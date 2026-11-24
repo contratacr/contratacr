@@ -2,6 +2,7 @@ import {test,expect} from 'playwright/test';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {parseTags,markupCents,parseExtrasData,statusesExtrasSchema} from '../../src/lib/pro/project-extras';
 import {csvCell,daysBetween,scheduleCsv} from '../../src/lib/pro/schedule-views';
+import {messageTemplates,renderMessageTemplate} from '../../src/lib/pro/message-templates';
 import {emptyFileFilters,fileFiltersActive,filterFiles} from '../../src/lib/pro/file-filters';
 import {expenseKpis} from '../../src/components/pro/expense-extras';
 import {ownerFixture,local,origin,headersFor} from './pro-round2-fixture';
@@ -64,4 +65,12 @@ test('Schedule actions: CSV export and date offset',()=>{
  const csv=scheduleCsv({phases:[{id:'p',title:'Obra'}],tasks:[{id:'t',title:'=Cmd',status:'open',phaseId:'p',plannedStart:'2026-11-01',plannedEnd:'2026-11-03'} as never],milestones:[{id:'m',title:'Entrega',date:'2026-11-30'} as never]},false);
  expect(csv.startsWith('﻿Tipo;Fase;Título;Inicio;Fin;Estado\r\n')).toBe(true);
  expect(csv).toContain("Elemento;Obra;'=Cmd;2026-11-01;2026-11-03;Abierto");expect(csv).toContain('Fecha clave;;Entrega;2026-11-30;2026-11-30;');
+});
+
+test('Message templates render with the first name',()=>{
+ expect(renderMessageTemplate('interested',false,'María Pérez')).toContain('Hola María,');
+ expect(renderMessageTemplate('unavailable',true,'John Smith')).toContain('Hi John,');
+ expect(renderMessageTemplate('interested',true,'')).toContain('Hi there,');
+ expect(renderMessageTemplate('nope',true,'x')).toBe('');
+ for(const item of messageTemplates)expect(item.es.body.length).toBeLessThan(1000);
 });
