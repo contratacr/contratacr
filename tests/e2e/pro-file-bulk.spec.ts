@@ -23,6 +23,8 @@ for(const language of ['es','en'] as const)test(`File bulk operations, permanent
   r=await bulkPost(libBulk,{action:'favorite',on:true,items:await items(ids)});expect(r.ok).toBe(3);
   r=await bulkPost(libBulk,{action:'tags_add',tags:['Manual','permiso'],items:await items(ids.slice(0,2))});expect(r.ok).toBe(2);
   r=await bulkPost(libBulk,{action:'tags_remove',tags:['permiso'],items:await items(ids.slice(0,1))});expect(r.ok).toBe(1);
+  // ids[1] is copied into the job while it is still active (a copy needs an active source); it is archived just below, so it ends archived AND used.
+  await post(lib,{action:'copy',actionId:crypto.randomUUID(),fileId:ids[1],revision:await rev(ids[1]),workId,targetFileId:crypto.randomUUID()});
   // A stale revision fails alone, the rest go through.
   r=await bulkPost(libBulk,{action:'archive',items:[{fileId:ids[0],revision:99},...await items([ids[1]])]});expect([r.ok,r.failed]).toEqual([1,1]);expect(r.items.find((i:{ok:boolean})=>!i.ok).error).toBe('conflict');
   // Validation: empty, too many, unknown field, foreign origin, oversized body.
@@ -32,7 +34,6 @@ for(const language of ['es','en'] as const)test(`File bulk operations, permanent
   expect((await page.request.post(libBulk,{headers:{...headers,Origin:'http://evil.example'},data:{batchId:crypto.randomUUID(),action:'archive',items:await items([ids[2]])}})).status()).toBe(403);
   // Permanent delete: only archived and never used. ids[2] stays active, ids[1] is archived and used (copied into the job), ids[0] was archived by a failed revision -> archive it now.
   r=await bulkPost(libBulk,{action:'archive',items:await items([ids[0]])});expect(r.ok).toBe(1);
-  await post(lib,{action:'copy',actionId:crypto.randomUUID(),fileId:ids[1],revision:await rev(ids[1]),workId,targetFileId:crypto.randomUUID()});
   const batchId=crypto.randomUUID();
   r=await post(libBulk,{batchId,action:'purge',items:await items(ids)});expect([r.ok,r.failed]).toEqual([1,2]);const bad=r.items.filter((i:{ok:boolean})=>!i.ok).map((i:{error:string})=>i.error);expect(bad).toHaveLength(2);expect(bad).toContain('in_use');
   expect((await db.from('pro_company_files').select('id').eq('owner_id',owner.id).eq('id',ids[0])).data).toEqual([]);
