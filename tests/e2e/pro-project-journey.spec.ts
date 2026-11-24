@@ -6,7 +6,7 @@ import {emptyBusiness} from '../../src/lib/pro/business';
 import {gotoOK,expectNoHorizontalOverflow} from './helpers';
 import {projectOriginPath} from '../../src/lib/pro/project-origin';
 
-test('Project returns allow only local project pages',()=>{expect(projectOriginPath('/en/proyectos/example-12345678?q=red')).toBe('/en/proyectos/example-12345678?q=red');for(const value of ['https://evil.test/proyectos','//evil.test/proyectos','/\\evil.test','/dashboard/profesional','/proyectos/a/b'])expect(projectOriginPath(value)).toBeNull();});
+test('Project returns allow only local project pages',()=>{expect(projectOriginPath('/en/proyectos/example-12345678?q=red')).toBe('/en/proyectos/example-12345678?q=red');expect(projectOriginPath('/en/solicitudes/example-12345678?from=%2Fen%2Fsolicitudes')).toBe('/en/solicitudes/example-12345678?from=%2Fen%2Fsolicitudes');for(const value of ['https://evil.test/proyectos','//evil.test/proyectos','/\\evil.test','/dashboard/profesional','/proyectos/a/b'])expect(projectOriginPath(value)).toBeNull();});
 for(const language of ['es','en'] as const)test('Project to quote to same customer/job preserves context ['+language+']',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(240000);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
  const owner=await createDisposableAccount({prefix:'project-journey'}),client=await createDisposableAccount({prefix:'project-customer'}),outsider=await createDisposableAccount({prefix:'project-outsider'}),db=regressionAdminClient();let customer:BrowserContext|undefined,foreign:BrowserContext|undefined,anonymous:BrowserContext|undefined;
@@ -35,7 +35,7 @@ for(const language of ['es','en'] as const)test('Project to quote to same custom
   // Observe them without starting their timeout before that page has hydrated.
   const contextStatuses:number[]=[],contactStatuses:number[]=[];
   const observeContext=(response:import('playwright/test').Response)=>{const url=new URL(response.url());if(response.request().method()!=='GET')return;if(url.pathname===api)contextStatuses.push(response.status());if(url.pathname==='/api/pro/catalog'&&url.searchParams.get('option')==='1')contactStatuses.push(response.status());};page.on('response',observeContext);
-  await prepare.click();await expect(page).toHaveURL(/proyectoOrigen=/);const contactId='reservation-'+client.id;expect(new URL(page.url()).searchParams.get('cliente')).toBe(contactId);const origin=new URL(page.url()).searchParams.get('volverProyecto');expect(origin).toContain('/proyectos/');
+  await prepare.click();await expect(page).toHaveURL(/proyectoOrigen=/);const contactId='reservation-'+client.id;expect(new URL(page.url()).searchParams.get('cliente')).toBe(contactId);const origin=new URL(page.url()).searchParams.get('volverProyecto');expect(origin).toContain('/solicitudes/');
   const quoteForm=page.getByRole('dialog');await expect(quoteForm.getByPlaceholder(copy.description,{exact:true})).toHaveValue(project.title);await expect(quoteForm.getByLabel(copy.price,{exact:true})).toHaveValue('');expect(contextStatuses[0]).toBe(200);expect(contactStatuses[0]).toBe(200);page.off('response',observeContext);
   const contact=(await db.from('pro_clients').select('*').eq('user_id',owner.id).eq('id',contactId).single().throwOnError()).data!;expect(contact.phone).toBe('');expect(contact.email).toBe('');
   // Reopening context must never overwrite the professional's enriched contact.
