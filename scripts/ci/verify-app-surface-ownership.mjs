@@ -227,6 +227,7 @@ const handlerRules = [
   [/^\/api\/pro\/project-schedule$/, "pro-project-schedule.spec.ts"],
   [/^\/api\/pro\/projects$/, "pro-projects.spec.ts"],
   [/^\/api\/pro\/projects-hub$/, "pro-projects-hub.spec.ts"],
+  [/^\/api\/pro\/time-activity-defaults$/, "pro-time-activity-defaults.spec.ts"],
   [/^\/api\/pro\/notification-extras$/, "pro-notification-extras.spec.ts"],
   [/^\/api\/pro\/promotions$/, "pro-local-integration.spec.ts"],
   [/^\/api\/pro\/catalog-specs$/, "pro-catalog-specs.spec.ts"],
