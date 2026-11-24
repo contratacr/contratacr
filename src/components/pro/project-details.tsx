@@ -13,6 +13,7 @@ import {
  type DetailsMutation,type DetailsRead,type ProjectCatalog,type ProjectColor,type ProjectType,type ProjectVatCode,
 } from '@/lib/pro/project-details';
 import {useProChildGuard} from './use-pro-child-guard';
+import {ProjectActivityRates} from './project-activity-rates';
 
 /**
  * Detalles del proyecto: colour, type, code, planned budget, tags, addresses and the
@@ -192,6 +193,7 @@ function DetailsSession({accountId,workId,onStateChange}:{accountId:string;workI
    </fieldset>
    <div className="flex flex-wrap gap-2"><Button className="min-h-11" type="submit" disabled={busy||conflict||!dirty}>{saving?c.saving:c.save}</Button>{dirty&&<Button className="min-h-11" type="button" variant="secondary" disabled={saving} onClick={()=>{setDraft(initial);setError('');setCodeError('');}}>{c.reset}</Button>}</div>
   </form>
+  <ProjectActivityRates workId={workId} accountId={accountId}/>
   <CatalogManager catalog={catalog} c={c} en={en} disabled={busy||dirty} onType={catalogAction} onSimple={simpleCatalog}/>
   <details className="rounded-2xl border border-[#d7e1ea] bg-white p-4"><summary className="min-h-11 cursor-pointer text-sm font-semibold text-[#162543]">{c.history}</summary>
    {read.history.length===0?<p className="mt-2 text-sm text-[#52627a]">{c.historyEmpty}</p>:<ol className="mt-2 space-y-1">{read.history.map(item=><li key={item.actionId+item.at} className="text-sm text-[#52627a]"><span className="font-semibold text-[#162543]">{c.actions[item.action]}</span> · {stamp(item.at,en)}</li>)}</ol>}

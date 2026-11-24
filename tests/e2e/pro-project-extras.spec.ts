@@ -6,6 +6,7 @@ import {messageTemplates,renderMessageTemplate} from '../../src/lib/pro/message-
 import {emptyFileFilters,fileFiltersActive,filterFiles} from '../../src/lib/pro/file-filters';
 import {expenseKpis} from '../../src/components/pro/expense-extras';
 import {ownerFixture,local,origin,headersFor} from './pro-round2-fixture';
+import {gotoOK,expectNoHorizontalOverflow} from './helpers';
 
 // Area C: task tags + schedule link, time markup/taxable, project preferences, statuses and templates.
 test('Project extras: pure helpers',()=>{
@@ -73,4 +74,39 @@ test('Message templates render with the first name',()=>{
  expect(renderMessageTemplate('interested',true,'')).toContain('Hi there,');
  expect(renderMessageTemplate('nope',true,'x')).toBe('');
  for(const item of messageTemplates)expect(item.es.body.length).toBeLessThan(1000);
+});
+
+test('Project activities and rates: shapes',()=>{
+ const ok={costCents:null,rateCents:250000,markupBps:1500,taxable:true,billable:false};
+ expect(parseExtrasData('work','activity',ok)).toEqual(ok);
+ expect(parseExtrasData('work','activity',{...ok,rateCents:-1})).toBeNull();
+ expect(parseExtrasData('work','activity',{...ok,markupBps:100001})).toBeNull();
+ expect(parseExtrasData('work','activity',{...ok,extra:1})).toBeNull();
+ expect(parseExtrasData('work','activity',{costCents:null,rateCents:null,markupBps:0,taxable:false})).toBeNull();
+});
+test('Project activities and rates: API override applies to new entries',async({page},info)=>{
+ test.setTimeout(600000);local(info.project.use.baseURL);const id=randomBytes(3).toString('hex');
+ const f=await ownerFixture(page.context(),'actrate'+id);
+ try{
+  const headers=headersFor(f.owner),extras=(data:Record<string,unknown>)=>page.request.post(origin+'/api/pro/project-extras',{headers,data}),time=(data:Record<string,unknown>)=>page.request.post(origin+'/api/pro/time-tracking',{headers,data});
+  const activityId=randomUUID(),today=new Date(Date.now()-6*3600000).toISOString().slice(0,10);
+  expect((await time({action:'activity_save',actionId:randomUUID(),activityId,revision:0,name:'Instalación '+id,rateCents:2000000,costCents:1200000,billable:true})).status()).toBe(200);
+  const base={scope:'work',workId:f.workId,kind:'activity',key:activityId};
+  const saved=await extras({...base,revision:0,data:{costCents:null,rateCents:3000000,markupBps:1000,taxable:true,billable:true}});expect(saved.status(),await saved.text()).toBe(200);
+  expect((await extras({...base,revision:0,data:{costCents:null,rateCents:1,markupBps:0,taxable:false,billable:true}})).status()).toBe(409);
+  expect((await extras({...base,key:randomUUID(),revision:0,data:{costCents:null,rateCents:1,markupBps:0,taxable:false,billable:true}})).status()).toBe(404);
+  const read=await page.request.get(origin+'/api/pro/project-extras?scope=work&kind=activity&workId='+f.workId+'&keys='+activityId,{headers});expect((await read.json()).items[activityId].data.rateCents).toBe(3000000);
+  const entryId=randomUUID(),manual=await time({action:'manual',actionId:randomUUID(),entryId,workId:f.workId,activityId,billable:true,date:today,minutes:60,note:'Con tarifa del proyecto'});expect(manual.status(),await manual.text()).toBe(200);
+  const entry=(await manual.json()).entry;expect(entry.rateCents).toBe(3000000);expect(entry.billable).toBe(true);
+  // UI: the table is in Project details, in both languages, and shows the saved override.
+  for(const language of ['es','en'] as const){
+   const en=language==='en';await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:f.workId}));
+   const workspace=page.locator('[data-job-workspace]');await expect(workspace).toBeVisible({timeout:60000});
+   await workspace.locator('[data-job-workspace-header]').getByRole('button',{name:en?'Project details':'Detalles del proyecto',exact:true}).click();
+   const table=workspace.locator('[data-project-activity-rates]');await expect(table).toBeVisible({timeout:60000});
+   const row=table.locator(`[data-activity-row="${activityId}"]`);await expect(row).toBeVisible();
+   await expect(row.locator('[data-activity-field="rate"]')).toHaveValue('30000');await expect(row.locator('[data-activity-field="markup"]')).toHaveValue('10');
+   await expect(table).toContainText(en?'Activities and rates':'Actividades y tarifas');await expectNoHorizontalOverflow(page);
+  }
+ }finally{await f.cleanup();}
 });
