@@ -41,3 +41,29 @@ test('task center detail: comment, mention notice, link and unlink existing job 
   const anonymous=await browser.newContext({baseURL:origin});expect((await anonymous.request.get(origin+url+q)).status()).toBe(401);await anonymous.close();
  }finally{await f.cleanup();await cleanupDisposableAccount(member);await cleanupDisposableAccount(rival);}
 });
+
+// Row 16 (migration 437): edit and delete a comment. History is kept, deleted text is hidden, others cannot change it.
+test('task center detail: edit and delete a comment keeping the history',async({page,browser},info)=>{
+ test.setTimeout(240000);local(info.project.use.baseURL);
+ const tag=randomBytes(3).toString('hex'),f=await ownerFixture(page.context(),tag),rival=await createDisposableAccount({prefix:'detail-edit-rival'});
+ try{
+  const db=f.db,owner=f.owner.id,headers=headersFor(f.owner),url='/api/pro/task-center-detail',taskId=crypto.randomUUID();
+  await db.from('pro_work_tasks').insert({owner_id:owner,work_id:f.workId,id:taskId,title:'EDIT '+tag,details:'',assignee:'',due_date:null,status:'open',archived:false,revision:1}).throwOnError();
+  const q='?'+new URLSearchParams({workId:f.workId,taskId});
+  await page.request.post(url,{headers,data:{kind:'comment',actionId:crypto.randomUUID(),workId:f.workId,taskId,text:'Texto original',mentions:[]}});
+  const first=(await (await page.request.get(url+q)).json()).comments[0];expect(first.canManage).toBe(true);expect(first.edited).toBe(false);
+  const edit={kind:'comment-change',action:'edit',actionId:crypto.randomUUID(),workId:f.workId,taskId,commentId:first.id,text:'Texto corregido'};
+  expect((await page.request.post(url,{headers,data:{...edit,actionId:crypto.randomUUID(),text:'   '}})).status()).toBe(400);
+  expect((await page.request.post(url,{headers,data:edit})).status()).toBe(200);
+  expect((await page.request.post(url,{headers,data:edit})).status()).toBe(200);
+  const edited=(await (await page.request.get(url+q)).json()).comments[0];expect(edited.body).toBe('Texto corregido');expect(edited.edited).toBe(true);
+  const revisions=(await db.from('pro_task_center_comment_revisions').select('previous_body,kind').eq('owner_id',owner).eq('comment_id',first.id).throwOnError()).data!;
+  expect(revisions).toEqual([{previous_body:'Texto original',kind:'edit'}]);
+  const del={kind:'comment-change',action:'delete',actionId:crypto.randomUUID(),workId:f.workId,taskId,commentId:first.id};
+  expect((await page.request.post(url,{headers,data:del})).status()).toBe(200);
+  const gone=(await (await page.request.get(url+q)).json()).comments[0];expect(gone.deleted).toBe(true);expect(gone.body).toBe('');expect(gone.canManage).toBe(false);
+  expect((await page.request.post(url,{headers,data:{...edit,actionId:crypto.randomUUID(),text:'Otra vez'}})).status()).toBe(409);
+  expect((await db.from('pro_task_center_comments').delete().eq('owner_id',owner)).error).not.toBeNull();
+  const other=await browser.newContext({baseURL:origin});await login(other,rival);expect((await other.request.post(origin+url,{headers:{'X-Pro-Expected-Actor':rival.id},data:del})).status()).toBeGreaterThanOrEqual(400);await other.close();
+ }finally{await f.cleanup();await cleanupDisposableAccount(rival);}
+});

@@ -2,7 +2,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {z} from 'zod';
 import {proActor,proBoundedJson,proDbError,proFail,proQuery,proRouteHeaders as headers,proSameOrigin} from '@/lib/pro/route-common';
 import {proWorkspaceMember} from '@/lib/pro/workspace-user';
-import {taskDetailMutationSchema,taskDetailSchema} from '@/lib/pro/task-center-detail';
+import {taskCommentChangeSchema,taskDetailMutationSchema,taskDetailSchema} from '@/lib/pro/task-center-detail';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 
 /**
@@ -27,6 +27,7 @@ export async function POST(req:Request){
   let input;try{input=taskDetailMutationSchema.parse(await proBoundedJson(req,4096));}catch{return proFail(400,'Revise los datos.');}
   const who=(await person())??a.user.id;
   const{kind,...rest}=input;
+  if(kind==='comment-change'){const ch=taskCommentChangeSchema.safeParse(rest);if(!ch.success)return proFail(400,'Revise los datos.');const c=await a.db.rpc('pro_task_center_comment_change',{p_owner:a.user.id,p_person:who,p_input:ch.data});if(c.error)return proDbError(c.error,'El comentario cambió. Actualice.');return Response.json(c.data,{headers});}
   const r=kind==='comment'?await a.db.rpc('pro_task_center_comment_add',{p_owner:a.user.id,p_person:who,p_input:rest}):await a.db.rpc('pro_task_center_file_link',{p_owner:a.user.id,p_person:who,p_input:rest});
   if(r.error)return proDbError(r.error,'El archivo ya no estaba vinculado. Actualice.');return Response.json(r.data,{headers});
  }catch{return proFail(503,'No se pudo comprobar el guardado. Reintente: no se duplicará.');}
