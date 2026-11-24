@@ -207,3 +207,11 @@ Todas las filas C quedan en P/E: ninguna es V hasta que `pro-local-regression` p
 
 Ninguna fila A pasa a V hasta que `pro-local-regression` pase en CI. Las pruebas de API/SQL no se ejecutaron en local (no hay Supabase local).
 
+
+## Dinero, documentos y catalogo (area D, ronda 3, 2026-11-24). Evidencia pendiente de CI (pro-local-regression)
+
+| # | Fila | Estado | Evidencia |
+|---|------|--------|-----------|
+| D-31 | Facturas del proyecto: vista de tabla con columnas Titulo, Destinatario, Codigo, Estado, Compartida, Creada, Total, Saldo, Vence, Documentos vinculados, Enviada, Actualizada; encabezados ordenables y selector de columnas | P | `finance-table.tsx` (tarjetas/tabla, orden, selector guardado en el navegador), `lib/pro/finance-table.ts`, `work-invoices.tsx`; migracion 494 agrega `linkedDocs` y `updatedAt`; specs `pro-finance-table-unit.spec.ts` (pasa) y `pro-finance-table.spec.ts` (fixture, pendiente de CI). Falta: fijar columna (pin). |
+| D-32 | Cotizaciones del proyecto: vista de tabla con Titulo, Destinatario, Codigo, Estado, Compartida, Creada, Total, Documentos vinculados, Actualizada; orden y selector de columnas | P | `project-estimates.tsx` con el mismo `FinanceTable`. Faltan Saldo, Vence, Enviada y Fecha de aprobacion: la lectura de cotizaciones privadas (`pro_project_estimates_page`, migracion 299) no los entrega todavia. |
+| D-33 | Ordenes de compra: vista de tabla con selector de columnas (codigo, titulo, proveedor, estado, emision, esperada, total, pagado, saldo, lineas, emitida, actualizada) | P | `work-purchase-orders.tsx` (`poColumns`). El tipo Activa/Anulada ya lo cubre el filtro de estado; no existe el concepto de archivada. Falta la columna de seguimiento en la lista (solo en el detalle). |

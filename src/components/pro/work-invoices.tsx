@@ -7,6 +7,8 @@ import {proMoney} from '@/lib/pro/money';
 import {navigatePro} from '@/lib/pro/navigation';
 import {filterWorkInvoices,summarizeWorkInvoices,workInvoicesSchema,type WorkInvoice,type WorkInvoiceFilter} from '@/lib/pro/work-invoices';
 import {FinanceFilters,FinanceSummaryCards} from './finance-list-kit';
+import {FinanceTable,FinanceViewSwitch,useFinanceView,type FinanceColumn} from './finance-table';
+import {documentCode} from '@/lib/pro/finance-table';
 
 /** Area D: Invoices of one project (cards Total / Paid / Balance / Overdue, status filters, search). Read only; opening a row goes to Billing. */
 export function WorkInvoices({workId}:{workId:string}){const {user,loading}=useAuth();if(loading||!user)return null;return <Session key={user.id+':'+workId} workId={workId} accountId={user.id}/>;}
@@ -22,6 +24,8 @@ function Session({workId,accountId}:{workId:string;accountId:string}){
   }catch{if(active.current&&n===sequence.current)setError(true);}
  },[workId,accountId]);
  useEffect(()=>{active.current=true;const timer=setTimeout(()=>void load(),0);return()=>{active.current=false;sequence.current++;clearTimeout(timer);};},[load]);
+ const [view,setView]=useFinanceView('invoices');
+ const day=(value?:string|null)=>value?value.slice(0,10):'';
  const money=(cents:number)=>proMoney(cents/100,en),label:Record<WorkInvoice['status'],string>={draft:t('Borrador','Draft'),sent:t('Enviada','Sent'),viewed:t('Vista','Viewed'),partial:t('Pago parcial','Partially paid'),overdue:t('Vencida','Overdue'),paid:t('Pagada','Paid'),void:t('Anulada','Void')};
  return <section data-work-invoices className="space-y-4">
   <div className="space-y-1"><h3 className="text-lg font-bold text-[#162543]">{t('Facturas del proyecto','Project invoices')}</h3>
@@ -30,12 +34,28 @@ function Session({workId,accountId}:{workId:string;accountId:string}){
   {!items&&!error&&<p role="status" className="text-sm text-[#52627a]">{t('Cargando facturas…','Loading invoices…')}</p>}
   {items&&(()=>{
    const sum=summarizeWorkInvoices(items),shown=filterWorkInvoices(items,filter,query);
+   const columns:FinanceColumn<WorkInvoice>[]=[
+    {key:'title',label:t('Título','Title'),render:i=>i.title,sort:i=>i.title},
+    {key:'recipient',label:t('Destinatario','Recipient'),render:i=>i.receiver,sort:i=>i.receiver},
+    {key:'code',label:t('Código','Code'),render:i=>documentCode('FAC',i.id),sort:i=>documentCode('FAC',i.id)},
+    {key:'status',label:t('Estado','Status'),render:i=>label[i.status],sort:i=>label[i.status]},
+    {key:'shared',label:t('Compartida','Shared'),render:i=>i.delivered?t('Sí','Yes'):t('No','No'),sort:i=>i.delivered?1:0},
+    {key:'created',label:t('Creada','Created'),render:i=>day(i.createdAt),sort:i=>i.createdAt},
+    {key:'total',label:t('Total','Total'),render:i=>money(i.totalCents),sort:i=>i.totalCents,align:'right'},
+    {key:'balance',label:t('Saldo','Balance'),render:i=>money(i.balanceCents),sort:i=>i.balanceCents,align:'right'},
+    {key:'due',label:t('Vence','Due'),render:i=>i.dueDate??'',sort:i=>i.dueDate},
+    {key:'linked',label:t('Documentos vinculados','Linked docs'),render:i=>String(i.linkedDocs??0),sort:i=>i.linkedDocs??0,align:'right'},
+    {key:'sent',label:t('Enviada','Sent'),render:i=>day(i.sentAt),sort:i=>i.sentAt},
+    {key:'updated',label:t('Actualizada','Updated'),render:i=>day(i.updatedAt),sort:i=>i.updatedAt},
+   ];
    return <>
     <FinanceSummaryCards label={t('Resumen de facturas','Invoice summary')} cards={[{key:'total',label:t('Total facturado','Total invoiced'),value:money(sum.total)},{key:'paid',label:t('Pagado','Paid'),value:money(sum.paid)},{key:'balance',label:t('Saldo','Balance'),value:money(sum.balance)},{key:'overdue',label:t('Vencido','Overdue'),value:money(sum.overdue)}]}/>
     <FinanceFilters value={filter} onChange={setFilter} query={query} onQuery={setQuery} searchLabel={t('Buscar facturas','Search invoices')} groupLabel={t('Filtrar facturas por estado','Filter invoices by status')} options={[{value:'all',label:t('Todas','All'),count:sum.counts.all},{value:'open',label:t('Por cobrar','Open'),count:sum.counts.open},{value:'overdue',label:t('Vencidas','Overdue'),count:sum.counts.overdue},{value:'paid',label:t('Pagadas','Paid'),count:sum.counts.paid},{value:'draft',label:t('Borradores','Drafts'),count:sum.counts.draft},{value:'void',label:t('Anuladas','Void'),count:sum.counts.void}]}/>
     {!items.length&&<p data-work-invoices-empty className="rounded-xl border border-dashed border-[#d7e1ea] bg-white p-4 text-sm text-[#52627a]">{t('Este proyecto aún no tiene facturas. Use «Facturar desde el trabajo» en Costos y pagos para crear la primera.','This project has no invoices yet. Use "Bill from job" in Costs & payments to create the first one.')}</p>}
     {items.length>0&&!shown.length&&<p data-finance-no-match className="text-sm text-[#52627a]">{t('Ninguna factura coincide con la búsqueda o el filtro.','No invoice matches this search or filter.')}</p>}
-    {shown.length>0&&<ul className="space-y-2">{shown.map(item=><li key={item.id} data-work-invoice={item.id} data-work-invoice-status={item.status} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#d7e1ea] bg-white p-3">
+    {items.length>0&&<FinanceViewSwitch mode={view} onChange={setView} groupLabel={t('Vista de la lista','List view')} cards={t('Tarjetas','Cards')} table={t('Tabla','Table')}/>}
+    {shown.length>0&&view==='table'&&<FinanceTable id="invoices" columns={columns} rows={shown} caption={t('Facturas del proyecto','Project invoices')} rowAttrs={i=>({'data-work-invoice':i.id,'data-work-invoice-status':i.status})} onOpen={i=>navigatePro('pro_billing',{factura:i.id})} openLabel={i=>`${t('Abrir factura','Open invoice')}: ${i.title}`}/>}
+    {shown.length>0&&view==='cards'&&<ul className="space-y-2">{shown.map(item=><li key={item.id} data-work-invoice={item.id} data-work-invoice-status={item.status} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#d7e1ea] bg-white p-3">
      <div className="min-w-0 flex-1 basis-56"><p className="break-words font-semibold text-[#162543]">{item.title}</p>
       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#52627a]"><span data-work-invoice-badge className="rounded-full bg-[#eaf7fb] px-2 py-0.5 text-xs font-semibold text-[#006f93]">{label[item.status]}</span><span className="break-words">{item.receiver}</span></p>
       <p className="mt-1 text-xs text-[#52627a]">{t('Total','Total')} {money(item.totalCents)} · {t('Saldo','Balance')} {money(item.balanceCents)}{item.dueDate?` · ${t('Vence','Due')} ${item.dueDate}`:''}{item.daysOverdue>0?` · ${t(`${item.daysOverdue} días de atraso`,`${item.daysOverdue} days overdue`)}`:''}</p></div>

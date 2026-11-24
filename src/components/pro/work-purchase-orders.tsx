@@ -19,6 +19,7 @@ import {useProChildGuard} from './use-pro-child-guard';
 import {PurchaseOrderTracking} from './po-tracking';
 import {PoDetailTools,PoListTools,poReceiptKindLabel} from './po-extras';
 import {pushProParams} from '@/lib/pro/navigation';
+import {FinanceTable,FinanceViewSwitch,useFinanceView,type FinanceColumn} from './finance-table';
 
 /**
  * Órdenes de compra por proyecto (families 51, 52 and 54). A purchase order is a
@@ -128,7 +129,7 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
  const defaultTax=projectVatInput(useProjectDefaultVat(workId,accountId),en);
  const [list,setList]=useState<PurchaseOrderList|null>(null),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(false);
  const [filters,setFilters]=useState<Filters>(noFilters),[cursors,setCursors]=useState<Array<number|null>>([null]),[filtersOpen,setFiltersOpen]=useState(false);
- const [tab,setTab]=useState<'orders'|'budget'>('orders'),[budgetKey,setBudgetKey]=useState(0);
+ const [tab,setTab]=useState<'orders'|'budget'>('orders'),[view,setView]=useFinanceView('purchase-orders'),[budgetKey,setBudgetKey]=useState(0);
  const [openId,setOpenId]=useState<string|null>(null),[detail,setDetail]=useState<Extract<PurchaseOrderDetail,{history:unknown}>|null>(null),[detailError,setDetailError]=useState(false);
  const [form,setForm]=useState<Form|null>(null),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
@@ -275,7 +276,10 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
   </div>
   {loadError&&<div role="alert" className="space-y-2 text-sm"><p>{c.loadError}</p><Button type="button" variant="secondary" disabled={loading} onClick={()=>void load()}>{c.retry}</Button></div>}
   {!list.items.length?<div data-purchase-orders-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center"><p className="font-semibold text-[#162543]">{filtered?c.emptyFiltered:c.empty}</p>{!filtered&&<p className="mt-1 text-sm text-[#52627a]">{c.emptyHelp}</p>}</div>:
-   <ul data-purchase-order-list className="space-y-2">{list.items.map(item=><li key={item.id}><OrderRow c={c} en={en} item={item} disabled={busy} onOpen={()=>{setOpenId(item.id);setDetail(null);setNotice('');setError('');}}/></li>)}</ul>}
+   <>
+   <FinanceViewSwitch mode={view} onChange={setView} groupLabel={en?'List view':'Vista de la lista'} cards={en?'Cards':'Tarjetas'} table={en?'Table':'Tabla'}/>
+   {view==='table'?<FinanceTable id="purchase-orders" columns={poColumns(c,en)} rows={list.items} caption={en?'Purchase orders':'Órdenes de compra'} rowAttrs={item=>({'data-purchase-order':item.code})} onOpen={item=>{setOpenId(item.id);setDetail(null);setNotice('');setError('');}} openLabel={item=>`${c.open}: ${item.code}`}/>:
+   <ul data-purchase-order-list className="space-y-2">{list.items.map(item=><li key={item.id}><OrderRow c={c} en={en} item={item} disabled={busy} onOpen={()=>{setOpenId(item.id);setDetail(null);setNotice('');setError('');}}/></li>)}</ul>}</>}
   {(cursors.length>1||list.nextCursor!==null)&&<nav data-purchase-order-pages className="flex flex-wrap items-center justify-between gap-2">
    <Button type="button" variant="secondary" disabled={busy||loading||cursors.length<=1} onClick={()=>setCursors(value=>value.slice(0,-1))}>{c.prev}</Button>
    <span className="text-sm text-[#52627a]">{c.page(cursors.length)}</span>
@@ -286,6 +290,24 @@ function PurchaseOrdersSession({accountId,workId,onStateChange}:{accountId:strin
  </section>;
 }
 
+/** Table columns of the purchase orders list (Area D): the same data as the cards, sortable and hideable. */
+function poColumns(c:Copy,en:boolean):FinanceColumn<PurchaseOrderSummary>[]{
+ const t=(es:string,english:string)=>en?english:es;
+ return [
+  {key:'code',label:t('Código','Code'),render:i=>i.code,sort:i=>i.number},
+  {key:'title',label:t('Título','Title'),render:i=>i.title,sort:i=>i.title},
+  {key:'supplier',label:c.supplier,render:i=>i.supplierName,sort:i=>i.supplierName},
+  {key:'status',label:c.status,render:i=>c.statuses[i.status]+(i.overdue?' · '+c.pastDue:''),sort:i=>c.statuses[i.status]},
+  {key:'issued',label:c.issued,render:i=>day(i.issueDate,en),sort:i=>i.issueDate},
+  {key:'expected',label:c.expected,render:i=>i.expectedDate?day(i.expectedDate,en):'',sort:i=>i.expectedDate},
+  {key:'total',label:c.total,render:i=>money(i.totalCents),sort:i=>i.totalCents,align:'right'},
+  {key:'paid',label:t('Pagado','Paid'),render:i=>money(i.paidCents),sort:i=>i.paidCents,align:'right'},
+  {key:'balance',label:c.balance,render:i=>i.status==='cancelled'?'':money(i.balanceCents),sort:i=>i.status==='cancelled'?null:i.balanceCents,align:'right'},
+  {key:'lines',label:t('Líneas','Lines'),render:i=>String(i.lineCount),sort:i=>i.lineCount,align:'right'},
+  {key:'sent',label:t('Emitida el','Issued on'),render:i=>i.issuedAt?i.issuedAt.slice(0,10):'',sort:i=>i.issuedAt},
+  {key:'updated',label:t('Actualizada','Updated'),render:i=>i.updatedAt.slice(0,10),sort:i=>i.updatedAt},
+ ];
+}
 function Stat({label:text,value,id,tone,wide}:{label:string;value:string;id:string;tone?:boolean;wide?:boolean}){
  return <div data-po-total={id} className={`min-w-0 ${wide?'col-span-2 sm:col-span-1 ':''}rounded-xl border border-[#d7e1ea] bg-[#f7f9fc] p-3`}><dt className="text-xs font-semibold text-[#52627a]">{text}</dt><dd className={`mt-1 break-words text-base font-bold tabular-nums ${tone?'text-[#a03c1f]':'text-[#162543]'}`}>{value}</dd></div>;
 }

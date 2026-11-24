@@ -4,7 +4,7 @@ export const workInvoiceStatuses=['draft','sent','viewed','partial','overdue','p
 export const workInvoiceSchema=z.object({
  id:z.string().uuid(),title:z.string(),receiver:z.string(),createdAt:z.string(),status:z.enum(workInvoiceStatuses),
  totalCents:z.number().int().nonnegative(),balanceCents:z.number().int().nonnegative(),dueDate:z.string().nullable(),daysOverdue:z.number().int().nonnegative(),
- delivered:z.boolean(),
+ delivered:z.boolean(),sentAt:z.string().nullable().optional(),viewedAt:z.string().nullable().optional(),linkedDocs:z.number().int().nonnegative().optional(),updatedAt:z.string().nullable().optional(),
 }).passthrough();
 export type WorkInvoice=z.infer<typeof workInvoiceSchema>;
 export const workInvoicesSchema=z.object({workId:z.string().min(1).max(160),items:z.array(workInvoiceSchema).max(100)}).strict();
