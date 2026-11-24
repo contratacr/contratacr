@@ -4,6 +4,7 @@ import {PhotoPicker,uploadPlacePhotos,type UploadOutcome} from './place-photo-up
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
 import {BIZ,RatingSummary,Stars} from './biz-ui';
+import {RECOMMEND_EVENT} from './place-recommend';
 
 /**
  * LOCAL PRO ONLY (multivertical F5): reviews of a place. Same rules as professional reviews (half stars, 300
@@ -29,7 +30,7 @@ type Sort='recent'|'best'|'worst';
 export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [state,setState]=useState<'idle'|'sending'|'sent'>('idle'),[error,setError]=useState<string|null>(null),[writing,setWriting]=useState(false);
- const [photos,setPhotos]=useState<File[]>([]),[photoResult,setPhotoResult]=useState<UploadOutcome|null>(null),[sort,setSort]=useState<Sort>('recent');
+ const [photos,setPhotos]=useState<File[]>([]),[photoResult,setPhotoResult]=useState<UploadOutcome|null>(null),[sort,setSort]=useState<Sort>('recent'),[suggested,setSuggested]=useState('5');
  const sectionRef=useRef<HTMLElement>(null);
  // «Escribir reseña» links (#escribir-resena) open the form here, on arrival and on later clicks.
  useEffect(()=>{
@@ -37,6 +38,9 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    requestAnimationFrame(()=>{sectionRef.current?.scrollIntoView({block:'start'});(sectionRef.current?.querySelector('form select, form input, [data-place-review-manager], [data-place-review-sent]') as HTMLElement|null)?.focus?.();});};
   fromHash();window.addEventListener('hashchange',fromHash);return()=>window.removeEventListener('hashchange',fromHash);
  },[]);
+ // «¿Recomienda este lugar?» opens the form with a suggested rating.
+ useEffect(()=>{const on=(e:Event)=>{const r=(e as CustomEvent<{rating:number}>).detail?.rating;if(r)setSuggested(String(r));setWriting(true);};
+  window.addEventListener(RECOMMEND_EVENT,on);return()=>window.removeEventListener(RECOMMEND_EVENT,on);},[]);
  const items=sort==='recent'?initial.items:[...initial.items].sort((a,b)=>sort==='best'?b.rating-a.rating||b.createdAt.localeCompare(a.createdAt):a.rating-b.rating||b.createdAt.localeCompare(a.createdAt));
  const action=useRef(''),form=useRef<HTMLFormElement>(null);
  // data-ready marks the form as interactive (true only after hydration); the action id is created on first submit.
@@ -92,7 +96,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
     <h3 className="font-semibold">{t('Dejar una reseña','Leave a review')}</h3>
     {!signedIn&&<label className="flex flex-col gap-1 text-sm font-medium">{t('Su nombre','Your name')}<input name="authorName" maxLength={80} autoComplete="name" className={input}/></label>}
     <label className="flex flex-col gap-1 text-sm font-medium">{t('Calificación','Rating')}
-     <select name="rating" defaultValue="5" className={input}>{[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(v=><option key={v} value={v}>{t(`${String(v).replace('.',',')} de 5`,`${v} out of 5`)}</option>)}</select></label>
+     <select name="rating" key={suggested} defaultValue={suggested} className={input}>{[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(v=><option key={v} value={v}>{t(`${String(v).replace('.',',')} de 5`,`${v} out of 5`)}</option>)}</select></label>
     <label className="flex flex-col gap-1 text-sm font-medium">{t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')}<textarea name="comment" maxLength={300} rows={3} required className={`${input} py-2`}/></label>
     {signedIn&&<fieldset className="space-y-1 text-sm"><legend className="font-medium">{t('Fotos (opcional, hasta 5)','Photos (optional, up to 5)')}</legend>
      <PhotoPicker files={photos} onChange={setPhotos} en={en} label={t('Agregar fotos a la reseña','Add photos to the review')} disabled={state==='sending'}/>

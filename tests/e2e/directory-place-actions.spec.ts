@@ -92,3 +92,35 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
   await page.keyboard.press('Escape');await expect(opts).toHaveCount(0);
  }
 });
+
+// Ficha tipo app móvil: pestañas, «¿Recomienda este lugar?» y hoja de compartir (ES y EN).
+for(const locale of ['es','en'] as const)test(`ficha: recomendación, pestañas y hoja de compartir [${locale}]`,async({page})=>{
+ const prefix=locale==='en'?'/en':'';
+ const res=await page.goto(`${prefix}/restaurantes`,{waitUntil:'domcontentloaded'});
+ if(!res||res.status()>=400){test.skip(true,'restaurantes no está activa en este entorno');return;}
+ const link=page.locator('a[href*="/lugar/"]').first();
+ if(!(await link.count())){test.skip(true,'sin lugares');return;}
+ await gotoOK(page,(await link.getAttribute('href'))!);
+ const en=locale==='en';
+ // Pestañas: Información, Reseñas y Más siempre; sin desbordar.
+ for(const id of ['info','reviews','more'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
+ await expect(page.locator('[data-place-tab="more"]')).toHaveText(en?'More':'Más');
+ // Recomendación: tres opciones; «Sí» abre el formulario con 5 estrellas sugeridas.
+ const rec=page.locator('[data-place-recommend]');
+ await expect(rec).toBeVisible();
+ await expect(rec.locator('[data-place-recommend-option]')).toHaveCount(3);
+ await expect(rec).toContainText(en?'Would you recommend this place?':'¿Recomienda este lugar?');
+ await expect(async()=>{
+  await rec.locator('[data-place-recommend-option="maybe"]').click();
+  await expect(page.locator('[data-place-review-form]')).toBeVisible({timeout:1500});
+  await expect(page.locator('[data-place-review-form] select[name="rating"]')).toHaveValue('3',{timeout:1500});
+ }).toPass({timeout:15000});
+ // Hoja de compartir: Copiar enlace, Enviar a amigos, Sugerir un cambio.
+ const btn=page.locator('[data-place-actions-bar] [data-share-button]');
+ await expect(async()=>{await btn.click();await expect(page.locator('[data-share-sheet]')).toBeVisible({timeout:1500});}).toPass({timeout:15000});
+ await expect(page.locator('[data-share-copy]')).toHaveText(en?'Copy link':'Copiar enlace');
+ await expect(page.locator('[data-share-send]')).toHaveText(en?'Send to friends':'Enviar a amigos');
+ await expect(page.locator('[data-share-suggest]')).toHaveText(en?'Suggest an edit':'Sugerir un cambio');
+ await page.keyboard.press('Escape');await expect(page.locator('[data-share-sheet]')).toHaveCount(0);
+ expect(await page.locator('[data-place-page]').evaluate(m=>m.scrollWidth<=m.clientWidth+1),'la ficha desborda').toBe(true);
+});

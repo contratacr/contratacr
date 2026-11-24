@@ -17,6 +17,7 @@ import {ProfileIdentityName} from '@/components/professionals/profile-identity-n
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {ShareButton} from './share-button';
+import {PlaceRecommend} from './place-recommend';
 import {mapLinks,placeBarActions,placeHeadActions,placeSideActions,type PlaceActionInput} from '@/lib/directory/place-actions';
 import {ActionButton,PlaceMobileBar,actionIcon} from './place-action-buttons';
 
@@ -82,6 +83,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:place.status==='published'};
  const barActions=hasMobileBar?placeBarActions(actionInput):[],barIds=barActions.map(a=>a.id);
  const headActions=hasMobileBar?placeHeadActions(actionInput):[],sideActions=placeSideActions(actionInput);
+ // Short description from typed data only (never invented): «<kind> en <zona>. Cocina: …».
+ const summary=[kind&&area?t(`${kind} en ${place.address.adminArea2??area}.`,`${kind} in ${place.address.adminArea2??area}.`):null,cuisines.length?t(`Cocina: ${cuisines.slice(0,3).join(', ')}.`,`Cuisine: ${cuisines.slice(0,3).join(', ')}.`):null].filter(Boolean).join(' ')||(brandAbout??'');
  const avatarClass=cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full');
  const pageBtn='h-12 w-full text-base font-semibold';
  const hoursTable=place.hours.length>0&&<section aria-labelledby="place-hours" className="space-y-3">
@@ -152,6 +155,15 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {slots.events}
   {slots.branches}
  </>;
+ const moreTab=<section id="mas" aria-labelledby="place-more" data-place-more className="scroll-mt-24 space-y-3">
+  <h2 id="place-more" className={BIZ.h2}>{t('Más sobre este lugar','More about this place')}</h2>
+  <ul className="divide-y divide-[#eef2f6] rounded-2xl border border-[#e3e9ef] text-[15px]">
+   {place.website&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={place.website} rel="noopener noreferrer nofollow" target="_blank">{t('Sitio web del negocio','Business website')}</a></li>}
+   {brand&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={`${prefix}/marca/${brand.slug}`}>{t(`Todas las sucursales de ${brand.name}`,`All ${brand.name} branches`)}</a></li>}
+   {sectionHref&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={sectionHref}>{t(`Más lugares en ${vertical}`,`More places in ${vertical}`)}</a></li>}
+   <li><a href="#reportar" data-place-suggest-more className={`flex min-h-12 items-center gap-2 px-4 ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></li>
+  </ul>
+ </section>;
  const offerLabel=offerTabLabel(place.vertical.id,en);
  const tabs:PlaceTab[]=[
   {id:'info',label:t('Información','Information'),anchors:['horario','comodidades','acerca','eventos','sucursales','place-reservations'],content:infoTab},
@@ -160,7 +172,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   ...(photos.length>0?[{id:'photos',label:t('Fotos','Photos'),anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-24 space-y-4">
    <h2 id="place-photos" className={BIZ.h2}>{t('Fotos','Photos')} ({photos.length})</h2>
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
-  ...(slots.questions?[{id:'questions',label:t('Preguntas','Questions'),anchors:['preguntas'],content:slots.questions}]:[]),
+  ...(slots.questions?[{id:'questions',label:t('Preguntar','Ask'),anchors:['preguntas'],content:slots.questions}]:[]),
+ {id:'more',label:t('Más','More'),anchors:['mas'],content:moreTab},
  ];
  // Gas stations lead with their prices; every other section opens on «Información».
  const defaultTab=place.vertical.id==='fuel'&&slots.offer?'offer':'info';
@@ -200,6 +213,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
         <span className={`font-bold ${statusText.open?'text-emerald-700':'text-red-700'}`}>{statusText.label}</span>
         {statusText.detail&&<>{' '}<span className="text-[#334155]">· {statusText.detail}</span></>}
         <a href="#horario" className={`ml-1 text-[13px] ${BIZ.link}`}>{t('Ver horario','See hours')}</a></p>}
+       {summary&&<p data-place-summary className="mt-2 max-w-2xl text-[14px] leading-6 text-[#334155]">{summary}</p>}
        {area&&<p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/>{area}</p>}
       </div>
      </div>
@@ -217,9 +231,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
       {headActions.map(x=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(BIZ.secondary,'max-lg:hidden')}>{actionIcon(x.id,'h-4 w-4')}{x.label}</ActionButton>)}
       <a href="#escribir-resena" data-place-write-review className={cn(BIZ.primary,barIds.includes('review')&&'max-lg:hidden')}><Star aria-hidden="true" className="h-4 w-4"/>{t('Dejar una reseña','Leave a review')}</a>
       {photoSlot}
-      <ShareButton title={place.name} locale={locale} className={BIZ.secondary}/>
+      <ShareButton title={place.name} locale={locale} suggest className={BIZ.secondary}/>
       {saveSlot}
      </div>}
+     {place.status==='published'&&<div className="mt-4"><PlaceRecommend locale={locale}/></div>}
     </div>
    </div>
 
