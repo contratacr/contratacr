@@ -212,6 +212,8 @@ const COPY = {
   },
 } as const;
 
+export const ASSISTANT_COPY = COPY;
+
 function language(locale: string) {
   return locale === "en" ? "en" : "es";
 }
@@ -239,7 +241,7 @@ function actionIcon(kind?: string | null) {
   return <ArrowRight className="h-4 w-4" />;
 }
 
-function localizedDestination(href: string, lang: "es" | "en") {
+export function localizedDestination(href: string, lang: "es" | "en") {
   const trimmed = href.trim();
   if (!trimmed) return `${prefijoDeIdioma(lang) || "/"}`;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;

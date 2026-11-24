@@ -58,6 +58,8 @@ const pageRules = [
   // IA 2026-11-21: the "Lugares" hub and the "Para negocios y profesionales" entry page.
   [/^\/\[locale\]\/(?:lugares|negocios-y-profesionales)$/, "pro-dir-hubs.spec.ts"],
   [/^\/\[locale\]\/(?:vehiculos|inmuebles)(?:\/|$)/, "pro-dir-listings.spec.ts"],
+  // Directory app tabs (WS5): Proyectos hub on /solicitudes (mobile) and the full-screen Asistente.
+  [/^\/\[locale\]\/asistente$/, "directory-app-projects-assistant.spec.ts"],
   [/^\/\[locale\](?:\/|$)/, "public-smoke.spec.ts"],
   [/^\/$/, "public-smoke.spec.ts"],
 ];

@@ -36,6 +36,8 @@ export const RUTAS_DEL_SITIO = new Set([
   "precios",
   // IA 2026-11-21: hub "Lugares" y página "Para negocios y profesionales" (solo con el directorio encendido).
   "lugares", "negocios-y-profesionales",
+  // App del directorio (WS5): pestaña Asistente.
+  "asistente",
   // Ronda de funciones del directorio (2026-11-17, solo desarrollo): agenda de eventos, páginas de marca, mis listas y
   // listas compartidas (/lista/<token>).
   "eventos", "marca", "listas", "lista",
