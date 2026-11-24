@@ -233,6 +233,7 @@ const handlerRules = [
   [/^\/api\/pro\/project-extras$/, "pro-project-extras.spec.ts"],
   [/^\/api\/pro\/work-invoices$/, "pro-work-invoices.spec.ts"],
   [/^\/api\/pro\/expense-meta$/, "pro-expense-meta.spec.ts"],
+  [/^\/api\/pro\/catalog-kind$/, "pro-catalog-kind.spec.ts"],
   [/^\/api\/pro\/purchase-order-tracking$/, "pro-po-tracking.spec.ts"],
   [/^\/api\/pro\/(?:purchase-order-vendor-links|po-portal|purchase-order-tools)$/, "pro-po-vendor-link.spec.ts"],
   [/^\/api\/pro\/purchase-order-print$/, "pro-purchase-orders.spec.ts"],
