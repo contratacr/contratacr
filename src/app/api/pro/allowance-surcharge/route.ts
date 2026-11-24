@@ -10,9 +10,9 @@ import {PRO_ENABLED} from '@/lib/pro/enabled';
 const headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff'};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'||error.code==='23505'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22008','22007','23514','22P02','22003'].includes(error.code||'')?400:503,error.code==='40001'?'La partida o la cotización cambió. Actualice antes de guardar.':error.code==='23505'?'Ese recargo ya está en la cotización.':'No se pudo completar la operación.');
-async function actor(req:Request){
+async function actor(req:Request,writing=false){
  const user=await safeGetUser(await createClient());if(!user)return{error:fail(401,'Inicie sesión.')};
- const expected=req.headers.get('x-pro-expected-actor');if(expected!==null&&(!z.string().uuid().safeParse(expected).success||expected!==user.id))return{error:fail(403,'La cuenta cambió.')};
+ const expected=req.headers.get('x-pro-expected-actor');if((writing||expected!==null)&&(!z.string().uuid().safeParse(expected).success||expected!==user.id))return{error:fail(403,'La cuenta cambió.')};
  const db=createAdminClient(),profile=await db.from('profiles').select('is_disabled,role').eq('id',user.id).maybeSingle();
  if(profile.error)return{error:fail(503,'No se pudo comprobar el acceso.')};
  if(!profile.data||profile.data.is_disabled||profile.data.role==='admin'&&!await getApiAdmin())return{error:fail(403,'Sin acceso.')};
@@ -38,7 +38,7 @@ export async function POST(req:Request){
  if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  if(req.headers.get('origin')!==`${new URL(req.url).protocol}//${req.headers.get('host')||new URL(req.url).host}`)return fail(403,'Origen no autorizado.');
  try{
-  const a=await actor(req);if(a.error)return a.error;
+  const a=await actor(req,true);if(a.error)return a.error;
   const limited=await enforceRateLimit(req,'allowance-surcharge-'+a.user.id,60,60000);if(limited)return limited;
   let input;try{input=surchargeSendSchema.parse(await bounded(req));}catch(cause){return fail(cause instanceof RangeError?413:400,'Revise los datos del recargo.');}
   const result=await a.db.rpc('pro_work_allowance_surcharge_send',{p_actor:a.user.id,p_input:input});
