@@ -47,7 +47,7 @@ test('Pro navigation: standard panel plus everyday destinations, optional tools 
   await expect(page.locator('[data-pro-tools]')).toBeVisible();await expect(proSpaceTitle(page)).toHaveText('Inicio');await expect(proHubButton(page,'Preparar visitas')).toBeVisible();await expect(page.locator('[data-visit-preparation-settings]')).toHaveCount(0);await expectNoHorizontalOverflow(page);await page.screenshot({path:testInfo.outputPath('pro-tools.png'),fullPage:true});
   // The Pro space titles «Gastos» as «Gastos» (pro-space.tsx labels).
   for(const [label,tab,title] of [['Productos y servicios','pro_inventory','Productos y servicios'],['Gastos','pro_expenses','Gastos'],['Pagos','pro_payments','Pagos'],['Borradores de facturación','pro_billing','Borradores de facturación']]){
-   await proHubButton(page,label).click();await expect(page).toHaveURL(proSpaceUrl(tab));
+   /* A click before hydration is lost: retry it until the section opens. */await expect(async()=>{if(proSpaceUrl(tab).test(page.url()))return;await proHubButton(page,label).click({timeout:10000});await expect(page).toHaveURL(proSpaceUrl(tab),{timeout:5000});}).toPass({timeout:60000});
    await expect(proSpaceTitle(page)).toHaveText(title);await expectNoHorizontalOverflow(page);
    await expect(page.getByRole('button',{name:'Volver a herramientas',exact:true})).toHaveCount(0);await proSpaceBack(page);await expect(page).toHaveURL(PRO_SPACE_HOME_URL);await expect(proSpaceTitle(page)).toHaveText('Inicio');
   }

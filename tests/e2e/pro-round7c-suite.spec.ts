@@ -40,7 +40,7 @@ for(const language of ['es','en'] as const)test(`Round 7C: company roles, invita
   await invite.getByLabel(tr('Correo de la persona','Member email'),{exact:true}).fill(member.email);
   await invite.getByLabel(tr('Rol de la invitación','Invitation role'),{exact:true}).selectOption('read_only');
   await invite.getByRole('button',{name:tr('Crear invitación','Create invitation'),exact:true}).click();
-  const draft=panel.locator('[data-company-invite-draft]');await expect(draft).toContainText(tr('Borrador de correo — no se envió','Draft email — not sent'),{timeout:60000});
+  const draft=panel.locator('[data-company-invite-draft]');await expect(draft).toContainText(tr('Borrador de correo: no se envió','Draft email: not sent'),{timeout:60000});
   await expect(draft).toContainText(tr('Solo lectura','Read-only'));await expect(draft).toContainText(member.email);
   const code=await draft.getByLabel(tr('Código de invitación emitido','Issued invitation code'),{exact:true}).inputValue();expect(code).toMatch(/^[0-9A-HJKMNP-TV-Z]{16}$/);
   // Launch fix I5: the invitation e-mail is recorded in the local test mailbox (mock mode: nothing is delivered) and never carries the code.
