@@ -77,6 +77,8 @@ for(const language of ['es','en'] as const)test(`Round 6D: product clipper and f
   expect(measurement).toMatchObject({name:t('Cocina','Kitchen'),kind:'area',manual_milli:12000});
   expect(((await f.db.from('pro_floor_plans').select('takeoff_link').eq('id',saved.id).single()).data!.takeoff_link as {measurements:{measurementId:string}[]}).measurements[0]!.measurementId).toBe(measurement.id);
   await expect(page.locator('[data-takeoffs]')).toContainText(t('Plano: Planta baja','Plan: Ground floor'),{timeout:60000});// the takeoff list refreshed (event from the plan editor)
+  // Area E: convert the sent areas into a draft quote (existing takeoff send_estimate writer).
+  await plans.locator('[data-floor-estimate]').click();await expect(plans.locator('[data-floor-notice]')).toContainText(t('cotización en borrador','draft quote'),{timeout:90000});
   // CAS: a stale save is refused.
   expect((await page.request.post(origin+'/api/pro/floor-plans',{headers:h,data:{action:'archive',actionId:crypto.randomUUID(),id:saved.id,revision:1}})).status()).toBe(409);
   // ---- (3) Scan import: OBJ (local parser) and USDZ (simulated parser)

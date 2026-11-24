@@ -130,6 +130,18 @@ export function WorkFloorPlans({workId}:{workId:string}){
    window.dispatchEvent(new Event('ccr:pro-takeoffs-changed'));
   }catch{setError(t('No se pudo completar el envío. Reintente: no se duplicará.','Could not complete the transfer. Retry: it will not be duplicated.'));}finally{setBusy(false);}
  }
+ // ---- convert the sent areas into draft quote lines (existing takeoff "send_estimate" writer)
+ const estimateAction=useRef<string|null>(null);
+ async function convertToEstimate(){
+  const link=plan?.takeoffLink;if(!plan||dirty||!link){setError(t('Primero envíe las áreas a Mediciones.','First send the areas to Measurements.'));return;}
+  setBusy(true);setError('');setNotice('');estimateAction.current??=crypto.randomUUID();
+  try{
+   const r=await fetch('/api/pro/takeoffs',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send_estimate',actionId:estimateAction.current,workId,measurementIds:link.measurements.map(m=>m.measurementId),estimateId:null,estimateRevision:null,language:en?'en':'es'})});
+   if(!r.ok)throw Error('estimate');const body=await r.json() as {estimate:{title:string;lineIds:string[]}};estimateAction.current=null;
+   setNotice(t(`Se creó una cotización en borrador con ${body.estimate.lineIds.length} líneas ("${body.estimate.title}"). Encuéntrela en Cotizaciones.`,`A draft quote with ${body.estimate.lineIds.length} lines was created ("${body.estimate.title}"). Find it in Quotes.`));
+   window.dispatchEvent(new Event('ccr:pro-takeoffs-changed'));
+  }catch{setError(t('No se pudo crear la cotización. Reintente: no se duplicará.','Could not create the quote. Retry: it will not be duplicated.'));}finally{setBusy(false);}
+ }
  // ---- scan import
  async function scanData(file:File,format:'json'|'obj'|'usdz'){return format==='usdz'?base64(new Uint8Array(await file.arrayBuffer())):await file.text();}
  /** Row 65: reads the dimensions of the file (nothing is stored) so the owner can check unit and axis before importing. */
@@ -249,6 +261,7 @@ export function WorkFloorPlans({workId}:{workId:string}){
      <Button type="button" variant="secondary" data-floor-png disabled={busy} onClick={()=>void exportPng()}>{t('Exportar PNG','Export PNG')}</Button>
      <Button type="button" variant="secondary" data-floor-pdf disabled={busy} onClick={exportPdf}>{t('Exportar PDF','Export PDF')}</Button>
      <Button type="button" variant="secondary" data-floor-send disabled={busy||!plan||dirty||!content.rooms.length} onClick={()=>void sendToTakeoffs()}>{t('Enviar áreas a Mediciones','Send areas to Measurements')}</Button>
+     <Button type="button" variant="secondary" data-floor-estimate disabled={busy||!plan||dirty||!plan?.takeoffLink} onClick={()=>void convertToEstimate()}>{t('Convertir en cotización','Convert to quote')}</Button>
      {plan&&<Button type="button" variant="ghost" disabled={busy} onClick={()=>void (async()=>{if(!(await confirm({title:t('¿Archivar el plano?','Archive the plan?'),description:t('Se conserva con su historial.','It is kept with its history.'),confirmLabel:t('Archivar','Archive'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;if(await api({action:'archive',actionId:crypto.randomUUID(),id:plan.id,revision:plan.revision},t('Plano archivado.','Plan archived.')))await load('');})()}>{t('Archivar','Archive')}</Button>}
     </div>
    </div>
