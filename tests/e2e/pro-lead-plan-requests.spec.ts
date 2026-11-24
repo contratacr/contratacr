@@ -19,7 +19,7 @@ test('Appointment request plan templates: pending until confirmation, then creat
   expect((await db.from('pro_workspaces').insert({user_id:owner.id,document,revision:1})).error).toBeNull();
   const account=await db.auth.admin.getUserById(owner.id);expect((await db.auth.admin.updateUserById(owner.id,{user_metadata:{...account.data.user!.user_metadata,is_provider:true}})).error).toBeNull();
   const ownerContext=await auth(owner),clientContext=await auth(client),post=(c:BrowserContext,path:string,data:unknown)=>c.request.post(baseURL!+path,{headers:{origin:baseURL!,'X-Pro-Expected-Actor':owner.id},data});
-  expect((await post(ownerContext,'/api/pro/appointment-preferences',{enabled:true,revision:1,actionId:crypto.randomUUID()})).status()).toBe(200);
+  expect((await post(ownerContext,'/api/pro/appointment-preferences',{enabled:true,revision:0,actionId:crypto.randomUUID()})).status()).toBe(200);
   const template=crypto.randomUUID();
   expect((await post(ownerContext,'/api/pro/task-templates',{action:'save',actionId:crypto.randomUUID(),templateId:template,revision:0,name:'Plan visita',notes:'',rows:[{id:crypto.randomUUID(),title:'Preparar visita',details:'',assignee:'',dueOffset:0}]})).status()).toBe(200);
   const created=await clientContext.request.post(baseURL!+api,{headers:{origin:baseURL!},data:{action:'create',id:crypto.randomUUID(),actionId:crypto.randomUUID(),professionalId:professional.data!.id,service:'Visita con plan',durationMinutes:60,locationKind:'agree',locationText:'',note:'',start:`${day}T10:00:00-06:00`,preferredDay:null,preference:''}});

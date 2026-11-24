@@ -355,7 +355,8 @@ function BoardEditor({accountId,workId,boardId,c,en,clientVisible,onOpenClientVi
   apply(outcome.data);setError('');setNotice(c.saved);setDraft(null);setPast([]);setFuture([]);setReply('');void load(false);
  }
  function savePage(automatic=false){
-  if(!detail||!page||!current||!dirty||locked)return;
+  // A save already in flight (for example the 4 s autosave) must not be raced by a second page_save on the same revision.
+  if(!detail||!page||!current||!dirty||locked||sender.saving)return;
   const parsed=moodBoardMutationSchema.safeParse({action:'page_save',actionId:crypto.randomUUID(),workId,id:boardId,pageId:page.id,revision:page.revision,name:current.name.trim()||null,background:current.background,elements:current.elements.map(moodElementInput)});
   if(!parsed.success){setError(c.failed);return;}
   if(bytes(JSON.stringify(parsed.data))>MOOD_BODY_MAX){setError(c.tooLarge);return;}

@@ -98,7 +98,7 @@ for(const language of ['es','en'] as const){
    await panel.locator('[data-lead-task-input]').fill('Visitar el sitio');
    await panel.getByRole('button',{name:en?'Add task':'Agregar tarea'}).click();
    await expect(panel.locator('[data-lead-task]')).toHaveCount(1);
-   await panel.locator('[data-lead-task-done]').check();
+   await panel.locator('[data-lead-task-done]').click();
    await expect(panel.locator('[data-lead-task][data-done="true"]')).toHaveCount(1);
    await panel.getByRole('button',{name:en?'Open':'Pendientes',exact:true}).click();
    await expect(panel.locator('[data-lead-task]')).toHaveCount(0);

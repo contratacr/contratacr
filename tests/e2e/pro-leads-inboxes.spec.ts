@@ -205,7 +205,7 @@ for(const language of ['es','en'] as const){
    await expect(dialog.locator('[data-lead-import-row="6"]')).toContainText(en?'Repeated contact in this file':'Contacto repetido en el archivo');await expect(dialog.locator('[data-lead-import-row="7"]')).toContainText(en?'Channel not found among your active channels':'El canal no está entre sus canales activos');
    await expect(dialog.locator('[data-lead-import-row="2"]')).toContainText('Ana Local');await expect(dialog.locator('[data-lead-import-row="3"]')).toContainText(en?'Already exists · skipped':'Ya existe · se omite');
    await expect(commit).toBeDisabled();await shot(page,info,'import-errors');
-   await file.setInputFiles({name:'unknown.csv',mimeType:'text/csv',buffer:Buffer.from('foo,bar\r\n1,2')});await expect(dialog.getByRole('alert')).toContainText(en?'Unrecognized column: foo':'Columna no reconocida: foo');
+   await file.setInputFiles({name:'unknown.csv',mimeType:'text/csv',buffer:Buffer.from('foo,bar\r\n1,2')});await expect(dialog.locator('[data-lead-import-mapping]')).toBeVisible();await expect(dialog.locator('[data-lead-import-map-missing]')).toBeVisible();await expect(dialog.locator('[data-lead-import-map-apply]')).toBeDisabled();
    await file.setInputFiles({name:'solicitudes.csv',mimeType:'text/csv',buffer:Buffer.from(csv(goodRows))});
    await expect(dialog.locator('[data-lead-import-summary]')).toHaveText(en?'3 rows · 1 new customer · 1 existing customer · 1 duplicate · 0 with errors':'3 filas · 1 cliente nuevo · 1 cliente existente · 1 duplicada · 0 con errores');
    await expect(commit).toHaveText(en?'Import 2 leads':'Importar 2 solicitudes');await commit.click();

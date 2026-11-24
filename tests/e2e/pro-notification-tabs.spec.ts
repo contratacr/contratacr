@@ -26,7 +26,7 @@ for(const language of ['es','en'] as const)test(`Notification tabs and Messages 
   const item=(event:string,title:string,read:boolean)=>({id:crypto.randomUUID(),event,title,body:'',link:{tab:'pro_projects'},createdAt:new Date().toISOString(),read,emailDraft:false});
   const items=[item('client_message','Mensaje de Ana',false),item('task_due','Tarea vencida',false),item('quote_changes','Cambios pedidos',true),item('invoice_paid','Factura pagada',false)];
   await page.route(url=>url.pathname==='/api/pro/notifications',route=>{if(route.request().method()!=='GET')return route.continue();const view=new URL(route.request().url()).searchParams.get('view');
-   if(view==='count')return route.fulfill({json:{unread:3}});return route.fulfill({json:{items,unread:3,hasMore:false,next:null,settings:{revision:0,dueSoonDays:2,overdueGraceDays:1,prefs:{}}}});});
+   if(view==='count')return route.fulfill({json:{unread:3}});return route.fulfill({json:{items,unread:3,hasMore:false,next:null,settings:{revision:0,dueSoonDays:2,overdueGraceDays:1,prefs:Object.fromEntries(notificationEvents.map(event=>[event,{inApp:true,email:false}]))}}});});
   await gotoOK(page,`/${language}/dashboard/pro?tab=pro_notifications`);
   const center=page.locator('[data-notification-center]');await expect(center).toBeVisible({timeout:60000});
   await expect(center.locator('[data-notification]')).toHaveCount(4);

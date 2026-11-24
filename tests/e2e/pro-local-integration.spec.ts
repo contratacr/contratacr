@@ -119,6 +119,9 @@ test("real local Supabase: admin MFA, Pro memberships, account isolation and rec
     await expect(
       page.getByRole("button", { name: "Nuevo cliente" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Nuevo cliente" }),
+    ).toBeEnabled({ timeout: 60000 });
     await page.getByRole("button", { name: "Nuevo cliente" }).click();
     await page
       .getByLabel("Nombre", { exact: true })

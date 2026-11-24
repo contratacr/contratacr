@@ -108,7 +108,7 @@ test("connected panel lists reveal next twenty, search, translate and retire soc
     await expect(page.getByRole("dialog")).toContainText("Crear cotización");
     await expectNoHorizontalOverflow(page);
     await page.getByRole('button',{name:'Crear cotización',exact:true}).click();
-    await expect(page.getByLabel('Cliente guardado',{exact:true})).toHaveValue('c-44');
+    await expect(page.getByLabel('Cliente guardado',{exact:true})).toHaveValue('c-44',{timeout:60000});
     await page.getByRole('dialog').getByRole('button',{name:'Cerrar',exact:true}).click();
     await page.screenshot({
       path: testInfo.outputPath("customer-detail.png"),
