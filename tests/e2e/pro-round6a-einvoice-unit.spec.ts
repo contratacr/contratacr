@@ -1,5 +1,5 @@
 import {test,expect} from 'playwright/test';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import {createHash,createVerify,generateKeyPairSync} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -119,8 +119,12 @@ test('mock signer: enveloped ds:Signature, digest = SHA-256 of the unsigned cano
  expect(wellFormed(signed.signedXml)).toBe(true);
  // Independent XML parser (libxml2 of macOS): the signed document is well-formed and namespace-valid.
  const file=info.outputPath('signed.xml');mkdirSync(join(file,'..'),{recursive:true});writeFileSync(file,signed.signedXml);
- expect(()=>execFileSync('xmllint',['--noout','--nonet',file],{stdio:'pipe'})).not.toThrow();
- expect(execFileSync('xmllint',['--nonet','--xpath','count(/*[local-name()="FacturaElectronica"]/*[local-name()="Signature"])',file]).toString().trim()).toBe('1');
+ // The independent parser is only an extra check: runners without libxml2-utils rely on wellFormed() above and the structural asserts.
+ const hasXmllint=spawnSync('xmllint',['--version']).error===undefined;
+ if(hasXmllint){
+  expect(()=>execFileSync('xmllint',['--noout','--nonet',file],{stdio:'pipe'})).not.toThrow();
+  expect(execFileSync('xmllint',['--nonet','--xpath','count(/*[local-name()="FacturaElectronica"]/*[local-name()="Signature"])',file]).toString().trim()).toBe('1');
+ }else expect((signed.signedXml.match(/<ds:Signature[ >]/g)||[]).length).toBe(1);
 });
 test('sandbox signer: legacy .p12 (3DES key + RC2-40 cert) parsed without dependencies, RSA-SHA256 XAdES verifies',({},info)=>{
  const dir=info.outputPath('p12');mkdirSync(dir,{recursive:true});

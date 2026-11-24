@@ -59,8 +59,11 @@ test('Round 6C: provider output is re-validated; links and invalid shapes are di
  expect(validateOutput('quote_line',{text:''})).toBeNull();
  expect(validateOutput('quote_line',{text:'ok',extra:'prompt leak'})).toBeNull();
  expect(validateOutput('takeoff',{items:[{name:'Piso',kind:'area',quantity:10,unit:'m',confidence:'low',note:''}],warnings:[]})).toBeNull();// unit must match kind
- expect(validateOutput('expense_receipt',{vendor:'X',date:'13/11/2026',totalAmount:1,vatRateBps:1300,vatAmount:0,paymentMethod:'card',concept:'',confidence:'low'})).toBeNull();
- expect(validateOutput('expense_receipt',{vendor:'X',date:null,totalAmount:null,vatRateBps:700,vatAmount:null,paymentMethod:null,concept:'',confidence:'low'})).toBeNull();
+ // Lenient receipt formats are normalized deterministically (Costa Rican day/month/year becomes ISO); anything unreadable becomes null, never a guess.
+ expect(validateOutput('expense_receipt',{vendor:'X',date:'13/11/2026',totalAmount:1,vatRateBps:1300,vatAmount:0,paymentMethod:'card',concept:'',confidence:'low'})).toMatchObject({date:'2026-11-13',totalAmount:1,vatRateBps:1300});
+ expect(validateOutput('expense_receipt',{vendor:'X',date:'31/02/2026',totalAmount:1,vatRateBps:1300,vatAmount:0,paymentMethod:'card',concept:'',confidence:'low'})).toMatchObject({date:null});
+ expect(validateOutput('expense_receipt',{vendor:'X',date:null,totalAmount:null,vatRateBps:700,vatAmount:null,paymentMethod:null,concept:'',confidence:'low'})).toMatchObject({vatRateBps:null,totalAmount:null});
+ expect(validateOutput('expense_receipt',{vendor:'X',date:null,totalAmount:1,vatRateBps:1300,vatAmount:0,paymentMethod:'card',concept:'',confidence:'low',extra:'x'})).toBeNull();
 });
 
 test('Round 6C: the Anthropic adapter sends the documented Messages API request and handles refusals/truncation',async()=>{
