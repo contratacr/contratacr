@@ -32,7 +32,7 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   await box.fill(t('Gracias por su visita. Ya reforzamos el equipo de cocina.','Thank you for visiting. We have added staff in the kitchen.'));
   await editor.getByRole('button',{name:t('Publicar respuesta','Post reply')}).click();
   await expect(editor.locator('[data-owner-reply-saved]')).toBeVisible();
-  await page.reload();await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
+  await page.reload();await openPlaceTab(page,'reviews');await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
   const shown=page.locator(`[data-place-review="${reviewId}"] [data-owner-reply]`);
   await expect(shown).toContainText(t('Ya reforzamos el equipo de cocina','We have added staff in the kitchen'));
   await expect(shown).not.toContainText(t('editada','edited'));
@@ -40,7 +40,7 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   await box.fill(t('Gracias por su visita. Ya reforzamos el equipo de cocina y la espera bajó.','Thank you for visiting. We added kitchen staff and the wait is shorter now.'));
   await editor.getByRole('button',{name:t('Guardar cambios','Save changes')}).click();
   await expect(editor.locator('[data-owner-reply-saved]')).toBeVisible();
-  await page.reload();await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
+  await page.reload();await openPlaceTab(page,'reviews');await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
   await expect(shown).toContainText(t('la espera bajó','the wait is shorter now'));await expect(shown).toContainText(t('editada','edited'));
   await expectNoHorizontalOverflow(page);
   await page.locator(`[data-place-review="${reviewId}"]`).scrollIntoViewIfNeeded();

@@ -60,7 +60,7 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   const nc=await browser.newContext({baseURL:origin,extraHTTPHeaders:randomIp()});await login(nc,neighbour);
   const na=await postJson(nc,`/api/lugar/${slug}/preguntas`,{type:'answer',actionId:uid(),answerId:uid(),questionId,body:t('Yo la pedí ayer.','I ordered it yesterday.')});
   expect(na.status,JSON.stringify(na.body)).toBe(200);expect(na.body?.isOwner).toBe(false);
-  await ap.reload();
+  await ap.reload();await openPlaceTab(ap,'questions');
   const answers=ap.locator(`[data-qa-question="${questionId}"] [data-qa-answer]`);
   await expect(answers).toHaveCount(2);
   await expect(answers.first()).toHaveAttribute('data-qa-owner','true');
@@ -82,7 +82,7 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   const stale=await db.rpc('dir_admin_qa_moderate',{p_actor:staff,p_input:{actionId:uid(),targetKind:'answer',targetId:neighbourAnswer,decision:'hide',reason:'Otra vez',expectedStatus:'published'}});
   expect(stale.error?.code).toBe('40001');
   expect((await db.from('dir_moderation_log').select('kind,decision').eq('target_id',neighbourAnswer)).data).toEqual([{kind:'answer',decision:'hide'}]);
-  await ap.reload();await expect(answers).toHaveCount(1);
+  await ap.reload();await openPlaceTab(ap,'questions');await expect(answers).toHaveCount(1);
 
   // Daily cap (5 questions per person): the asker already asked 1.
   for(let i=0;i<4;i++)expect((await postJson(ac,`/api/lugar/${slug}/preguntas`,{type:'question',actionId:uid(),questionId:uid(),body:`Pregunta de prueba ${i} ${tag}`})).status).toBe(200);
