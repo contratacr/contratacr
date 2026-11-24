@@ -64,12 +64,15 @@ for(const language of ['es','en'] as const)test(`new sections: listings, type ch
 for(const language of ['es','en'] as const)test(`cafés moved out of restaurants; banks map-only; health permit and review note [${language}]`,async({page},info)=>{
  test.setTimeout(300000);local(info.project.use.baseURL);
  const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page);
- // A real café imported from OpenStreetMap as a restaurant and moved by reference (dir_import_reclassify).
+ // A café imported from OpenStreetMap as a restaurant and moved by reference (dir_import_reclassify). The local stack has
+ // no real OSM seed, so the test imports its own synthetic restaurant and moves it, exactly like the production import does.
  // History row written by the move: before restaurant → after cafe_bar (same place id and slug).
- const moved=await db.from('dir_place_history').select('place_id').eq('before->>vertical','restaurant').eq('after->>vertical','cafe_bar').limit(50);
- expect(moved.error).toBeNull();
- const ids=(moved.data??[]).map(r=>r.place_id as string);
- const cafe=(await db.from('dir_places').select('id,slug,name,vertical_id,status').in('id',ids).eq('vertical_id','cafe_bar').eq('status','published').limit(1)).data?.[0];
+ const cafeSlug=`e2e-cafe-${tag}`,cafeName=`E2E Café ${tag}`;
+ await seedPlace(db,{slug:cafeSlug,vertical:'restaurant',name:cafeName,adminArea1:'Heredia'});
+ const move=await db.rpc('dir_import_reclassify',{p_actor:crypto.randomUUID(),p_input:{actionId:crypto.randomUUID(),sourceId:'osm',from:'restaurant',to:'cafe_bar',rows:[{ref:`node/e2e-${cafeSlug}`,attributes:{kind:'cafe'}}]}});
+ expect(move.error,'reclassify the imported café').toBeNull();
+ expect((move.data as {moved:number}).moved,'one place moved').toBe(1);
+ const cafe=(await db.from('dir_places').select('id,slug,name,vertical_id,status').eq('slug',cafeSlug).eq('vertical_id','cafe_bar').eq('status','published').limit(1)).data?.[0];
  expect(cafe,'a moved café exists').toBeTruthy();
  const prov=await db.from('dir_field_provenance').select('source_id,source_ref').eq('place_id',cafe!.id).eq('field','vertical').order('id',{ascending:false}).limit(1);
  expect(prov.data?.[0]?.source_id,'move recorded with the OSM source').toBe('osm');
