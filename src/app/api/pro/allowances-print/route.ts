@@ -6,12 +6,12 @@ import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/pro/workspace-user';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {allowanceDetailSchema} from '@/lib/pro/allowances';
-import {allowancesPrintHtml} from '@/lib/pro/round10-print';
+import {allowancesPrintHtml,allowancesReconciliationHtml} from '@/lib/pro/round10-print';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 // Family 75: printable allowances sheet with the company branding (no internal notes). Owner only, GET = read. Never sends or stores anything.
 const headers={'Cache-Control':'private, no-store, max-age=0','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow','Content-Security-Policy':"default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
-const query=z.object({workId:z.string().trim().min(1).max(160),lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional()}).strict();
+const query=z.object({workId:z.string().trim().min(1).max(160),lang:z.enum(['es','en']).optional(),preview:z.literal('1').optional(),kind:z.enum(['sheet','reconciliation']).optional()}).strict();
 export async function GET(req:Request){
  if(!PRO_ENABLED)return new Response(null,{status:404,headers});
  const params=new URL(req.url).searchParams,keys=[...params.keys()];
@@ -27,7 +27,8 @@ export async function GET(req:Request){
   if(work.error)return fail(503,'No se pudo preparar el documento.');if(!work.data)return fail(404,'Trabajo no disponible.');
   const detail=allowanceDetailSchema.parse(result.data);
   const nonce=printNonce(req);
-  const html=allowancesPrintHtml({service:String(work.data.service??''),client:String(work.data.client??''),today:detail.today,items:detail.items.filter(i=>!i.archived),totals:detail.totals},nonce,parsed.data.lang==='en',parsed.data.preview==='1');
+  const render=parsed.data.kind==='reconciliation'?allowancesReconciliationHtml:allowancesPrintHtml;
+  const html=render({service:String(work.data.service??''),client:String(work.data.client??''),today:detail.today,items:detail.items.filter(i=>!i.archived),totals:detail.totals},nonce,parsed.data.lang==='en',parsed.data.preview==='1');
   const branded=applyDocumentBranding(html,await loadPrintBranding(db,user.id),'selections');
   return new Response(branded,{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':`default-src 'none'; ${printImgSrc}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`}});
  }catch{return fail(503,'No se pudo preparar el documento.');}
