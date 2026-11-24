@@ -46,8 +46,9 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
   // The page lists the businesses as tiles on top, once each, and the professional groups below without place rows.
   const tiles = page.locator("[data-place-tiles] [data-place-tile]");
-  await expect(tiles.first()).toBeVisible();
-  for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).count(), section).toBeLessThanOrEqual(1);
+  // The page renders a mobile and a desktop tree; only the one for this viewport is visible.
+  await expect(tiles.filter({ visible: true }).first()).toBeVisible();
+  for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).filter({ visible: true }).count(), section).toBeLessThanOrEqual(1);
   for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+$/);
   await expect(page.locator("[data-nav-directory-section]")).toHaveCount(0);
   await expect(page.getByTestId("services-group-option").first()).toBeVisible();
@@ -77,13 +78,10 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expectNoHorizontalOverflow(page);
 });
 
-test("quick links row scrolls sideways on phones without widening the page", async ({ page }, testInfo) => {
+test("quick links row is desktop-only: phones use the drawer and the page does not widen", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile only");
   await gotoOK(page, "/");
-  const row = page.locator("[data-quick-nav]");
-  await expect(row).toBeVisible();
-  const scroller = row.locator("ul");
-  expect(await scroller.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  await expect(page.locator("[data-quick-nav]").filter({ visible: true })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });
 

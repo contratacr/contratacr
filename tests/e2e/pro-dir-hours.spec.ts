@@ -35,7 +35,7 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  const hours=page.locator('section[aria-labelledby="place-hours"]');
  await expect(hours.locator('[data-place-hours-source="osm"]')).toHaveText(t('Horario según OpenStreetMap.','Hours from OpenStreetMap.'));
  await expect(hours.locator('dd').first()).toHaveText(t('24 horas','24 hours'));
- const site=page.locator('[data-place-website]');await expect(site).toHaveAttribute('href','http://www.example.com');
+ const site=page.locator('[data-place-info-contact] a[href="http://www.example.com"]');await expect(site).toHaveAttribute('href','http://www.example.com');
  const rel=(await site.getAttribute('rel'))!.split(' ');for(const r of ['nofollow','ugc','noopener'])expect(rel).toContain(r);
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toBeVisible();
  // Header open status (2026-11-19, Yelp model), computed from the same hours in Costa Rica time.

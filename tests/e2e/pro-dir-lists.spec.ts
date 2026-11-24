@@ -47,7 +47,7 @@ test('saved lists: save from the place page, private by default, share link with
   // /listas: private by default, create a share link.
   for(const language of ['es','en'] as const){
    const prefix=language==='en'?'/en':'/es';
-   await gotoOK(page,`${prefix}/listas`);
+   await gotoOK(page,`${prefix}/listas`);await expect(page.locator('[data-lists-manager][data-ready]')).toBeVisible({timeout:45000});
    const card=page.locator(`[data-list="${listName}"]`);await expect(card).toBeVisible();
    await expect(card).toContainText(language==='en'?'Private: only you can see it.':'Privada: solo usted la ve.');
   }

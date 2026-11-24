@@ -20,7 +20,7 @@ test('quotes preserve resolved values and only matching accepted quotes can be s
  s=saveAppointment(s,{...appointment,cancelled:true});expect(saveAppointment(s,{...appointment,id:'b'}).work).toHaveLength(2);
 });
 test('local workspace keeps clients after reload and links agenda and quotations',async({page})=>{
- const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<ProWorkspace/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
+ const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{NextIntlClientProvider}from'next-intl';import{ProWorkspace}from'./src/components/pro/pro-workspace';createRoot(document.getElementById('root')).render(<NextIntlClientProvider locale="es" messages={{}}><ProWorkspace/></NextIntlClientProvider>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',define:{'process.env':JSON.stringify({NODE_ENV:'test'})},platform:'browser',jsx:'automatic'});
  await page.route('**/pro-harness',r=>r.fulfill({contentType:'text/html',body:'<div id="root"></div>'}));
  const open=async()=>{await page.goto('/pro-harness');await page.addScriptTag({content:bundle.outputFiles[0].text});};await open();
  await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.getByRole('button',{name:'Nuevo cliente',exact:true}).click();

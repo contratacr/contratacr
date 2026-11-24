@@ -102,7 +102,7 @@ for(const language of ['es','en'] as const)test(`Company hub: vendor API, isolat
   await dialog.getByRole('button',{name:tr('Guardar proveedor','Save supplier'),exact:true}).click();await expect(dialog.getByRole('alert')).toContainText(tr('Revise el correo electrónico.','Check the email address.'));
   await dialog.getByLabel(tr('Correo (opcional)','Email (optional)')).fill('ventas@valle.test');
   await dialog.getByLabel(tr('Tipo','Type'),{exact:true}).selectOption('subcontractor');
-  await dialog.getByLabel(tr('Oficio o categoría (opcional)','Trade or category (optional)')).fill(tr('Pintura','Painting'));
+  await dialog.getByLabel(tr('Etiquetas u oficio (opcional, separe con comas)','Tags or trade (optional, separate with commas)')).fill(tr('Pintura','Painting'));
   await dialog.getByLabel(tr('Persona de contacto (opcional)','Contact person (optional)')).fill('Mario Solís');
   await dialog.getByLabel(tr('Teléfono (opcional)','Phone (optional)')).fill('8888-2222');
   await shot(page,info,'vendor-editor-'+language);
