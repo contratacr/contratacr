@@ -34,7 +34,7 @@ for(const language of ['es','en'] as const)test(`Round 13: payment link QR, down
   // SINPE Movil is offered next to the card (sandbox), and nothing is created until the owner asks.
   await expect(panel.getByLabel('SINPE M\u00f3vil')).toBeChecked();await expect(panel.locator('[data-payment-link-qr]')).toHaveCount(0);
   await panel.locator('[data-payment-link-create]').click();
-  const url=await panel.locator('[data-payment-link-url]').inputValue(),qr=panel.locator('[data-payment-link-qr]');
+  await expect(panel.locator('[data-payment-link-url]')).toBeVisible({timeout:60000});const url=await panel.locator('[data-payment-link-url]').inputValue(),qr=panel.locator('[data-payment-link-qr]');
   await expect(qr.locator('[data-payment-link-qr-image]')).toBeVisible({timeout:30000});
   await expect(qr.locator('[data-payment-link-qr-image]')).toHaveAttribute('alt',en?'QR code of the payment link':'C\u00f3digo QR del enlace de pago');
   // The image is a real PNG of 160 css pixels and the downloads exist.
