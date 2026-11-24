@@ -7,8 +7,7 @@ import {trackerViewSchema,trackerViewsSchema} from '@/lib/pro/selection-boards';
 import {selectionTrackingSchema,type SelectionTracking} from '@/lib/pro/round10';
 import type {SelectionArea,SelectionItem,SelectionState} from '@/lib/pro/selections';
 import {
- buildTrackerRows,filterTrackerRows,groupTrackerRows,parseCustomViews,roomSorts,sortRooms,sortTrackerRows,summarizeRooms,trackerColumnGroups,trackerColumnLabels,trackerColumns,trackerCsvRows,trackerCustomViewKey,
- trackerGroups,trackerOrderStatuses,trackerSorts,trackerViewColumns,trackerViewLabels,trackerViews,
+ buildTrackerRows,filterTrackerRows,groupTrackerRows,parseCustomViews,roomSorts,sortRooms,sortTrackerRows,summarizeRooms,trackerColumnGroups,trackerColumnLabels,trackerColumns,trackerCsvRows, trackerGroups,trackerOrderStatuses,trackerSorts,trackerViewColumns,trackerViewLabels,trackerViews,
  type CustomView,type RoomSort,type TrackerColumn,type TrackerFilters,type TrackerGroup,type TrackerRow,type TrackerSort,
 } from '@/lib/pro/selections-views';
 
@@ -37,7 +36,7 @@ export function SelectionsTrackerPro({accountId,workId,en,areas,items,stateBadge
  useEffect(()=>{let live=true;const timer=setTimeout(()=>{
   void (async()=>{
    try{const r=await fetch('/api/pro/selection-tracker-views',{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!r.ok)throw Error();const body=trackerViewsSchema.parse(await r.json());if(live)setCustom(parseCustomViews(JSON.stringify(body.views)));}
-   catch{try{if(live)setCustom(parseCustomViews(window.localStorage.getItem(trackerCustomViewKey)));}catch{/* storage unavailable */}}
+   catch{/* the saved views stay empty; the built-in views keep working */}
   })();},0);return()=>{live=false;clearTimeout(timer);};},[accountId]);
  /** Views are stored on the account (server); new ones get their real id from the answer, edited ones are replaced, removed ones deleted. */
  function saveCustom(next:CustomView[]){
