@@ -52,7 +52,7 @@ test('Pro web app: manifest, service worker, offline fallback and responsive she
   await page.context().setOffline(true);await expect(page.locator('[data-pro-offline]')).toBeVisible({timeout:15000});await expectNoHorizontalOverflow(page);
   await page.context().setOffline(false);await expect(page.locator('[data-pro-offline]')).toHaveCount(0,{timeout:15000});
   // English copy of the notice.
-  await gotoOK(page,'/en/dashboard/pro?tab=pro_agenda');await page.context().setOffline(true);await expect(page.locator('[data-pro-offline]')).toContainText('You are offline',{timeout:15000});await page.context().setOffline(false);
+  await gotoOK(page,'/en/dashboard/pro?tab=pro_agenda');/* hydrated: the manifest link switches to the English Pro manifest */await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href',/\/api\/pro\/app-manifest\?lang=en/,{timeout:30000});await page.context().setOffline(true);await expect(page.locator('[data-pro-offline]')).toContainText('You are offline',{timeout:15000});await page.context().setOffline(false);
   expect(runtime.filter(m=>!/Failed to fetch|NetworkError|Load failed/i.test(m))).toEqual([]);
  }finally{await cleanupDisposableAccount(actor);}
 });
