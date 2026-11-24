@@ -31,7 +31,7 @@ begin
  if jsonb_typeof(p_input) is distinct from 'object' or jsonb_typeof(p_input->'action') is distinct from 'string' then raise exception 'Invalid meeting type action' using errcode='22023';end if;
  act:=p_input->>'action';
  select array_agg(k order by k) into keys from jsonb_object_keys(p_input) k;
- if keys is distinct from case act when 'save' then array['action','description','id','locationKind','minutes','name','revision','videoApp'] when 'delete' then array['action','id'] end then raise exception 'Invalid meeting type fields' using errcode='22023';end if;
+ if keys is distinct from (case act when 'save' then array['action','description','id','locationKind','minutes','name','revision','videoApp'] when 'delete' then array['action','id'] end) then raise exception 'Invalid meeting type fields' using errcode='22023';end if;
  if jsonb_typeof(p_input->'id') is distinct from 'string' or not (p_input->>'id')~'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'Invalid id' using errcode='22023';end if;
  tid:=(p_input->>'id')::uuid;
  perform pg_advisory_xact_lock(hashtextextended('meeting-types:'||p_actor::text,0));

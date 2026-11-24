@@ -59,7 +59,7 @@ begin
  perform public.pro_role_require(p_person,p_owner,'work.write');
  act:=p_input->>'action';
  if act not in('edit','delete') or jsonb_typeof(p_input->'workId')<>'string'
-  or pro_ops_keys(p_input) is distinct from case when act='edit' then array['action','actionId','commentId','taskId','text','workId'] else array['action','actionId','commentId','taskId','workId'] end
+  or pro_ops_keys(p_input) is distinct from (case when act='edit' then array['action','actionId','commentId','taskId','text','workId'] else array['action','actionId','commentId','taskId','workId'] end)
   or (act='edit' and (jsonb_typeof(p_input->'text')<>'string' or not public.pro_ops_text_ok(p_input->>'text',1,1000))) then raise exception 'Invalid comment' using errcode='22023';end if;
  begin aid:=(p_input->>'actionId')::uuid;cid:=(p_input->>'commentId')::uuid;tid:=(p_input->>'taskId')::uuid;exception when others then raise exception 'Invalid comment' using errcode='22023';end;
  replay:=pro_ops_receipt(p_owner,p_person,aid,hash);if replay is not null then return replay;end if;

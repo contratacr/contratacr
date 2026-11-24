@@ -54,7 +54,7 @@ begin
  if jsonb_typeof(p_input) is distinct from 'object' or jsonb_typeof(p_input->'action') is distinct from 'string' then raise exception 'Invalid list action' using errcode='22023';end if;
  act:=p_input->>'action';
  select array_agg(k order by k) into keys from jsonb_object_keys(p_input) k;
- if keys is distinct from case act when 'create' then array['action','id','name'] when 'rename' then array['action','id','name'] when 'delete' then array['action','id'] when 'set_members' then array['action','contactIds','id'] end then raise exception 'Invalid list fields' using errcode='22023';end if;
+ if keys is distinct from (case act when 'create' then array['action','id','name'] when 'rename' then array['action','id','name'] when 'delete' then array['action','id'] when 'set_members' then array['action','contactIds','id'] end) then raise exception 'Invalid list fields' using errcode='22023';end if;
  if jsonb_typeof(p_input->'id') is distinct from 'string' or not (p_input->>'id')~'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'Invalid list id' using errcode='22023';end if;
  lid:=(p_input->>'id')::uuid;
  perform pg_advisory_xact_lock(hashtextextended('mkt-lists:'||p_actor::text,0));
