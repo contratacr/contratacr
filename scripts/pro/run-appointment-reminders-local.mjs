@@ -11,7 +11,8 @@ const clock=clockArgument?.slice(8);
 if(args.some(arg=>arg!=='--watch'&&!arg.startsWith('--as-of='))||args.filter(arg=>arg.startsWith('--as-of=')).length>1||watch&&clockArgument!==undefined)throw Error('Use no arguments, --watch, or --as-of=<ISO timestamp> for a single local test.');
 if(clockArgument!==undefined&&(!clock||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(clock)||!Number.isFinite(Date.parse(clock))))throw Error('Invalid UTC test clock.');
 if(clock&&new Date(clock).toISOString()!==clock.replace(/(?:\.(\d{1,3}))?Z$/,(_,fraction)=>'.'+(fraction??'').padEnd(3,'0')+'Z'))throw Error('Invalid UTC calendar date.');
-const env=parseEnv(await readFile(new URL('../../.env.test',import.meta.url),'utf8'));
+// Local runs read .env.test; CI exports the same variables in the environment instead.
+const env=await readFile(new URL('../../.env.test',import.meta.url),'utf8').then(parseEnv,error=>{if(error?.code!=='ENOENT')throw error;return process.env;});
 if(!/^http:\/\/127\.0\.0\.1:54321\/?$/.test(env.NEXT_PUBLIC_SUPABASE_URL??''))throw Error('Refusing non-loopback Supabase.');
 if(!env.SUPABASE_SERVICE_ROLE_KEY)throw Error('Local service configuration unavailable.');
 const endpoint='http://127.0.0.1:54321';
