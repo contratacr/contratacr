@@ -96,6 +96,31 @@ do $$ declare t record; begin
   end loop;
 end $$;
 
+-- Pro tables that expose only some operations to browser roles (for example a
+-- SELECT policy and no write policy: migrations grant select only) keep exactly
+-- that contract after the blanket grant: a privilege with no matching policy for
+-- the role is revoked, so a forged write gets 42501 instead of a silent no-op.
+do $$ declare t record; r text; op text; begin
+  for t in
+    select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
+     where n.nspname='public' and c.relkind in ('r','p') and c.relrowsecurity and c.relname like 'pro\_%'
+       and exists (select 1 from pg_policies p where p.schemaname='public' and p.tablename=c.relname)
+  loop
+    foreach r in array array['anon','authenticated'] loop
+      execute format('revoke truncate, references, trigger on table public.%I from %I', t.relname, r);
+      foreach op in array array['SELECT','INSERT','UPDATE','DELETE'] loop
+        if not exists (
+          select 1 from pg_policies p
+           where p.schemaname='public' and p.tablename=t.relname
+             and p.cmd in (op,'ALL') and (r::name = any(p.roles) or 'public'::name = any(p.roles))
+        ) then
+          execute format('revoke %s on table public.%I from %I', op, t.relname, r);
+        end if;
+      end loop;
+    end loop;
+  end loop;
+end $$;
+
 -- Moderation/chat records never inherit blanket local bootstrap permissions.
 do $$ declare t text; begin
   foreach t in array array['admin_chat_reviewers','admin_chat_access_log','moderation_actions','moderation_holds','moderation_restrictions','moderation_files','moderation_photo_holds','admin_staff_permissions','moderation_retention_state'] loop
