@@ -22,7 +22,7 @@ export const timeEntrySchema=z.object({id,workId:z.string(),workTitle:z.string()
 export type TimeEntry=z.infer<typeof timeEntrySchema>;
 export const timeTotalsSchema=z.object({entries:z.number().int().nonnegative(),minutes:z.number().int().nonnegative(),billableMinutes:z.number().int().nonnegative(),billableCents:z.number().int().nonnegative(),costCents:z.number().int().nonnegative().nullable(),uncostedMinutes:z.number().int().nonnegative(),byActivity:z.array(z.object({activityId:id.nullable(),name:z.string().nullable(),minutes:z.number().int().nonnegative(),billableCents:z.number().int().nonnegative()}).strict())}).strict();
 /** Round 4B: who did the work — the owner or an active team member of the job (Equipo). */
-export const timePersonSchema=z.object({grantId:id.nullable(),name:z.string().min(1).max(160),self:z.boolean()}).strict();
+export const timePersonSchema=z.object({grantId:id.nullable(),name:z.string().min(1).max(160),self:z.boolean(),memberUserId:id.optional()}).strict();
 export type TimePerson=z.infer<typeof timePersonSchema>;
 export const timeReadSchema=z.object({workId:z.string(),serverNow:z.string(),period:z.object({from:day,to:day}).strict(),running:timeEntrySchema.nullable(),activities:z.array(timeActivitySchema).max(100),entries:z.array(timeEntrySchema).max(200),totals:timeTotalsSchema,people:z.array(timePersonSchema).max(101).optional(),
  // Closing round (security review M2): Member and Read-only get every cost (per hour, per entry, total) as null.
