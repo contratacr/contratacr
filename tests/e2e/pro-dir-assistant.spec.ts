@@ -78,8 +78,9 @@ for(const language of ['es','en'] as const)test(`A2: assistant directory tools �
     await page.setViewportSize({width,height:width===390?844:900});
     await page.goto(`${prefix}/?assistantDirectoryTest=${width}`);
     await page.waitForLoadState('networkidle');
-    await page.evaluate(()=>window.dispatchEvent(new Event('contratacr:open-ai')));
-    const dialog=page.locator('[data-ai-concierge-dialog]').filter({visible:true});await expect(dialog).toBeVisible({timeout:30000});
+    // The listener exists only after hydration: send the event again until the dialog opens (a lost event is not a failure).
+    const dialog=page.locator('[data-ai-concierge-dialog]').filter({visible:true});
+    await expect(async()=>{await page.evaluate(()=>window.dispatchEvent(new Event('contratacr:open-ai')));await expect(dialog).toBeVisible({timeout:2500});}).toPass({timeout:45000});
     await dialog.getByRole('textbox').fill(t(`¿Cuánto cuesta el arroz ${seed.tag}?`,`How much is arroz ${seed.tag}?`));
     await dialog.getByRole('button',{name:t('Enviar mensaje','Send message'),exact:true}).click();
     await expect(dialog.getByText(`Mercado Norte ${seed.tag}`,{exact:false})).toBeVisible({timeout:30000});
