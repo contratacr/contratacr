@@ -74,7 +74,7 @@ export function CompanyPortfolio(){
   <section data-portfolio-publish aria-labelledby="pp-title" className={card}>
    <h3 id="pp-title" className="font-bold">{t('Publicar un trabajo terminado en su perfil','Publish a finished job on your profile')}</h3>
    <p className="text-sm text-[#52627a]">{t('Elija fotos de los archivos del trabajo. Se publican con los metadatos eliminados y solo con el consentimiento de su cliente, que queda registrado.','Pick photos from the job files. They are published with metadata removed and only with your customer\'s consent, which is kept on record.')}</p>
-   {failed&&<div role="alert" data-portfolio-error className="flex flex-wrap items-center gap-2 text-sm text-red-700"><span>{t('No se pudo cargar el portafolio.','Could not load the portfolio.')}</span><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>}
+   {failed&&<div role="alert" data-portfolio-error className="flex flex-wrap items-center gap-2 text-sm text-red-700"><span>{t('No se pudieron cargar los casos de éxito.','Could not load the success stories.')}</span><Button type="button" variant="secondary" onClick={()=>void load()}>{t('Reintentar','Retry')}</Button></div>}
    {error&&<p role="alert" data-portfolio-feedback className="text-sm text-red-700">{error}</p>}{notice&&<p role="status" data-portfolio-notice className="text-sm text-[#18794e]">{notice}</p>}
    {!data&&!failed&&<p role="status" aria-busy="true" className="text-sm text-[#52627a]">{t('Cargando…','Loading…')}</p>}
    {data&&!data.hasProfile&&<p className="text-sm text-[#52627a]">{t('Cree primero su perfil público para poder publicar proyectos.','Create your public profile first to publish projects.')}</p>}

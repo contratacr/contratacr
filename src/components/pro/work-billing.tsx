@@ -40,7 +40,7 @@ function WorkBillingDialog({accountId,workId,onClose}:{accountId:string;workId:s
   try{
    const response=await fetch('/api/pro/work-billing?'+new URLSearchParams({workId}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});
    if(!response.ok)throw Error();const next=workBillingSourcesSchema.parse(await response.json());if(n!==sequence.current)return;
-   setData(next);setTitle(old=>old||(en?'Invoice — ':'Factura — ')+next.title);
+   setData(next);setTitle(old=>old||(en?'Invoice: ':'Factura: ')+next.title);
    setLines(old=>Object.fromEntries(next.lines.map(line=>{const left=10000-line.billedBps,prior=keepSelection?old[line.key]:undefined;return[line.key,{on:left>0&&(prior?.on??false),percent:prior?.percent??String(left/100).replace('.',en?'.':',')}];})));
    if(!keepSelection){setTimes(new Set());setExpenses(new Set());setProgress('');}
    else{setTimes(old=>new Set([...old].filter(id=>next.time.some(row=>row.id===id&&!row.invoicedDraftId))));setExpenses(old=>new Set([...old].filter(id=>next.expenses.some(row=>row.id===id&&!row.invoicedDraftId))));}
