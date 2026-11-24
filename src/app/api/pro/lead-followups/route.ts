@@ -28,6 +28,7 @@ const query=z.discriminatedUnion('view',[
  z.object({view:z.literal('detail'),leadId:id}).strict(),
  z.object({view:z.literal('action'),actionId:id}).strict(),
  z.object({view:z.literal('history'),leadId:id,after:id.optional()}).strict(),
+ z.object({view:z.literal('batch'),ids:z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}){0,19}$/)}).strict(),
  z.object({view:z.literal('upcoming'),atSnapshot:z.string().regex(/^[0-9a-f]{32}$/).optional(),after:z.string().regex(/^(manual|request):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).optional()}).strict(),
 ]);
 const local=()=>PRO_ENABLED;
@@ -35,6 +36,12 @@ export async function GET(req:Request){
  if(!local())return new Response(null,{status:404,headers});
  try{const a=await actor(req);if(a.error)return a.error;const raw:Record<string,string>={};for(const[k,v]of new URL(req.url).searchParams){if(k in raw)return fail(400,'Consulta inválida.');raw[k]=v;}const parsed=query.safeParse(raw);if(!parsed.success)return fail(400,'Consulta inválida.');const q=parsed.data;if(q.view==='upcoming'&&!!q.after!==!!q.atSnapshot)return fail(400,'Consulta inválida.');
   if(q.view==='action'){const r=await a.db.rpc('pro_lead_followup_action_read',{p_actor:a.user.id,p_action:q.actionId});if(r.error)return dbError(r.error);const data=leadFollowupReceiptSchema.parse(r.data);if(data.receipt&&data.receipt.input.actionId!==q.actionId)return fail(503,'No se pudo comprobar el recibo.');return Response.json(data,{headers});}
+  if(q.view==='batch'){
+   // Row 15 (leads table, Task column): the follow-up of each manual lead on the page, read in one query. Entitlement is checked by the same owner guard the other readers use.
+   const owner=await a.db.rpc('pro_lead_followup_owner',{p_actor:a.user.id});if(owner.error)return dbError(owner.error);
+   const rows=await a.db.from('pro_lead_followups').select('lead_id,due_date,note,status').eq('owner_id',a.user.id).in('lead_id',q.ids.split(','));if(rows.error)return fail(503,'No se pudieron cargar los seguimientos.');
+   return Response.json({items:(rows.data??[]).map(r=>({leadId:r.lead_id as string,dueDate:r.due_date as string|null,note:String(r.note??'').slice(0,1000),status:r.status==='done'?'done':'open'}))},{headers});
+  }
   if(q.view==='upcoming'){const r=await a.db.rpc('pro_lead_followups_upcoming',{p_actor:a.user.id,p_after:q.after??null,p_snapshot:q.atSnapshot??null});if(r.error)return dbError(r.error);return Response.json(leadFollowupPageSchema.parse(r.data),{headers});}
   if(q.view==='detail'){const r=await a.db.rpc('pro_lead_followup_read',{p_actor:a.user.id,p_lead:q.leadId});if(r.error)return dbError(r.error);const data=leadFollowupDetailSchema.parse(r.data);if(data.followup.leadId!==q.leadId)return fail(503,'No se pudo comprobar el seguimiento.');return Response.json(data,{headers});}
   const r=await a.db.rpc('pro_lead_followup_history_read',{p_actor:a.user.id,p_lead:q.leadId,p_after:q.after??null});if(r.error)return dbError(r.error);const data=leadFollowupHistoryPageSchema.parse(r.data);if(data.items.some(item=>item.after.leadId!==q.leadId))return fail(503,'No se pudo comprobar el historial.');return Response.json(data,{headers});

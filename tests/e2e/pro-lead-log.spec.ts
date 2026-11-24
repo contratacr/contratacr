@@ -119,6 +119,19 @@ for(const language of ['es','en'] as const){
    await page.locator('[data-lead-view="table"]').click();
    const bulk=page.locator('[data-lead-table-view]');await expect(bulk.locator('[data-lead-bulk-bar]')).toHaveCount(0);
    const before=await bulk.locator('[data-lead-table-row]').count();
+   // Task and Managers columns, pinned columns and bulk assignment.
+   await expect(bulk.locator('[data-lead-col="task"]').first()).toBeVisible();await expect(bulk.locator('[data-lead-col="managers"]').first()).toBeVisible();
+   await expect(bulk.locator(`[data-lead-table-row="${f.roof}"] [data-lead-task-add]`)).toBeVisible({timeout:45000});
+   if((page.viewportSize()?.width??1280)>=640){
+    const pin=bulk.locator('[data-lead-pin="client"]');await pin.click();await expect(pin).toHaveAttribute('aria-pressed','true');
+    await page.reload();await expect(page.locator('[data-lead-inbox-layout]')).toBeVisible({timeout:45000});
+    await expect(page.locator('[data-lead-table-view] [data-lead-pin="client"]')).toHaveAttribute('aria-pressed','true');
+    await page.locator('[data-lead-table-view] [data-lead-pin="client"]').click();await expect(page.locator('[data-lead-table-view] [data-lead-pin="client"]')).toHaveAttribute('aria-pressed','false');
+   }
+   await bulk.locator(`[data-lead-select="${f.paint}"]`).check();await bulk.locator(`[data-lead-select="${f.roof}"]`).check();
+   await bulk.locator('[data-lead-bulk-assignee]').selectOption(f.owner.id);await bulk.locator('[data-lead-bulk-assign]').click();
+   await expect(bulk.locator(`[data-lead-table-row="${f.paint}"] [data-lead-col="managers"]`)).not.toHaveText('—',{timeout:45000});
+   await expect(bulk.locator('[data-lead-bulk-bar]')).toHaveCount(0);
    await bulk.locator(`[data-lead-select="${f.roof}"]`).check();
    await expect(bulk.locator('[data-lead-bulk-count]')).toContainText('1');
    await bulk.locator('[data-lead-bulk-archive]').click();
