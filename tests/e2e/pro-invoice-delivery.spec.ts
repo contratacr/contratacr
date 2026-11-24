@@ -50,7 +50,10 @@ for(const language of ['es','en'] as const)test(`Invoice delivery: send, custome
   const get=async(query:Record<string,string>,who=owner.id)=>await page.request.get(api+'?'+new URLSearchParams(query),{headers:{'X-Pro-Expected-Actor':who}});
   expect(await (await get({draftId})).json()).toMatchObject({status:'draft',delivered:false,totalCents:500000,balanceCents:500000,events:[]});
   // Access and strict input.
-  expect((await get({draftId},rival.id)).status()).toBe(404);
+  // A mismatched actor header on the owner's session is refused as an account change; real isolation uses the rival's own session.
+  expect((await get({draftId},rival.id)).status()).toBe(403);
+  const rivalContext=await page.context().browser()!.newContext();
+  try{await login(rivalContext,rival);expect((await rivalContext.request.get(origin+api+'?'+new URLSearchParams({draftId}),{headers:{'X-Pro-Expected-Actor':rival.id}})).status()).toBe(404);}finally{await rivalContext.close();}
   expect((await page.request.post(api,{headers:{'X-Pro-Expected-Actor':owner.id},data:{action:'send'}})).status()).toBe(403);
   expect((await page.request.post(api,{headers,data:{action:'send',actionId:crypto.randomUUID(),draftId,email:false,extra:1}})).status()).toBe(400);
   expect((await page.request.post(api,{headers:{...headers,'X-Pro-Expected-Actor':rival.id},data:{action:'send',actionId:crypto.randomUUID(),draftId,email:false}})).status()).toBe(403);

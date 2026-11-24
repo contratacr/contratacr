@@ -38,6 +38,9 @@ test.describe("@pro-landing offer page", () => {
       await expect(cta.getByRole("link", { name: "Iniciar sesión" })).toHaveAttribute("href", /\/login\?redirect=%2Fdashboard%2Fpro$/);
     }
     await expect(page.locator("main")).toContainText("se lanza gratis");
+    // On phones the footer groups are collapsed accordions: open the professionals group first.
+    const footerGroup = page.locator("footer.ccr-app-footer").filter({ visible: true }).locator('button[aria-controls="footer-pros-title"]:visible');
+    if (await footerGroup.count()) await footerGroup.click();
     await expect(page.locator("footer.ccr-app-footer").filter({ visible: true }).getByRole("link", { name: "ContrataCR Pro" }).first()).toHaveAttribute("href", /\/contratacr-pro$/);
     await expectNoHorizontalOverflow(page);
   });

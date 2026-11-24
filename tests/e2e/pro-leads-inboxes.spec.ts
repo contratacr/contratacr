@@ -226,7 +226,7 @@ for(const language of ['es','en'] as const){
    await expect(insights.locator('[data-lead-funnel-stage="new"] [data-lead-funnel-count]')).toHaveText('2');await expect(insights.locator('[data-lead-origin-metrics]')).toBeVisible();
    await shot(page,info,'insights');await page.getByRole('button',{name:en?'Close':'Cerrar',exact:true}).last().click();await expect(insights).toHaveCount(0);
    await leads.getByRole('button',{name:en?'Contact form':'Formulario de contacto',exact:true}).click();const contact=page.locator('[data-lead-contact-form]');
-   await expect(contact.getByRole('link',{name:en?'Open my public profile':'Abrir mi perfil público',exact:true})).toHaveAttribute('href',(en?'/en':'')+'/profesionales/inbox-'+f.owner.id);
+   await expect(contact.getByRole('link',{name:en?'Open my public profile':'Abrir mi perfil público',exact:true})).toHaveAttribute('href',(en?'/en':'')+'/profesionales/'+(await f.db.from('professionals').select('slug').eq('id',f.professional.id).single().throwOnError()).data!.slug);
    await shot(page,info,'contact-form');await expectNoHorizontalOverflow(page);
    expect(errors).toEqual([]);
   }finally{await page.goto('about:blank').catch(()=>{});await cleanup(f);}

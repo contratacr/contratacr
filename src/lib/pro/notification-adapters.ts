@@ -24,7 +24,7 @@ const hhmm=/^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 export const scheduleSchema=z.object({revision:z.number().int().min(0),delivery:z.literal('sandbox'),quietEnabled:z.boolean(),quietStart:z.string().regex(hhmm),quietEnd:z.string().regex(hhmm),quietWeekends:z.boolean(),
  digestFrequency:z.enum(['off','daily','weekly']),digestHour:z.number().int().min(0).max(23),digestWeekday:z.number().int().min(1).max(7),
  outbox:z.array(z.object({id:z.string().uuid(),channel:z.enum(['email','whatsapp','push']),status:z.literal('simulated'),subject:z.string(),body:z.string(),unreadCount:z.number().int().min(0),at:z.string()}).strict()).max(10),
- simulated:z.number().int().optional()}).strict();
+ simulated:z.number().int().optional(),replayed:z.boolean().optional()}).strict();
 export type NotifySchedule=z.infer<typeof scheduleSchema>;
 export const scheduleSaveSchema=z.object({actionId:z.string().uuid(),revision:z.number().int().min(0),quietEnabled:z.boolean(),quietStart:z.string().regex(hhmm),quietEnd:z.string().regex(hhmm),quietWeekends:z.boolean(),
  digestFrequency:z.enum(['off','daily','weekly']),digestHour:z.number().int().min(0).max(23),digestWeekday:z.number().int().min(1).max(7)}).strict()
