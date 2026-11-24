@@ -15,8 +15,8 @@ for(const locale of ['es','en'] as const)test(`Guest appointment survives real p
  expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
  const owner=await createDisposableAccount({prefix:'appt-login-owner'}),client=await createDisposableAccount({prefix:'appt-login-client'}),db=regressionAdminClient(),copy=appointmentCopy[locale];
  try{
-  const slug='appt-login-'+owner.id;
-  const professional=await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Disponibilidad de prueba local',slug,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_available:true,is_banned:false}).select('id').single();expect(professional.error).toBeNull();
+  let slug='appt-login-'+owner.id;
+  const professional=await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Disponibilidad de prueba local',slug,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending',is_available:true,is_banned:false}).select('id,slug').single();expect(professional.error).toBeNull();slug=professional.data!.slug;// the business-name trigger (migration 256) assigns the public slug
   expect((await db.from('profiles').update({is_provider:true}).eq('id',owner.id)).error).toBeNull();
   expect((await db.from('pro_memberships').insert({user_id:owner.id,status:'active'})).error).toBeNull();
   const day=new Date(Date.now()+3*86400000).toISOString().slice(0,10),document=emptyBusiness();document.availability=[{start:day+'T08:00:00-06:00',end:day+'T16:00:00-06:00'}];
