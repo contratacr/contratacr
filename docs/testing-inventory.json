@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1258,
-    "controls": 5933,
+    "files": 1260,
+    "controls": 5931,
     "pages": 133,
     "handlers": 407,
-    "components": 651,
+    "components": 653,
     "hooks": 29,
-    "specs": 586
+    "specs": 587
   },
   "dashboardTabs": [
     "pro_tools",
@@ -24276,6 +24276,35 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/directory/place-action-buttons.tsx",
+      "kind": "Componente",
+      "group": "Otros: clasificación manual pendiente",
+      "route": null,
+      "exports": [
+        "actionIcon",
+        "ActionButton",
+        "PlaceMobileBar"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 21,
+          "tag": "a",
+          "label": "{ariaLabel}",
+          "handler": "",
+          "destination": "{action.href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/directory/place-branches.tsx",
       "kind": "Componente",
       "group": "Otros: clasificación manual pendiente",
@@ -24343,7 +24372,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 125,
+          "line": 127,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24351,23 +24380,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 148,
-          "tag": "a",
-          "label": "{`${t('Llamar','Call')} ${phone.display}`}",
-          "handler": "",
-          "destination": "{`tel:${phone.tel}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 149,
+          "line": 153,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
-          "destination": "{directions.google}",
+          "destination": "{a.href}",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 152,
+          "line": 157,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24651,6 +24672,41 @@
       "priority": "P1"
     },
     {
+      "file": "src/components/directory/place-directions-menu.tsx",
+      "kind": "Componente",
+      "group": "Otros: clasificación manual pendiente",
+      "route": null,
+      "exports": [
+        "PlaceDirectionsMenu"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 24,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>setOpen(o=>!o)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 27,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>setOpen(false)}",
+          "destination": "{href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/components/directory/place-events.tsx",
       "kind": "Componente",
       "group": "Otros: clasificación manual pendiente",
@@ -24768,7 +24824,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 94,
+          "line": 98,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24776,7 +24832,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 95,
+          "line": 99,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24784,7 +24840,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 96,
+          "line": 100,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{directions.apple}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 101,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24792,31 +24856,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 109,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{orderHref}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 111,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{directions.google}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 112,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{place.website}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 119,
+          "line": 122,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24824,7 +24864,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 168,
+          "line": 171,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24832,7 +24872,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 169,
+          "line": 172,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24840,7 +24880,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 193,
+          "line": 195,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24848,7 +24888,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 200,
+          "line": 202,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24856,7 +24896,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 212,
+          "line": 214,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24864,7 +24904,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 213,
+          "line": 215,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24872,7 +24912,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 215,
+          "line": 218,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -24880,27 +24920,11 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 237,
+          "line": 240,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
           "destination": "{s.url}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 246,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{directions.google}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 247,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "\"#escribir-resena\"",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],
@@ -78524,6 +78548,31 @@
       ]
     },
     {
+      "file": "tests/e2e/directory-place-actions.spec.ts",
+      "cases": [
+        {
+          "line": 13,
+          "title": "'mapa de botones: cada sección tiene su juego y nunca hay botones muertos'"
+        },
+        {
+          "line": 29,
+          "title": "'restaurantes: Reservar usa la herramienta de reservas o \"Llamar para reservar\", sin duplicar el teléfono'"
+        },
+        {
+          "line": 39,
+          "title": "'Cómo llegar ofrece Waze, Google Maps y Apple Maps; WhatsApp y Cotizar salen del enlace del dueño'"
+        },
+        {
+          "line": 49,
+          "title": "`ficha de ${section}: botones por categoría sin botones muertos [${locale}]`"
+        },
+        {
+          "line": 53,
+          "title": "true"
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/display-name-case.spec.ts",
       "cases": [
         {
@@ -80812,27 +80861,27 @@
       "file": "tests/e2e/pro-daily-log-weather.spec.ts",
       "cases": [
         {
-          "line": 11,
+          "line": 12,
           "title": "'auto resolves to the labelled sample unless the server default says otherwise; manual gives nothing'"
         },
         {
-          "line": 16,
+          "line": 17,
           "title": "'sandbox provider is deterministic and labelled'"
         },
         {
-          "line": 20,
+          "line": 21,
           "title": "'WMO codes map to daily log conditions'"
         },
         {
-          "line": 23,
+          "line": 24,
           "title": "'Open-Meteo reading is parsed from the provider payload; failures fall back to the labelled sample'"
         },
         {
-          "line": 30,
+          "line": 31,
           "title": "'settings contract rejects unknown providers and out-of-range values'"
         },
         {
-          "line": 37,
+          "line": 38,
           "title": "'daily log settings and automatic private drafts (SQL, local)'"
         }
       ]
@@ -81025,47 +81074,47 @@
       "file": "tests/e2e/pro-dir-hubs.spec.ts",
       "cases": [
         {
-          "line": 10,
+          "line": 18,
           "title": "`/lugares no longer exists: the old address goes to Categorías [${language}]`"
         },
         {
-          "line": 16,
+          "line": 24,
           "title": "`/negocios-y-profesionales no longer exists: old links go to the professional registration [${language}]`"
         },
         {
-          "line": 27,
+          "line": 35,
           "title": "\"desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry\""
         },
         {
-          "line": 28,
+          "line": 36,
           "title": "isMobileProject(testInfo)"
         },
         {
-          "line": 49,
+          "line": 57,
           "title": "\"quick links row under the navbar: sections, Profesionales and Más, active state, keyboard\""
         },
         {
-          "line": 50,
+          "line": 58,
           "title": "isMobileProject(testInfo)"
         },
         {
-          "line": 72,
+          "line": 80,
           "title": "\"quick links row scrolls sideways on phones without widening the page\""
         },
         {
-          "line": 73,
+          "line": 81,
           "title": "!isMobileProject(testInfo)"
         },
         {
-          "line": 82,
+          "line": 90,
           "title": "\"footer: cookie and privacy settings is a discreet link in the legal row\""
         },
         {
-          "line": 94,
+          "line": 102,
           "title": "\"mobile drawer: Categorías is a plain link to the full page and there is no business entry\""
         },
         {
-          "line": 95,
+          "line": 103,
           "title": "!isMobileProject(testInfo)"
         }
       ]
@@ -81242,15 +81291,15 @@
           "title": "'F6: national ARESEP fuel price banner on /gasolineras'"
         },
         {
-          "line": 87,
+          "line": 88,
           "title": "'F6: search and facets APIs expose public data only'"
         },
         {
-          "line": 104,
+          "line": 105,
           "title": "'F0: featured flag never changes the professional order'"
         },
         {
-          "line": 111,
+          "line": 112,
           "title": "`F0: public «Cómo ordenamos» page [${language}]`"
         }
       ]
@@ -81690,7 +81739,7 @@
       "file": "tests/e2e/pro-gantt-edit.spec.ts",
       "cases": [
         {
-          "line": 47,
+          "line": 49,
           "title": "`Editable Gantt: create, drag, resize, keyboard, dependency, undo, filter, conflict and read-only [${language}]`"
         }
       ]
@@ -81949,19 +81998,19 @@
           "title": "PRO_OFF"
         },
         {
-          "line": 45,
+          "line": 48,
           "title": "\"English version of the offer page\""
         },
         {
-          "line": 46,
+          "line": 49,
           "title": "PRO_OFF"
         },
         {
-          "line": 53,
+          "line": 56,
           "title": "\"a professional with an account is sent to the Pro space\""
         },
         {
-          "line": 54,
+          "line": 57,
           "title": "PRO_OFF"
         }
       ]
@@ -83703,15 +83752,15 @@
           "title": "'mock signer: enveloped ds:Signature, digest = SHA-256 of the unsigned canonical XML, never valid'"
         },
         {
-          "line": 125,
+          "line": 129,
           "title": "'sandbox signer: legacy .p12 (3DES key + RC2-40 cert) parsed without dependencies, RSA-SHA256 XAdES verifies'"
         },
         {
-          "line": 150,
+          "line": 154,
           "title": "'mock ATV fixtures: accepted, rejected, transient error then accepted'"
         },
         {
-          "line": 159,
+          "line": 163,
           "title": "'redaction, retry backoff, webhook signatures, mock processor fixtures'"
         }
       ]
@@ -83832,19 +83881,19 @@
           "title": "'Round 6C: provider output is re-validated; links and invalid shapes are discarded'"
         },
         {
-          "line": 66,
+          "line": 69,
           "title": "'Round 6C: the Anthropic adapter sends the documented Messages API request and handles refusals/truncation'"
         },
         {
-          "line": 96,
+          "line": 99,
           "title": "'Round 6C: every output schema is strict (additionalProperties false, all keys required) for structured outputs'"
         },
         {
-          "line": 106,
+          "line": 109,
           "title": "'Round 6C: OpenAI-compatible transcription request (multipart, bearer key, verbose_json) without network'"
         },
         {
-          "line": 118,
+          "line": 121,
           "title": "'Round 6C: registry, request schemas and the calendar auto-sync contract'"
         }
       ]
@@ -84423,7 +84472,7 @@
           "title": "'task center detail: comment, mention notice, link and unlink existing job file'"
         },
         {
-          "line": 46,
+          "line": 47,
           "title": "'task center detail: edit and delete a comment keeping the history'"
         }
       ]
@@ -84666,7 +84715,7 @@
       "file": "tests/e2e/pro-work-activity.spec.ts",
       "cases": [
         {
-          "line": 45,
+          "line": 47,
           "title": "`Job activity: real events newest first, pages, roles and screenshots [${language}]`"
         }
       ]
