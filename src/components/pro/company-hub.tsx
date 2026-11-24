@@ -28,6 +28,7 @@ const CompanyIntegrations=dynamic(()=>import('./company-integrations').then(m=>m
 const CompanyEinvoice=dynamic(()=>import('./company-einvoice').then(m=>m.CompanyEinvoice),{loading:ViewLoading});
 const CompanyConnectors=dynamic(()=>import('./company-connectors').then(m=>m.CompanyConnectors),{loading:ViewLoading});
 const CompanyAutomation=dynamic(()=>import('./company-automation').then(m=>m.CompanyAutomation),{loading:ViewLoading});
+const MeetingTypes=dynamic(()=>import('./meeting-types').then(m=>m.MeetingTypes),{loading:ViewLoading});
 const CompanyMeetings=dynamic(()=>import('./company-automation').then(m=>m.CompanyMeetings),{loading:ViewLoading});
 const CompanyAccounting=dynamic(()=>import('./company-accounting').then(m=>m.CompanyAccounting),{loading:ViewLoading});
 const CompanySite=dynamic(()=>import('./company-site').then(m=>m.CompanySite),{loading:ViewLoading});
@@ -119,7 +120,7 @@ export function CompanyHub({profileSlug,disabled=false}:{profileSlug:string|null
    {view==='integraciones'&&user&&<CompanyIntegrations key={user.id}/>}
    {view==='conectores'&&user&&<CompanyConnectors key={user.id}/>}
    {view==='automatizacion'&&user&&<CompanyAutomation key={user.id}/>}
-   {view==='reuniones'&&user&&<CompanyMeetings key={user.id}/>}
+   {view==='reuniones'&&user&&<div className="space-y-5"><CompanyMeetings key={user.id}/><MeetingTypes key={user.id+':types'}/></div>}
    {view==='contabilidad'&&user&&<CompanyAccounting key={user.id}/>}
    {view==='cobros'&&user&&<PaymentReconciliation key={user.id}/>}
    {view==='documentos'&&user&&<DocumentBrandingSettings key={user.id}/>}
