@@ -55,8 +55,11 @@ for(const language of ['es','en'] as const)test(`Board templates: save, list, ap
   await post({action:'archive',actionId:uuid(),id,revision:2});expect(await list()).toEqual([]);
   await post({action:'archive',actionId:uuid(),id,revision:3},400);
   // Limit of 50 active templates.
-  for(let i=0;i<50;i++)await post({action:'create',actionId:uuid(),id:uuid(),name:`P${i}`,pageFormat:i%2?'a4':'wide',background:'#ffffff',elements:[swatch('x')]});
-  await post({action:'create',actionId:uuid(),id:uuid(),name:'P50',pageFormat:'wide',background:'#ffffff',elements:[swatch('x')]},429);
+  // 51 writes exceed the route's 60 requests/minute bucket together with the earlier calls, so each one gets its own
+  // development-only rate-limit namespace; the 429 below is then the template limit (54000), not the throttle.
+  const bulk=async(data:Record<string,unknown>,status=200)=>{const r=await page.request.post(api,{headers:{...headers,'x-ccr-rate-limit-namespace':'bt-'+uuid().slice(0,16)},data});expect(r.status(),JSON.stringify(data).slice(0,200)).toBe(status);};
+  for(let i=0;i<50;i++)await bulk({action:'create',actionId:uuid(),id:uuid(),name:`P${i}`,pageFormat:i%2?'a4':'wide',background:'#ffffff',elements:[swatch('x')]});
+  await bulk({action:'create',actionId:uuid(),id:uuid(),name:'P50',pageFormat:'wide',background:'#ffffff',elements:[swatch('x')]},429);
   expect(await list()).toHaveLength(50);
  }finally{if(other)await other.close();await cleanupDisposableAccount(owner);await cleanupDisposableAccount(rival);}
 });
