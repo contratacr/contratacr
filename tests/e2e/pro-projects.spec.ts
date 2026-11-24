@@ -8,7 +8,7 @@ import {gotoOK,expectNoHorizontalOverflow,collectPageErrors} from './helpers';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
 import type {ProjectsPage} from '../../src/lib/pro/projects';
 
-const origin='http://127.0.0.1:3185',api='/api/pro/projects';
+const origin='http://127.0.0.1:3185',api='/api/pro/projects',hubApi='/api/pro/projects-hub';
 function local(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
 async function login(context:BrowserContext,actor:DisposableAccount){await stabilizeLocalProRuntime(context,origin);const auth=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{cookies:{getAll:()=>[],setAll:async cookies=>context.addCookies(cookies.map(cookie=>({name:cookie.name,value:cookie.value,url:origin,sameSite:'Lax' as const})))}});const result=await auth.auth.signInWithPassword({email:actor.email,password:actor.password});expect(result.error).toBeNull();}
 async function makePro(db:ReturnType<typeof regressionAdminClient>,owner:DisposableAccount){const account=await db.auth.admin.getUserById(owner.id);expect((await db.auth.admin.updateUserById(owner.id,{user_metadata:{...account.data.user!.user_metadata,is_provider:true,role:'professional'}})).error).toBeNull();await db.from('profiles').update({is_provider:true,role:'professional'}).eq('id',owner.id).throwOnError();await db.from('pro_memberships').insert({user_id:owner.id,status:'active'}).throwOnError();}
@@ -65,13 +65,13 @@ for(const language of ['es','en'] as const)test(`Projects hub: derived status, c
   await expect(hub.locator('[data-projects-total]')).toHaveText(en?'23 projects in total':'23 proyectos en total');
   // A filter change keeps the previous rows but announces that it is updating.
   let releaseList:()=>void=()=>{};const listHeld=new Promise<void>(resolve=>{releaseList=resolve;});
-  await page.route(url=>url.pathname===api&&url.searchParams.get('status')==='all'&&!url.searchParams.has('after'),async route=>{await listHeld;await route.continue();},{times:1});
-  await hub.locator('[data-projects-status]').selectOption('all');
+  await page.route(url=>url.pathname===hubApi&&url.searchParams.get('statuses')==='open,in_progress,completed,cancelled'&&!url.searchParams.has('after'),async route=>{await listHeld;await route.continue();},{times:1});
+  await hub.locator('[data-projects-status-toggle]').click();await hub.locator('[data-projects-status-option="completed"]').check();await hub.locator('[data-projects-status-option="cancelled"]').check();await hub.locator('[data-projects-status-apply]').click();
   await expect(hub.locator('[data-projects-loading]')).toHaveText(en?'Updating projects…':'Actualizando proyectos…');await expect(hub.locator('[aria-busy="true"]')).toHaveCount(1);await expect(entry('p-progress')).toBeVisible();
   releaseList();await expect(entry('p-done')).toBeVisible();await expect(hub.locator('[data-projects-loading]')).toHaveCount(0);await expect(hub.locator('[aria-busy="true"]')).toHaveCount(0);
   // «Show more» fails once: «Retry» asks for the same cursor again and keeps the first page.
-  const pageRequests:string[]=[];page.on('request',request=>{const url=new URL(request.url());if(url.pathname===api&&url.searchParams.get('status')==='all')pageRequests.push(url.searchParams.get('after')??'first');});
-  await page.route(url=>url.pathname===api&&url.searchParams.has('after'),route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"fixture"}'}),{times:1});
+  const pageRequests:string[]=[];page.on('request',request=>{const url=new URL(request.url());if(url.pathname===hubApi&&url.searchParams.get('statuses')==='open,in_progress,completed,cancelled')pageRequests.push(url.searchParams.get('after')??'first');});
+  await page.route(url=>url.pathname===hubApi&&url.searchParams.has('after'),route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"fixture"}'}),{times:1});
   await hub.getByRole('button',{name:en?'Show more projects':'Ver más proyectos'}).click();
   await expect(hub.locator('[data-projects-error]')).toContainText(en?'Could not load more projects.':'No se pudieron cargar más proyectos.');await expect(hub.locator(mobile?'[data-project-card]':'[data-project-row]')).toHaveCount(20);
   await expect(hub.getByRole('button',{name:en?'Show more projects':'Ver más proyectos'})).toHaveCount(0);
