@@ -3,8 +3,10 @@ import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directo
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
 import {checkPlacePhone} from '@/lib/directory/phone';
-import {directionsLinks} from '@/lib/maps/maplibre';
-import {MapPin,Navigation,Phone} from 'lucide-react';
+import {placeCardActions} from '@/lib/directory/place-actions';
+import {MapPin,Navigation} from 'lucide-react';
+import {PlaceDirectionsMenu} from './place-directions-menu';
+import {actionIcon} from './place-action-buttons';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {HeroTile,RatingLine} from './biz-ui';
 import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
@@ -101,7 +103,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
  const phone=checkPlacePhone(item.phone);
- const directions=item.location?directionsLinks(item.location.lat,item.location.lng):null;
+ const cardActions=placeCardActions({slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location});
  const verified=VERIFIED.has(level);
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
@@ -144,9 +146,12 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
-  {(phone?.kind==='cr'||directions)&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions>
-   {phone?.kind==='cr'&&<a className={actionPrimary} href={`tel:${phone.tel}`} data-place-phone aria-label={`${t('Llamar','Call')} ${phone.display}`}><Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Llamar','Call')}</a>}
-   {directions&&<a className={phone?.kind==='cr'?actionSecondary:actionPrimary} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Cómo llegar','Directions')}</a>}
+  {cardActions.length>0&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions data-place-card-actions={cardActions.map(a=>a.id).join(' ')}>
+   {cardActions.map((a,i)=>{
+    const cls=i===0?actionPrimary:actionSecondary;
+    if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${cls} relative z-10`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
+    return <a key={a.id} className={cls} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
+   })}
   </div>}
   {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>

@@ -1,14 +1,12 @@
 import {createElement,type ReactNode} from 'react';
 import {cn} from '@/lib/utils';
-import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,ExternalLink,FileText,Fuel,Landmark,Leaf,MapPin,Navigation,PawPrint,PenLine,Percent,Phone,Pill,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
+import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
-import {PlaceContactLink} from './place-contact-link';
 import {DIRECTORY_LISTINGS_ENABLED} from '@/lib/directory/feature-flags';
 import {kindLabel,placeSectionById} from '@/lib/directory/place-verticals';
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
 import {PlacesMap} from '@/components/maps/places-map';
-import {directionsLinks} from '@/lib/maps/maplibre';
 import {PlacePhotoGallery} from './place-photo-gallery';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
@@ -19,6 +17,8 @@ import {ProfileIdentityName} from '@/components/professionals/profile-identity-n
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {ShareButton} from './share-button';
+import {mapLinks,placeBarActions,placeHeadActions,placeSideActions,type PlaceActionInput} from '@/lib/directory/place-actions';
+import {ActionButton,PlaceMobileBar,actionIcon} from './place-action-buttons';
 
 /**
  * Canonical page of a place, /lugar/<slug> — Yelp «biz page» MODEL in the ContrataCR look (2026-11-19, owner request
@@ -57,7 +57,7 @@ function offerTabLabel(vertical:string,en:boolean):string{
  if(vertical==='vehicle_dealer'||vertical==='real_estate')return en?'Listings':'Anuncios';
  return en?'Prices':'Precios';
 }
-export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={}}:{photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
+export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false}:{hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const area=[place.address.adminArea3,place.address.adminArea2,place.address.adminArea1].filter(Boolean).join(', ');
  const days=en?WEEKDAYS.en:WEEKDAYS.es,vertical=en?place.vertical.nameEn:place.vertical.nameEs;
@@ -67,7 +67,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const verification=VERIFICATION_LABELS[place.verificationLevel][en?'en':'es'];
  const section=placeSectionById(place.vertical.id),kind=kindLabel(place.vertical.id,place.attributes.kind,en);
  const trusted=place.verificationLevel==='verified'||place.verificationLevel==='license_verified'||place.verificationLevel==='claimed';
- const directions=place.location?directionsLinks(place.location.lat,place.location.lng):null;
+ const directions=place.location?mapLinks(place.location.lat,place.location.lng):null;
  const today=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Costa_Rica'})).getDay();
  const phone=checkPlacePhone(place.phone);
  const status=place.status==='published'?openStatus(place.hours):null,statusText=status?openStatusText(status,en,days):null;
@@ -77,9 +77,13 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const brandAbout=brand?(en?brand.descriptionEn:brand.descriptionEs):null;
  const address=place.address.line?`${place.address.line}${place.address.locality?`, ${place.address.locality}`:''}`:null;
  const order=orderLink&&place.status==='published'?orderLink:null;
- const orderHref=order?(order.channel==='phone'?`tel:${order.value.replace(/[^+0-9]/g,'')}`:order.value):null;
  const hasMobileBar=place.status==='published';
+ const actionInput:PlaceActionInput={slug:place.slug,name:place.name,verticalId:place.vertical.id,locale,phone:place.phone,website:place.website,location:place.location,
+  hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:place.status==='published'};
+ const barActions=hasMobileBar?placeBarActions(actionInput):[],barIds=barActions.map(a=>a.id);
+ const headActions=hasMobileBar?placeHeadActions(actionInput):[],sideActions=placeSideActions(actionInput);
  const avatarClass=cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full');
+ const pageBtn='h-12 w-full text-base font-semibold';
  const hoursTable=place.hours.length>0&&<section aria-labelledby="place-hours" className="space-y-3">
   <h3 id="place-hours" className="text-base font-bold text-[#162543]">{t('Horario','Opening hours')}</h3>
   <dl className="grid grid-cols-[max-content_1fr] overflow-hidden rounded-2xl border border-[#e3e9ef] text-[15px]">
@@ -93,6 +97,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const dirLinks=directions&&<p data-place-directions className="flex flex-wrap gap-2">
   <a className={cn(BIZ.secondary,'px-3.5 text-[13px]')} href={directions.google} rel="noopener noreferrer" target="_blank">Google Maps</a>
   <a className={cn(BIZ.secondary,'px-3.5 text-[13px]')} href={directions.waze} rel="noopener noreferrer" target="_blank">Waze</a>
+  <a className={cn(BIZ.secondary,'px-3.5 text-[13px]')} href={directions.apple} rel="noopener noreferrer" target="_blank">Apple Maps</a>
   <a className={cn(BIZ.secondary,'px-3.5 text-[13px]')} href={directions.osm} rel="noopener noreferrer" target="_blank">OpenStreetMap</a></p>;
 
 
@@ -104,12 +109,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    <p className={BIZ.cardTitle}>{t('Contacte a este negocio','Contact this business')}</p>
    {area&&<p className="flex items-center gap-1 text-[12px] font-semibold text-[#5f6f86]"><MapPin aria-hidden="true" className="h-3 w-3 shrink-0"/><span className="min-w-0">{area}</span></p>}
    {priceNote&&<p data-place-price-note className="text-[15px] font-bold text-[#162543]">{priceNote}</p>}
-   <div className={cn(row,'mt-2')}>
-    {phone?.kind==='cr'&&<PlaceContactLink slug={place.slug} channel="call" className={cn(BIZ.primary,'h-12 w-full text-base font-semibold')} href={`tel:${phone.tel}`}><Phone aria-hidden="true" className="h-5 w-5"/>{t('Llamar','Call')} <span className="whitespace-nowrap">{phone.display}</span></PlaceContactLink>}
-    {order&&orderHref&&<a data-place-order={order.channel} className={cn(phone?.kind==='cr'?BIZ.secondary:BIZ.primary,'h-12 w-full text-base font-semibold')} href={orderHref} {...(order.channel==='phone'?{}:{target:'_blank',rel:'nofollow noopener noreferrer'})}>
-     <ShoppingBag aria-hidden="true" className="h-5 w-5"/>{t('Pedir','Order')}<span className="text-sm font-normal">{order.channel==='whatsapp'?t('por WhatsApp','on WhatsApp'):order.channel==='web'?t('en su sitio','on its website'):t('por teléfono','by phone')}</span></a>}
-    {directions&&<a data-place-directions-cta className={cn(BIZ.secondary,'h-12 w-full text-base font-semibold')} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation aria-hidden="true" className="h-5 w-5"/>{t('Cómo llegar','Get directions')}</a>}
-    {place.website&&<a data-place-website className={cn(BIZ.secondary,'h-12 w-full text-base font-semibold')} href={place.website} rel="nofollow ugc noopener noreferrer" target="_blank"><ExternalLink aria-hidden="true" className="h-5 w-5"/>{t('Sitio web','Website')}</a>}
+   <div className={cn(row,'mt-2')} data-place-side-actions={sideActions.map(x=>x.id).join(' ')}>
+    {sideActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(i===0?BIZ.primary:BIZ.secondary,pageBtn)}>
+     {actionIcon(x.id,'h-5 w-5')}{x.label}{x.id==='call'&&phone?.kind==='cr'&&<>{' '}<span className="whitespace-nowrap">{phone.display}</span></>}
+     {x.id==='order'&&order&&<span className="text-sm font-normal">{order.channel==='whatsapp'?t('por WhatsApp','on WhatsApp'):order.channel==='web'?t('en su sitio','on its website'):t('por teléfono','by phone')}</span>}</ActionButton>)}
    </div>
    {address&&<p className="mt-1 text-center text-[13px] text-[#68778d]">{address}</p>}
    {phone?.kind==='other'&&<p data-place-phone-other={phone.reason} className="mt-1 text-sm text-slate-700"><span className="font-semibold">{t('Otros datos:','Other details:')}</span>{' '}
@@ -151,7 +154,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  </>;
  const offerLabel=offerTabLabel(place.vertical.id,en);
  const tabs:PlaceTab[]=[
-  {id:'info',label:t('Información','Information'),anchors:['horario','comodidades','acerca','eventos','sucursales'],content:infoTab},
+  {id:'info',label:t('Información','Information'),anchors:['horario','comodidades','acerca','eventos','sucursales','place-reservations'],content:infoTab},
   ...(slots.offer?[{id:'offer',label:offerLabel,anchors:['precios'],content:<div className="space-y-6">{slots.offer}</div>}]:[]),
   {id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={BIZ.h2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>},
   ...(photos.length>0?[{id:'photos',label:t('Fotos','Photos'),anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-24 space-y-4">
@@ -174,11 +177,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    <div className="min-w-0 lg:col-start-1 lg:row-start-1">
     <div className="relative rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
      {photos.length>0&&<div className="mb-4 sm:mb-5"><PlacePhotoGallery variant="strip" en={en} placeName={place.name} photos={photos}/></div>}
+     {photos.length===0&&<HeroTile verticalId={place.vertical.id} className="mb-4 h-16 w-full rounded-xl sm:h-20" iconClass="h-8 w-8 sm:h-10 sm:w-10"/>}
      <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-      {photos.length>0
-       ?<span data-place-avatar="photo" className={avatarClass}>{/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
-        <img src={placePhotoSrc(photos[0]!.url,320)} alt="" loading="eager" className="absolute inset-0 h-full w-full bg-white object-cover"/></span>
-       :<span data-place-photo-placeholder={place.vertical.id} className={avatarClass}><HeroTile verticalId={place.vertical.id} className="h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/></span>}
+      {photos.length>0&&<span data-place-avatar="photo" className={avatarClass}>{/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
+        <img src={placePhotoSrc(photos[0]!.url,320)} alt="" loading="eager" className="absolute inset-0 h-full w-full bg-white object-cover"/></span>}
       <div className="min-w-0 flex-1">
        <ProfileIdentityName testId="place-name" name={place.name} badge={nameBadge}/>
        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mt-2">
@@ -212,7 +214,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
       <a className={BIZ.link} href={`${prefix}/marca/${brand.slug}`}>{brand.name}</a>
       {brand.branches>1&&<>{' · '}<a className={BIZ.link} href={`${prefix}/marca/${brand.slug}#sucursales`}>{t(`ver las ${brand.branches} sucursales`,`see all ${brand.branches} branches`)}</a></>}</p>}
      {place.status==='published'&&<div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-[#eef2f6] pt-4" data-place-actions-bar>
-      <a href="#escribir-resena" data-place-write-review className={cn(BIZ.primary,'max-lg:hidden')}><Star aria-hidden="true" className="h-4 w-4"/>{t('Dejar una reseña','Leave a review')}</a>
+      {headActions.map(x=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(BIZ.secondary,'max-lg:hidden')}>{actionIcon(x.id,'h-4 w-4')}{x.label}</ActionButton>)}
+      <a href="#escribir-resena" data-place-write-review className={cn(BIZ.primary,barIds.includes('review')&&'max-lg:hidden')}><Star aria-hidden="true" className="h-4 w-4"/>{t('Dejar una reseña','Leave a review')}</a>
       {photoSlot}
       <ShareButton title={place.name} locale={locale} className={BIZ.secondary}/>
       {saveSlot}
@@ -240,12 +243,6 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    <PlaceReportForm slug={place.slug} locale={locale}/>
   </footer>
 
-  {hasMobileBar&&<nav aria-label={t('Acciones rápidas','Quick actions')} data-place-mobile-bar className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e5e7eb] bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2 shadow-[0_-8px_24px_-16px_rgba(22,37,67,0.4)] backdrop-blur lg:hidden">
-   <div className="mx-auto flex max-w-md gap-2">
-    {phone?.kind==='cr'&&<PlaceContactLink slug={place.slug} channel="call" className={cn(BIZ.primary,'h-12 min-w-0 flex-1 gap-1.5 px-2 text-[14px]')} href={`tel:${phone.tel}`}><Phone aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Llamar','Call')}</PlaceContactLink>}
-    {directions&&<a className={cn(BIZ.secondary,'h-12 min-w-0 flex-1 gap-1.5 px-2 text-[14px]')} href={directions.google} rel="noopener noreferrer" target="_blank"><Navigation aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Cómo llegar','Directions')}</a>}
-    <a href="#escribir-resena" data-place-mobile-review className={cn(BIZ.secondary,'h-12 min-w-0 flex-1 gap-1.5 px-2 text-[14px]')}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>
-   </div>
-  </nav>}
+  {hasMobileBar&&<PlaceMobileBar actions={barActions} slug={place.slug} locale={locale} label={t('Acciones rápidas','Quick actions')} open={status?(statusText?.open?'open':'closed'):null}/>}
  </main>;
 }

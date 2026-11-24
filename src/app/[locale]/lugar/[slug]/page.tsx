@@ -147,7 +147,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const priceNote=fuelPrices.length?`${en?'From':'Desde'} ${proMoney(Math.min(...fuelPrices.map(o=>o.price)),en)} /${en?'liter':'litro'}`:null;
  const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
  return <DirectoryShell>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} priceNote={priceNote}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={BIZ.secondary}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref}/>:null}
   slots={{
