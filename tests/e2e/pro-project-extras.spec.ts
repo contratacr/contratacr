@@ -1,6 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {parseTags,markupCents,parseExtrasData,statusesExtrasSchema} from '../../src/lib/pro/project-extras';
+import {emptyFileFilters,fileFiltersActive,filterFiles} from '../../src/lib/pro/file-filters';
 import {expenseKpis} from '../../src/components/pro/expense-extras';
 import {ownerFixture,local,origin,headersFor} from './pro-round2-fixture';
 
@@ -44,4 +45,14 @@ test('Project extras: API',async({page},info)=>{
   const tpl=await post({scope:'owner',kind:'templates',key:'',revision:0,data:{items:[{id:randomUUID(),name:'Cocina',type:'Remodelación',tags:['a'],tasks:['Demolición'],savedAt:'2026-11-24'}]}});expect(tpl.status(),await tpl.text()).toBe(200);
   const anonymous=await page.context().browser()!.newContext({baseURL:origin});expect((await anonymous.request.post(origin+'/api/pro/project-extras',{headers:{Origin:origin},data:{}})).status()).toBe(401);await anonymous.close();
  }finally{await f.cleanup();}
+});
+
+test('Project files: filters by date range and type',()=>{
+ const rows=[{createdAt:'2026-11-10T15:00:00Z',mimeType:'image/jpeg'},{createdAt:'2026-11-20T03:00:00Z',mimeType:'application/pdf'},{createdAt:'2026-11-22T12:00:00Z',mimeType:'text/plain'}];
+ expect(filterFiles(rows,emptyFileFilters)).toHaveLength(3);
+ expect(filterFiles(rows,{...emptyFileFilters,type:'pdf'})).toEqual([rows[1]]);
+ // 2026-11-20T03:00Z is still November 19 in Costa Rica (UTC-6)
+ expect(filterFiles(rows,{...emptyFileFilters,from:'2026-11-20'})).toEqual([rows[2]]);
+ expect(filterFiles(rows,{...emptyFileFilters,to:'2026-11-19',type:'all'})).toEqual([rows[0],rows[1]]);
+ expect(fileFiltersActive(emptyFileFilters)).toBe(false);expect(fileFiltersActive({...emptyFileFilters,type:'image'})).toBe(true);
 });
