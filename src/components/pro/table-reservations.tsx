@@ -70,7 +70,7 @@ export function TableReservations({locale,expectedActor,endpoint='/api/pro/table
   <div className="flex flex-wrap items-end gap-3">
    {places.length>1&&<label className="space-y-1 text-sm font-semibold">{t('Negocio','Business')}
     <select className={field} value={placeId} onChange={e=>{setPlaceId(e.target.value);setData(null);}}>{places.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
-   <div className="flex items-end gap-2">
+   <div className="flex flex-wrap items-end gap-2">
     <button type="button" className={`${btn} border border-slate-300`} onClick={()=>day&&setDay(addDays(day,-1))} aria-label={t('Día anterior','Previous day')}>‹</button>
     <label className="space-y-1 text-sm font-semibold">{t('Día','Day')}<input type="date" data-table-res-day className={field} value={day} onChange={e=>e.target.value&&setDay(e.target.value)}/></label>
     <button type="button" className={`${btn} border border-slate-300`} onClick={()=>day&&setDay(addDays(day,1))} aria-label={t('Día siguiente','Next day')}>›</button>
