@@ -42,20 +42,20 @@ async function flush(db:Db,owner:string,provider:WorkspaceProvider,mode:'mock'|'
 }
 
 // ---------- email ----------
-export async function sendProjectEmail(db:Db,owner:string,input:{actionId:string;provider:WorkspaceProvider;to:string[];subject:string;body:string;workId:string|null;attachments:string[];confirmed:true}){
+export async function sendProjectEmail(db:Db,owner:string,input:{actionId:string;provider:WorkspaceProvider;to:string[];cc?:string[];subject:string;body:string;workId:string|null;attachments:string[];confirmed:true}){
  const {mode,token}=await ready(db,owner,input.provider);
  const files:PickedFile[]=[];
  for(const id of input.attachments){
   const file=mode==='mock'?mockFileById(input.provider,id):await realFileMetadata(input.provider,token.token,id);
   if(!file)throw new OAuthError(400,'attachment','Uno de los archivos adjuntos ya no está disponible.');files.push(file);
  }
- const record=await rpc<{id:string;status:string;mode:string;duplicate?:boolean}>(db,'pro_email_record',{p_actor:owner,p_mode:mode,p_from:token.accountEmail,p_input:{action:'send_email',actionId:input.actionId,provider:input.provider,confirmed:input.confirmed,to:input.to,subject:input.subject,body:input.body,workId:input.workId,attachments:files}});
+ const record=await rpc<{id:string;status:string;mode:string;duplicate?:boolean}>(db,'pro_email_record',{p_actor:owner,p_mode:mode,p_from:token.accountEmail,p_input:{action:'send_email',actionId:input.actionId,provider:input.provider,confirmed:input.confirmed,to:input.to,...(input.cc?.length?{cc:input.cc}:{}),subject:input.subject,body:input.body,workId:input.workId,attachments:files}});
  if(mode==='mock'){
   if(!record.duplicate)await logOutbound(db,owner,{provider:input.provider,mode,operation:'mail_simulated',url:'https://mail.mock.local/outbox',statusCode:200,outcome:'ok',durationMs:0,correlation:record.id,summary:{to:input.to.length,attachments:files.length,sent:false}});
   return record;
  }
  if(record.duplicate||record.status!=='queued')return record;
- const sent=await sendRealMail(input.provider,token.token,{from:token.accountEmail??'',to:input.to,subject:input.subject,body:input.body,attachments:files});
+ const sent=await sendRealMail(input.provider,token.token,{from:token.accountEmail??'',to:input.to,cc:input.cc,subject:input.subject,body:input.body,attachments:files});
  await logOutbound(db,owner,{provider:input.provider,mode,operation:'mail_send',url:sent.url,statusCode:sent.status,outcome:sent.ok?'ok':'error',durationMs:sent.durationMs,correlation:record.id,summary:redact({to:input.to.length,attachments:files.length})});
  await rpc(db,'pro_email_result',{p_actor:owner,p_id:record.id,p_ok:sent.ok,p_message_id:sent.messageId,p_error:sent.ok?null:'HTTP '+sent.status});
  return {...record,status:sent.ok?'sent':'failed'};

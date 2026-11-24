@@ -82,22 +82,24 @@ type Post=(payload:Record<string,unknown>)=>Promise<Record<string,unknown>|null>
 type Confirm=ReturnType<typeof useAppDialog>['confirm'];
 export function Composer({providers,data,busy,post,confirm,onSent,fixedWork}:{providers:Provider[];data:Read;busy:boolean;post:Post;confirm:Confirm;onSent:()=>void;fixedWork?:string}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
- const [provider,setProvider]=useState<Provider>(providers[0]!),[to,setTo]=useState(''),[subject,setSubject]=useState(''),[body,setBody]=useState(''),[work,setWork]=useState(fixedWork??''),[files,setFiles]=useState<string[]>([]),[picker,setPicker]=useState(false),[error,setError]=useState('');
+ const [provider,setProvider]=useState<Provider>(providers[0]!),[to,setTo]=useState(''),[cc,setCc]=useState(''),[showCc,setShowCc]=useState(false),[subject,setSubject]=useState(''),[body,setBody]=useState(''),[work,setWork]=useState(fixedWork??''),[files,setFiles]=useState<string[]>([]),[picker,setPicker]=useState(false),[error,setError]=useState('');
  const offered=data.providers.find(p=>p.id===provider)?.files??[],from=data.connections.find(c=>c.provider===provider&&c.status==='connected')?.accountEmail??'';
  const pending=useRef<{key:string;id:string}|null>(null);
  async function submit(event:FormEvent){
   event.preventDefault();setError('');
   const recipients=to.split(/[,;\s]+/).map(v=>v.trim()).filter(Boolean);
   if(!recipients.length||recipients.some(v=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))){setError(t('Revise los destinatarios.','Check the recipients.'));return;}
+  const copies=showCc?cc.split(/[,;\s]+/).map(v=>v.trim()).filter(Boolean):[];
+  if(copies.length>10||copies.some(v=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))){setError(t('Revise los correos en copia.','Check the Cc addresses.'));return;}
   const mock=data.providers.find(p=>p.id===provider)?.resolved.mode==='mock';
-  const answer=await confirm({cancelLabel:t('Cancelar','Cancel'),title:t('¿Enviar este correo?','Send this email?'),description:t(`De ${from} para ${recipients.join(', ')}: "${subject}". ${files.length} adjunto(s).`,`From ${from} to ${recipients.join(', ')}: "${subject}". ${files.length} attachment(s).`),
+  const answer=await confirm({cancelLabel:t('Cancelar','Cancel'),title:t('¿Enviar este correo?','Send this email?'),description:t(`De ${from} para ${recipients.join(', ')}${copies.length?` (con copia a ${copies.join(', ')})`:''}: "${subject}". ${files.length} adjunto(s).`,`From ${from} to ${recipients.join(', ')}${copies.length?` (cc ${copies.join(', ')})`:''}: "${subject}". ${files.length} attachment(s).`),
    detail:mock?t('Simulación: el correo NO se envía; queda en la bandeja de salida.','Simulation: the email is NOT sent; it stays in the outbox.'):t('Se enviará de verdad desde su buzón.','It will really be sent from your mailbox.'),confirmLabel:mock?t('Confirmar (simulado)','Confirm (simulated)'):t('Enviar correo','Send email')});
   if(!answer.confirmed)return;
   // Same message retried after an uncertain result reuses its actionId (never recorded twice).
-  const content={provider,confirmed:true,to:recipients,subject:subject.trim(),body:body.trim(),workId:work||null,attachments:files},key=JSON.stringify(content);
+  const content={provider,confirmed:true,to:recipients,...(copies.length?{cc:copies}:{}),subject:subject.trim(),body:body.trim(),workId:work||null,attachments:files},key=JSON.stringify(content);
   if(pending.current?.key!==key)pending.current={key,id:crypto.randomUUID()};
   const result=await post({action:'send_email',actionId:pending.current.id,...content});
-  if(result){pending.current=null;setTo('');setSubject('');setBody('');setFiles([]);if(!fixedWork)setWork('');onSent();}
+  if(result){pending.current=null;setTo('');setCc('');setShowCc(false);setSubject('');setBody('');setFiles([]);if(!fixedWork)setWork('');onSent();}
  }
  return <section className={card} aria-labelledby="composer-title" data-email-composer><h3 id="composer-title" className="font-bold">{t('Correo de proyecto','Project email')}</h3>
   <form onSubmit={submit} className="grid min-w-0 gap-3 sm:grid-cols-2">
@@ -106,6 +108,7 @@ export function Composer({providers,data,busy,post,confirm,onSent,fixedWork}:{pr
    :<label className="block min-w-0 text-sm font-bold">{t('Proyecto (opcional)','Project (optional)')}<select data-email-field="work" className={field} value={work} onChange={e=>setWork(e.target.value)}><option value="">{t('Sin proyecto','No project')}</option>{data.works.map(w=><option key={w.id} value={w.id}>{w.label}</option>)}</select></label>}
    <TemplatePicker workLabel={data.works.find(w=>w.id===work)?.label??''} onPick={(nextSubject,nextBody)=>{setSubject(nextSubject);setBody(nextBody);}}/>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Para (separe con comas)','To (comma separated)')}<input data-email-field="to" className={field} required value={to} onChange={e=>setTo(e.target.value)} inputMode="email"/></label>
+   <div className="min-w-0 sm:col-span-2">{showCc?<label className="block min-w-0 text-sm font-bold">{t('Con copia (Cc, separe con comas)','Cc (comma separated)')}<input data-email-field="cc" className={field} value={cc} onChange={e=>setCc(e.target.value)} inputMode="email"/></label>:<button type="button" data-email-cc-toggle className="min-h-11 text-sm font-semibold text-[#00739a] underline" onClick={()=>setShowCc(true)}>{t('Agregar Cc','Add Cc')}</button>}</div>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Asunto','Subject')}<input data-email-field="subject" className={field} required maxLength={200} value={subject} onChange={e=>setSubject(e.target.value)}/></label>
    <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Mensaje','Message')}<textarea data-email-field="body" className={field+' min-h-32 py-2'} required maxLength={20000} value={body} onChange={e=>setBody(e.target.value)}/></label>
    <div className="space-y-2 sm:col-span-2"><Button type="button" variant="secondary" data-email-attach onClick={()=>setPicker(true)}>{provider==='google'?t('Adjuntar desde Drive','Attach from Drive'):t('Adjuntar desde OneDrive','Attach from OneDrive')}</Button>

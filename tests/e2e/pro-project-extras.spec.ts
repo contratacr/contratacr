@@ -6,6 +6,8 @@ import {messageTemplates,renderMessageTemplate} from '../../src/lib/pro/message-
 import {emptyFileFilters,fileFiltersActive,filterFiles} from '../../src/lib/pro/file-filters';
 import {expenseKpis} from '../../src/components/pro/expense-extras';
 import {ownerFixture,local,origin,headersFor} from './pro-round2-fixture';
+import {applyFormat,isSafeLink,parseInline,parseMessage,plainMessage} from '../../src/lib/pro/message-format';
+import {connectorMutationSchema} from '../../src/lib/pro/integrations/workspace/api';
 import {gotoOK,expectNoHorizontalOverflow} from './helpers';
 
 // Area C: task tags + schedule link, time markup/taxable, project preferences, statuses and templates.
@@ -109,4 +111,28 @@ test('Project activities and rates: API override applies to new entries',async({
    await expect(table).toContainText(en?'Activities and rates':'Actividades y tarifas');await expectNoHorizontalOverflow(page);
   }
  }finally{await f.cleanup();}
+});
+
+test('Messages: light formatting is parsed safely',()=>{
+ expect(parseInline('a **b** *c* __d__')).toEqual([{t:'text',v:'a '},{t:'b',c:[{t:'text',v:'b'}]},{t:'text',v:' '},{t:'i',c:[{t:'text',v:'c'}]},{t:'text',v:' '},{t:'u',c:[{t:'text',v:'d'}]}]);
+ expect(parseInline('[sitio](https://contratacr.com/x)')).toEqual([{t:'a',href:'https://contratacr.com/x',c:[{t:'text',v:'sitio'}]}]);
+ // unsafe links stay as plain text, never become anchors
+ expect(JSON.stringify(parseInline('[x](javascript:alert(1)) [y](http://a.com)'))).not.toContain('"t":"a"');
+ expect(isSafeLink('https://a.com/b')).toBe(true);expect(isSafeLink('data:text/html,x')).toBe(false);
+ const blocks=parseMessage('# Asunto\n\nHola\n- uno\n- dos\n1. a\n2. b');
+ expect(blocks.map(b=>b.t)).toEqual(['subject','p','ul','ol']);
+ expect(plainMessage('# Hola\n\n**Gracias** por [ver](https://a.com)')).toBe('Hola\nGracias por ver');
+ expect(applyFormat('hola mundo',5,10,'bold')).toMatchObject({value:'hola **mundo**'});
+ expect(applyFormat('uno\ndos',0,7,'bullets').value).toBe('- uno\n- dos');
+ expect(applyFormat('- uno\n- dos',0,11,'bullets').value).toBe('uno\ndos');
+ expect(applyFormat('x',0,1,'link','javascript:1').value).toBe('x');
+ expect(applyFormat('[a](https://b.com)',0,18,'unlink').value).toBe('a');
+});
+
+test('Project email: Cc is validated',()=>{
+ const base={action:'send_email',actionId:randomUUID(),provider:'google',confirmed:true,to:['a@b.cc'],subject:'S',body:'B',workId:null,attachments:[]};
+ expect(connectorMutationSchema.safeParse(base).success).toBe(true);
+ expect(connectorMutationSchema.safeParse({...base,cc:['c@d.cc']}).success).toBe(true);
+ expect(connectorMutationSchema.safeParse({...base,cc:['not-an-email']}).success).toBe(false);
+ expect(connectorMutationSchema.safeParse({...base,cc:Array(11).fill('c@d.cc')}).success).toBe(false);
 });

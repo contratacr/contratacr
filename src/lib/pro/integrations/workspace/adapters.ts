@@ -15,7 +15,7 @@ export type WorkspaceProvider='google'|'microsoft';
 export type CalendarEvent={title:string;startsAt:string;endsAt:string;allDay:boolean;localKey:string};
 export type RemoteEvent={id:string;title:string;startsAt:string;endsAt:string;allDay:boolean;etag:string;origin:'ccr'|'external';deleted:boolean};
 export interface CalendarAdapter{list():Promise<RemoteEvent[]>;create(event:CalendarEvent):Promise<{id:string;etag:string}>;update(id:string,event:CalendarEvent):Promise<{etag:string}>;remove(id:string):Promise<void>;calls:{operation:string;url:string;status:number;durationMs:number}[]}
-export type MailMessage={from:string;to:string[];subject:string;body:string;attachments:PickedFile[]};
+export type MailMessage={from:string;to:string[];cc?:string[];subject:string;body:string;attachments:PickedFile[]};
 export type PickedFile={provider:WorkspaceProvider;fileId:string;name:string;mimeType:string;size:number;link:string};
 
 // ---------- files (picker) ----------
@@ -42,7 +42,7 @@ export async function realFileMetadata(provider:WorkspaceProvider,token:string,f
 const rfc2047=(text:string)=>/^[\x20-\x7e]*$/.test(text)?text:`=?UTF-8?B?${Buffer.from(text,'utf8').toString('base64')}?=`;
 export function rfc2822(message:MailMessage){
  const links=message.attachments.length?'\r\n\r\n'+message.attachments.map(file=>`· ${file.name}: ${file.link}`).join('\r\n'):'';
- return [`From: ${message.from}`,`To: ${message.to.join(', ')}`,`Subject: ${rfc2047(message.subject)}`,'MIME-Version: 1.0','Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',Buffer.from(message.body+links,'utf8').toString('base64')].join('\r\n');
+ return [`From: ${message.from}`,`To: ${message.to.join(', ')}`,...(message.cc?.length?[`Cc: ${message.cc.join(', ')}`]:[]),`Subject: ${rfc2047(message.subject)}`,'MIME-Version: 1.0','Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',Buffer.from(message.body+links,'utf8').toString('base64')].join('\r\n');
 }
 /** Real send from the owner's mailbox. Never called in mock mode. */
 export async function sendRealMail(provider:WorkspaceProvider,token:string,message:MailMessage){
@@ -52,7 +52,7 @@ export async function sendRealMail(provider:WorkspaceProvider,token:string,messa
   return {ok:call.status===200,messageId:json?.id??null,status:call.status,url:'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',durationMs:call.durationMs};
  }
  const links=message.attachments.length?'\n\n'+message.attachments.map(file=>`· ${file.name}: ${file.link}`).join('\n'):'';
- const call=await timedFetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:message.subject,body:{contentType:'Text',content:message.body+links},toRecipients:message.to.map(address=>({emailAddress:{address}}))},saveToSentItems:true})});
+ const call=await timedFetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:message.subject,body:{contentType:'Text',content:message.body+links},toRecipients:message.to.map(address=>({emailAddress:{address}})),...(message.cc?.length?{ccRecipients:message.cc.map(address=>({emailAddress:{address}}))}:{})},saveToSentItems:true})});
  return {ok:call.status===202,messageId:null,status:call.status,url:'https://graph.microsoft.com/v1.0/me/sendMail',durationMs:call.durationMs};
 }
 
