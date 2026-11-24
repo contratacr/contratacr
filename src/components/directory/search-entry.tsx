@@ -51,13 +51,12 @@ export function SearchEntry({ onClose, initialText = "", autoVoice = false }: { 
   const { directorySections } = useSiteFeatures();
   const [text, setText] = useState(initialText);
   const [place, setPlace] = useState("");
-  const [recents, setRecents] = useState<string[]>([]);
-  const [visits, setVisits] = useState<RecentVisit[]>([]);
+  // Mounted only after a tap (never server-rendered), so reading the browser storage while initialising is safe.
+  const [recents, setRecents] = useState<string[]>(() => leerBusquedasRecientesConFecha().map((r) => r.termino));
+  const [visits] = useState<RecentVisit[]>(() => readRecentVisits("profesionales").slice(0, 4));
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setRecents(leerBusquedasRecientesConFecha().map((r) => r.termino));
-    setVisits(readRecentVisits("profesionales").slice(0, 4));
     input.current?.focus();
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);

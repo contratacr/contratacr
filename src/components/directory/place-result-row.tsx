@@ -65,7 +65,7 @@ export function PlaceResultRow({item,extra,rank,locale}:{item:PlaceSearchItem;ex
    </span>
   </p>
   {(independent||amenities.length>0)&&<div className="mt-2 flex flex-wrap items-start gap-1.5">
-   {independent&&<InfoBadge label={t('Negocio local','Locally owned')} tip={t('Negocio reclamado por su dueño que no pertenece a una cadena.','Business claimed by its owner and not part of a chain.')}/>}
+   {independent&&<InfoBadge label={t('Negocio local','Locally owned')} tip={t('Negocio reclamado por su dueño en ContrataCR, sin marca o cadena registrada.','Business claimed by its owner on ContrataCR, with no brand or chain on record.')}/>}
    {amenities.map(a=><span key={a} className="inline-flex min-h-7 items-center rounded-full bg-[#f4f7fa] px-2.5 text-[12px] font-semibold text-[#334155]">{a}</span>)}
   </div>}
   {extra?.snippet&&<div className="mt-2"><ReadMoreText text={extra.snippet} more={t('Leer más','Read more')} less={t('Leer menos','Read less')}/></div>}

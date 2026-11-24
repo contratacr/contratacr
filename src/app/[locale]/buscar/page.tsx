@@ -356,8 +356,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     llevar: params.llevar === "1" || params.mod === "takeout",
     orden: params.orden === "rating" || params.orden === "distance" || params.orden === "reviews" ? params.orden : "relevance",
   };
-  const placeResults = directoryOn && !selectedCategory && !selectedGroupId
-    ? await loadPlaceResults(params.q, directorySectionIds, locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }, placeFilters)
+  // Same 1.8 s race as the business mix: the list never waits for them (desktop ignores this block).
+  const placeResults = directoryOn && !selectedCategory && !selectedGroupId && currentPage === 1
+    ? await Promise.race([
+        loadPlaceResults(params.q, directorySectionIds, locale, { provinceId: selectedProvinceId, cantonId: selectedCantonId, lat: nearLat, lng: nearLng }, placeFilters).catch(() => null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1800)),
+      ])
     : null;
   // Sin resultados ni empresas cargadas (falló o tardó la consulta) pero la búsqueda nombra una sección: el camino sigue abierto.
   const fallbackMatch = !businessMix ? matchedBusinessSections(params.q, sitemapSections().map((s) => s.section), locale)[0] : undefined;
