@@ -6,6 +6,8 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {siteContentSchema,siteSlugSchema,siteThemeTokens,siteThemes,type PublicSite,type SiteContent,type SiteProfile,type SiteSection,type SiteTheme} from '@/lib/pro/site';
 import {ProModal} from './modal';
 import {SitePage} from './site-page';
+import {SiteTemplateGallery} from './site-template-gallery';
+import {applySiteTemplate,type SiteTemplate} from '@/lib/pro/site-templates';
 import {CompanySiteDomain} from './company-site-domain';
 
 /**
@@ -21,7 +23,7 @@ const sectionNames:Record<SiteSection['type'],[string,string]>={hero:['Portada',
 export function CompanySite(){
  const en=useLocale()==='en',t=useCallback((es:string,english:string)=>en?english:es,[en]),{confirm,dialogNode}=useAppDialog();
  const [data,setData]=useState<Read|null>(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const [slug,setSlug]=useState(''),[theme,setTheme]=useState<SiteTheme>('contratacr'),[content,setContent]=useState<SiteContent|null>(null),[dirty,setDirty]=useState(false),[preview,setPreview]=useState(false),[domain,setDomain]=useState('');
+ const [slug,setSlug]=useState(''),[theme,setTheme]=useState<SiteTheme>('contratacr'),[content,setContent]=useState<SiteContent|null>(null),[dirty,setDirty]=useState(false),[preview,setPreview]=useState(false),[domain,setDomain]=useState(''),[tplPreview,setTplPreview]=useState<SiteTemplate|null>(null);
  const seq=useRef(0);
  const load=useCallback(async(keep=false)=>{const n=++seq.current;setFailed(false);
   try{const response=await fetch('/api/pro/site?'+new URLSearchParams({lang:en?'en':'es'}),{cache:'no-store'});if(!response.ok)throw Error();const body=await response.json() as Read;if(n!==seq.current)return;setData(body);
@@ -76,6 +78,7 @@ export function CompanySite(){
    </section>
    <CompanySiteDomain key={site?.slug??'none'}/>
   </div>
+  <SiteTemplateGallery en={en} disabled={busy} onPreview={setTplPreview} onApply={tpl=>{setTheme(tpl.theme);update(applySiteTemplate(content,tpl));setNotice(t('Plantilla aplicada al borrador. Guarde para conservarla.','Template applied to the draft. Save to keep it.'));}}/>
   <section className={card} aria-labelledby="site-sections"><h3 id="site-sections" className="font-bold">{t('Secciones','Sections')}</h3>
    <ol className="space-y-3">{content.sections.map(section=><li key={section.type} data-site-section-editor={section.type} className="rounded-xl border border-[#e3eaf0] p-3">
     <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{en?sectionNames[section.type][1]:sectionNames[section.type][0]}</span>
@@ -83,6 +86,7 @@ export function CompanySite(){
     {section.enabled&&<SectionFields section={section} profile={data.profile} en={en} onChange={patch=>setSection(section.type,patch)}/>}
    </li>)}</ol>
   </section>
+  {tplPreview&&<ProModal open title={t('Vista previa de la plantilla','Template preview')+': '+tplPreview.name[en?'en':'es']} size="xl" mobilePresentation="fullscreen" onClose={()=>setTplPreview(null)}><div data-site-template-frame className="overflow-hidden rounded-xl border border-[#d7e1ea]"><SitePage site={{...previewSite,theme:tplPreview.theme,content:applySiteTemplate(content,tplPreview)}} preview/></div></ProModal>}
   {preview&&<ProModal open title={t('Vista previa del borrador','Draft preview')} size="xl" mobilePresentation="fullscreen" onClose={()=>setPreview(false)}><div data-site-preview-frame className="overflow-hidden rounded-xl border border-[#d7e1ea]"><SitePage site={previewSite} preview/></div></ProModal>}
  </div>;
 }

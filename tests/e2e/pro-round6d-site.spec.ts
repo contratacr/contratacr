@@ -48,7 +48,7 @@ for(const language of ['es','en'] as const)test(`Round 6D: website builder, trac
   expect((await page.request.post(origin+'/api/pro/site',{headers:h,data:{action:'publish',actionId:crypto.randomUUID(),revision:api.site.revision-1}})).status()).toBe(409);// stale revision
 
   // (2) Marketing insights: tracking campaign + cost.
-  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'insights'}));
+  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'insights',seccion:'campaigns'}));
   const ads=page.locator('[data-company-ads]');await expect(ads).toBeVisible({timeout:90000});
   await ads.locator('[data-ads-field="name"]').fill('Facebook '+label);await ads.locator('[data-ads-field="channel"]').selectOption('meta');await ads.locator('[data-ads-create]').click();
   await expect(ads.locator('[data-ads-notice]')).toContainText(t('Campaña creada','Campaign created'),{timeout:60000});
@@ -99,7 +99,7 @@ for(const language of ['es','en'] as const)test(`Round 6D: website builder, trac
   await v.goto('about:blank');await v.goto(confirmLink.replace(/#t=.*/,'#t=zz'));await expect(v.locator('[data-confirm-state="invalid"]')).toBeVisible({timeout:90000});expect(visitorErrors()).toEqual([]);
 
   // (4) Report from real data: 1 visit, 1 lead, ₡20 000 → ₡20 000 per lead, ROI −100 %.
-  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'insights'}));
+  await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_company',empresa:'insights',seccion:'campaigns'}));
   const row=ads.locator('[data-ads-row]').filter({hasText:'Facebook '+label});await expect(row.locator('[data-ads-cell="leads"]')).toHaveText('1',{timeout:90000});
   await expect(row.locator('[data-ads-cell="visits"]')).toHaveText('1');await expect(row.locator('[data-ads-cell="cost"]')).toContainText(en?'20,000':'20.000');await expect(row.locator('[data-ads-cell="cpl"]')).toContainText(en?'20,000':'20.000');
   await expect(row.locator('[data-ads-cell="roi"]')).toHaveText(en?'-100%':'-100 %');

@@ -33,7 +33,7 @@ const CompanyAccounting=dynamic(()=>import('./company-accounting').then(m=>m.Com
 const CompanySite=dynamic(()=>import('./company-site').then(m=>m.CompanySite),{loading:ViewLoading});
 const CompanyMarketing=dynamic(()=>import('./company-marketing').then(m=>m.CompanyMarketing),{loading:ViewLoading});
 const CompanyAdBuilder=dynamic(()=>import('./company-ad-builder').then(m=>m.CompanyAdBuilder),{loading:ViewLoading});
-const CompanyAdsTracking=dynamic(()=>import('./company-ads-tracking').then(m=>m.CompanyAdsTracking),{loading:ViewLoading});
+const CompanyInsights=dynamic(()=>import('./company-insights').then(m=>m.CompanyInsights),{loading:ViewLoading});
 const CompanyPortfolio=dynamic(()=>import('./company-portfolio').then(m=>m.CompanyPortfolio),{loading:ViewLoading});
 const ProHelpCenter=dynamic(()=>import('./pro-help-center').then(m=>m.ProHelpCenter),{loading:ViewLoading});
 const ProTraining=dynamic(()=>import('./pro-training').then(m=>m.ProTraining),{loading:ViewLoading});
@@ -56,7 +56,7 @@ const views:Record<CompanyView,{label:Copy;title:Copy;description:Copy}>={
  sitio:{label:{es:'Sitio web',en:'Website'},title:{es:'Sitio web',en:'Website'},description:{es:'Su sitio web con sus servicios, fotos, reseñas y un formulario que crea solicitudes. Se publica por versiones.',en:'Your website with your services, photos, reviews and a form that creates leads. Published in versions.'}},
  correo:{label:{es:'Correo masivo',en:'Email campaigns'},title:{es:'Correo masivo',en:'Email campaigns'},description:{es:'Campañas y automatizaciones por correo, solo a contactos con consentimiento y con enlace de baja.',en:'Email campaigns and automations, only to contacts with consent and with an unsubscribe link.'}},
  anuncios:{label:{es:'Constructor de anuncios',en:'Ad builder'},title:{es:'Constructor de anuncios',en:'Ad builder'},description:{es:'Planifique anuncios en Meta o Google con segmentación y presupuesto. Modo de prueba: no se publica ni se gasta nada.',en:'Plan Meta or Google ads with targeting and budget. Test mode: nothing is published or spent.'}},
- insights:{label:{es:'Resultados de marketing',en:'Marketing insights'},title:{es:'Resultados de marketing',en:'Marketing insights'},description:{es:'Enlaces de seguimiento (UTM), costos de sus campañas y costo por solicitud con datos reales.',en:'Tracking links (UTM), campaign costs and cost per lead from real data.'}},
+ insights:{label:{es:'Resultados de marketing',en:'Marketing insights'},title:{es:'Resultados de marketing',en:'Marketing insights'},description:{es:'Perfil y reseñas, fotos, sitio web, solicitudes y campañas con enlaces de seguimiento (UTM) y costo por solicitud, con datos reales.',en:'Profile and reviews, photos, website, leads and campaigns with tracking links (UTM) and cost per lead, from real data.'}},
  integraciones:{label:{es:'Integraciones',en:'Integrations'},title:{es:'Integraciones',en:'Integrations'},description:{es:'Hacienda, cobros en línea, firma electrónica, Google, Microsoft, QuickBooks, IA, transcripción, correo de campañas, anuncios, lector de enlaces y dominio: modo, estado y prueba de conexión.',en:'Hacienda, online payments, e-signature, Google, Microsoft, QuickBooks, AI, transcription, campaign email, ads, link reader and domain: mode, status and connection test.'}},
  conectores:{label:{es:'Correo y calendario',en:'Email and calendar'},title:{es:'Correo, calendario y archivos',en:'Email, calendar and files'},description:{es:'Conecte Google o Microsoft para enviar correos de proyecto desde su buzón, sincronizar la agenda y adjuntar archivos de Drive u OneDrive.',en:'Connect Google or Microsoft to send project emails from your mailbox, sync your agenda and attach Drive or OneDrive files.'}},
  automatizacion:{label:{es:'Automatización',en:'Automation'},title:{es:'Automatización con otras herramientas',en:'Automation with other tools'},description:{es:'Eventos firmados (webhooks) hacia Zapier, Make, n8n o su propio sistema, con registro de entregas.',en:'Signed events (webhooks) to Zapier, Make, n8n or your own system, with a delivery log.'}},
@@ -114,7 +114,7 @@ export function CompanyHub({profileSlug,disabled=false}:{profileSlug:string|null
    {view==='formulario'&&<CompanyContactForm slug={profileSlug}/>}
    {view==='sitio'&&user&&<CompanySite key={user.id}/>}
    {view==='correo'&&user&&<CompanyMarketing key={user.id}/>}
-   {view==='insights'&&user&&<CompanyAdsTracking key={user.id}/>}
+   {view==='insights'&&user&&<CompanyInsights key={user.id}/>}
    {view==='anuncios'&&user&&<CompanyAdBuilder key={user.id}/>}
    {view==='integraciones'&&user&&<CompanyIntegrations key={user.id}/>}
    {view==='conectores'&&user&&<CompanyConnectors key={user.id}/>}
