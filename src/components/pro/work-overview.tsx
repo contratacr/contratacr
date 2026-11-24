@@ -84,7 +84,7 @@ export function WorkOverview({workId,dated,period,disabled,onOpen}:{workId:strin
   {key:'payment-awaiting',count:o.paymentAwaiting?1:0,label:t('Plan de pagos esperando la aceptación del cliente','Payment plan waiting for the customer to accept'),view:'costs'},
   {key:'allowances',count:o.allowancesPending,label:proCount(o.allowancesPending,en,['monto previsto sin definir','montos previstos sin definir'],['allowance not decided','allowances not decided']),view:'allowances'},
  ] satisfies {key:string;count:number;label:string;view:View}[]).filter(item=>item.count>0):[];
- return <div className="space-y-3"><OverviewLayoutBar layout={layout} onChange={setLayout} titles={widgetTitles} disabled={disabled}/>
+ return <div className="space-y-3"><OverviewLayoutBar workId={workId} layout={layout} onChange={setLayout} titles={widgetTitles} disabled={disabled}/>
  <section data-work-overview data-work-summary-blocks aria-label={t('Resumen del proyecto','Project overview')} className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
   <Widget place={placeOf("client")} name="client" title={t('Cliente','Customer')} state={state(client)} footer={go('client',t('Abrir vista del cliente','Open customer view'))}>
    {c&&(c.client?<><p data-work-overview-client-name className="break-words font-semibold">{c.client.name}{c.client.archived?' · '+t('archivado','archived'):''}</p>

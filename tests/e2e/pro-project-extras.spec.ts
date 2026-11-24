@@ -33,12 +33,14 @@ test('Project extras: API',async({page},info)=>{
   const body=await read.json();expect(body.items[taskId].data.tags).toEqual(['urgente','cocina']);expect(body.links).toBeDefined();
   // time: markup and taxable need a real entry
   expect((await post({scope:'work',workId:f.workId,kind:'time',key:randomUUID(),revision:0,data:{markupBps:1000,taxable:true}})).status()).toBe(404);
-  // prefs: pin, overview scope, status
-  const prefs=await post({scope:'work',workId:f.workId,kind:'prefs',key:'',revision:0,data:{pinned:true,statusId:'in_progress',layout:{hidden:['files'],order:['tasks','upcoming','files','schedule','activity']}}});expect(prefs.status(),await prefs.text()).toBe(200);
-  expect((await post({scope:'work',workId:f.workId,kind:'prefs',key:'x',revision:0,data:{pinned:true,statusId:null,layout:null}})).status()).toBe(400);
-  // owner statuses and templates
-  const statuses=await post({scope:'owner',kind:'statuses',key:'',revision:0,data:{items:[{id:'pausa',name:'En pausa',color:'#ff8800'}]}});expect(statuses.status(),await statuses.text()).toBe(200);
-  expect((await post({scope:'owner',kind:'statuses',key:'',revision:0,data:{items:[]}})).status()).toBe(409);
+  // prefs: overview arrangement for this project only
+  const prefs=await post({scope:'work',workId:f.workId,kind:'prefs',key:'',revision:0,data:{layout:{hidden:['finance'],order:['open','client','next','schedule','finance','activity']}}});expect(prefs.status(),await prefs.text()).toBe(200);
+  expect((await post({scope:'work',workId:f.workId,kind:'prefs',key:'',revision:1,data:{layout:{hidden:['nope'],order:[]}}})).status()).toBe(400);
+  expect((await get('scope=work&kind=prefs&workId='+f.workId)).status()).toBe(200);
+  expect((await post({scope:'work',workId:f.workId,kind:'prefs',key:'x',revision:0,data:{layout:null}})).status()).toBe(400);
+  // pin flag and custom statuses are read from the projects hub state
+  const menu=await page.request.get(origin+'/api/pro/project-menu?workId='+f.workId,{headers});const menuBody=menu.status()===200?await menu.json():null;if(menu.status()!==404)expect(menuBody).toMatchObject({pinned:false,statusId:null});
+  // owner templates
   const tpl=await post({scope:'owner',kind:'templates',key:'',revision:0,data:{items:[{id:randomUUID(),name:'Cocina',type:'Remodelación',tags:['a'],tasks:['Demolición'],savedAt:'2026-11-24'}]}});expect(tpl.status(),await tpl.text()).toBe(200);
   const anonymous=await page.context().browser()!.newContext({baseURL:origin});expect((await anonymous.request.post(origin+'/api/pro/project-extras',{headers:{Origin:origin},data:{}})).status()).toBe(401);await anonymous.close();
  }finally{await f.cleanup();}

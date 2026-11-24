@@ -4,6 +4,7 @@ import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {workSidebarSchema,type WorkSidebar as Data} from '@/lib/pro/round8';
 import {WorkTimerControl} from './work-timer';
+import {ProjectMenu} from './project-menu';
 
 /**
  * Round 8: right column of the job page (Houzz-style): status, location, customer and
@@ -32,6 +33,7 @@ export function WorkSidebar({workId,disabled,onOpen}:{workId:string;disabled?:bo
     <p className="flex items-center gap-2 font-semibold"><span aria-hidden className={'inline-block h-2.5 w-2.5 rounded-full '+(data.status.cancelled?'bg-[#b42318]':data.status.phase==='completed'?'bg-[#1d8a52]':'bg-[#008bb5]')}/>{status}</p>
     <p data-work-sidebar-period className="text-sm text-[#52627a]">{data.status.start||data.status.end?`${data.status.start?day(data.status.start):'—'} – ${data.status.end?day(data.status.end):'—'}`:plan?.workId===workId&&plan.start&&plan.end?t(`Plan: ${day(plan.start)} – ${day(plan.end)}`,`Plan: ${day(plan.start)} – ${day(plan.end)}`):t('Sin fechas','No dates')}</p>
     {data.code&&<p className="text-sm text-[#52627a]">{t('Código: ','Code: ')}{data.code}</p>}
+    <ProjectMenu workId={workId} disabled={disabled}/>
    </section>
    <section className={block} data-work-sidebar-section="location"><h3 className={head}>{t('Ubicación','Location')}</h3>
     {data.location.address||data.location.visit?<p className="break-words text-sm">{data.location.address??data.location.visit}</p>:<p className="text-sm text-[#68778d]">{t('Sin dirección.','No address.')}</p>}

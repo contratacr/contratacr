@@ -1,11 +1,12 @@
 import {z} from 'zod';
+import {overviewLayoutSchema} from './round8';
 /** Area C: side stores for task tags, time markup/taxable, project preferences, statuses and templates. */
 const tag=z.string().trim().min(1).max(30).regex(/^[^\u0000-\u001f<>"]+$/);
 export const taskExtrasSchema=z.object({tags:z.array(tag).max(8)}).strict();
 export const timeExtrasSchema=z.object({markupBps:z.number().int().min(0).max(100000),taxable:z.boolean()}).strict();
 export const activityExtrasSchema=z.object({costCents:z.number().int().min(0).max(10000000000).nullable(),rateCents:z.number().int().min(0).max(10000000000).nullable(),markupBps:z.number().int().min(0).max(100000),taxable:z.boolean(),billable:z.boolean()}).strict();
-export const OVERVIEW_WIDGETS=['upcoming','files','tasks','schedule','activity'] as const;
-export const prefsExtrasSchema=z.object({pinned:z.boolean(),statusId:z.string().max(40).nullable(),layout:z.object({hidden:z.array(z.enum(OVERVIEW_WIDGETS)).max(5),order:z.array(z.enum(OVERVIEW_WIDGETS)).max(5)}).strict().nullable()}).strict();
+/** Per-project overview arrangement; null = use the shared one. Pin and custom status live in the projects hub (area A). */
+export const prefsExtrasSchema=z.object({layout:overviewLayoutSchema.nullable()}).strict();
 export const BUILTIN_STATUSES=['open','in_progress','done','closed'] as const;
 const statusColor=z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const statusesExtrasSchema=z.object({items:z.array(z.object({id:z.string().regex(/^[a-z0-9_-]{1,40}$/),name:z.string().trim().min(1).max(40),color:statusColor}).strict()).max(20)}).strict();
