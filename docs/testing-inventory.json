@@ -40432,7 +40432,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 57,
+          "line": 59,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>go(p)}",
@@ -88687,16 +88687,20 @@
       "file": "tests/e2e/pro-schedule-views-unit.spec.ts",
       "cases": [
         {
-          "line": 8,
+          "line": 9,
           "title": "'month grid starts on Monday and covers whole weeks'"
         },
         {
-          "line": 14,
+          "line": 15,
           "title": "'calendar spans task periods, adds key dates and honours the filter'"
         },
         {
-          "line": 18,
+          "line": 19,
           "title": "'upcoming windows are exclusive: today, rest of week, next week'"
+        },
+        {
+          "line": 31,
+          "title": "'save as template uses offsets from the first day and drops unplanned tasks and foreign dependencies'"
         }
       ]
     },

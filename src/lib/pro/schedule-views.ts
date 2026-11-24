@@ -1,4 +1,4 @@
-import type {GanttMilestone,GanttTask} from '@/lib/pro/project-schedule';
+import type {GanttMilestone,GanttPhase,GanttTask} from '@/lib/pro/project-schedule';
 
 /**
  * Pure helpers for the schedule calendar view (month grid, Monday first), the schedule status
@@ -84,3 +84,20 @@ export function scheduleCsv(data:{phases:{id:string;title:string}[];tasks:GanttT
 }
 /** Days between two civil dates (b - a). */
 export function daysBetween(a:string,b:string){return Math.round((toUtc(b)-toUtc(a))/MS);}
+
+/**
+ * Houzz "Save as Template": turn the schedule into a template definition with offsets relative to
+ * the first planned day. Only tasks with a period are included (a template task needs both ends);
+ * dependencies are kept only between included tasks; phases with no included task stay (they are
+ * still part of the plan). Returns null when there is nothing to save.
+ */
+export function scheduleToTemplate(data:{phases:GanttPhase[];tasks:GanttTask[];milestones:GanttMilestone[]}){
+ const planned=data.tasks.filter(t=>t.plannedStart&&t.plannedEnd).slice(0,100),dates=[...planned.map(t=>t.plannedStart!),...data.milestones.map(m=>m.date)].sort();
+ if(!dates.length&&!data.phases.length)return null;
+ const anchor=dates[0]??'1970-01-01',off=(d:string)=>Math.round((toUtc(d)-toUtc(anchor))/MS),ids=new Set(planned.map(t=>t.id)),phaseIds=new Set(data.phases.map(p=>p.id));
+ const phases=[...data.phases].sort((a,b)=>a.position-b.position).slice(0,50).map((p,i)=>({id:p.id,title:p.title,position:i}));
+ const tasks=planned.map(t=>({id:t.id,title:t.title,details:'',assignee:'',dueOffset:null,phaseId:t.phaseId&&phaseIds.has(t.phaseId)?t.phaseId:null,startOffset:off(t.plannedStart!),endOffset:off(t.plannedEnd!),dependsOn:t.dependsOn.filter(d=>ids.has(d)&&d!==t.id)}));
+ const milestones=data.milestones.slice(0,100).map(m=>({id:m.id,title:m.title,offset:off(m.date),notes:m.notes}));
+ if(!phases.length&&!tasks.length&&!milestones.length)return null;
+ return {phases,tasks,milestones};
+}

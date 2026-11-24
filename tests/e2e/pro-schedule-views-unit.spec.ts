@@ -1,8 +1,9 @@
 import {test,expect} from 'playwright/test';
-import {addDays,calendarEntries,inRange,matchesStatus,monthGrid,monthStart,shiftMonth,upcomingBounds,upcomingItems} from '../../src/lib/pro/schedule-views';
+import {scheduleToTemplate,addDays,calendarEntries,inRange,matchesStatus,monthGrid,monthStart,shiftMonth,upcomingBounds,upcomingItems} from '../../src/lib/pro/schedule-views';
 import type {GanttMilestone,GanttTask} from '../../src/lib/pro/project-schedule';
 
 const task=(id:string,o:Partial<GanttTask>={}):GanttTask=>({id,title:'T'+id,status:'open',revision:1,dueDate:null,phaseId:null,plannedStart:null,plannedEnd:null,dependsOn:[],baselineStart:null,baselineEnd:null,startVarianceDays:null,endVarianceDays:null,...o} as GanttTask);
+const phase=(id:string,position:number)=>({id,title:'P'+id,position,plannedStart:null,plannedEnd:null,taskCount:0,doneCount:0,baselineStart:null,baselineEnd:null,endVarianceDays:null}) as never;
 const key=(id:string,date:string):GanttMilestone=>({id,title:'K'+id,date,notes:'',baselineDate:null,varianceDays:null} as GanttMilestone);
 
 test('month grid starts on Monday and covers whole weeks',()=>{
@@ -25,4 +26,12 @@ test('upcoming windows are exclusive: today, rest of week, next week',()=>{
  expect(inRange(items,b.next,'all').map(i=>i.id)).toEqual(['k','3']);
  expect(inRange(items,b.next,'task').map(i=>i.id)).toEqual(['3']);
  expect(addDays('2026-12-31',1)).toBe('2027-01-01');
+});
+
+test('save as template uses offsets from the first day and drops unplanned tasks and foreign dependencies',()=>{
+ const none=scheduleToTemplate({phases:[],tasks:[task('1')],milestones:[]});expect(none).toBeNull();
+ const t=scheduleToTemplate({phases:[phase('p2',5),phase('p1',1)],tasks:[task('1',{plannedStart:'2026-11-02',plannedEnd:'2026-11-04',phaseId:'p1'}),task('2',{plannedStart:'2026-11-05',plannedEnd:'2026-11-05',dependsOn:['1','zz']}),task('3')],milestones:[key('a','2026-11-10')]})!;
+ expect(t.phases.map(p=>[p.id,p.position])).toEqual([['p1',0],['p2',1]]);
+ expect(t.tasks.map(x=>[x.id,x.startOffset,x.endOffset,x.phaseId])).toEqual([['1',0,2,'p1'],['2',3,3,null]]);
+ expect(t.tasks[1].dependsOn).toEqual(['1']);expect(t.milestones[0].offset).toBe(8);
 });
