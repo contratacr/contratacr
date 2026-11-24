@@ -8,6 +8,8 @@ import {z} from 'zod';
 const id=z.string().uuid(),revision=z.number().int().min(0).max(2147483646);
 const body=z.string().trim().min(1).max(8000),subject=z.string().trim().min(1).max(160),name=z.string().trim().min(1).max(120);
 export const marketingSegments=['all','clients','leads'] as const;
+/** System segments plus a custom email list (area E): 'list:<uuid>'. */
+export const marketingSegmentSchema=z.union([z.enum(marketingSegments),z.string().regex(/^list:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)]);
 export const consentEvidence=['verbal','written','form','other'] as const;
 export const automationKinds=['quote_followup','review_request'] as const;
 export const marketingMutationSchema=z.discriminatedUnion('action',[
@@ -15,7 +17,7 @@ export const marketingMutationSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('contact_revoke'),actionId:id,id,revision}).strict(),
  z.object({action:z.literal('template_save'),actionId:id,id,revision,name,subject,body}).strict(),
  z.object({action:z.literal('template_archive'),actionId:id,id,revision}).strict(),
- z.object({action:z.literal('campaign_save'),actionId:id,id,revision,name,subject,body,segment:z.enum(marketingSegments)}).strict(),
+ z.object({action:z.literal('campaign_save'),actionId:id,id,revision,name,subject,body,segment:marketingSegmentSchema}).strict(),
  z.object({action:z.literal('campaign_schedule'),actionId:id,id,revision,scheduledAt:z.string().datetime({offset:true})}).strict(),
  z.object({action:z.enum(['campaign_unschedule','campaign_cancel','campaign_send_now']),actionId:id,id,revision}).strict(),
  z.object({action:z.literal('test_send'),actionId:id,id}).strict(),
@@ -25,7 +27,7 @@ export const marketingMutationSchema=z.discriminatedUnion('action',[
 ]);
 export type MarketingMutation=z.infer<typeof marketingMutationSchema>;
 export type MarketingContact={id:string;email:string;name:string;clientId:string|null;leadId:string|null;consent:'granted'|'pending'|'revoked'|'none';consentSource:string|null;consentText:string|null;consentAt:string|null;revokedAt:string|null;confirmationRequestedAt:string|null;confirmedAt:string|null;suppressed:boolean;revision:number;createdAt:string};
-export type MarketingCampaign={id:string;name:string;subject:string;body:string;segment:typeof marketingSegments[number];status:'draft'|'scheduled'|'sent'|'cancelled';scheduledAt:string|null;sentAt:string|null;recipients:number|null;mode:string|null;revision:number;audience:number};
+export type MarketingCampaign={id:string;name:string;subject:string;body:string;segment:typeof marketingSegments[number]|`list:${string}`;status:'draft'|'scheduled'|'sent'|'cancelled';scheduledAt:string|null;sentAt:string|null;recipients:number|null;mode:string|null;revision:number;audience:number};
 export type MarketingAutomation={kind:typeof automationKinds[number];enabled:boolean;delayDays:number;subject:string;body:string;revision:number};
 export type MarketingDraft={id:string;kind:typeof automationKinds[number];refKind:string;refId:string;refLabel:string;contactId:string;to:string;subject:string;body:string;status:'pending_approval'|'approved'|'rejected';createdAt:string;decidedAt:string|null};
 export type MarketingMessage={id:string;kind:'test'|'campaign'|'automation';campaignId:string|null;draftId:string|null;to:string;subject:string;body:string;mode:string;delivery:string;createdAt:string};
@@ -41,3 +43,16 @@ export function simulatedMetrics(recipients:number){
 }
 /** Placeholders the owner may use in subject/body. */
 export const marketingPlaceholders=['{{nombre}}','{{negocio}}','{{enlace}}'] as const;
+
+export const marketingListsSchema=z.object({
+ system:z.object({all:z.number().int(),clients:z.number().int(),leads:z.number().int()}),
+ lists:z.array(z.object({id:z.string().uuid(),name:z.string(),contactIds:z.array(z.string().uuid()),audience:z.number().int()})),
+ contacts:z.array(z.object({id:z.string().uuid(),name:z.string(),email:z.string()})),
+});
+export type MarketingLists=z.infer<typeof marketingListsSchema>;
+export const marketingListMutationSchema=z.discriminatedUnion('action',[
+ z.object({action:z.literal('create'),id:z.string().uuid(),name:z.string().trim().min(1).max(80)}).strict(),
+ z.object({action:z.literal('rename'),id:z.string().uuid(),name:z.string().trim().min(1).max(80)}).strict(),
+ z.object({action:z.literal('delete'),id:z.string().uuid()}).strict(),
+ z.object({action:z.literal('set_members'),id:z.string().uuid(),contactIds:z.array(z.string().uuid()).max(2000)}).strict(),
+]);

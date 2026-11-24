@@ -4,6 +4,7 @@ import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {useAppDialog} from '@/hooks/use-app-dialog';
 import {proCount} from '@/lib/pro/plural';
+import {MarketingLists,useMarketingLists} from './marketing-lists';
 import {consentEvidence,simulatedMetrics,type MarketingCampaign,type MarketingOverview} from '@/lib/pro/marketing';
 
 /**
@@ -14,12 +15,12 @@ import {consentEvidence,simulatedMetrics,type MarketingCampaign,type MarketingOv
  */
 const card='min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 sm:p-5',field='mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base font-normal';
 const Simulated=({en}:{en:boolean})=><span data-simulated className="rounded-lg bg-[#fff6e5] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[#8a5300]">{en?'Simulated':'Simulado'}</span>;
-type Editor={id:string;revision:number;name:string;subject:string;body:string;segment:'all'|'clients'|'leads'};
+type Editor={id:string;revision:number;name:string;subject:string;body:string;segment:MarketingCampaign['segment']};
 export function CompanyMarketing(){
  const en=useLocale()==='en',t=useCallback((es:string,english:string)=>en?english:es,[en]),{confirm,dialogNode}=useAppDialog();
  const [data,setData]=useState<MarketingOverview|null>(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [editor,setEditor]=useState<Editor|null>(null),[schedule,setSchedule]=useState(''),[consent,setConsent]=useState({email:'',name:'',clientId:'',evidence:'written' as typeof consentEvidence[number],text:''}),[open,setOpen]=useState<string|null>(null);
- const seq=useRef(0);
+ const seq=useRef(0),mlists=useMarketingLists();
  const load=useCallback(async()=>{const n=++seq.current;setFailed(false);try{const response=await fetch('/api/pro/marketing',{cache:'no-store'});if(!response.ok)throw Error();const body=await response.json() as MarketingOverview;if(n===seq.current)setData(body);}catch{if(n===seq.current)setFailed(true);}},[]);
  useEffect(()=>{const counter=seq,timer=setTimeout(()=>void load(),0);return()=>{clearTimeout(timer);counter.current++;};},[load]);
  const post=useCallback(async(payload:Record<string,unknown>,done?:string)=>{
@@ -36,7 +37,7 @@ export function CompanyMarketing(){
  if(!data)return <p role="status" aria-busy="true" className="text-sm text-[#52627a]">{t('Cargando…','Loading…')}</p>;
  const mock=data.mode==='mock',defaultConsent=t(`La persona aceptó recibir novedades y ofertas de ${data.business} por correo.`,`The person agreed to receive news and offers from ${data.business} by email.`);
  const date=(value:string)=>new Date(value).toLocaleString(en?'en-US':'es-CR',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Costa_Rica'});
- const segmentLabel=(s:string)=>s==='clients'?t('Solo clientes','Customers only'):s==='leads'?t('Solo solicitudes','Leads only'):t('Todos con consentimiento','Everyone with consent');
+ const segmentLabel=(s:string)=>s.startsWith('list:')?(mlists.lists?.lists.find(x=>'list:'+x.id===s)?.name??t('Lista eliminada','Deleted list')):s==='clients'?t('Solo clientes','Customers only'):s==='leads'?t('Solo solicitudes','Leads only'):t('Todos con consentimiento','Everyone with consent');
  const statusLabel=(c:MarketingCampaign)=>({draft:t('Borrador','Draft'),scheduled:t('Programada','Scheduled'),sent:t('Enviada','Sent'),cancelled:t('Cancelada','Cancelled')})[c.status];
  const newCampaign=()=>setEditor({id:crypto.randomUUID(),revision:0,name:t('Campaña nueva','New campaign'),subject:t('Hola {{nombre}}','Hello {{nombre}}'),body:t('Le escribimos de {{negocio}} para contarle…','We are writing from {{negocio}} to tell you…'),segment:'all'});
  return <div data-company-marketing={data.mode} className="min-w-0 space-y-4">{dialogNode}
@@ -60,6 +61,7 @@ export function CompanyMarketing(){
     {c.consent==='granted'&&!c.suppressed&&<Button type="button" variant="ghost" disabled={busy} onClick={()=>void (async()=>{if(!(await confirm({title:t('¿Retirar el consentimiento?','Withdraw consent?'),description:t('La dirección pasa a la lista de supresión y no recibirá más campañas.','The address goes to the suppression list and will not receive more campaigns.'),confirmLabel:t('Retirar','Withdraw'),cancelLabel:t('Cancelar','Cancel')})).confirmed)return;await post({action:'contact_revoke',actionId:crypto.randomUUID(),id:c.id,revision:c.revision},t('Consentimiento retirado.','Consent withdrawn.'));})()}>{t('Retirar','Withdraw')}</Button>}</li>)}</ul>
    :<p className="text-sm text-[#52627a]">{t('Todavía no tiene contactos con consentimiento.','You have no contacts with consent yet.')}</p>}
   </section>
+  <MarketingLists en={en} lists={mlists.lists} failed={mlists.failed} reload={()=>void mlists.reload()} onChange={mlists.setLists}/>
   <section className={card} aria-labelledby="mkt-campaigns"><div className="flex flex-wrap items-center justify-between gap-2"><h3 id="mkt-campaigns" className="font-bold">{t('Campañas','Campaigns')}</h3><Button type="button" variant="secondary" data-mkt-new-campaign onClick={newCampaign}>{t('Campaña nueva','New campaign')}</Button></div>
    {editor&&<div data-mkt-editor className="space-y-2 rounded-xl bg-[#f7fafc] p-3">
     {data.templates.filter(x=>!x.archived).length>0&&<label className="block text-sm font-medium">{t('Usar plantilla','Use template')}<select className={field} value="" onChange={e=>{const tpl=data.templates.find(x=>x.id===e.target.value);if(tpl)setEditor({...editor,subject:tpl.subject,body:tpl.body});}}><option value="">—</option>{data.templates.filter(x=>!x.archived).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>}
@@ -67,7 +69,7 @@ export function CompanyMarketing(){
     <label className="block text-sm font-medium">{t('Asunto','Subject')}<input data-mkt-field="subject" className={field} maxLength={160} value={editor.subject} onChange={e=>setEditor({...editor,subject:e.target.value})}/></label>
     <label className="block text-sm font-medium">{t('Mensaje','Message')}<textarea data-mkt-field="body" className={field+' py-2'} rows={6} maxLength={8000} value={editor.body} onChange={e=>setEditor({...editor,body:e.target.value})}/></label>
     <p className="text-xs text-[#52627a]">{t('Puede usar {{nombre}} y {{negocio}}. El enlace de baja se agrega solo al final.','You can use {{nombre}} and {{negocio}}. The unsubscribe link is added automatically at the end.')}</p>
-    <label className="block text-sm font-medium">{t('Destinatarios','Recipients')}<select data-mkt-field="segment" className={field} value={editor.segment} onChange={e=>setEditor({...editor,segment:e.target.value as Editor['segment']})}>{(['all','clients','leads'] as const).map(s=><option key={s} value={s}>{segmentLabel(s)}</option>)}</select></label>
+    <label className="block text-sm font-medium">{t('Destinatarios','Recipients')}<select data-mkt-field="segment" className={field} value={editor.segment} onChange={e=>setEditor({...editor,segment:e.target.value as Editor['segment']})}>{(['all','clients','leads'] as string[]).concat((mlists.lists?.lists??[]).map(x=>'list:'+x.id)).map(s=><option key={s} value={s}>{segmentLabel(s)}</option>)}</select></label>
     <div className="flex flex-wrap gap-2"><Button type="button" data-mkt-campaign-save disabled={busy} onClick={()=>void post({action:'campaign_save',actionId:crypto.randomUUID(),...editor},t('Borrador de campaña guardado.','Campaign draft saved.')).then(r=>{if(r)setEditor(null);})}>{t('Guardar borrador','Save draft')}</Button>
      <Button type="button" variant="secondary" disabled={busy} onClick={()=>void post({action:'template_save',actionId:crypto.randomUUID(),id:crypto.randomUUID(),revision:0,name:editor.name,subject:editor.subject,body:editor.body},t('Plantilla guardada.','Template saved.'))}>{t('Guardar como plantilla','Save as template')}</Button>
      <Button type="button" variant="ghost" onClick={()=>setEditor(null)}>{t('Cerrar','Close')}</Button></div>
