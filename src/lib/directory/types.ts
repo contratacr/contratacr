@@ -38,7 +38,7 @@ export type ImportSummary={batchId:string;sourceId:string;status:'staged'|'commi
 export const WEEKDAYS={es:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']} as const;
 export const VERIFICATION_LABELS:Record<VerificationLevel,{es:string;en:string}>={
  unverified:{es:'Sin verificar',en:'Not verified'},
- imported:{es:'Datos públicos sin verificar',en:'Unverified public data'},
+ imported:{es:'No reclamado',en:'Unclaimed'},// quiet badge (2026-11-19); the data sources are explained in the Terms (13.1)
  claimed:{es:'Administrado por el negocio',en:'Managed by the business'},
  verified:{es:'Verificado por ContrataCR',en:'Verified by ContrataCR'},
  license_verified:{es:'Permiso de funcionamiento verificado',en:'Operating license verified'},
