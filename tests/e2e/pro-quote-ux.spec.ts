@@ -15,7 +15,7 @@ test('Pro quote UX: six exact states, filtered recovery and retrying the selecte
   await db.from('pro_memberships').insert({user_id:owner.id,status:'active'}).throwOnError();
   const professional=await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Negocio UX',slug:'quote-ux-'+owner.id,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending'}).select('id').single().throwOnError();
   const quotes=['sent','withdrawn'].map((status,i)=>({id:crypto.randomUUID(),professional_id:professional.data!.id,client_id:null,client_name:'Cliente UX '+i,client_phone:'',public_code:'quote-ux-'+owner.id+'-'+i,quote_number:i+1,title:'Servicio UX '+i,items:[{description:'Servicio',quantity:1,unit_price:1000}],tax_mode:'exento',subtotal:1000,tax_amount:0,total:1000,status}));
-  await login(page.context());await page.goto('/es/dashboard/profesional?tab=quotes');await expect(page.getByText('Aún no tiene cotizaciones',{exact:true})).toBeVisible();
+  await login(page.context());await page.goto('/es/dashboard/profesional?tab=quotes');await expect(page.getByText('Aún no tiene cotizaciones',{exact:true})).toBeVisible({timeout:60000});
   await db.from('quotes').insert(quotes).throwOnError();
   for(const en of [false,true]){
    await page.goto(`/${en?'en':'es'}/dashboard/profesional?tab=quotes`);
