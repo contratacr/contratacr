@@ -41,7 +41,7 @@ test('Quote agreement: formal partial response, direct conversion and acceptance
   expect(response.approvedLineIds).toEqual([l1]);expect(response.declinedLineIds).toEqual([l2]);
   expect(lineResponseSchema.parse((await (await respond(body)).json()).response).contentHash).toBe(response.contentHash);// replay
   expect((await respond({actionId:crypto.randomUUID(),publicationId:pub,note:'otra'})).status()).toBeGreaterThanOrEqual(400);// only once
-  expect((await decide(l1,'declined',1)).status()).toBe(409);// decisions are frozen
+  expect((await decide(l1,'declined',1)).status()).toBe(400);// decisions are frozen: the closed version raises 22023, which the API answers as 400
   const ownerSees=await page.request.get(responseApi+'?'+new URLSearchParams({publicationId:pub}),{headers:{'X-Pro-Expected-Actor':owner}});
   expect(ownerSees.status()).toBe(200);expect((await ownerSees.json()).response.approvedCents).toBe(response.approvedCents);
 
