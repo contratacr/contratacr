@@ -2,13 +2,13 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1339,
-    "controls": 6361,
+    "files": 1340,
+    "controls": 6365,
     "pages": 135,
     "handlers": 428,
-    "components": 709,
+    "components": 710,
     "hooks": 29,
-    "specs": 626
+    "specs": 627
   },
   "dashboardTabs": [
     "pro_tools",
@@ -40560,7 +40560,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 26,
+          "line": 27,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void load()}",
@@ -40568,7 +40568,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 27,
+          "line": 28,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>navigatePro('pro_company',{empresa:tab,...extra})}",
@@ -40576,7 +40576,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 59,
+          "line": 60,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>go(p)}",
@@ -40712,6 +40712,57 @@
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/pro/company-lead-insights.tsx",
+      "kind": "Componente",
+      "group": "Otros: clasificación manual pendiente",
+      "route": null,
+      "exports": [
+        "CompanyLeadInsights"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 37,
+          "tag": "textarea",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{e=>setText(e.target.value)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 38,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void send()}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 60,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>setRange(r)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 62,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>void load()}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -87708,6 +87759,23 @@
         {
           "line": 84,
           "title": "'Manual follow-up journey: metadata proof preserves a newer metadata draft and its mounted follow-up child (es)'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-lead-insights-unit.spec.ts",
+      "cases": [
+        {
+          "line": 5,
+          "title": "'Row 19: periods end today and the previous one is the same length right before'"
+        },
+        {
+          "line": 13,
+          "title": "'Row 19: percent change and source rows'"
+        },
+        {
+          "line": 20,
+          "title": "'Row 19: funnel counts a lead in its stage and the earlier ones, hidden stages are left out'"
         }
       ]
     },
