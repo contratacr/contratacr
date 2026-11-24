@@ -1,5 +1,7 @@
 import {test,expect,type Locator,type Page,type BrowserContext} from 'playwright/test';
 import {mkdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {ownerFixture,local,origin,login} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
@@ -13,7 +15,7 @@ import type {Gantt} from '../../src/lib/pro/project-schedule';
 // alternative, finish-to-start warning with explicit confirmation, one-step undo, assignee filter,
 // CAS conflict (409 → «Recargar», nothing overwritten) and a company read-only member without
 // editing affordances. Disposable accounts, loopback only; nothing is sent.
-const shots='/private/tmp/claude-501/-Users-contratacr/856767fe-101a-4aaa-8927-aa0cf5e87baa/scratchpad/gaps-shots';
+const shots=join(tmpdir(),'ccr-gaps-shots');
 const scheduleApi='/api/pro/project-schedule',planApi='/api/pro/work-schedule',tasksApi='/api/pro/work-tasks',teamApi='/api/pro/team';
 const shift=(iso:string,days:number)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);};
 const DAY=32;// «Días» scale
