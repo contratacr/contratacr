@@ -3,6 +3,8 @@ import {ClientBulkApprove} from './round10-selections';
 import {SelectionsTrackerPro} from './selections-tracker-pro';
 import {SelectionsGlobalTracker} from './selections-global-tracker';
 import {BoardTemplatesPanel,RoomBudgetBar,useRoomMeta} from './selection-rooms-extra';
+import {BoardsToolbar,useTeamAssignees,type BoardsFilter} from './selection-boards-toolbar';
+import {filterBoards} from '@/lib/pro/selection-boards';
 
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {useLocale} from 'next-intl';
@@ -156,7 +158,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
  },[accountId,workId]);
  const invalidate=useCallback(()=>{sequence.current++;},[]);
  useEffect(()=>{active.current=true;const timer=setTimeout(()=>void load(),0);return()=>{active.current=false;invalidate();clearTimeout(timer);};},[load,invalidate]);
- const rooms=useRoomMeta(accountId,workId,detail);
+ const rooms=useRoomMeta(accountId,workId,detail),team=useTeamAssignees(accountId,workId),[boardFilter,setBoardFilter]=useState<BoardsFilter>({query:'',sort:'custom',assignees:new Set()});
  const loadFiles=useCallback(async()=>{
   setFilesError(false);
   try{const response=await fetch('/api/pro/work-files?'+new URLSearchParams({workId}),{cache:'no-store',headers:{'X-Pro-Expected-Actor':accountId}});if(!response.ok)throw Error();const body=workFilesPageSchema.parse(await response.json());if(active.current)setFiles(body.items.filter(file=>file.ready&&file.mimeType==='image/jpeg'));}
@@ -263,10 +265,12 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
    {uncertain&&<Button type="button" variant="secondary" disabled={saving} onClick={()=>pending.current&&void post(pending.current.url,pending.current.body,pending.current.notice)}>{c.retrySame}</Button>}
    {conflict&&<Button type="button" variant="secondary" disabled={loading||saving} onClick={()=>{setForm(null);setError('');void load();}}>{c.reload}</Button>}</div>}
   {mode==='global'?<SelectionsGlobalTracker accountId={accountId} en={en}/>:mode==='tracker'?<SelectionsTrackerPro accountId={accountId} workId={workId} en={en} areas={detail.areas} items={items} stateBadge={(state,wrap)=><StateBadge state={state} c={c} wrap={wrap}/>} onOpenBoard={()=>setMode('board')}/>:<div data-selections-board className="space-y-5">
-   <BoardTemplatesPanel accountId={accountId} workId={workId} en={en} areas={areas} items={items} locked={locked} onCreated={()=>void load()}/>
+   <BoardTemplatesPanel accountId={accountId} workId={workId} en={en} areas={areas} items={items} locked={locked} names={team.names} onCreated={()=>void load()}/>
+   {areas.length>1&&<BoardsToolbar en={en} filter={boardFilter} onChange={setBoardFilter} names={team.names} extraAssignees={[...rooms.meta.values()].map(m=>m.assignee?.trim()||'').filter(Boolean)}/>}
    {formNode('area',null)}
    {!areas.length&&!(form?.kind==='area')&&<div data-selections-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center"><p className="font-semibold text-[#162543]">{c.emptyAreas}</p><p className="mt-1 text-sm text-[#52627a]">{c.emptyAreasHelp}</p></div>}
-   {areas.map(area=>{const areaItems=items.filter(item=>item.areaId===area.id);return <section key={area.id} data-selection-area={area.id} aria-label={area.name} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-[#f7f9fc] p-3 sm:p-4">
+   {areas.length>1&&!filterBoards(areas,rooms.meta,boardFilter).length&&<p data-boards-no-match className="rounded-xl bg-[#f7f9fc] p-3 text-sm text-[#52627a]">{en?'No boards match the search or filters.':'Ningún tablero coincide con la búsqueda o los filtros.'}</p>}
+   {filterBoards(areas,rooms.meta,boardFilter).map(area=>{const areaItems=items.filter(item=>item.areaId===area.id);return <section key={area.id} data-selection-area={area.id} aria-label={area.name} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-[#f7f9fc] p-3 sm:p-4">
     {form?.kind==='area'&&form.area?.id===area.id?formNode('area',area.id):<div className="flex flex-wrap items-center justify-between gap-2">
      <h4 className="min-w-0 break-words text-base font-bold text-[#162543]">{area.name} <span className="font-normal text-[#52627a]">({areaItems.length})</span></h4>
      <div className="flex flex-wrap gap-2">
@@ -275,7 +279,7 @@ function SelectionsSession({accountId,workId,onStateChange,onOpenClientView}:{ac
       {!areaItems.length&&<Button type="button" size="sm" variant="ghost" className="min-h-11" disabled={locked} onClick={()=>areaAction(area,'area_archive')}>{c.archive}</Button>}
      </div>
     </div>}
-    <RoomBudgetBar accountId={accountId} areaId={area.id} en={en} room={rooms.meta.get(area.id)} onSaved={rooms.set} locked={locked}/>
+    <RoomBudgetBar accountId={accountId} areaId={area.id} en={en} room={rooms.meta.get(area.id)} onSaved={rooms.set} locked={locked} names={team.names}/>
     {formNode('item','new:'+area.id)}
     {!areaItems.length&&!(form?.kind==='item'&&!form.item&&form.initial.areaId===area.id)&&<p className="text-sm text-[#52627a]">{c.emptyItems}</p>}
     {areaItems.map(item=>form?.kind==='item'&&form.item?.id===item.id?<div key={item.id}>{formNode('item',item.id)}</div>:

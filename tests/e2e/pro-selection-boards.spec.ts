@@ -50,12 +50,20 @@ for(const language of ['es','en'] as const)test(`Selection rooms, templates, vie
   await gotoOK(page,`/${language}/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:f.workId,vistaTrabajo:'selections'}));
   const bar=page.locator(`[data-room-budget="${areaId}"]`);await expect(bar).toBeVisible({timeout:90000});
   await expect(bar.locator('[data-room-budget-text]')).toContainText(en?'/':'/');await expect(bar.locator('[data-room-assignee]')).toContainText('Ana');
-  await bar.locator('[data-room-budget-edit]').click();await bar.locator('[data-room-budget-input]').fill('80000');await bar.locator('[data-room-assignee-input]').fill('Luis');await bar.locator('[data-room-budget-save]').click();
-  await expect(bar.locator('[data-room-assignee]')).toContainText('Luis',{timeout:60000});
+  await bar.locator('[data-room-budget-edit]').click();await bar.locator('[data-room-budget-input]').fill('80000');await bar.locator('[data-room-assignee-input]').selectOption('');await bar.locator('[data-room-budget-save]').click();
+  await expect(bar.locator('[data-room-assignee]')).toContainText(tr('Sin asignar','Unassigned'),{timeout:60000});
   await page.locator('[data-board-templates-toggle]').click();
   await page.locator('[data-template-use]').selectOption(tplId);await page.locator('[data-template-room-name]').fill('Baño '+id);await page.locator('[data-template-create]').click();
   await expect(page.locator('[data-board-template-notice]')).toContainText(tr('Habitación creada desde la plantilla.','Room created from the template.'),{timeout:90000});
   await expect(page.locator('[data-selection-area]')).toHaveCount(2,{timeout:60000});
+  // Boards toolbar: search, sort and multi-select assignee filter (both rooms are unassigned now).
+  await expect(page.locator('[data-boards-toolbar]')).toBeVisible();
+  await page.locator('[data-boards-search]').fill('zzzz-no-existe');await expect(page.locator('[data-boards-no-match]')).toBeVisible();
+  await page.locator('[data-boards-search]').fill('Baño');await expect(page.locator('[data-selection-area]')).toHaveCount(1);
+  await page.locator('[data-boards-search]').fill('');await page.locator('[data-boards-sort]').selectOption('name');await expect(page.locator('[data-selection-area]')).toHaveCount(2);
+  await page.locator('[data-boards-assignees-toggle]').click();await page.locator('[data-boards-assignee-option="__unassigned__"]').check();await page.locator('[data-boards-assignees-apply]').click();
+  await expect(page.locator('[data-selection-area]')).toHaveCount(2);
+  await page.locator('[data-boards-assignees-toggle]').click();await page.locator('[data-boards-assignees-clear]').click();await page.locator('[data-boards-assignees-apply]').click();
   await page.locator('[data-selections-mode="global"]').click();
   await expect(page.locator('[data-selections-global]')).toBeVisible({timeout:60000});
   await expect(page.locator('[data-global-row], [data-global-card]').first()).toBeVisible();

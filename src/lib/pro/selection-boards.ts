@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 /** Area E: per-room budget and assignee, board templates, server-side tracker views and the global tracker. */
 const cents=z.number().int().min(0).max(100000000000);
 export const roomMetaSchema=z.object({areaId:z.string().uuid(),budgetCents:cents.nullable(),assignee:z.string().nullable(),revision:z.number().int().nonnegative(),
@@ -25,3 +26,26 @@ export const globalTrackerSchema=z.object({items:z.array(globalRowSchema),total:
 export type GlobalRow=z.infer<typeof globalRowSchema>;
 /** Budget bar: percent used (0-100, capped) and whether the approved total exceeds the budget. */
 export function budgetUse(budgetCents:number|null,approvedCents:number){if(!budgetCents)return {percent:0,over:false};return {percent:Math.min(100,Math.round(approvedCents*100/budgetCents)),over:approvedCents>budgetCents};}
+/** Boards grid toolbar (area E row 12): search by room name, sort (custom order or name) and multi-select assignee filter. */
+export const boardSorts=['custom','name'] as const;
+export type BoardSort=(typeof boardSorts)[number];
+/** Sentinel used by the assignee filter for rooms without an assignee. */
+export const UNASSIGNED_FILTER='__unassigned__';
+export function filterBoards<T extends {id:string;name:string;position:number}>(areas:T[],meta:Map<string,{assignee:string|null}>,opts:{query:string;sort:BoardSort;assignees:ReadonlySet<string>}):T[]{
+ const q=opts.query.trim().toLowerCase();
+ const kept=areas.filter(a=>{
+  if(q&&!a.name.toLowerCase().includes(q))return false;
+  if(!opts.assignees.size)return true;
+  const who=meta.get(a.id)?.assignee?.trim()||'';
+  return who?opts.assignees.has(who):opts.assignees.has(UNASSIGNED_FILTER);
+ });
+ return opts.sort==='name'?[...kept].sort((a,b)=>a.name.localeCompare(b.name,'es',{sensitivity:'base'})):[...kept].sort((a,b)=>a.position-b.position);
+}
+/** Team member names that can be assigned: active members of the job, unique, trimmed, sorted. */
+export function assigneeNames(members:{displayName:string;active:boolean}[]):string[]{
+ return [...new Set(members.filter(m=>m.active).map(m=>m.displayName.trim().slice(0,80)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+}
+/** Link to the owner's selections page of a job (to share with teammates who have access), never the customer's. */
+export function selectionsDeepLink(origin:string,locale:'es'|'en',workId:string):string{
+ return `${origin}${prefijoDeIdioma(locale)}/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:workId,vistaTrabajo:'selections'}).toString();
+}
