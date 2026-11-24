@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {pathToFileURL} from 'node:url';
 
 const ORIGIN='http://127.0.0.1:3185';
-const ROUTES=['/','/registro','/login','/proyectos','/promociones','/empleos'];
+const ROUTES=['/','/registro','/login','/solicitudes','/promociones','/empleos'];
 const PRO_SHELLS=['/notificaciones','/en/notificaciones'];
 const MAX_REDIRECTS=3,MAX_SCRIPTS=128;
 const HTML_LIMIT=16*1024*1024,ASSET_LIMIT=64*1024*1024;
