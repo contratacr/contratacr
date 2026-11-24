@@ -131,3 +131,23 @@ for(const language of ['es','en'] as const){
   }finally{await visitor.close();await page.goto('about:blank').catch(()=>{});await cleanup(f);}
  });
 }
+
+for(const language of ['es','en'] as const){
+ test(`${language}: onboarding tiles open create, import and contact form, and can be hidden`,async({page,baseURL}:{page:Page;baseURL:string|undefined})=>{
+  test.setTimeout(240000);local(baseURL);const en=language==='en',f=await fixture(page.context()),errors:string[]=[];onAppPageError(page,message=>errors.push(message));
+  try{
+   await openLeads(page,language);
+   const strip=page.locator('[data-lead-onboarding]');await expect(strip).toBeVisible({timeout:45000});await expect(strip.locator('[data-lead-onboarding-tile]')).toHaveCount(3);
+   await expectNoHorizontalOverflow(page);
+   await strip.locator('[data-lead-onboarding-tile="contact-form"]').click();await expect(page.locator('[data-lead-contact-form]')).toBeVisible();
+   await page.getByRole('button',{name:en?'Close':'Cerrar',exact:true}).last().click();await expect(page.locator('[data-lead-contact-form]')).toHaveCount(0);
+   await strip.locator('[data-lead-onboarding-tile="import"]').click();await expect(page.locator('[data-lead-import-dialog]')).toBeVisible();
+   await page.getByRole('button',{name:en?'Cancel':'Cancelar',exact:true}).last().click();await expect(page.locator('[data-lead-import-dialog]')).toHaveCount(0);
+   await strip.locator('[data-lead-onboarding-tile="create"]').click();await expect(page.getByRole('dialog',{name:en?'Add lead':'Agregar solicitud',exact:true})).toBeVisible({timeout:45000});
+   await page.getByRole('dialog',{name:en?'Add lead':'Agregar solicitud',exact:true}).getByRole('button',{name:en?'Cancel':'Cancelar',exact:true}).click();await expect(strip).toBeVisible({timeout:45000});
+   await strip.locator('[data-lead-onboarding-hide]').click();await expect(strip).toHaveCount(0);
+   await page.reload();await expect(page.locator('[data-lead-inbox-layout]')).toBeVisible({timeout:45000});await expect(page.locator('[data-lead-onboarding]')).toHaveCount(0);
+   expect(errors).toEqual([]);
+  }finally{await page.goto('about:blank').catch(()=>{});await cleanup(f);}
+ });
+}

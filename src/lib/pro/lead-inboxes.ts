@@ -32,6 +32,17 @@ export const leadImportColumns=['name','email','phone','service','projectType','
 export type LeadImportRow=Record<typeof leadImportColumns[number],string>;
 export const leadImportTemplateHeaders={es:['nombre','correo','telefono','servicio','tipo_proyecto','canal','direccion','descripcion'],en:['name','email','phone','service','project_type','channel','address','description']} as const;
 const headerAliases:Record<string,typeof leadImportColumns[number]>={nombre:'name',name:'name',cliente:'name','nombre completo':'name',correo:'email','correo electronico':'email',email:'email','e-mail':'email',telefono:'phone',phone:'phone',celular:'phone',servicio:'service',service:'service','tipo de proyecto':'projectType',tipo_proyecto:'projectType','tipo proyecto':'projectType','project type':'projectType',project_type:'projectType',canal:'channel',channel:'channel',origen:'channel',source:'channel',direccion:'address',address:'address',descripcion:'description',description:'description',notas:'description',notes:'description'};
+/** Which lead field a file column most likely holds (by header, accents and case ignored); null when it is not recognised. */
+export const guessLeadImportColumn=(header:string):typeof leadImportColumns[number]|null=>headerAliases[header.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ')]??null;
+export type LeadImportMapping=(typeof leadImportColumns[number]|null)[];
+/** True when the mapping has no repeated field and covers name, service and an email or phone. */
+export const leadImportMappingValid=(map:LeadImportMapping)=>{const used=map.filter((v):v is typeof leadImportColumns[number]=>v!==null);return new Set(used).size===used.length&&used.includes('name')&&used.includes('service')&&(used.includes('email')||used.includes('phone'));};
+/** Rebuilds a CSV with the template headers from a parsed table and the column mapping chosen by the person (unmapped columns are dropped). */
+export function buildLeadImportCsv(table:string[][],map:LeadImportMapping):string{
+ const keep=map.map((v,n)=>v===null?-1:n).filter(n=>n>=0),headers=leadImportTemplateHeaders.en,cell=(v:string)=>'"'+v.replace(/"/g,'""')+'"';
+ const header=keep.map(n=>headers[leadImportColumns.indexOf(map[n]!)]);
+ return [header,...table.slice(1).map(row=>keep.map(n=>row[n]??''))].map(r=>r.map(cell).join(',')).join('\r\n');
+}
 export class LeadImportFileError extends Error{constructor(public code:'empty'|'format'|'too_many'|'unknown_column'|'duplicate_column'|'missing_column',public column=''){super(code);}}
 const normalizeHeader=(v:string)=>v.normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
 /** Parses CSV text into fixed row objects. Never evaluates formulas; at most 200 rows. */
