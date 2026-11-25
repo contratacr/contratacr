@@ -132,7 +132,8 @@ export function PoVendorPortal(){
  if(phase==='opening'||phase==='loading'&&!view)return shell(<p role="status" className="text-sm text-[#52627a]">{phase==='opening'?c.opening:c.loading}</p>);
  if(phase==='error'||!view)return shell(<div role="alert" data-po-portal-error={reason} className="space-y-3 rounded-2xl border border-[#f2c9c9] bg-[#fdf0f0] p-4 text-sm text-[#9b2c2c]"><p>{c.errors[reason]??c.errors.unknown}</p>
   {(reason==='unavailable')&&<Button type="button" variant="secondary" className="min-h-11" onClick={()=>{if(claimToken.current)void claim(claimToken.current);else void load();}}>{c.retry}</Button>}</div>);
- const o=view.order,last=view.responses.find(r=>r.current)??null,answeredOld=!last&&view.responses.length>0;
+ // Answers come oldest first (pro_po_vendor_view); the newest answer to this revision is the current one.
+ const o=view.order,last=view.responses.findLast(r=>r.current)??null,answeredOld=!last&&view.responses.length>0;
  return shell(<>
   <section className="min-w-0 space-y-2 rounded-2xl border border-[#d7e1ea] bg-[#f7f9fc] p-4">
    {view.business&&<p className="break-words text-sm font-semibold text-[#52627a]">{c.from(view.business)}</p>}

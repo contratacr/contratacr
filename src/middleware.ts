@@ -97,7 +97,7 @@ async function esServicioPublicado(id: string): Promise<boolean> {
       if (!Array.isArray(filas) || filas.length === 0) throw new Error("catálogo vacío");
       serviciosPublicados = { ids: new Set(filas.map((f) => f.id)), hasta: Date.now() + 5 * 60_000 };
     } catch {
-      return !/-(?:[a-z0-9]{8}|[a-f0-9]{10}|[a-f0-9]{12}|[a-f0-9]{32})$/.test(categorySlug(id));
+      return !/-(?:[a-z0-9]{8}|[a-f0-9]{10}|[a-f0-9]{32})$/.test(categorySlug(id));
     }
   }
   return serviciosPublicados.ids.has(id) || CATALOGO_DEL_CODIGO.has(id);

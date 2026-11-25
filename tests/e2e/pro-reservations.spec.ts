@@ -13,9 +13,10 @@ test('Pro calendar compatibility: free client legacy API books atomically, new U
     const db = regressionAdminClient(), contexts: BrowserContext[] = [];
     async function auth(context: BrowserContext, actor: typeof owner) { const auth = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll: () => [], setAll: async (cookies) => { await context.addCookies(cookies.map(c => ({ name: c.name, value: c.value, url: baseURL!, sameSite: 'Lax' as const }))); } } }); expect((await auth.auth.signInWithPassword({ email: actor.email, password: actor.password })).error).toBeNull(); }
     try {
-        const slug = 'calendar-' + owner.id;
-        const p = await db.from('professionals').insert({ profile_id: owner.id, category_id: 'desarrollo_web', business_name: 'Calendario Pro local', slug, whatsapp: '', provincia_id: 'al', canton_id: 'al-at', verification_status: 'pending', is_available: true, is_banned: false }).select('id').single();
+        // The assign_business_profile_slug trigger replaces the slug with <trade name>-<10 hex of the id>; open the stored one.
+        const p = await db.from('professionals').insert({ profile_id: owner.id, category_id: 'desarrollo_web', business_name: 'Calendario Pro local', slug: 'calendar-' + owner.id, whatsapp: '', provincia_id: 'al', canton_id: 'al-at', verification_status: 'pending', is_available: true, is_banned: false }).select('id,slug').single();
         expect(p.error).toBeNull();
+        const slug = p.data!.slug as string;
         await db.from('profiles').update({ is_provider: true }).eq('id', owner.id);
         await db.from('pro_memberships').insert({ user_id: owner.id, status: 'active' });
         await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1}).throwOnError();
