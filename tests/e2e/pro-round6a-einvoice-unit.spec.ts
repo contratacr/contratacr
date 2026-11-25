@@ -15,7 +15,7 @@ import {redact,maskCardNumbers} from '../../src/lib/pro/integrations/redact';
 import {retryDelaySeconds} from '../../src/lib/pro/integrations/retry';
 import {signWebhook,verifyWebhook,MOCK_WEBHOOK_SECRET} from '../../src/lib/pro/integrations/webhook';
 import {MockProcessor,MOCK_CARDS} from '../../src/lib/pro/integrations/payments/mock';
-import {luhn} from '../../src/lib/pro/integrations/payments/processor';
+import {luhn,sinpeProcessorRef} from '../../src/lib/pro/integrations/payments/processor';
 
 // Round 6A — unit-level checks (no browser, no server, no network): clave/consecutivo formats, totals,
 // v4.4 element order (structural: the official XSD is not downloadable — cdn.comprobanteselectronicos.go.cr
@@ -180,5 +180,12 @@ test('redaction, retry backoff, webhook signatures, mock processor fixtures',asy
  expect(p.drainEvents()).toHaveLength(0);
  expect((await p.confirmSinpe({processorRef:'ccr_sinpe_d',amountCents:100,currency:'CRC',reference:'00012345678',code:''})).status).toBe('failed');
  expect(await p.confirmSinpe({processorRef:'ccr_sinpe_e',amountCents:100,currency:'CRC',reference:'2026111312345678',code:''})).toEqual({status:'pending',processorRef:'ccr_sinpe_e'});
- const sinpe=p.drainEvents()[0]!.event;expect(sinpe.id).toMatch(/^evt_[a-f0-9]{24}$/);expect(sinpe).toMatchObject({processorRef:'ccr_sinpe_e',amountCents:100});
+ const sinpe=p.drainEvents()[0]!.event;expect(sinpe.id).toMatch(/^evt_[a-p]{24}$/);expect(sinpe).toMatchObject({processorRef:'ccr_sinpe_e',amountCents:100});
+ // Generated references survive the inbox redaction unchanged (a 13–19 digit run in a hex reference was
+ // masked as a card number, so the event no longer matched its attempt and the payment was never booked).
+ for(let i=0;i<2000;i++){
+  const sinpeRef=sinpeProcessorRef(),cardRef=(await p.chargeCard({attemptId:'attempt-'+i,amountCents:100,description:'',card:{...card,number:MOCK_CARDS.approved}})).processorRef;
+  const event=p.drainEvents()[0]!.event;
+  for(const value of [{processorRef:sinpeRef},{processorRef:cardRef},event])expect(redact(value)).toEqual(value);
+ }
 });

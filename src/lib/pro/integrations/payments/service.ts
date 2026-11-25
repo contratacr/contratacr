@@ -45,7 +45,7 @@ export async function receiveMockEvent(db:Db,body:string,signature:string|null):
  const check=verifyWebhook(MOCK_WEBHOOK_SECRET,body,signature);
  if(!check.ok){await db.rpc('pro_integration_webhook_reject',{p_provider:'tilopay',p_reason:'signature_'+check.reason});return {status:401,body:{status:'rejected',reason:check.reason}};}
  let event:ProcessorEvent;
- try{event=JSON.parse(body) as ProcessorEvent;if(typeof event.id!=='string'||!/^evt_[a-f0-9]{24}$/.test(event.id)||!['payment.succeeded','payment.failed','payment.refunded'].includes(event.type)||typeof event.processorRef!=='string')throw Error();}
+ try{event=JSON.parse(body) as ProcessorEvent;if(typeof event.id!=='string'||!/^evt_[a-p0-9]{24}$/.test(event.id)||!['payment.succeeded','payment.failed','payment.refunded'].includes(event.type)||typeof event.processorRef!=='string')throw Error();}
  catch{await db.rpc('pro_integration_webhook_reject',{p_provider:'tilopay',p_reason:'malformed'});return {status:400,body:{status:'rejected',reason:'malformed'}};}
  const owner=await payRpc<{ownerId:string;mode:string}|null>(db,'pro_payment_attempt_by_ref',{p_provider:'tilopay',p_ref:event.processorRef});
  // Mock events can only ever touch attempts made in mock mode.

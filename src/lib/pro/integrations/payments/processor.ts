@@ -9,6 +9,13 @@ export type ChargeResult=
  |{status:'failed';processorRef:string;failureCode:string;cardLast4?:string;cardBrand?:string};
 export type ProcessorEvent={id:string;type:'payment.succeeded'|'payment.failed'|'payment.refunded';processorRef:string;amountCents:number;failureCode?:string;created:number};
 export type SignedEvent={body:string;signature:string;event:ProcessorEvent};
+/**
+ * SINPE order reference. References travel in webhook payloads and the inbox redaction masks any 13–19 digit
+ * run as a card number: the old 32-hex reference sometimes contained one, so the stored event no longer
+ * matched its attempt («unknown_reference») and the payment was never booked. A UUID keeps every digit run
+ * at 12 or fewer (Tilopay card attempts already use UUIDs as order numbers).
+ */
+export function sinpeProcessorRef(){return 'ccr_sinpe_'+globalThis.crypto.randomUUID();}
 export interface PaymentProcessor{
  readonly provider:'tilopay';readonly mode:'mock'|'sandbox'|'production';
  /** Card charge for one link attempt. Never receives more than it needs; nothing is stored by us but last4. */

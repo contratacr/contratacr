@@ -1,9 +1,8 @@
-import {randomBytes} from 'node:crypto';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
 import {proBoundedJson,proRequestOrigin,proSameOrigin} from '@/lib/pro/route-common';
 import {paymentPublicSchema,paymentPublicViewSchema,sinpeCodeFrom} from '@/lib/pro/integrations/payments/api';
-import type {ChargeResult} from '@/lib/pro/integrations/payments/processor';
+import {sinpeProcessorRef,type ChargeResult} from '@/lib/pro/integrations/payments/processor';
 import {PaymentError,deliver,linkTokenHash,logCharge,payRpc,processorFor} from '@/lib/pro/integrations/payments/service';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 
@@ -49,7 +48,7 @@ export async function POST(req:Request){
    // consulted; the processor is asked about that stored reference (not the browser's attemptId) with the attempt's
    // own amount and currency. A refusal (not found / amount_mismatch / unavailable) closes the attempt as failed.
    const started=Date.now();
-   const recorded=await payRpc<Owned>(db,'pro_payment_attempt_record',{p_token_hash:hash,p_input:{attemptId:input.attemptId,processorRef:'ccr_sinpe_'+randomBytes(16).toString('hex'),method:'sinpe',status:'pending',sinpeReference:input.reference,failureCode:''}});
+   const recorded=await payRpc<Owned>(db,'pro_payment_attempt_record',{p_token_hash:hash,p_input:{attemptId:input.attemptId,processorRef:sinpeProcessorRef(),method:'sinpe',status:'pending',sinpeReference:input.reference,failureCode:''}});
    owner=recorded.ownerId;
    let result:ChargeResult;
    try{result=await processor.confirmSinpe({processorRef:recorded.processorRef,amountCents:recorded.amountCents,currency:current.currency,reference:input.reference,code:current.sinpe?.code??''});}

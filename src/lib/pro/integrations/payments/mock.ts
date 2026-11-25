@@ -1,5 +1,5 @@
-import {createHash} from 'node:crypto';
 import {MOCK_WEBHOOK_SECRET,signWebhook} from '../webhook';
+import {letterDigest} from '../esign/events';
 import {cardBrand,luhn,type CardInput,type ChargeResult,type PaymentProcessor,type ProcessorEvent,type SignedEvent} from './processor';
 
 /**
@@ -13,12 +13,14 @@ import {cardBrand,luhn,type CardInput,type ChargeResult,type PaymentProcessor,ty
  * through the webhook inbox like a real one.
  */
 export const MOCK_CARDS={approved:'4242424242424242',declined:'4000000000000002',threeDs:'4000000000003220',insufficient:'4000000000009995'} as const;
-const ref=(kind:string,id:string)=>`mock_${kind}_${createHash('sha256').update(id).digest('hex').slice(0,20)}`;
+// Letters only (as the e-sign mock): a hex digest could hold a 13–19 digit run that the inbox redaction masks
+// as a card number, and the stored event then no longer matched its attempt or its own id.
+const ref=(kind:string,id:string)=>`mock_${kind}_${letterDigest(id,20)}`;
 export class MockProcessor implements PaymentProcessor{
  readonly provider='tilopay' as const;readonly mode='mock' as const;
  private events:SignedEvent[]=[];
  private emit(type:ProcessorEvent['type'],processorRef:string,amountCents:number,suffix:string,failureCode?:string){
-  const event:ProcessorEvent={id:`evt_${createHash('sha256').update(processorRef+':'+suffix).digest('hex').slice(0,24)}`,type,processorRef,amountCents,...(failureCode?{failureCode}:{}),created:Math.floor(Date.now()/1000)};
+  const event:ProcessorEvent={id:'evt_'+letterDigest(processorRef+':'+suffix),type,processorRef,amountCents,...(failureCode?{failureCode}:{}),created:Math.floor(Date.now()/1000)};
   const body=JSON.stringify(event);this.events.push({body,signature:signWebhook(MOCK_WEBHOOK_SECRET,body),event});
  }
  async chargeCard({attemptId,amountCents,card}:{attemptId:string;amountCents:number;card:CardInput;description:string}):Promise<ChargeResult>{
