@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {Buffer} from 'node:buffer';
 import {createHash} from 'node:crypto';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/pro/workspace-user';
 import {createAdminClient} from '@/lib/supabase/admin';
@@ -83,8 +84,8 @@ export async function POST(req:Request){
   }else return fail(503,'No se pudo comprobar la operación pendiente.');
   const current=await a.db.rpc('pro_company_action_state',{p_actor:a.user.id,p_action:input.actionId});if(current.error)return dbError(current.error);
   const bucket=a.db.storage.from(destination),stored=await bucket.upload(objectPath,bytes,{contentType:mimeType,upsert:false,cacheControl:'0'});if(stored.error&&String(stored.error.statusCode)!=='409'&&String(stored.error.statusCode)!=='400')return fail(503,'No se pudo subir el archivo.');
-  // A concurrent replay of the same pending action may still be writing the identical object: re-read briefly before failing.
-  let verified:'ok'|'missing'|'mismatch'='missing';for(let attempt=0;attempt<4&&verified!=='ok';attempt++){if(attempt)await new Promise(resolve=>setTimeout(resolve,150*attempt));const verify=await bucket.download(objectPath);if(verify.error||!verify.data||verify.data.size!==expectedSize){verified='missing';continue;}verified=digest(new Uint8Array(await verify.data.arrayBuffer()))===expectedHash?'ok':'mismatch';}
+  // A concurrent replay of the same pending action may replace the identical object: verifyStoredObject re-reads briefly.
+  const verified=await verifyStoredObject(bucket,objectPath,expectedSize,expectedHash);
   if(verified==='missing')return fail(503,'No se pudo comprobar la subida.');if(verified==='mismatch')return fail(503,'El archivo almacenado no coincide.');
   const ready=await a.db.rpc('pro_company_file_ready',{p_actor:a.user.id,p_action:input.actionId});if(ready.error)return dbError(ready.error);return Response.json(companyFileResultSchema.parse(ready.data),{headers});
  }catch{return fail(503,'No se pudo comprobar el guardado. Reintente la misma operación.');}

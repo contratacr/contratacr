@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 import {z} from 'zod';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {enforceRateLimit,enforceRateLimitKey} from '@/lib/rate-limit';
@@ -76,8 +77,8 @@ export async function POST(req:Request){
    const uploaded=await bucket.upload(reservation.objectPath,canonical.bytes,{contentType:canonical.mimeType,upsert:false,cacheControl:'0'});
    if(uploaded.error&&String((uploaded.error as {statusCode?:string|number}).statusCode)!=='409')return fail(503,'unavailable','No se pudo completar la subida. Reintente el mismo archivo.');
    // Existing paths are never trusted or overwritten: verify the stored bytes.
-   const stored=await bucket.download(reservation.objectPath);if(stored.error||!stored.data||stored.data.size!==canonical.bytes.length)return fail(503,'unavailable','No se pudo comprobar la subida.');
-   if(digest(new Uint8Array(await stored.data.arrayBuffer()))!==sha256)return fail(503,'unavailable','El archivo almacenado no coincide. Se conservó el intento sin sobrescribirlo.');
+   const stored=await verifyStoredObject(bucket,reservation.objectPath,canonical.bytes.length,sha256);if(stored==='missing')return fail(503,'unavailable','No se pudo comprobar la subida.');
+   if(stored==='mismatch')return fail(503,'unavailable','El archivo almacenado no coincide. Se conservó el intento sin sobrescribirlo.');
   }
   const ready=await db.rpc('pro_bid_portal_file_ready',{p_session_hash:hash,p_file:input.fileId,p_sha256:sha256});
   if(ready.error)return dbFailure(ready.error);

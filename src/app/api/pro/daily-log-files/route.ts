@@ -2,6 +2,7 @@ import {proCustomerReader} from '@/lib/pro/route-common';
 import {z} from 'zod';
 import {Buffer} from 'node:buffer';
 import {createHash} from 'node:crypto';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/pro/workspace-user';
 import {createAdminClient} from '@/lib/supabase/admin';
@@ -89,7 +90,7 @@ export async function POST(req:Request){
   if(!bytes||bytes.length!==file.sizeBytes||digest(bytes)!==file.sha256||input.action==='upload'&&file.name!==internal.name)return fail(503,'El contenido de la reserva no coincide.');
   const current=await a.db.rpc('pro_company_daily_log_legacy_pending',{p_actor:a.user.id,p_action:input.actionId});if(current.error)return dbError(current.error);
   const bucket=a.db.storage.from(bucketName),uploaded=await bucket.upload(expected,bytes,{contentType:file.mimeType,upsert:false,cacheControl:'0'});if(uploaded.error&&!['409','400'].includes(String(uploaded.error.statusCode)))return fail(503,'No se pudo subir el archivo.');
-  const verify=await bucket.download(expected);if(verify.error||!verify.data||verify.data.size!==file.sizeBytes||digest(new Uint8Array(await verify.data.arrayBuffer()))!==file.sha256)return fail(503,'El archivo almacenado no coincide.');
+  if(await verifyStoredObject(bucket,expected,file.sizeBytes,file.sha256)!=='ok')return fail(503,'El archivo almacenado no coincide.');
   const ready=await a.db.rpc('pro_company_daily_log_legacy_ready',{p_actor:a.user.id,p_action:input.actionId});if(ready.error)return dbError(ready.error);return Response.json(dailyLogFileResultSchema.parse(ready.data),{headers});
  }catch{return fail(503,'No se pudo comprobar la subida. Reintente la misma operación.');}
 }

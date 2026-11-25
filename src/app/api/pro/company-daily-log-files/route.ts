@@ -4,6 +4,7 @@ import {safeGetUser} from '@/lib/pro/workspace-user';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {getApiAdmin} from '@/lib/auth/admin';
 import {createHash} from 'node:crypto';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {companyDailyLogFileMutationSchema,companyDailyLogFileResultSchema,companyDailyLogFileReceiptSchema,canonicalCompanyDailyLogFileInput} from '@/lib/pro/company-daily-log-files';
 import {companyFileSchema} from '@/lib/pro/company-files';
@@ -49,7 +50,7 @@ export async function POST(req:Request){
   const original=await a.db.storage.from('pro-company-files').download(pending.sourcePath);if(original.error||!original.data||original.data.size!==source.sizeBytes)return fail(503,'No se pudo leer el archivo de biblioteca.');const bytes=new Uint8Array(await original.data.arrayBuffer());if(bytes.length!==source.sizeBytes||hash(bytes)!==source.sha256)return fail(503,'El archivo de biblioteca no coincide.');
   const recheck=await a.db.rpc('pro_company_daily_log_file_pending',{p_actor:a.user.id,p_action:input.actionId});if(recheck.error)return dbError(recheck.error);const current=pendingSchema.parse(recheck.data);if(current.inputHash!==inputHash||JSON.stringify(current.source)!==JSON.stringify(source))return fail(503,'La reserva cambió.');if(current.result)return Response.json(current.result,{headers});
   const upload=await a.db.storage.from('pro-daily-log-files').upload(pending.targetPath,bytes,{contentType:source.mimeType,upsert:false});if(upload.error&&!['409','400','Duplicate'].includes(String(upload.error.statusCode)))return fail(503,'No se pudo copiar el archivo.');
-  const copied=await a.db.storage.from('pro-daily-log-files').download(pending.targetPath);if(copied.error||!copied.data||copied.data.size!==source.sizeBytes)return fail(503,'No se pudo verificar la copia.');const canonical=new Uint8Array(await copied.data.arrayBuffer());if(canonical.length!==source.sizeBytes||hash(canonical)!==source.sha256)return fail(503,'La copia no coincide.');
+  const copied=await verifyStoredObject(a.db.storage.from('pro-daily-log-files'),pending.targetPath,source.sizeBytes,source.sha256);if(copied==='missing')return fail(503,'No se pudo verificar la copia.');if(copied==='mismatch')return fail(503,'La copia no coincide.');
   // Finalizer reauthorizes after work/head waits and after the ready transition.
   const ready=await a.db.rpc('pro_company_daily_log_file_ready',{p_actor:a.user.id,p_action:input.actionId});if(ready.error)return dbError(ready.error);return Response.json(companyDailyLogFileResultSchema.parse(ready.data),{headers});
  }catch{return fail(503,'No se pudo comprobar la copia. Reintente el mismo archivo.');}

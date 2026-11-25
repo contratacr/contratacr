@@ -19,6 +19,11 @@ for(const language of ['es','en'] as const)test(`M1: user price report, Rx refus
  await seedPlace(db,{slug:`bomba-${tag}`,vertical:'fuel',name:`Bomba ${tag}`});
  const otc=`acetaminofen-ops-${tag}`,rx=`amoxicilina-ops-${tag}`,rice=`arroz-pr-${tag}`;
  await seedItem(db,place.staff,otc,`Acetaminofén ${tag}`,'medicine',false);await seedItem(db,place.staff,rx,`Amoxicilina ${tag}`,'medicine',true);await seedItem(db,place.staff,rice,`Arroz ${tag}`,'grocery');
+ // Each simulated person gets their own client address. The route limits 10 reports a minute per IP (before the
+ // sign-in check), and on a production build every test, worker and run on this machine shares 127.0.0.1: es and en
+ // alone send exactly 10, so any other report in the same minute answered 429. Real clients do not share one IP.
+ const headers=info.project.use.extraHTTPHeaders??{},device=()=>`198.51.100.${1+Math.floor(Math.random()*254)}`;
+ await context.setExtraHTTPHeaders({...headers,'x-forwarded-for':device()});
  const errors=collectPageErrors(page);
  let a:DisposableAccount|undefined,b:DisposableAccount|undefined;
  try{
@@ -57,7 +62,7 @@ for(const language of ['es','en'] as const)test(`M1: user price report, Rx refus
    expect((await db.from('price_observations').select('id,price_items!inner(slug)').eq('price_items.slug',rx)).data).toEqual([]);
   }
   // A second, independent person reports a matching price (within 2 %): both become public and «confirmed».
-  b=await createDisposableAccount({prefix:'dir-price-b'});const bc=await browser.newContext({baseURL:origin});await login(bc,b);
+  b=await createDisposableAccount({prefix:'dir-price-b'});const bc=await browser.newContext({baseURL:origin,extraHTTPHeaders:{...headers,'x-forwarded-for':device()}});await login(bc,b);
   const second=await postJson(bc,`/api/lugar/${slug}/precios/reporte`,{actionId:uid(),itemSlug:otc,price:1510,observedOn:crDay()});
   expect(second.status,JSON.stringify(second.body)).toBe(200);expect(second.body).toEqual({status:'published',confidence:'community_verified'});await bc.close();
   await page.reload();

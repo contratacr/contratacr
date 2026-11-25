@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {createHash} from 'node:crypto';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 import {enforceRateLimit} from '@/lib/rate-limit';
 import {decodeDeliveryPhotoBase64} from '@/lib/pro/delivery-photo-base64';
 import {normalizeCompanyFile} from '@/lib/pro/company-file-normalize';
@@ -47,7 +48,7 @@ export async function POST(req:Request){
   const bucket=a.db.storage.from(bucketName),uploaded=await bucket.upload(objectPath,canonical.bytes,{contentType:canonical.mimeType,upsert:false,cacheControl:'0'});
   if(uploaded.error&&String((uploaded.error as {statusCode?:string|number}).statusCode)!=='409')return proFail(503,'No se pudo completar la subida. Reintente el mismo archivo.');
   // An existing path is never overwritten: verify the stored bytes are this exact receipt.
-  const stored=await bucket.download(objectPath);if(stored.error||!stored.data||stored.data.size!==canonical.bytes.length||digest(new Uint8Array(await stored.data.arrayBuffer()))!==sha256)return proFail(503,'No se pudo comprobar la subida.');
+  if(await verifyStoredObject(bucket,objectPath,canonical.bytes.length,sha256)!=='ok')return proFail(503,'No se pudo comprobar la subida.');
   const result=await a.db.rpc('pro_expense_receipt_mutate',{p_user:a.user.id,p_input:{action:'attach',expenseId:input.expenseId,receiptId:input.receiptId,objectPath,name,mimeType:canonical.mimeType,sizeBytes:canonical.bytes.length,sha256}});
   if(result.error)return proDbError(result.error,conflict);
   return Response.json(result.data,{headers});

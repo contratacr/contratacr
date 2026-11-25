@@ -14,6 +14,7 @@ import {canonicalWorkFileName,sharedFoldersSchema,workFileMutationSchema,workFil
 import {PRO_FILE_BODY_MAX} from '@/lib/pro/file-limit';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 import {proHiddenDocuments} from '@/lib/pro/client-hidden';
+import {verifyStoredObject} from '@/lib/pro/storage-verify';
 const bucketName='pro-work-files',headers={'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox; default-src 'none'; frame-ancestors 'none'"};
 const fail=(status:number,error:string)=>Response.json({error},{status,headers});
 const dbError=(error:{code?:string})=>fail(error.code==='40001'?409:error.code==='42501'?403:error.code==='54000'?429:['22023','22008','22007','22021','23514','23505','22P02'].includes(error.code||'')?400:503,error.code==='40001'?'El archivo o destinatario cambió. Actualice antes de compartir.':'No se pudo completar la operación.');
@@ -109,8 +110,8 @@ export async function POST(req:Request){
   const bucket=a.db.storage.from(bucketName),uploaded=await bucket.upload(expectedPath,canonical.bytes,{contentType:canonical.mimeType,upsert:false,cacheControl:'0'});
   if(uploaded.error&&String((uploaded.error as {statusCode?:string|number}).statusCode)!=='409')return fail(503,'No se pudo completar la subida. Reintente el mismo archivo.');
   // Existing paths are never trusted or overwritten: verify stored canonical bytes.
-  const stored=await bucket.download(expectedPath);if(stored.error||!stored.data||stored.data.size!==canonical.bytes.length)return fail(503,'No se pudo comprobar la subida.');
-  const verified=new Uint8Array(await stored.data.arrayBuffer());if(digest(verified)!==sha256)return fail(503,'El archivo almacenado no coincide. Se conservó el intento sin sobrescribirlo.');
+  const stored=await verifyStoredObject(bucket,expectedPath,canonical.bytes.length,sha256);if(stored==='missing')return fail(503,'No se pudo comprobar la subida.');
+  if(stored==='mismatch')return fail(503,'El archivo almacenado no coincide. Se conservó el intento sin sobrescribirlo.');
   const ready=await a.db.rpc('pro_work_file_ready',{p_actor:a.user.id,p_file:input.fileId,p_sha256:sha256});if(ready.error)return dbError(ready.error);
   return Response.json(ready.data,{headers});
  }catch{return fail(503,'No se pudo comprobar el guardado. Reintente la misma operación.');}
