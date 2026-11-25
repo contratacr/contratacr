@@ -1,6 +1,7 @@
 import {test,expect,type BrowserContext,type Page,type Locator,type TestInfo,type Dialog} from 'playwright/test';
 import {createServerClient} from '@supabase/ssr';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
+import {stableSnapshotRows} from './stable-rows';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
@@ -31,10 +32,8 @@ type Fixture=Awaited<ReturnType<typeof fixture>>;
 async function cleanup(f:Fixture){await cleanupDisposableAccount(f.owner);await cleanupDisposableAccount(f.client);}
 
 
-// Row order is not part of these relation snapshots; retain every field and duplicate.
-function stableSnapshotRows<T>(rows:T[]|null){return rows?.slice().sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))??rows;}
 async function sourceSnapshot(f:Fixture){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_work','pro_clients','pro_quote_links','pro_client_entries','pro_work_cost_entries'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).throwOnError()).data;for(const table of ['pro_appointment_requests','pro_request_quotes','pro_request_followups'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).order(table==='pro_appointment_requests'?'id':'request_id').throwOnError()).data;result.events=(await f.db.from('pro_appointment_events').select('*').in('request_id',[f.requestId,f.pageRequestId]).order('position').throwOnError()).data;result.quotes=(await f.db.from('quotes').select('*').eq('professional_id',f.professional.id).order('id').throwOnError()).data;for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,f.client.id]).order('id').throwOnError()).data;for(const key of Object.keys(result))if(Array.isArray(result[key]))result[key]=stableSnapshotRows(result[key] as unknown[]);return result;}
-async function privateRows(f:Fixture){const result:Record<string,unknown>={};for(const table of ['pro_lead_center_records','pro_lead_center_actions','pro_lead_center_history','pro_lead_center_catalog_actions','pro_request_pipeline_heads','pro_request_pipeline_stages','pro_request_pipeline_states','pro_request_pipeline_actions','pro_request_pipeline_history'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;return result;}
+async function privateRows(f:Fixture){const result:Record<string,unknown>={};for(const table of ['pro_lead_center_records','pro_lead_center_actions','pro_lead_center_history','pro_lead_center_catalog_actions','pro_request_pipeline_heads','pro_request_pipeline_stages','pro_request_pipeline_states','pro_request_pipeline_actions','pro_request_pipeline_history'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);return result;}
 
 
 async function readyLead(page:Page,target:Locator,en:boolean){

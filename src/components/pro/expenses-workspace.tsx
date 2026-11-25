@@ -147,7 +147,11 @@ export function ExpensesWorkspace(){
 function WriteForm({title,initial,children,onClose,onSaved,prepare,prepareSupplier,onSupplierSaved,editing=false,onReview,onConflict}:{title:string;initial:Record<string,unknown>;children:ReactNode;onClose:()=>void;onSaved:(id:string)=>void;prepare:(form:FormData)=>Record<string,unknown>|Promise<Record<string,unknown>>;prepareSupplier?:(form:FormData)=>ExpenseMutation|undefined;onSupplierSaved?:(supplier:Extract<ExpenseMutation,{action:'supplier'}>,revision:number)=>void;editing?:boolean;onReview?:()=>Promise<void>;onConflict?:()=>Promise<boolean>}){
  const scope=useExpenseScope(),t=useCopy(),writer=useExpenseWriter(onSupplierSaved,onConflict),[dirty,setDirty]=useState(false),[reviewedIntent,setReviewedIntent]=useState(''),[reviewing,setReviewing]=useState(false),{confirm,dialogNode}=useAppDialog(),allowExit=useRef(false);
  const rejected=scope.attempt?.steps[scope.attempt.index].phase==='rejected',reviewed=!!scope.attempt&&reviewedIntent===scope.attempt.intentId,blocked=writer.saving||scope.pending,locked=blocked||!scope.ready||scope.storageFailed||!!rejected&&!reviewed;
- useEffect(()=>{if(!writer.done||scope.attempt)return;allowExit.current=true;onSaved(writer.done);onClose();},[writer.done,scope.attempt,onSaved,onClose]);
+ // One completed save closes the form once. onSaved refreshes the parent, which hands new onSaved/onClose
+ // functions before the history step back has removed this form; re-running here stepped back twice,
+ // past the Pro page (to the browser's previous entry).
+ const closedFor=useRef('');
+ useEffect(()=>{if(!writer.done){closedFor.current='';return;}if(scope.attempt||closedFor.current===writer.done)return;closedFor.current=writer.done;allowExit.current=true;onSaved(writer.done);onClose();},[writer.done,scope.attempt,onSaved,onClose]);
  useEffect(()=>{
   if(!dirty&&!blocked)return;const path=currentProPath(),state={...window.history.state};let asking=false;
   function unload(event:BeforeUnloadEvent){if(!allowExit.current){event.preventDefault();event.returnValue='';}}

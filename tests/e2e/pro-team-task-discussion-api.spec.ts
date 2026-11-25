@@ -4,6 +4,7 @@ import {createClient} from '@supabase/supabase-js';
 import {randomBytes,createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
+import {stableSnapshotRows} from './stable-rows';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
@@ -55,7 +56,7 @@ const pdf=Buffer.from('%PDF-1.4\n% LOCAL_TEAM_TASK_TEST_ONLY\n1 0 obj\n<< /Type 
 const digest=(bytes:Uint8Array)=>createHash('sha256').update(bytes).digest('hex');
 async function postDiscussion(context:BrowserContext,actor:DisposableAccount,input:Record<string,unknown>){return context.request.post(origin+discussionApi,{headers:{Origin:origin,'X-Pro-Expected-Actor':actor.id},data:input});}
 async function getDiscussion(context:BrowserContext,actor:DisposableAccount,query:Record<string,string>){return context.request.get(origin+discussionApi+'?'+new URLSearchParams(query),{headers:{'X-Pro-Expected-Actor':actor.id}});}
-async function discussionSnapshot(f:Fixture,others:string[]){const result=await preserved(f,others);for(const table of ['pro_work_tasks','pro_work_task_history','pro_team_comments','pro_team_task_assignments','pro_work_files'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;return result;}
+async function discussionSnapshot(f:Fixture,others:string[]){const result=await preserved(f,others);for(const table of ['pro_work_tasks','pro_work_task_history','pro_team_comments','pro_team_task_assignments','pro_work_files'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);return result;}
 async function protectedBinary(context:BrowserContext,actor:DisposableAccount,grantId:string,taskId:string,fileId:string){const response=await getDiscussion(context,actor,{grantId,taskId,fileId});expect(response.status()).toBe(200);const headers=response.headers();expect(headers['cache-control']).toContain('no-store');expect(headers['x-content-type-options']).toBe('nosniff');expect(headers['content-security-policy']).toContain('sandbox');expect(headers['referrer-policy']).toBe('no-referrer');expect(headers['content-disposition']).toMatch(/^attachment;/);expect(headers.location).toBeUndefined();return response;}
 async function cleanupStorage(f:Fixture){for(const [table,bucket] of [['pro_team_task_files',discussionBucket],['pro_work_files','pro-work-files']]){const paths=(await f.db.from(table).select('object_path').eq('owner_id',f.owner.id).throwOnError()).data!.map(row=>row.object_path as string);for(const path of paths)expect(path.startsWith(f.owner.id+'/')).toBe(true);if(paths.length)expect((await f.db.storage.from(bucket).remove(paths)).error).toBeNull();const list=await f.db.storage.from(bucket).list(f.owner.id,{limit:1000});expect(list.error).toBeNull();expect(list.data).toEqual([]);}}
 
