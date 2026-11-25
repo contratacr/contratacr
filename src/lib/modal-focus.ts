@@ -15,6 +15,24 @@ function openingTrigger(doc:Document){
  return active instanceof HTMLElement?active:null;
 }
 
+// Closing a dialog often re-renders its trigger disabled for a frame or two (the
+// owner's busy flags flip while a sibling remounts). A disabled control drops
+// focus to <body>, so keyboard and screen-reader users lost their place after
+// closing (Pro «Review shared version», mobile run 2026-11-25). Give the focus
+// back once the trigger is enabled again, unless the user moved it meanwhile.
+function settleOnTrigger(trigger:HTMLElement){
+ const doc=trigger.ownerDocument;
+ let observer:MutationObserver|null=null,timer=0;
+ const stop=()=>{observer?.disconnect();observer=null;window.clearTimeout(timer);};
+ const check=()=>{
+  const active=doc.activeElement;
+  if(!trigger.isConnected||(active&&active!==doc.body&&active!==trigger)){stop();return;}
+  if(active!==trigger&&!trigger.matches(':disabled'))trigger.focus({preventScroll:true});
+ };
+ observer=new MutationObserver(check);observer.observe(trigger,{attributes:true,attributeFilter:['disabled','inert','hidden']});
+ timer=window.setTimeout(stop,2000);
+}
+
 /** Opt-in keyboard ownership for Pro dialogs; conventional dialogs keep their behavior. */
 export function manageModalFocus(dialog:HTMLElement,onClose:()=>void){
  const doc=dialog.ownerDocument,trigger=openingTrigger(doc);
@@ -60,7 +78,7 @@ export function manageModalFocus(dialog:HTMLElement,onClose:()=>void){
   observer.disconnect();
   doc.removeEventListener('keydown',key,true);doc.removeEventListener('focusin',contain,true);
   const remaining=Array.from(doc.querySelectorAll<HTMLElement>('[role="dialog"]')).filter(node=>node!==dialog&&visible(node)).at(-1);
-  if(owned&&trigger?.isConnected&&(!remaining||remaining.contains(trigger)))focus(trigger);
+  if(owned&&trigger?.isConnected&&(!remaining||remaining.contains(trigger))){focus(trigger);settleOnTrigger(trigger);}
   else if(owned&&remaining?.hasAttribute('data-managed-modal-focus'))focus(remaining);
   // A closing confirmation can remove its trigger later in the same commit.
   queueMicrotask(()=>{const active=doc.activeElement;if(owned&&remaining?.isConnected&&remaining.hasAttribute('data-managed-modal-focus')&&top()===remaining&&(!active||active===doc.body||!active.isConnected))focus(remaining);});

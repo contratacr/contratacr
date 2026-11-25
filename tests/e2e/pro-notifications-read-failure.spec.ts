@@ -62,7 +62,8 @@ for(const language of ['es','en'] as const){
    network.setMode('503');await page.goto(prefix+'/notificaciones');await expect(page.getByRole('alert').filter({hasText:errorCopy(language)})).toBeVisible();network.setMode('success');await page.getByRole('button',{name:retryCopy(language),exact:true}).click();await expect.poll(unread).toBe(0);expect((await db.from('notifications').select('*').eq('user_id',actor.id).order('id').throwOnError()).data).toEqual(saved.map(row=>({...row,read:true})));
    const retryUrl=new URL(network.attempts.at(-1)!);expect(retryUrl.searchParams.get('user_id')).toBe('eq.'+actor.id);expect(retryUrl.searchParams.get('read')).toBe('eq.false');expect(retryUrl.searchParams.has('id')).toBe(false);
    await expect(page.getByRole('alert').filter({hasText:errorCopy(language)})).toHaveCount(0);
-   await page.goto(prefix+'/proyectos');await expect(bell(page,language)).not.toContainText('9+');
+   // /proyectos is the mobile Projects hub (directory app) with no header bell; /empleos keeps the bell on every width.
+   await page.goto(prefix+'/empleos');await expect(bell(page,language)).not.toContainText('9+');
    await page.screenshot({path:testInfo.outputPath('read-retry-'+language+'.png')});
   }finally{await page.goto('about:blank');await cleanupDisposableAccount(actor);}
  });
@@ -112,7 +113,7 @@ for(const surface of ['center','bell'] as const)test(`A delayed ${surface} mark-
   // Let the original callback settle; a second navigation then reads the same
   // persisted cache and server count, rather than observing pending UI alone.
   await expect.poll(async()=>{const rows=(await db.from('notifications').select('*').eq('user_id',actor.id).order('id').throwOnError()).data!;return rows;}).toEqual([...saved.map(row=>({...row,read:true})),arrival].sort((a,b)=>a.id.localeCompare(b.id)));
-  await page.goto('/en/proyectos');await expect(bell(page,'en')).toHaveText('1');
+  await page.goto('/en/empleos');await expect(bell(page,'en')).toHaveText('1');
   const cached=await page.evaluate(id=>JSON.parse(localStorage.getItem('ccr:notifications:'+id)||'[]') as {id:string;read:boolean}[],actor.id);expect(cached.find(row=>row.id===arrival.id)?.read).toBe(false);expect(await page.evaluate(()=>sessionStorage.getItem('qa:false-read-zero'))).toBeNull();expect(patches).toBe(1);expect(await page.evaluate(()=>sessionStorage.getItem('qa:late-arrival-false-read'))).toBeNull();
  }finally{release();await page.goto('about:blank');await cleanupDisposableAccount(actor);}
 });

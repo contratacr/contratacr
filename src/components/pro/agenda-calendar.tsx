@@ -9,11 +9,13 @@ import { ReservationCalendar } from './reservation-calendar';
 import { type Business, costaRicaDate } from '@/lib/pro/business';
 import { crTodayISO } from '@/lib/time-cr';
 const slotField = 'mt-1 block min-h-11 w-full min-w-0 max-w-full box-border appearance-none rounded-xl border border-[#e5e7eb] bg-white p-3 text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9]';
-export function AgendaCalendar({ data, commit, saving, day, onDay,remote }: {
+export function AgendaCalendar({ data, commit, saving, loading = false, day, onDay,remote }: {
     remote?:import("./agenda-workspace").AgendaControls;
     data: Business;
     commit: (data: Business) => Promise<boolean>;
     saving: boolean;
+    /** A background reload: it disables writes but must never trap the user in the sheet (only a save does). */
+    loading?: boolean;
     day: string;
     onDay: (date: string) => void;
 }) {
@@ -58,8 +60,8 @@ export function AgendaCalendar({ data, commit, saving, day, onDay,remote }: {
    <p className="text-sm text-[#68778d]">{tr("Agregue horarios para recibir solicitudes cuando active la opción.","Add times to receive requests when you enable the option.")}</p>
    <label className="block text-sm font-semibold">{tr('Fecha', 'Date')}<input type="date" aria-label={tr('Fecha disponible', 'Available date')} value={selected} min={crTodayISO()} onChange={e => onDay(e.target.value)} required className={slotField}/></label>
    <div className="grid grid-cols-2 gap-3"><label className="text-sm font-semibold">{tr('Hora', 'Time')}<input aria-label={tr('Hora disponible', 'Available time')} name="time" type="time" required defaultValue="09:00" className={slotField}/></label><label className="text-sm font-semibold">{tr('Duración', 'Duration')}<select name="duration" className={slotField}>{[30, 45, 60, 90, 120].map(n => <option key={n} value={n}>{n} min</option>)}</select></label></div>
-   <Button type="submit" disabled={saving}>{tr('Agregar horario', 'Add time')}</Button>
-   <ul className="divide-y">{slots.map(s => <li key={s.start} className="flex items-center justify-between py-3 text-sm"><span>{s.start.slice(0,10)!==selected&&`${s.start.slice(0,10)} · `}{s.start.slice(11,16)}–{s.end.slice(11,16)}{s.start.slice(0,10)!==s.end.slice(0,10)&&` (${copy('nextDay')})`}</span><button type="button" aria-label={`${copy('removeTime')} ${s.start.slice(11,16)}–${s.end.slice(11,16)}`} disabled={saving} className="min-h-11 rounded-lg px-3 font-semibold text-[#0089bb]" onClick={() => save({ ...data, availability: data.availability.filter(a => a.start !== s.start) })}>{tr('Quitar horario', 'Remove time')}</button></li>)}</ul>
+   <Button type="submit" disabled={saving || loading}>{tr('Agregar horario', 'Add time')}</Button>
+   <ul className="divide-y">{slots.map(s => <li key={s.start} className="flex items-center justify-between py-3 text-sm"><span>{s.start.slice(0,10)!==selected&&`${s.start.slice(0,10)} · `}{s.start.slice(11,16)}–{s.end.slice(11,16)}{s.start.slice(0,10)!==s.end.slice(0,10)&&` (${copy('nextDay')})`}</span><button type="button" aria-label={`${copy('removeTime')} ${s.start.slice(11,16)}–${s.end.slice(11,16)}`} disabled={saving || loading} className="min-h-11 rounded-lg px-3 font-semibold text-[#0089bb]" onClick={() => save({ ...data, availability: data.availability.filter(a => a.start !== s.start) })}>{tr('Quitar horario', 'Remove time')}</button></li>)}</ul>
    {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
   </form>
  </Modal>
