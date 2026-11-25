@@ -54,12 +54,13 @@ for(const language of ['es','en'] as const)test(`Board templates: save, list, ap
   // Archive frees the name and removes it from the list.
   await post({action:'archive',actionId:uuid(),id,revision:2});expect(await list()).toEqual([]);
   await post({action:'archive',actionId:uuid(),id,revision:3},400);
-  // Limit of 50 active templates.
-  // 51 writes exceed the route's 60 requests/minute bucket together with the earlier calls, so each one gets its own
-  // development-only rate-limit namespace; the 429 below is then the template limit (54000), not the throttle.
-  const bulk=async(data:Record<string,unknown>,status=200)=>{const r=await page.request.post(api,{headers:{...headers,'x-ccr-rate-limit-namespace':'bt-'+uuid().slice(0,16)},data});expect(r.status(),JSON.stringify(data).slice(0,200)).toBe(status);};
-  for(let i=0;i<50;i++)await bulk({action:'create',actionId:uuid(),id:uuid(),name:`P${i}`,pageFormat:i%2?'a4':'wide',background:'#ffffff',elements:[swatch('x')]});
-  await bulk({action:'create',actionId:uuid(),id:uuid(),name:'P50',pageFormat:'wide',background:'#ffffff',elements:[swatch('x')]},429);
+  // Limit of 50 active templates. The route allows 60 requests/minute per account and production builds ignore the
+  // test rate-limit namespace, so 48 templates are seeded in the database and only the last writes go through the API;
+  // the final 429 is the template limit (54000, no Retry-After), not the throttle (which always sends Retry-After).
+  await db.from('pro_mood_board_templates').insert(Array.from({length:48},(_,i)=>({owner_id:owner.id,id:uuid(),name:`P${i}`,page_format:i%2?'a4':'wide',background:'#ffffff',elements:[swatch('x')]}))).throwOnError();
+  for(const i of [48,49])await post({action:'create',actionId:uuid(),id:uuid(),name:`P${i}`,pageFormat:i%2?'a4':'wide',background:'#ffffff',elements:[swatch('x')]});
+  const overLimit=await page.request.post(api,{headers,data:{action:'create',actionId:uuid(),id:uuid(),name:'P50',pageFormat:'wide',background:'#ffffff',elements:[swatch('x')]}});
+  expect(overLimit.status()).toBe(429);expect(overLimit.headers()['retry-after']).toBeUndefined();
   expect(await list()).toHaveLength(50);
  }finally{if(other)await other.close();await cleanupDisposableAccount(owner);await cleanupDisposableAccount(rival);}
 });

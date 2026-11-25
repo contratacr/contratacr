@@ -132,7 +132,7 @@ for(const language of ['es','en'] as const)test(`Purchase order journey: terms, 
   // ---- Row 51: duplicate and combine drafts ----
   await detailView.locator('[data-po-duplicate]').click();
   const form=view.locator('form').first();await expect(form).toBeVisible({timeout:60000});await expect(form.locator('input').first()).toBeVisible();
-  await expect(view).toContainText(en?'(copy)':'(copia)');
+  await expect(form.locator('[data-po-field="title"]')).toHaveValue(en?/ \(copy\)$/:/ \(copia\)$/);
   await form.getByRole('button',{name:en?'Save purchase order':'Guardar orden de compra'}).click();
   await expect(view.locator('[data-purchase-order-detail]')).toBeVisible({timeout:60000});
   const copyCount=(await (await page.request.get(orders+'?'+new URLSearchParams({workId}))).json()).items.length;expect(copyCount).toBe(2);

@@ -29,7 +29,11 @@ async function fixture(language:Language,browser:Browser,context:BrowserContext,
 }
 
 for(const language of ['es','en'] as const)test(`Personal reminders are safe, recoverable and navigate to the exact appointment (${language})`,async({page,browser,baseURL},info)=>{
- test.setTimeout(240000);const f=await fixture(language,browser,page.context(),baseURL!,info),text=copy(language),prefix=language==='en'?'/en':'';let bodyError:unknown;const runtimeErrors:string[]=[];/* Closing round: WebKit reports fetches it cancels on reload/navigation (already caught by the app) as page errors; the shared narrow filter drops only those. */onAppPageError(page,message=>runtimeErrors.push(message));
+ test.setTimeout(240000);
+ // The reminders route is a staged, development-only feature (localRuntime() in the route): a production build answers
+ // 404 with no body for every caller. Only `next dev` against local Supabase (the CI server) can exercise it.
+ const staged=await page.request.get(api);test.skip(staged.status()===404&&(await staged.text())==='','Appointment reminders are development-only; this server is a production build.');
+ const f=await fixture(language,browser,page.context(),baseURL!,info),text=copy(language),prefix=language==='en'?'/en':'';let bodyError:unknown;const runtimeErrors:string[]=[];/* Closing round: WebKit reports fetches it cancels on reload/navigation (already caught by the app) as page errors; the shared narrow filter drops only those. */onAppPageError(page,message=>runtimeErrors.push(message));
  try{
   const users=[f.owner.id,f.client.id,f.stranger.id],preferenceRows=async()=>(await f.db.from('pro_appointment_reminder_preferences').select('*').in('user_id',users).order('user_id').throwOnError()).data,actionRows=async()=>(await f.db.from('pro_appointment_reminder_preference_actions').select('*').in('user_id',users).order('action_id').throwOnError()).data;
   expect(await preferenceRows()).toEqual([]);expect(await(await page.request.get(api)).json()).toEqual({enabled:false,revision:0,available:false});expect(await preferenceRows()).toEqual([]);

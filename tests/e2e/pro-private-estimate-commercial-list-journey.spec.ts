@@ -7,6 +7,9 @@ for(const language of ['es','en'] as const){
  test(`Commercial quote list journey: shared versions stay immutable while the current draft is edited separately (${language})`,async({page,browser,baseURL},info)=>{
   test.setTimeout(240000);local(baseURL);const en=language==='en',f=await commercialFixture(page.context(),browser),clientPage=await f.recipientContext.newPage();
   const errors:string[]=[],ownerWrites:string[]=[],privateDetailReads:string[]=[];
+  // The journal key is only written once the confirm click starts the write, so polling it for null can pass before the
+  // POST is sent; wait for the customer's write itself before refreshing the owner's list.
+  const clientWrite=()=>clientPage.waitForResponse(response=>new URL(response.url()).pathname==='/api/pro/private-estimate-publications'&&response.request().method()==='POST',{timeout:60000});
   try {
    await stabilizeLocalProRuntime(page.context(),'http://127.0.0.1:3185');await stabilizeLocalProRuntime(f.recipientContext,'http://127.0.0.1:3185');
    const draft=await savedDraft(page.context(),f,{title:'PUBLICADA A · reparación eléctrica',notes:'VERSION_1_SNAPSHOT'}),first=await publishState(page.context(),f,draft,'awaiting_claim');
@@ -29,7 +32,7 @@ for(const language of ['es','en'] as const){
    const initialClientDetail=client.locator('[data-estimate-publication-detail]');
    await initialClientDetail.getByLabel(en?'Requested changes':'Cambios solicitados',{exact:true}).fill('Solicito aclarar la versión inicial');
    await initialClientDetail.getByRole('button',{name:en?'Request changes':'Solicitar cambios',exact:true}).click();
-   await clientPage.getByRole('dialog').last().getByRole('button',{name:en?'Request changes':'Solicitar cambios',exact:true}).click();
+   const written=clientWrite();await clientPage.getByRole('dialog').last().getByRole('button',{name:en?'Request changes':'Solicitar cambios',exact:true}).click();expect((await written).status()).toBe(200);
    await expect.poll(()=>clientPage.evaluate(key=>localStorage.getItem(key),'ccr:pro:private-estimate-publication-write:v1:'+f.recipient.id)).toBeNull();
    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
    await expect(row).toContainText(en?'Changes requested':'Cambios solicitados');
@@ -71,7 +74,7 @@ for(const language of ['es','en'] as const){
    const clientDetail=client.locator('[data-estimate-publication-detail]');
    await expect(clientDetail).toContainText('VERSION_2_SNAPSHOT');
    await clientDetail.getByRole('button',{name:en?'Accept quote':'Aceptar cotización',exact:true}).click();
-   await clientPage.getByRole('dialog').last().getByRole('button',{name:en?'Accept quote':'Aceptar cotización',exact:true}).click();
+   const accepted=clientWrite();await clientPage.getByRole('dialog').last().getByRole('button',{name:en?'Accept quote':'Aceptar cotización',exact:true}).click();expect((await accepted).status()).toBe(200);
    await expect.poll(()=>clientPage.evaluate(key=>localStorage.getItem(key),'ccr:pro:private-estimate-publication-write:v1:'+f.recipient.id)).toBeNull();
    const clientB=await page.request.get(estimates+'?'+new URLSearchParams({view:'context',clientId:f.secondClient}));expect(clientB.status()).toBe(200);
    const draftB={...update,actionId:crypto.randomUUID(),revision:2,clientId:f.secondClient,clientFingerprint:(await clientB.json()).clientFingerprint,refreshClient:true,title:'BORRADOR B · servicio diferente',notes:'PRIVATE_DRAFT_B_NOT_PUBLISHED',currency:'CRC',lines:[{...draft.input.lines[0],qtyMilli:1000,unitPriceCents:100000,discountBps:0,taxBps:0}]};

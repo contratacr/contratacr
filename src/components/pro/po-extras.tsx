@@ -19,7 +19,7 @@ const headers=(accountId:string)=>({'Content-Type':'application/json','X-Pro-Exp
 
 function copy(en:boolean){
  return en?{
-  termsTitle:'Delivery address and payment terms',termsIntro:'Printed on the order and shown to the vendor on its secure link.',address:'Delivery address (optional)',payTerms:'Payment terms (optional)',saveTerms:'Save',editTerms:'Edit',cancel:'Cancel',saving:'Saving…',
+  termsTitle:'Delivery address and payment terms',termsIntro:'Printed on the order and shown to the vendor on its secure link.',address:'Delivery address (optional)',payTerms:'Payment terms (optional)',saveTerms:'Save',editTerms:'Edit terms',cancel:'Cancel',saving:'Saving…',
   noTerms:'No address or terms recorded.',termsSaved:'Address and terms saved.',termsClosed:'The terms can no longer change on this order.',
   vendorTitle:'Vendor confirmation (secure link)',vendorIntro:'Create a private link and send it to the vendor yourself (WhatsApp, e-mail…). The vendor does not need an account: it confirms, declines or proposes a delivery date, and sees only this order. ContrataCR sends nothing.',
   vendorDraft:'Issue the order to create a vendor link.',vendorClosed:'This order no longer accepts vendor answers.',none:'No link yet',
@@ -43,7 +43,7 @@ function copy(en:boolean){
   mergeOpen:'Combine drafts',mergeName:'Title of the combined order',mergeDo:'Combine',mergeNeed:'Select at least two draft orders and write a title.',mergeDone:'Orders combined into a new draft.',noDrafts:'There are fewer than two draft orders.',
   changedPo:'This order changed in another window. Reload before trying again.',
  }:{
-  termsTitle:'Dirección de entrega y condiciones de pago',termsIntro:'Se imprimen en la orden y se muestran al proveedor en su enlace seguro.',address:'Dirección de entrega (opcional)',payTerms:'Condiciones de pago (opcional)',saveTerms:'Guardar',editTerms:'Editar',cancel:'Cancelar',saving:'Guardando…',
+  termsTitle:'Dirección de entrega y condiciones de pago',termsIntro:'Se imprimen en la orden y se muestran al proveedor en su enlace seguro.',address:'Dirección de entrega (opcional)',payTerms:'Condiciones de pago (opcional)',saveTerms:'Guardar',editTerms:'Editar condiciones',cancel:'Cancelar',saving:'Guardando…',
   noTerms:'Sin dirección ni condiciones registradas.',termsSaved:'Dirección y condiciones guardadas.',termsClosed:'Las condiciones ya no se pueden cambiar en esta orden.',
   vendorTitle:'Confirmación del proveedor (enlace seguro)',vendorIntro:'Cree un enlace privado y envíelo usted mismo al proveedor (WhatsApp, correo…). El proveedor no necesita cuenta: confirma, rechaza o propone una fecha de entrega, y solo ve esta orden. ContrataCR no envía nada.',
   vendorDraft:'Emita la orden para crear un enlace de proveedor.',vendorClosed:'Esta orden ya no recibe respuestas del proveedor.',none:'Sin enlace todavía',
