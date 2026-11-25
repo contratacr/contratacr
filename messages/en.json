@@ -457,9 +457,7 @@
     "contactPending": "Contact",
     "whatsappLong": "Contact via WhatsApp",
     "moreZones": "+{count, plural, one {# more area} other {# more areas}}",
-    "atiendeTodoElPais": "Serves all of Costa Rica",
-    "aDomicilio": "Home visits",
-    "cubreLaZona": "Covers the area"
+    "atiendeTodoElPais": "Serves all of Costa Rica"
   },
   "selfAction": {
     "title": "This is your profile",

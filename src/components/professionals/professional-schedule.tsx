@@ -8,7 +8,8 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES, getCantonById } from "@/lib/data/cr-geography";
-import { marcaDeCobertura, rotuloDeCobertura, type MarcaDeCobertura } from "@/lib/search/rotulo-de-cobertura";
+import { rotuloDeCobertura } from "@/lib/search/rotulo-de-cobertura";
+import { isFixedWorkplace } from "@/lib/public-workplaces";
 import { useTranslations } from "next-intl";
 import { MapPin, Video } from "lucide-react";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
@@ -152,9 +153,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     // Una sola regla, tres rótulos (decisión de Isaac, 13-nov-2026):
     //   está en la zona → su lugar · cubre la provincia → «Provincia de X» ·
     //   cubre el país → «Todo Costa Rica».
-    // `tipo` dice cómo se lee en la tarjeta: «local» (con ícono de ubicación) o con
-    // una marca sin ícono: «A domicilio», «Cubre la zona» o «Videoconsulta».
-    let cobertura: { id: string; lugar: string; pais: boolean; marca?: MarcaDeCobertura } | null = null;
+    // `video`: la cobertura es solo por videoconsulta y lleva esa marca; el resto
+    // de la cobertura se lee solo con el nombre del lugar buscado, sin ícono.
+    let cobertura: { id: string; lugar: string; pais: boolean; video?: boolean } | null = null;
     let fijo: string | null = null;
     let mismoEsLocal = false;
     const amplios = new Set<string>();
@@ -174,9 +175,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       if (!isVideoWorkplace && !yaAtiendeElCanton && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
         // La provincia gana al país: es lo más puntual que calza.
         if (!cobertura || (cobertura.pais && !cubreElPaisYBuscaronLugar)) {
-          // La visita a domicilio cuenta solo si el perfil la tiene encendida de verdad.
-          const domicilio = (w as { homeService?: boolean }).homeService === true;
-          cobertura = { id, pais: cubreElPaisYBuscaronLugar, lugar: rotuloDeCobertura(t, { lugarBuscado }), marca: marcaDeCobertura({ domicilio, porVideo: false }) };
+          cobertura = { id, pais: cubreElPaisYBuscaronLugar, lugar: rotuloDeCobertura(t, { lugarBuscado }) };
         }
         continue;
       }
@@ -186,16 +185,16 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     if (lugarBuscado && !yaAtiendeElCanton && !cobertura && professional.coverage?.country) {
       // Solo la casilla «cubro todo Costa Rica», sin lugar guardado: si además
       // da videoconsulta, la cobertura es por video.
-      cobertura = { id: "pais", pais: true, lugar: rotuloDeCobertura(t, { lugarBuscado }), marca: marcaDeCobertura({ domicilio: false, porVideo: videoConsultApplies && !!professional.videoconsulta }) };
+      cobertura = { id: "pais", pais: true, lugar: rotuloDeCobertura(t, { lugarBuscado }), video: videoConsultApplies && !!professional.videoconsulta };
     }
     // Sin lugar en la zona y sin cobertura, pero con videoconsulta: la tarjeta dice
     // el lugar buscado con la marca «Videoconsulta», no el local de otra zona.
     if (lugarBuscado && !yaAtiendeElCanton && !cobertura && !perfilEnLaZona && videoConsultApplies && professional.videoconsulta) {
-      cobertura = { id: "videoconsulta", pais: false, lugar: lugarBuscado, marca: "videoconsulta" };
+      cobertura = { id: "videoconsulta", pais: false, lugar: lugarBuscado, video: true };
     }
     if (perfilEnLaZona && cobertura) {
-      // Vive en la zona: es su lugar, con ícono y sin marca.
-      cobertura = { ...cobertura, marca: undefined, lugar: searchedPlace?.cantonName ? lugarBuscado : [professional.cantonName, professional.provinceName].filter(Boolean).join(", ") };
+      // Vive en la zona: es su lugar, sin marca.
+      cobertura = { ...cobertura, video: false, lugar: searchedPlace?.cantonName ? lugarBuscado : [professional.cantonName, professional.provinceName].filter(Boolean).join(", ") };
     }
     if (cobertura) {
       // Si ese rótulo ya es uno de sus lugares, se usa ese: dos iguales parecerían un error.
@@ -228,8 +227,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       map.set("videoconsulta", videoLabel);
     }
     // `fijo`: el rótulo de la regla manda; ningún reordenamiento lo saca del frente.
-    // `marca`: solo lo lleva el lugar de la cobertura (no el de un local).
-    const marcaDelFijo = mismoEsLocal ? undefined : cobertura?.marca;
+    // `marca`: solo la lleva el lugar de la cobertura por videoconsulta.
+    const marcaDelFijo = !mismoEsLocal && cobertura?.video ? ("videoconsulta" as const) : undefined;
     return Array.from(map, ([id, label]) => ({ id, label, fijo: id === fijo, marca: id === fijo ? marcaDelFijo : undefined }));
   }, [professional.cantonName, professional.provinceName, professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, t, videoConsultApplies]);
 
@@ -304,10 +303,17 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // La fila es una sola línea informativa —la zona principal y cuántas más
   // hay—; la lista completa vive en Información.
   const zonasRestantes = Math.max(0, primaryLocationTabs.length - 1);
-  // La marca («A domicilio», «Cubre la zona», «Videoconsulta») solo aparece con
-  // una zona buscada y cuando el primer lugar es cobertura, no un local suyo.
-  const marcaPrincipal = zonaBuscada ? (primaryLocationTabs[0] as { marca?: MarcaDeCobertura } | undefined)?.marca : undefined;
-  const zonaPrincipalEsVideo = !marcaPrincipal && (primaryLocationTabs[0]?.id === "videoconsulta"
+  // Con una zona buscada, solo quien tiene un lugar en el mapa (local fijo con
+  // coordenadas) lleva el ícono de ubicación. El resto —cubre la provincia o el
+  // país, o solo videoconsulta— dice únicamente el nombre del lugar buscado; la
+  // videoconsulta además lleva su marca.
+  const principal = primaryLocationTabs[0] as { id: string; marca?: "videoconsulta" } | undefined;
+  const idsConLocalEnMapa = new Set((professional.workplaces ?? [])
+    .filter((w) => isFixedWorkplace(w) && w.receivesClients !== false)
+    .map((w) => w.id));
+  const sinIcono = zonaBuscada && !!principal && principal.id !== "__fallback" && !idsConLocalEnMapa.has(principal.id);
+  const marcaPrincipal = zonaBuscada ? principal?.marca : undefined;
+  const zonaPrincipalEsVideo = !sinIcono && (primaryLocationTabs[0]?.id === "videoconsulta"
     || (!hasRealLoc && videoConsultApplies && !!(professional.videoconsulta || professional.coverage?.country)));
   // Address under the tabs: follow the selected tab. If a workplace has no exact
   // address, show that tab label instead of falling back to another location from
@@ -345,13 +351,13 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           <div data-testid="professional-card-location-row" className="flex min-w-0 items-center gap-3">
           <p className={`flex min-w-0 items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280] ${alLadoDeLaZona ? "flex-1 flex-nowrap" : "flex-wrap"}`} aria-label={t("location")}>
             <span className="inline-flex min-w-0 items-center gap-1">
-              {marcaPrincipal ? null : zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
+              {sinIcono ? null : zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
               <span className={alLadoDeLaZona ? "min-w-0 truncate" : "min-w-0"}>{locTabLabel(primaryLocationTabs[0].label)}</span>
             </span>
             {marcaPrincipal && (
               <span data-testid="professional-card-location-mark" data-mark={marcaPrincipal} className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium leading-5 text-[#6b7280] before:content-['·'] before:mr-1">
-                {marcaPrincipal === "videoconsulta" && <Video className="h-3 w-3 shrink-0" />}
-                {t(marcaPrincipal)}
+                <Video className="h-3 w-3 shrink-0" />
+                {t("videoconsulta")}
               </span>
             )}
             {/* «+N zonas más» cuando dice algo.
