@@ -110,7 +110,7 @@ export function LeadWorkPanel({actor,kind,leadId,service,disabled=false,canDelet
   </div>
   <div data-lead-section="estimate" data-lead-estimate className="space-y-2">
    <p className="text-sm font-semibold">{t('Cotización','Estimate')}</p>
-   <div className="flex flex-wrap items-start gap-2"><LeadQuickQuoteButton actor={actor} kind={kind} id={leadId} service={service} size="md" disabled={disabled||busy}/>{uploader('estimate',t('Subir cotización','Upload estimate'))}<AiDraftAssist feature="quote_scope" label={t('✦ Crear con IA','✦ Create with AI')} disabled={disabled||busy} getInput={()=>({title:service,notes:''})} onUse={setAiNote}/></div>
+   <div className="flex flex-wrap items-start gap-2">{kind==='manual'&&<LeadQuickQuoteButton actor={actor} kind={kind} id={leadId} service={service} size="md" disabled={disabled||busy}/>}{uploader('estimate',t('Subir cotización','Upload estimate'))}<AiDraftAssist feature="quote_scope" label={t('✦ Crear con IA','✦ Create with AI')} disabled={disabled||busy} getInput={()=>({title:service,notes:''})} onUse={setAiNote}/></div>
    {aiNote&&<div data-lead-ai-draft className="space-y-2"><textarea aria-label={t('Borrador de alcance','Scope draft')} value={aiNote} maxLength={1800} rows={4} onChange={e=>setAiNote(e.target.value)} className={field}/><Button type="button" onClick={()=>void saveAiNote()} disabled={busy||disabled}>{t('Guardar como nota','Save as note')}</Button></div>}
    <ul className="space-y-2">{byPurpose('estimate').map(fileRow)}</ul>
   </div>

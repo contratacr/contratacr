@@ -1,5 +1,6 @@
 'use client';
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ComponentProps} from 'react';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {ProModal as Modal} from '@/components/pro/modal';
@@ -31,7 +32,7 @@ export function ClientOperations({accountId,clientId,archived,onChanged,onQuote,
  const finance=useProInternalFinance();
  const [data,setData]=useState<ClientOperationsPage|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[saving,setSaving]=useState(false),[formError,setFormError]=useState(''),[saved,setSaved]=useState(''),[uncertain,setUncertain]=useState(false),[pendingRead,setPendingRead]=useState(false),[confirmed,setConfirmed]=useState(false);
  const [recovery,setRecovery]=useState<SavedClientAttempt|null>(null),[storageReady,setStorageReady]=useState(false),[storageFailed,setStorageFailed]=useState(false);
- const budgetEnabled=process.env.NODE_ENV==='development'&&['http://127.0.0.1:54321','http://127.0.0.1:54321/'].includes(process.env.NEXT_PUBLIC_SUPABASE_URL??'');
+ const budgetEnabled=PRO_UI_ENABLED;
  const [budgetState,setBudgetState]=useState({dirty:false,busy:false}),[costState,setCostState]=useState({dirty:false,busy:false});
  const baseBlocked=saving||uncertain||pendingRead,blocked=baseBlocked||budgetState.dirty||budgetState.busy||costState.dirty||costState.busy,confirmationHandled=useRef(false);
  const warnLeaving=useCallback(()=>setFormError(t('Resuelva el guardado pendiente antes de salir. Sus datos se conservan.','Resolve the pending save before leaving. Your data is preserved.')),[t]);

@@ -60,7 +60,7 @@ test('Pro navigation: standard panel plus everyday destinations, optional tools 
   // global navbar bell, matching main's lg:flex NotificationBell contract.
   const sectionBellCount=(page.viewportSize()?.width??0)>=1024?1:0;
   const bell=page.getByRole('banner').getByRole('button',{name:'Notificaciones',exact:true});
-  for(const [tab,title] of [['sent_projects','Mis proyectos'],['jobs','Empleos'],['offers','Promociones'],['pro_agenda','Citas'],['pro_clients','Clientes'],['pro_quotes','Cotizaciones'],['pro_inventory','Productos y servicios'],['pro_expenses','Gastos'],['pro_payments','Pagos'],['pro_billing','Borradores de facturación']]){
+  for(const [tab,title] of [['sent_projects','Mis solicitudes'],['jobs','Empleos'],['offers','Promociones'],['pro_agenda','Citas'],['pro_clients','Clientes'],['pro_quotes','Cotizaciones'],['pro_inventory','Productos y servicios'],['pro_expenses','Gastos'],['pro_payments','Pagos'],['pro_billing','Borradores de facturación']]){
    await gotoOK(page,'/es/dashboard/profesional?tab='+tab);await expect(sectionTitle(title)).toBeVisible();await expect(bell).toHaveCount(sectionBellCount);
    const primaryLabels:Record<string,string>={pro_agenda:'Nueva cita',pro_clients:'Nuevo cliente',pro_inventory:'Nuevo producto o servicio',pro_quotes:'Nueva cotización',pro_expenses:'Nuevo gasto',pro_billing:'Nuevo borrador'};
    if(primaryLabels[tab])await expect(page.getByRole('button',{name:primaryLabels[tab],exact:true})).toBeEnabled();

@@ -1,5 +1,6 @@
 "use client";
 import { ClientProjectLinks } from "@/components/pro/project-link-consent";
+import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
 import { PRO_BEFORE_PATH_CHANGE } from "@/lib/pro/navigation";
 import { PromotionHistory } from "@/components/pro/promotion-history";
 
@@ -322,7 +323,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
               relación. */}
           <SectionHeadline className="mb-3.5" subtitulo={tSub("sent_projects")}>
             <div className="flex flex-wrap items-center gap-2">
-            {process.env.NODE_ENV === "development" && ["http://127.0.0.1:54321", "http://127.0.0.1:54321/"].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "") && user && <Button type="button" variant="outline" data-received-estimates-link disabled={showPublish || !!editandoProyecto || deleting || cancellingProject || !!deleteTarget || !!cancelProjectTarget} onClick={() => {
+            {PRO_UI_ENABLED && user && <Button type="button" variant="outline" data-received-estimates-link disabled={showPublish || !!editandoProyecto || deleting || cancellingProject || !!deleteTarget || !!cancelProjectTarget} onClick={() => {
               if (showPublish || editandoProyecto || deleting || cancellingProject || deleteTarget || cancelProjectTarget) return;
               const path = prefijoDeIdioma(locale) + "/dashboard/cotizaciones";
               if (window.dispatchEvent(new CustomEvent(PRO_BEFORE_PATH_CHANGE, {cancelable: true, detail: {path}}))) window.location.assign(path);
@@ -339,7 +340,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
             )}
             </div>
           </SectionHeadline>
-          {process.env.NODE_ENV === "development" && ["http://127.0.0.1:54321", "http://127.0.0.1:54321/"].includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "") && user && <ClientProjectLinks onCount={setLinkedProjects} />}
+          {PRO_UI_ENABLED && user && <ClientProjectLinks onCount={setLinkedProjects} />}
           {projects.length === 0 && linkedProjects > 0 ? (
             // Round 7B: a customer who follows a job with a professional has not
             // «asked for no professional»; offer publishing without contradicting it.

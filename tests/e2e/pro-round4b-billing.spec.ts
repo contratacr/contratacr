@@ -159,7 +159,7 @@ for(const language of ['es','en'] as const)test(`Round 4B expenses and time: bil
   const manual=page.locator('[data-time-manual]');await manual.locator('[data-time-field="hours"]').fill('2');
   const person=manual.getByLabel(en?'Person':'Persona');await expect(person.locator('option')).toHaveCount(2);
   await person.selectOption('self');
-  await manual.getByRole('button',{name:en?'Save':'Guardar'}).click();await expect(manual).toBeHidden();
+  await manual.getByRole('button',{name:en?'Save':'Guardar',exact:true}).click();await expect(manual).toBeHidden();
   const owner=(await f.db.from('profiles').select('full_name').eq('id',f.owner.id).single().throwOnError()).data!.full_name as string;
   const entries=(await f.db.from('pro_time_entry_people').select('name,grant_id').eq('owner_id',f.owner.id).throwOnError()).data!;
   expect(entries.filter(row=>row.grant_id===null).length).toBe(2);

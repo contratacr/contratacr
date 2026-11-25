@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
+import {PRO_DOC_MIMES} from '../../src/lib/pro/file-formats';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
 import type {WorkFile,WorkFilesPage,WorkFileDetail,AppointmentFilesPage} from '../../src/lib/pro/work-files';
@@ -93,7 +94,7 @@ for(const language of ['es','en'] as const)test(`Private job files recover uploa
 test('Job files API: validated bytes, immutable identity, captured recipient, Storage RLS and deletion safety',async({page,browser,baseURL})=>{
  test.setTimeout(300000);local(baseURL);const f=await fixture(page.context()),{owner,client,db,workId,manualWorkId,pageWorkId,requestId,pageRequestId}=f;let other:Awaited<ReturnType<typeof fixture>>|undefined,foreign:BrowserContext|undefined,customer:BrowserContext|undefined;
  try{
-  const before=await preserve(f),oldBucket=await db.storage.getBucket('pro-work-delivery');expect(oldBucket.error).toBeNull();const privateBucket=await db.storage.getBucket(bucket);expect(privateBucket.error).toBeNull();expect(privateBucket.data?.public).toBe(false);expect(privateBucket.data?.file_size_limit).toBe(rawLimit);expect([...(privateBucket.data?.allowed_mime_types??[])].sort()).toEqual(['application/pdf','image/jpeg']);
+  const before=await preserve(f),oldBucket=await db.storage.getBucket('pro-work-delivery');expect(oldBucket.error).toBeNull();const privateBucket=await db.storage.getBucket(bucket);expect(privateBucket.error).toBeNull();expect(privateBucket.data?.public).toBe(false);expect(privateBucket.data?.file_size_limit).toBe(rawLimit);expect([...(privateBucket.data?.allowed_mime_types??[])].sort()).toEqual([...PRO_DOC_MIMES].sort());
   const rows=async()=>({files:(await db.from('pro_work_files').select('*').eq('owner_id',owner.id).order('id').throwOnError()).data,uploads:(await db.from('pro_work_file_upload_actions').select('*').eq('actor_id',owner.id).order('file_id').throwOnError()).data,publishes:(await db.from('pro_work_file_publish_actions').select('*').eq('actor_id',owner.id).order('action_id').throwOnError()).data});const empty=await rows();expect((await ownerRead(page,owner,workId)).items).toEqual([]);expect(await rows()).toEqual(empty);
   foreign=await browser.newContext({baseURL});expect((await foreign.request.get(origin+api+'?workId='+workId)).status()).toBe(401);other=await fixture(foreign);customer=await browser.newContext({baseURL});await login(customer,client);
   const source=await sharp({create:{width:32,height:32,channels:3,background:'#00a1ce'}}).jpeg().withExif({IFD0:{Artist:'PRIVATE_LOCAL_METADATA',ImageDescription:'LOCAL TEST ONLY'}}).toBuffer();expect((await sharp(source).metadata()).exif).toBeDefined();

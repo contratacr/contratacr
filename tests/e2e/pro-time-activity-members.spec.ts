@@ -4,6 +4,8 @@ import {fixture,local,login,origin,uuid} from './pro-schedule-time-fixture';
 
 // Area A (time management): team permissions per activity. No restriction = whole team; with a list, only those members can be credited.
 const api='/api/pro/time-activity-members',time='/api/pro/time-tracking';
+// The server compares against the Costa Rica calendar day (UTC is already tomorrow after 18:00 there).
+const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Costa_Rica'}).format(new Date());
 for(const language of ['es','en'] as const)test(`Time activity team permissions [${language}]`,async({page,browser,baseURL},info)=>{
  test.setTimeout(300000);local(baseURL);const en=language==='en',f=await fixture(page.context(),'tam',1),{owner,rival,client,db}=f,[workId]=f.works;
  try{
@@ -14,14 +16,14 @@ for(const language of ['es','en'] as const)test(`Time activity team permissions 
    {id:grantB,owner_id:owner.id,work_id:workId,member_user_id:rival.id,member_name:'Beto Electricista',role:'contributor',source_invite_id:uuid()}]).throwOnError();
   const activityId=uuid(),create=await page.request.post(origin+time,{headers:{Origin:origin},data:{action:'activity_save',actionId:uuid(),activityId,revision:0,name:'Pintura',rateCents:1500000,costCents:900000,billable:true}});expect(create.status(),await create.text()).toBe(200);
   const post=(data:Record<string,unknown>)=>page.request.post(origin+api,{headers:{Origin:origin},data});
-  const manual=(person:string|null)=>page.request.post(origin+time,{headers:{Origin:origin},data:{action:'manual',actionId:uuid(),entryId:uuid(),workId,activityId,billable:true,date:new Date().toISOString().slice(0,10),minutes:60,note:'',personGrantId:person}});
+  const manual=(person:string|null)=>page.request.post(origin+time,{headers:{Origin:origin},data:{action:'manual',actionId:uuid(),entryId:uuid(),workId,activityId,billable:true,date:today,minutes:60,note:'',personGrantId:person}});
   const first=await (await page.request.get(origin+api)).json();expect(first.restrictions).toEqual({});expect(first.members.map((m:{name:string})=>m.name)).toEqual(['Ana Pintora','Beto Electricista']);
   // Open by default: any member can be credited.
   expect((await manual(grantB)).status()).toBe(200);
   const saved=await post({activityId,memberUserIds:[client.id]});expect(saved.status(),await saved.text()).toBe(200);expect(await saved.json()).toEqual({activityId,memberUserIds:[client.id]});
   expect((await (await page.request.get(origin+api)).json()).restrictions).toEqual({[activityId]:[client.id]});
   expect((await manual(grantB)).status()).toBe(403);expect((await manual(grantA)).status()).toBe(200);expect((await manual(null)).status()).toBe(200);
-  const read=await (await page.request.get(origin+time+'?'+new URLSearchParams({workId,from:new Date().toISOString().slice(0,10),to:new Date().toISOString().slice(0,10)}))).json();
+  const read=await (await page.request.get(origin+time+'?'+new URLSearchParams({workId,from:today,to:today}))).json();
   expect(read.people.find((p:{grantId:string|null})=>p.grantId===grantA).memberUserId).toBe(client.id);
   for(const bad of [{memberUserIds:[rival.id]},{memberUserIds:['x']},{memberUserIds:'x'},{extra:1}])expect((await post({activityId,...bad})).status()).toBe(400);
   expect((await post({activityId:uuid(),memberUserIds:[]})).status()).toBe(404);
