@@ -2,6 +2,7 @@ import { HomeRecoveryLink } from "@/components/error/home-recovery-link";
 import { headers } from "next/headers";
 import { Compass, Search } from "lucide-react";
 import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
+import { CampaignAppLinks } from "@/components/mobile/campaign-app-links";
 
 /**
  * LA PANTALLA DE «NO EXISTE» PARA LO QUE NO ES NINGUNA RUTA.
@@ -23,7 +24,12 @@ import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/er
  */
 export default async function NotFound() {
   const en = (await headers()).get("x-ccr-locale") === "en";
+  // In the app the root layout covers every new document until the launch link is resolved
+  // (APP_LINK_PREPAINT). That resolver lives in [locale]/layout, which this page is outside of:
+  // without it the cover never lifts and the app shows a spinner instead of this screen.
   return (
+    <>
+    <CampaignAppLinks />
     <ErrorScreen
       code="404"
       icon={<Compass className="h-7 w-7" />}
@@ -41,5 +47,6 @@ export default async function NotFound() {
         <Search className="h-4 w-4" /> {en ? "Search professionals" : "Buscar profesionales"}
       </a>
     </ErrorScreen>
+    </>
   );
 }

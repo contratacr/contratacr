@@ -10,9 +10,9 @@ import { E2E_USERS } from "./seed";
 // el cuerpo a la letra, en la misma esquina de la misma pantalla.
 //
 // La regla, toda junta: fila de 64; primer control de 40×40 a 16 px del borde;
-// el título a 17. Desde el 1-oct-2026 el menú va a la DERECHA: donde hay marca,
+// el título a 19 (CABECERA_TITULO). Desde el 1-oct-2026 el menú va a la DERECHA: donde hay marca,
 // la marca es lo primero a la izquierda (32×32 a 16 px) y no hay control ahí.
-const REGLA = { fila: 64, control: { x: 16, tamano: 40 }, marca: { x: 16, tamano: 32 }, titulo: "17px" };
+const REGLA = { fila: 64, control: { x: 16, tamano: 40 }, marca: { x: 16, tamano: 32 }, titulo: "19px" };
 
 type Cabecera = { mismaFila: boolean | null; fila: number; control: { x: number; w: number; h: number } | null; marca: { x: number; w: number; h: number } | null; titulo: string | null };
 
@@ -29,7 +29,8 @@ async function medirCabecera(page: import("playwright/test").Page): Promise<Cabe
       .find((n) => visible(n) && arriba(n) && n.getBoundingClientRect().x < 120 && !n.querySelector('img[alt="ContrataCR"]')) ?? null;
     const titulo = Array.from(document.querySelectorAll<HTMLElement>("header h1, header h2, header p[data-ccr-section-title], .ccr-marketplace-sticky h1, div[class*='sticky'] h2"))
       .find((n) => visible(n) && arriba(n)) ?? null;
-    const ancla = marca ? (marca.closest("a")?.parentElement as HTMLElement | null) : (control?.parentElement as HTMLElement | null);
+    // SectionBrand (marca + título) va en su propia caja de 32 px: la fila es la que la contiene.
+    const ancla = marca ? ((marca.closest("[data-ccr-section-brand]") ?? marca.closest("a"))?.parentElement as HTMLElement | null) : (control?.parentElement as HTMLElement | null);
     const caja = (n: HTMLElement | null) => (n ? { x: Math.round(n.getBoundingClientRect().x), w: Math.round(n.getBoundingClientRect().width), h: Math.round(n.getBoundingClientRect().height) } : null);
     const centroY = (n: HTMLElement) => { const b = n.getBoundingClientRect(); return b.y + b.height / 2; };
     return {

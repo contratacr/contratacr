@@ -2,6 +2,7 @@ import { test,expect } from "playwright/test";
 import { qualifiesServiceContact,usableProfessional,GROWTH_ACTIONS,META_TEST_BUDGET } from "../../src/lib/analytics/growth-contract";
 import { summarizeGrowth } from "../../src/lib/analytics/growth-report";
 import { sendMetaConversion } from "../../src/lib/analytics/meta-delivery";
+import { META_MEASUREMENT_VERSION } from "../../src/lib/analytics/meta-minimal";
 import { eligibleProjectRecipient,matchesProjectCoverage } from "../../src/lib/projects/project-recipients";
 
 test("service demand excludes job applications, products, self and professional-to-client contact",()=>{
@@ -28,7 +29,7 @@ test("reports separate campaigns and deduplicate people across repeated actions"
 });
 test("CAPI success requires an acknowledged event, retries preserve the event identity",async()=>{
  const requests: Record<string,unknown>[]=[];
- const payload={event_name:"Contact",event_id:"stable-event-identifier",event_time:123,action_source:"website",event_source_url:"https://contratacr.com/profesionales",user_data:{fbp:"fb.1.1792500000000.123456"},custom_data:{action:"service_contact",audience:"client",measurement_version:"minimal-2026-10-20"}};
+ const payload={event_name:"Contact",event_id:"stable-event-identifier",event_time:123,action_source:"website",event_source_url:"https://contratacr.com/profesionales",user_data:{fbp:"fb.1.1792500000000.123456"},custom_data:{action:"service_contact",audience:"client",measurement_version:META_MEASUREMENT_VERSION}};
  const config={pixelId:"123",token:"test-secret",version:"v99.0",testCode:"TEST"};
  const transport=(async (_url,init)=>{requests.push(JSON.parse(String(init?.body)));return Response.json({events_received:1});}) as typeof fetch;
  expect(await sendMetaConversion(payload,config,transport)).toBe("sent");

@@ -63,7 +63,7 @@ for (const [name, ua] of [...iosBrowsers, ...androidBrowsers]) {
       const action = own.getByRole('link');
       await expect(action).toHaveText(ios || detected ? (locale === 'en' ? 'Open app' : 'Abrir app') : (locale === 'en' ? 'Use app' : 'Usar app'));
       await expect(own.getByTestId('app-platform-label')).toHaveText(`${locale === 'en' ? 'for' : 'para'} ${ios ? 'iOS' : 'Android'}`);
-      await expect(action).toHaveAttribute('href', ios ? /^https:\/\/(?:www\.)?contratacr\.com\/(?:en\/)?proyectos\?_ccr_open=ios$/ : /^intent:\/\/contratacr.com\/(?:en\/)?proyectos#Intent;/);
+      await expect(action).toHaveAttribute('href', ios ? /^https:\/\/(?:www\.)?contratacr\.com\/(?:en\/)?solicitudes\?_ccr_open=ios$/ : /^intent:\/\/contratacr.com\/(?:en\/)?solicitudes#Intent;/);
      }
     }
     expect(errors).toEqual([]);

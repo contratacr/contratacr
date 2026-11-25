@@ -60,10 +60,16 @@ test('home streams its main content while coverage and service data are still pe
     '@/components/landing/pros-section':`import React from 'react';export async function ProsSection(){await new Promise(resolve=>{globalThis.__releaseSupply=resolve});return React.createElement('section',null,'Ready services')}`,
     '@/components/landing/find-by-zone':`import React from 'react';export const FindByZone=()=>React.createElement('section',null,'Ready coverage');`,
     'next-intl/server':`export const getTranslations=async()=>key=>key;`,
+    // Directory pieces of the home (DIR_ENABLED): off in this harness, as in the regression build.
+    '@/components/landing/directory-nav':`export const DirectoryQuickNav=()=>null;`,
+    '@/components/landing/home-places':`export const HomePlacesTiles=()=>null;`,
+    '@/components/landing/home-directory-bands':`export const HomeFeaturedPlaces=()=>null;export const HomePromoBand=()=>null;`,
+    '@/components/directory/app-home':`export const AppHome=()=>null;`,
+    '@/components/directory/app-home-data':`export const loadTopPlaces=async()=>[];`,
   };
   const names:Record<string,string>={'app-download':'AppDownloadSection','landing-navbar':'LandingNavbar','landing-hero':'LandingHero','featured-brands':'FeaturedBrands','why-contratacr':'WhyContratacr','landing-footer':'LandingFooter','fade-in-up':'FadeInUp'};
   const result=await build({stdin:{contents:`import React from 'react';import{renderToReadableStream}from'react-dom/server';import Home from './src/app/[locale]/page';export async function render(){return renderToReadableStream(await Home({params:Promise.resolve({locale:'es'}),searchParams:Promise.resolve({})}))}export function release(){globalThis.__releaseCoverage?.();globalThis.__releaseSupply?.()}`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',plugins:[{name:'boundaries',setup(b){
-    b.onResolve({filter:/^(?:next-intl\/server|@\/lib\/queries\/professionals|@\/components\/landing\/)/},a=>({path:a.path,namespace:'mock'}));
+    b.onResolve({filter:/^(?:next-intl\/server|@\/lib\/queries\/professionals|@\/components\/landing\/|@\/components\/directory\/app-home(?:-data)?$)/},a=>({path:a.path,namespace:'mock'}));
     b.onLoad({filter:/.*/,namespace:'mock'},a=>{
       let contents=modules[a.path];
       if(!contents){const name=names[a.path.split('/').at(-1)!];if(!name)throw Error('Missing module '+a.path);contents=`import React from 'react';export function ${name}({children}){return React.createElement('${name==='LandingHero'?'h1':'div'}',null,children??'${name==='LandingHero'?'Home hero':name}')}`;}

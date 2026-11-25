@@ -236,7 +236,8 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
-    await page.getByRole("button", { name: /^Buscar profesionales$/ }).click();
+    // Since 9aa52e6c the menu entry is the general "Buscar".
+    await page.locator(".ccr-menu-completo").getByRole("button", { name: /^Buscar$/ }).click();
     const panel = page.locator(".ccr-native-search-panel");
     await expect(panel).toBeVisible();
     const medida = await page.evaluate(() => {
