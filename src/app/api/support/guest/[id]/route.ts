@@ -5,7 +5,7 @@ import { guestAccessEligible, validGuestAccess, GUEST_ACCESS_SECONDS } from "@/l
 import { firmarAdjuntos } from "@/lib/support/adjuntos";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { despuesDeResponder } from "@/lib/after-response";
-import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { SUPPORT_MESSAGE_MAX_LENGTH, exceedsTrimmedLength, limitTrimmedText } from "@/lib/text-limits";
 
 export const runtime = "nodejs";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -62,7 +62,8 @@ export async function POST(req: NextRequest, ctx: Context) {
   }
   if (input.action !== "reply" || !validGuestAccess(id, ticket.email, req.cookies.get(cookieName(id))?.value || "")) return denied();
   if (typeof input.body !== "string") return json({ error: "invalid_body" }, 400);
-  const body = limitTrimmedText(input.body, LONG_TEXT_MAX_LENGTH);
+  if (exceedsTrimmedLength(input.body, SUPPORT_MESSAGE_MAX_LENGTH)) return json({ error: "message_too_long" }, 400);
+  const body = limitTrimmedText(input.body, SUPPORT_MESSAGE_MAX_LENGTH);
   if (!body) return json({ error: "empty_message" }, 400);
   // Re-check guest ownership at the write boundary: claimed cases require login.
   const now = new Date().toISOString();

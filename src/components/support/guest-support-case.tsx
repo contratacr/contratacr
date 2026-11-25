@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AdjuntosDelMensaje } from "@/components/support/compositor-de-soporte";
 import type { AdjuntoDeSoporte } from "@/lib/support/adjuntos";
-import { LONG_TEXT_MAX_LENGTH } from "@/lib/text-limits";
+import { SUPPORT_MESSAGE_MAX_LENGTH } from "@/lib/text-limits";
 import { SupportMessageSkeleton } from "@/components/support/support-thread-skeleton";
 import { Skeleton } from "@/components/ui/content-loading";
 
@@ -91,7 +91,7 @@ export function GuestSupportCase({ id }: { id: string }) {
         </div>
         <form onSubmit={reply} className="mt-5">
           <label htmlFor="guest-reply" className="block text-sm font-semibold">{t("reply")}</label>
-          <textarea id="guest-reply" value={body} onChange={e => { setBody(e.target.value); setSent(false); }} maxLength={LONG_TEXT_MAX_LENGTH} required rows={4} className="mt-2 w-full rounded-xl border border-[#ccd5df] p-3 text-sm" />
+          <textarea id="guest-reply" value={body} onChange={e => { setBody(e.target.value); setSent(false); }} maxLength={SUPPORT_MESSAGE_MAX_LENGTH} required rows={4} className="mt-2 w-full rounded-xl border border-[#ccd5df] p-3 text-sm" />
           <button disabled={sending || !body.trim()} className="mt-3 rounded-full bg-[#009FD9] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{t(sending ? "sending" : "send")}</button>
           {sent && <p role="status" className="mt-3 text-sm">{t("sent")}</p>}
         </form>
