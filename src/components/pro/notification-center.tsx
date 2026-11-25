@@ -28,6 +28,9 @@ export function openNotification(item:NotificationItem,en:boolean){
 export function NotificationCenter(){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es;
  const params=useProSearchParams(),[tab,setTab]=useState<NotificationTab>(()=>{const value=params.get('pestana');return value==='comments'||value==='general'?value:'all';});
+ // Reaching this section again from the Messages flyout only changes the URL: follow it without remounting.
+ const tabParam=params.get('pestana'),[seenTabParam,setSeenTabParam]=useState(tabParam);
+ if(tabParam!==seenTabParam){setSeenTabParam(tabParam);if(tabParam==='comments'||tabParam==='general')setTab(tabParam);}
  const [view,setView]=useState<'unread'|'all'>('unread'),[items,setItems]=useState<NotificationItem[]>([]),[next,setNext]=useState<{at:string;id:string}|null>(null);
  const [unread,setUnread]=useState(0),[settings,setSettings]=useState<NotificationSettings|null>(null),[draft,setDraft]=useState<NotificationSettings|null>(null);
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),sequence=useRef(0);

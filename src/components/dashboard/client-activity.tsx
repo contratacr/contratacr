@@ -1,4 +1,5 @@
 "use client";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { ClientProjectLinks } from "@/components/pro/project-link-consent";
 import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
 import { PRO_BEFORE_PATH_CHANGE } from "@/lib/pro/navigation";
@@ -444,7 +445,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             </div>
                           )}
 
-                          {process.env.NODE_ENV === "development" && <PromotionHistory key={project.id} contentType="project" contentId={project.id}/>}
+                          {PRO_UI_ENABLED && <PromotionHistory key={project.id} contentType="project" contentId={project.id}/>}
                           <QuoteBlock projectId={project.id} role="client" />
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
                           {/* SIN LA LISTA DE PROPUESTAS. Desde que se contesta

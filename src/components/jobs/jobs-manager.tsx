@@ -1,4 +1,5 @@
 "use client";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { PromotionHistory } from "@/components/pro/promotion-history";
 
 import { trackMetaConversion } from "@/lib/analytics/meta-pixel";
@@ -222,7 +223,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                 {isOpen && (
                   <div className="px-4 pb-5 pt-3 sm:px-5">
                     {job.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{job.description}</p>}
-                    {process.env.NODE_ENV === "development" && <PromotionHistory key={job.id} contentType="job" contentId={job.id}/>}
+                    {PRO_UI_ENABLED && <PromotionHistory key={job.id} contentType="job" contentId={job.id}/>}
                                         {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
                         «Ver» solo mira, el «···» guarda lo de cambiar de estado,
                         y editar es a lo que se viene cuando se abre una

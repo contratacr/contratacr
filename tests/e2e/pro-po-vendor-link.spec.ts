@@ -104,13 +104,13 @@ for(const language of ['es','en'] as const)test(`Purchase order journey: terms, 
   await root.locator('[data-po-portal-send]').click();await expect(root.locator('[data-po-portal-notice]')).toContainText(en?'Answer received':'Respuesta recibida');await expect(root.locator('[data-po-portal-current]')).toHaveAttribute('data-po-portal-current','propose_date');
   // Idempotent: the same actionId sent twice counts once.
   const respondBody=(actionId:string,revision:number,response:string)=>({action:'respond',link:link1,actionId,revision,response,proposedDate:response==='propose_date'?proposed:null,note:null});
-  const viewJson=await (await vendorContext.request.get(origin+portal)).json() as {revision:number};
+  const viewJson=await (await vendorContext.request.get(origin+portal)).json() as {order:{revision:number}};
   const sameAction=crypto.randomUUID();
-  for(let i=0;i<2;i++)expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(sameAction,viewJson.revision,'confirm')})).status()).toBe(200);
+  for(let i=0;i<2;i++)expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(sameAction,viewJson.order.revision,'confirm')})).status()).toBe(200);
   expect((await db.from('pro_po_vendor_responses').select('id').eq('owner_id',owner.id).eq('action_id',sameAction).throwOnError()).data).toHaveLength(1);
-  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(crypto.randomUUID(),viewJson.revision+9,'confirm')})).status()).toBe(409);
-  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:'http://evil.example'},data:respondBody(crypto.randomUUID(),viewJson.revision,'confirm')})).status()).toBe(403);
-  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:{...respondBody(crypto.randomUUID(),viewJson.revision,'confirm'),proposedDate:proposed}})).status()).toBe(400);
+  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(crypto.randomUUID(),viewJson.order.revision+9,'confirm')})).status()).toBe(409);
+  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:'http://evil.example'},data:respondBody(crypto.randomUUID(),viewJson.order.revision,'confirm')})).status()).toBe(403);
+  expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:{...respondBody(crypto.randomUUID(),viewJson.order.revision,'confirm'),proposedDate:proposed}})).status()).toBe(400);
   await vendorPage.reload();await expect(root.locator('[data-po-portal-current]')).toHaveAttribute('data-po-portal-current','confirm',{timeout:60000});
   await vendorPage.screenshot({path:info.outputPath(`po-vendor-answered-${suffix}.png`),fullPage:true});
 

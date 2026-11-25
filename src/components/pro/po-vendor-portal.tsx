@@ -121,7 +121,7 @@ export function PoVendorPortal(){
   if(pending.current){void post(pending.current.body,pending.current.actionId);return;}
   if(choice==='propose_date'&&(!date||date<view.today)){setError(c.invalidDate);return;}
   const actionId=crypto.randomUUID();
-  void post(JSON.stringify({action:'respond',link:link.current??undefined,actionId,revision:view.revision,response:choice,proposedDate:choice==='propose_date'?date:null,note:note.trim()||null}),actionId);
+  void post(JSON.stringify({action:'respond',link:link.current??undefined,actionId,revision:view.order.revision,response:choice,proposedDate:choice==='propose_date'?date:null,note:note.trim()||null}),actionId);
  }
  function edit(apply:()=>void){apply();setError('');pending.current=null;setUncertain(false);}
  const shell=(children:ReactNode)=><main data-po-portal className="mx-auto min-h-screen w-full max-w-3xl space-y-5 bg-white px-4 py-6 text-[#162543] sm:px-6">

@@ -1,4 +1,5 @@
 "use client";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 import { serviceModalities } from "@/components/professionals/service-modalities";
 import type { CoverageArea } from "@/lib/public-workplaces";
@@ -1486,7 +1487,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
       {avisoCompartir}
-      {process.env.NODE_ENV === "development" && isOwn && <div className="mx-auto w-full max-w-6xl px-4"><PromotionHistory key={professional.id} contentType="profile" contentId={professional.id}/></div>}
+      {PRO_UI_ENABLED && isOwn && <div className="mx-auto w-full max-w-6xl px-4"><PromotionHistory key={professional.id} contentType="profile" contentId={professional.id}/></div>}
       {ofrecerProyecto && !isOwn && (
         <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+88px)] z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-lg lg:bottom-6">
           <div className="min-w-0 flex-1">

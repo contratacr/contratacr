@@ -1,4 +1,5 @@
 "use client";
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { ProjectQuoteAction } from "./project-quote-action";
 import { PromotionHistory } from "@/components/pro/promotion-history";
 import { SectionBrand } from "@/components/layout/section-brand";
@@ -845,7 +846,7 @@ export function ProjectsBoard({
                           tarjeta se queda grande y el párrafo se lee. */}
                       <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
                       {ficha.allow_direct_contact&&!misProyectos.includes(ficha.id)&&<ProjectQuoteAction projectId={ficha.id}/>}
-                      {process.env.NODE_ENV === "development" && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
+                      {PRO_UI_ENABLED && misProyectos.includes(ficha.id) && <PromotionHistory key={ficha.id} contentType="project" contentId={ficha.id}/>}
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta

@@ -1,4 +1,5 @@
 'use client';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type FormEvent,type ComponentProps} from 'react';
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import {useLocale} from 'next-intl';

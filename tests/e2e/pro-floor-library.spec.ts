@@ -25,7 +25,7 @@ for(const language of ['es','en'] as const)test(`Rows 63/64: object library, cus
   const dup=await page.request.post(origin+'/api/pro/floor-object-library',{headers:h,data:{action:'create',id:crypto.randomUUID(),name:t('Mesa de centro','Coffee table'),w:1,d:1,h:1,source:'manual'}});expect(dup.status()).toBe(409);
   // Place it and save.
   await plans.locator('[data-floor-tool="object"]').click();await plans.locator('[data-floor-object-kind]').selectOption({label:t('Mesa de centro','Coffee table')});
-  const box=(await plans.locator('[data-floor-canvas]').boundingBox())!;await page.mouse.click(box.x+box.width/2,box.y+box.height/2);
+  await plans.locator('[data-floor-canvas]').click(); // scrolls the canvas into view first: raw page.mouse coordinates miss it when it sits below the fold
   await expect(plans.locator('[data-floor-object="custom"]')).toHaveCount(1);
   await plans.locator('[data-floor-save]').click();await expect(plans.locator('[data-floor-notice]')).toContainText(t('Plano creado','Plan created'),{timeout:60000});
   const saved=(await f.db.from('pro_floor_plans').select('content').eq('owner_id',f.owner.id).single().throwOnError()).data!.content as {objects:{kind:string;label:string;h:number}[]};

@@ -1,4 +1,5 @@
 'use client';
+import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import {useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type CustomerReservation} from '@/lib/directory/place-features';
 
@@ -45,7 +46,7 @@ export function ReservationStatus({token,locale,initial}:{token:string;locale:st
    if(!res.ok){setMsg({ok:false,text:featureReasonText(j.reason,en)});return;}
    setR(j);setAsking(false);action.current=null;
    // Public copy is neutral; the «simulated notice» hint exists only in local development builds.
-   setMsg({ok:true,text:process.env.NODE_ENV==='development'?t('Listo. Avisamos al negocio (aviso simulado en esta versión local).','Done. We let the business know (simulated notice in this local build).'):t('Listo. Avisamos al negocio.','Done. We let the business know.')});
+   setMsg({ok:true,text:PRO_UI_ENABLED?t('Listo. Avisamos al negocio (aviso simulado en esta versión local).','Done. We let the business know (simulated notice in this local build).'):t('Listo. Avisamos al negocio.','Done. We let the business know.')});
   }catch{setMsg({ok:false,text:featureReasonText('unavailable',en)});}finally{setBusy(false);}
  };
  return <section data-reservation-status={r.status} data-ready={ready||undefined} aria-labelledby="reservation-title" className="space-y-5">
