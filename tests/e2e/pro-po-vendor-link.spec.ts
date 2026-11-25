@@ -107,7 +107,7 @@ for(const language of ['es','en'] as const)test(`Purchase order journey: terms, 
   const viewJson=await (await vendorContext.request.get(origin+portal)).json() as {order:{revision:number}};
   const sameAction=crypto.randomUUID();
   for(let i=0;i<2;i++)expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(sameAction,viewJson.order.revision,'confirm')})).status()).toBe(200);
-  expect((await db.from('pro_po_vendor_responses').select('id').eq('owner_id',owner.id).eq('action_id',sameAction).throwOnError()).data).toHaveLength(1);
+  expect((await db.from('pro_po_vendor_responses').select('action_id').eq('owner_id',owner.id).eq('action_id',sameAction).throwOnError()).data).toHaveLength(1);
   expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:respondBody(crypto.randomUUID(),viewJson.order.revision+9,'confirm')})).status()).toBe(409);
   expect((await vendorContext.request.post(origin+portal,{headers:{Origin:'http://evil.example'},data:respondBody(crypto.randomUUID(),viewJson.order.revision,'confirm')})).status()).toBe(403);
   expect((await vendorContext.request.post(origin+portal,{headers:{Origin:origin},data:{...respondBody(crypto.randomUUID(),viewJson.order.revision,'confirm'),proposedDate:proposed}})).status()).toBe(400);

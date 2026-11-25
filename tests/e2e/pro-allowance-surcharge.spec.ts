@@ -58,9 +58,9 @@ for(const language of ['es','en'] as const)test(`Allowance surcharge: send the d
   const post=async(data:Record<string,unknown>,status=200)=>{const r=await page.request.post(api,{headers:h,data});expect(r.status(),JSON.stringify(data)).toBe(status);return status===200?(await r.json()).item as AllowanceItem:null;};
   const send=async(data:Record<string,unknown>,status=200)=>{const r=await page.request.post(sapi,{headers:h,data});expect(r.status(),JSON.stringify(data)).toBe(status);return status===200?await r.json():null;};
   const read=async()=>{const r=await page.request.get(sapi+'?'+new URLSearchParams({workId}),{headers:{'X-Pro-Expected-Actor':owner.id}});expect(r.status()).toBe(200);return await r.json() as SurchargeDetail;};
-  const make=async(name:string,planned:number,actual:number|null)=>{
-   const id=crypto.randomUUID();let item=await post({action:'create',actionId:crypto.randomUUID(),workId,id,name,category:null,plannedCents:planned,dueDate:null,notes:null})!;
-   if(actual!==null)item=await post({action:'decide',actionId:crypto.randomUUID(),workId,id,revision:item!.revision,choiceDescription:'Elegido '+name,supplier:null,quantity:1,actualCents:actual})!;
+  const make=async(name:string,planned:number,actual:number|null,forWork=workId)=>{
+   const id=crypto.randomUUID();let item=await post({action:'create',actionId:crypto.randomUUID(),workId:forWork,id,name,category:null,plannedCents:planned,dueDate:null,notes:null})!;
+   if(actual!==null)item=await post({action:'decide',actionId:crypto.randomUUID(),workId:forWork,id,revision:item!.revision,choiceDescription:'Elegido '+name,supplier:null,quantity:1,actualCents:actual})!;
    return item!;
   };
   // Access and validation.
@@ -101,7 +101,7 @@ for(const language of ['es','en'] as const)test(`Allowance surcharge: send the d
   // ---- UI ----
   await page.setViewportSize(info.project.name.includes('mobile')?{width:390,height:844}:{width:1366,height:900});
   await page.context().addCookies([{name:'NEXT_LOCALE',value:language,url:origin}]);
-  const second=await make('Pintura especial',1000000,1600000);
+  const second=await make('Pintura especial',1000000,1600000,f.uiWorkId);
   await gotoOK(page,origin+'/'+language+'/dashboard/pro?'+new URLSearchParams({tab:'pro_agenda',cita:f.uiWorkId,vistaTrabajo:'allowances'}));
   const card=page.locator(`[data-allowance-item="${second.id}"]`);await expect(card).toBeVisible({timeout:60000});
   await expect(card.locator('[data-allowance-surcharge]')).toBeVisible();

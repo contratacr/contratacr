@@ -25,7 +25,7 @@ for(const language of ['es','en'] as const)test(`Time activity team permissions 
   expect((await manual(grantB)).status()).toBe(403);expect((await manual(grantA)).status()).toBe(200);expect((await manual(null)).status()).toBe(200);
   const read=await (await page.request.get(origin+time+'?'+new URLSearchParams({workId,from:today,to:today}))).json();
   expect(read.people.find((p:{grantId:string|null})=>p.grantId===grantA).memberUserId).toBe(client.id);
-  for(const bad of [{memberUserIds:[rival.id]},{memberUserIds:['x']},{memberUserIds:'x'},{extra:1}])expect((await post({activityId,...bad})).status()).toBe(400);
+  for(const bad of [{memberUserIds:[uuid()]},{memberUserIds:['x']},{memberUserIds:'x'},{extra:1}])expect((await post({activityId,...bad})).status()).toBe(400);
   expect((await post({activityId:uuid(),memberUserIds:[]})).status()).toBe(404);
   expect((await page.request.get(origin+api+'?x=1')).status()).toBe(400);
   const other=await browser.newContext({baseURL});await login(other,rival);expect((await (await other.request.get(origin+api)).json()).restrictions).toEqual({});

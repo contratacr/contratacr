@@ -116,6 +116,8 @@ for(const language of ['es','en'] as const){
    await page.reload();await expect(log).toBeVisible({timeout:45000});
    await expect(log.locator('[data-lead-tags] li')).toHaveCount(1);
    // Bulk select and bulk archive in the table view.
+   // The lead detail is a modal that survives the reload; close it before using the list behind it.
+   await page.getByRole('dialog',{name:en?'Lead details':'Detalle de la solicitud'}).getByRole('button',{name:en?'Close':'Cerrar',exact:true}).first().click();await expect(log).toHaveCount(0);
    await page.locator('[data-lead-view="table"]').click();
    const bulk=page.locator('[data-lead-table-view]');await expect(bulk.locator('[data-lead-bulk-bar]')).toHaveCount(0);
    const before=await bulk.locator('[data-lead-table-row]').count();
