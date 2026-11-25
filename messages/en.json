@@ -2727,6 +2727,8 @@
     "cat8Desc": "How to ask for a price in writing and compare answers.",
     "cat9Title": "Messages",
     "cat9Desc": "How to write to a professional inside ContrataCR.",
+    "cat10Title": "Hiring safely",
+    "cat10Desc": "How to avoid scams",
     "faq12Q": "How do I request a quote?",
     "faq12A": "From the professional's profile, request a quote describing what you need. They answer with the price and conditions, and the quote is kept in your dashboard so you can compare it with others and have it in writing.",
     "faq13Q": "Can I message a professional without giving out my number?",
@@ -2734,7 +2736,9 @@
     "faq14Q": "How do I delete my account?",
     "faq14A": "In My profile, open Account and security and find the option to delete your account. You can review what is deleted and retained before confirming.",
     "faq15Q": "What should I check before hiring?",
-    "faq15A": "Compare reviews and photos of similar work. Agree in writing on the price, timing and conditions. ContrataCR helps you make contact; it does not guarantee the outcome."
+    "faq15A": "Compare reviews and photos of similar work. Agree in writing on the price, timing and conditions. ContrataCR helps you make contact; it does not guarantee the outcome.",
+    "faq16Q": "How do I avoid scams when hiring?",
+    "faq16A": "Choose verified professionals with reviews, and talk through ContrataCR messages. Be careful if someone asks you to pay everything in advance, pushes you to decide quickly, or asks for passwords, verification codes or card details: ContrataCR will never ask for them. If something does not seem right, report the profile or listing; the reported person will not know who reported them."
   },
   "atraerClientes": {
     "eyebrow": "For professionals",

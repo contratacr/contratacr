@@ -29,10 +29,11 @@ import { BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY, FIELD, FOCUS, KindTag, LINK, Pr
 
 type HistoryRow = { id: string; actor_id: string; report_id?: string | null; target_type?: string; target_id?: string; action: string; reason: string; created_at: string };
 
-// Texto fijo para asignar o cambiar prioridad: la RPC lo guarda como
-// decision_reason, que la persona reportada puede ver en sus decisiones.
+// Texto fijo para asignar o cambiar prioridad. La RPC lo guarda como
+// decision_reason, pero /api/moderation/decisions solo muestra a la persona
+// reportada los casos que terminaron en sanción, así que no lo ve.
 const REVIEW_NOTE = "Caso en revisión por el equipo de moderación.";
-const REASON_LABEL = "Motivo (visible al afectado si se registra como decisión)";
+const REASON_LABEL = "Motivo (si hay sanción, se le envía a la persona afectada)";
 
 const LADDER: ReadonlyArray<{ id: LadderId; title: string; hint: string; destructive: boolean }> = [
   { id: "warn", title: "Advertencia", hint: "Queda en el expediente de la cuenta. No limita su uso.", destructive: false },
@@ -282,7 +283,7 @@ export function AdminReportDetail({ item, stale, showBack, onBack, onChanged }: 
             <button type="button" className={BTN_SECONDARY} disabled={busy || item.reports.every((r) => r.priority === priority)} onClick={() => void updateCase({ priority }, REVIEW_NOTE, "Prioridad actualizada.")}>Aplicar prioridad</button>
           </div>
         </div>
-        <p className="text-xs text-[#64748b]">Asignar o cambiar la prioridad registra el texto «{REVIEW_NOTE}»{count > 1 ? ` en los ${count} reportes del caso` : ""}.</p>
+        <p className="text-xs text-[#64748b]">{`Asignar o cambiar la prioridad guarda la nota interna "${REVIEW_NOTE}"${count > 1 ? ` en los ${count} reportes del caso` : ""}. No se le muestra a la persona reportada.`}</p>
       </div>
 
       {/* Decisión */}
@@ -351,9 +352,9 @@ export function AdminReportDetail({ item, stale, showBack, onBack, onChanged }: 
         {confirming && payload && (
           <div role="group" aria-labelledby={`${uid}-confirm`} className="rounded-xl border border-[#fecaca] bg-[#fef2f2] p-4">
             <p id={`${uid}-confirm`} className="text-sm font-semibold text-[#7f1d1d]">
-              ¿Confirma «{step.title}» sobre «{r0.subject_name}»{ladder === "restrict" ? ` por ${days} ${days === 1 ? "día" : "días"}` : ""}?
+              {`¿Confirma "${step.title}" sobre "${r0.subject_name}"${ladder === "restrict" ? ` por ${days} ${days === 1 ? "día" : "días"}` : ""}?`}
             </p>
-            <p className="mt-1 text-xs text-[#7f1d1d]">El motivo queda registrado en la auditoría y es visible para la persona afectada.</p>
+            <p className="mt-1 text-xs text-[#7f1d1d]">El motivo queda en la auditoría y se le envía por correo a la persona afectada, sin datos de quien reportó.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button ref={confirmRef} type="button" className={BTN_DANGER} disabled={busy} onClick={() => void moderate(payload, `${step.title}: acción registrada.`)}>Confirmar y guardar</button>
               <button type="button" className={BTN_SECONDARY} disabled={busy} onClick={() => setConfirming(false)}>Cancelar</button>
