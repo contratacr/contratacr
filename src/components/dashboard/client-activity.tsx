@@ -1,7 +1,6 @@
 "use client";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { ClientProjectLinks } from "@/components/pro/project-link-consent";
-import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
 import { PRO_BEFORE_PATH_CHANGE } from "@/lib/pro/navigation";
 import { PromotionHistory } from "@/components/pro/promotion-history";
 
