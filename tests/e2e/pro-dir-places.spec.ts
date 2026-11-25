@@ -33,7 +33,7 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  // claim link, the section-colour hero instead of an empty photo box, and the phones' fixed action bar.
  await expect(page.locator('[data-rating-line="none"]')).toHaveText(t('Sin reseñas todavía','No reviews yet'));
  await expect(page.locator('[data-place-open-status]')).toHaveCount(1);
- await expect(page.locator('[data-place-photo-placeholder="restaurant"]')).toBeVisible();
+ await expect(page.locator('[data-hero-tile="restaurant"]')).toBeVisible();
  await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
  await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();

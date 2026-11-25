@@ -28,7 +28,8 @@ export type PurgeReceipt=z.infer<typeof purgeReceiptSchema>;
 export const purgePreviewSchema=z.object({scope:z.enum(['company','work']),workId:z.string().nullable(),expiredFiles:z.number().int(),deletableFiles:z.number().int(),keptFiles:z.number().int(),bytes:z.number(),expiredFolders:z.number().int(),today:z.string()}).passthrough();
 export const purgeStateSchema=z.object({preview:purgePreviewSchema,receipts:z.array(purgeReceiptSchema)});
 export const purgeQuerySchema=z.object({scope:z.enum(['company','work']),workId:z.string().min(1).max(160).optional()}).strict().refine(v=>v.scope==='company'?v.workId===undefined:v.workId!==undefined);
-export const purgeInputSchema=z.discriminatedUnion('action',[
+// z.union, not discriminatedUnion: two options share action 'purge_expired' (work and company) and zod 4 throws on a duplicate discriminator value.
+export const purgeInputSchema=z.union([
  z.object({action:z.literal('purge_expired'),scope:z.literal('work'),actionId:id,workId:z.string().min(1).max(160),confirm:z.literal(true)}).strict(),
  z.object({action:z.literal('purge_expired'),scope:z.literal('company'),actionId:id,confirm:z.literal(true)}).strict(),
  z.object({action:z.literal('purge_entry'),scope:z.literal('company'),actionId:id,trashId:id}).strict(),

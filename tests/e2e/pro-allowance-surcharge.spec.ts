@@ -102,7 +102,7 @@ for(const language of ['es','en'] as const)test(`Allowance surcharge: send the d
   await page.setViewportSize(info.project.name.includes('mobile')?{width:390,height:844}:{width:1366,height:900});
   await page.context().addCookies([{name:'NEXT_LOCALE',value:language,url:origin}]);
   const second=await make('Pintura especial',1000000,1600000);
-  await gotoOK(page,origin+'/dashboard/profesional?'+new URLSearchParams({tab:'pro_agenda',cita:f.uiWorkId,vistaTrabajo:'allowances'}));
+  await gotoOK(page,origin+'/'+language+'/dashboard/pro?'+new URLSearchParams({tab:'pro_agenda',cita:f.uiWorkId,vistaTrabajo:'allowances'}));
   const card=page.locator(`[data-allowance-item="${second.id}"]`);await expect(card).toBeVisible({timeout:60000});
   await expect(card.locator('[data-allowance-surcharge]')).toBeVisible();
   await card.locator('[data-allowance-surcharge-open]').click();

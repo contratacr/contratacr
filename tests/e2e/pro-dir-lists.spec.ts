@@ -15,6 +15,8 @@ test.afterEach(()=>hideSeededPlaces());
 test('saved lists: save from the place page, private by default, share link without ids, CAS and isolation',async({page,context,browser},info)=>{
  test.setTimeout(300000);local(info.project.use.baseURL);
  const tag=label(),db=dirDb(),errors=collectPageErrors(page);
+ // «Mis listas» has tabs (He estado | Quiero ir | Listas); the lists manager lives in «Listas» and only after hydration.
+ const openLists=async(path:string)=>{await gotoOK(page,path);await expect(page.locator('[data-my-lists][data-ready]')).toBeVisible({timeout:45000});await page.locator('[data-lists-tab="lists"]').click();await expect(page.locator('[data-lists-manager][data-ready]')).toBeVisible({timeout:45000});};
  const a=`soda-lista-${tag}`,b=`ferreteria-lista-${tag}`;
  await seedPlace(db,{slug:a,vertical:'restaurant',name:`Soda Lista ${tag}`,adminArea1:'Cartago',locality:'Paraíso'});
  await seedPlace(db,{slug:b,vertical:'hardware',name:`Ferretería Lista ${tag}`,attributes:{kind:'hardware'}});
@@ -47,11 +49,11 @@ test('saved lists: save from the place page, private by default, share link with
   // /listas: private by default, create a share link.
   for(const language of ['es','en'] as const){
    const prefix=language==='en'?'/en':'/es';
-   await gotoOK(page,`${prefix}/listas`);await expect(page.locator('[data-lists-manager][data-ready]')).toBeVisible({timeout:45000});
+   await openLists(`${prefix}/listas`);
    const card=page.locator(`[data-list="${listName}"]`);await expect(card).toBeVisible();
    await expect(card).toContainText(language==='en'?'Private: only you can see it.':'Privada: solo usted la ve.');
   }
-  await gotoOK(page,'/es/listas');await expect(page.locator('[data-lists-manager][data-ready]')).toBeVisible({timeout:45000});
+  await openLists('/es/listas');
   const card=page.locator(`[data-list="${listName}"]`);
   await card.locator('[data-list-share="on"]').click();
   const link=card.locator('[data-list-share-link]');await expect(link).toHaveValue(/\/lista\/[a-f0-9]{32}$/);

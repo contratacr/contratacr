@@ -34,7 +34,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   await claimByEmail(context,slug);await context.setExtraHTTPHeaders(randomIp());
   // Owner: «Agregar fotos» → published at once.
   await gotoOK(page,`/lugar/${slug}`);
-  await expect(page.locator('[data-place-photo-placeholder]')).toBeVisible();
+  await expect(page.locator('[data-hero-tile]')).toBeVisible();
   await upload(page,{name:'terraza.jpg',buffer:await jpeg('#2a9d8f')},'Terraza al atardecer');
   await expect(page.locator('[data-place-photo-result]')).toContainText('Se publicó 1 foto');
   await expectNoHorizontalOverflow(page);
@@ -75,7 +75,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
     const prefix=language==='en'?'/en':'';
     await gotoOK(a,`${prefix}/lugar/${slug}`);await openPlaceTab(a,'photos');
     const thumbs=a.locator('[data-place-photo-thumb]');await expect(thumbs).toHaveCount(2);
-    await expect(a.locator('[data-place-photo-placeholder]')).toHaveCount(0);
+    await expect(a.locator('[data-hero-tile]')).toHaveCount(0);
     const alts=await a.locator('[data-place-gallery] img').evaluateAll(n=>n.map(i=>(i as HTMLImageElement).alt));
     expect(alts.sort()).toEqual(['Terraza al atardecer',language==='en'?`Photo 2 of ${name}`:`Foto 2 de ${name}`].sort());
     await expect.poll(()=>a.locator('[data-place-gallery] img').evaluateAll(n=>n.every(i=>(i as HTMLImageElement).naturalWidth>0))).toBe(true);

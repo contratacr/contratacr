@@ -13,12 +13,18 @@ type Provider='google'|'microsoft';
 type Work={id:string;label:string};
 type Data={templates:EmailTemplate[];inbox:InboxMessage[]};
 const api='/api/pro/company-email-tools',card='min-w-0 space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4 sm:p-5',field='mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-[#d7e1ea] bg-white px-3 text-base font-normal';
+const TEMPLATES_CHANGED='pro-email-templates-changed';
 async function load():Promise<Data|null>{try{const response=await fetch(api,{cache:'no-store'});return response.ok?await response.json() as Data:null;}catch{return null;}}
 
 /** Select inside the project-email form: choosing a template fills the subject and the message. */
 export function TemplatePicker({workLabel,onPick}:{workLabel:string;onPick:(subject:string,body:string)=>void}){
  const en=useLocale()==='en',t=(es:string,english:string)=>en?english:es,[templates,setTemplates]=useState<EmailTemplate[]>([]);
- useEffect(()=>{let live=true;void load().then(data=>{if(live&&data)setTemplates(data.templates.filter(template=>!template.archived));});return()=>{live=false;};},[]);
+ useEffect(()=>{
+  let live=true;
+  const reload=()=>{void load().then(data=>{if(live&&data)setTemplates(data.templates.filter(template=>!template.archived));});};
+  reload();window.addEventListener(TEMPLATES_CHANGED,reload);// the template manager on the same page saved, archived or changed one
+  return()=>{live=false;window.removeEventListener(TEMPLATES_CHANGED,reload);};
+ },[]);
  if(!templates.length)return null;
  const today=new Intl.DateTimeFormat(en?'en-US':'es-CR',{timeZone:'America/Costa_Rica',dateStyle:'long'}).format(new Date());
  return <label className="block min-w-0 text-sm font-bold sm:col-span-2">{t('Usar una plantilla','Use a template')}
@@ -43,7 +49,7 @@ export function CompanyMailTools({providers,works}:{providers:Provider[];works:W
    if(!response.ok){setError(response.status===409?t('El dato cambió o el nombre ya existe. Actualice e intente de nuevo.','The data changed or the name already exists. Refresh and try again.'):(json.error??t('No se pudo completar la operación.','The operation could not be completed.')));return false;}
    setNotice(typeof json.inserted==='number'?(en?`${json.inserted} new message(s) copied.`:`${json.inserted} mensaje(s) nuevo(s) copiado(s).`):done);return true;
   }catch{setError(t('No se pudo comprobar la operación. Reintente.','Could not confirm the operation. Retry.'));return false;}
-  finally{setBusy(false);await refresh();}
+  finally{setBusy(false);await refresh();window.dispatchEvent(new Event(TEMPLATES_CHANGED));}
  }
  async function save(event:FormEvent){
   event.preventDefault();if(!draft)return;
