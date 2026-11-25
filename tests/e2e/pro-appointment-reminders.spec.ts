@@ -8,6 +8,8 @@ import {emptyBusiness} from '../../src/lib/pro/business';
 import {expectNoHorizontalOverflow,onAppPageError} from './helpers';
 
 const api='/api/pro/appointment-reminders',runFile=promisify(execFile);
+// The reminder rollout clock is global (one enabled owner at a time), so the es/en runs must never overlap.
+test.describe.configure({mode:'serial'});
 type Language='es'|'en';
 const copy=(language:Language)=>language==='en'?{summary:'Reminders',toggle:'Remind me about my appointments',check:'Check saved result',updated:'Reminders enabled.',message:'Check the date and time in Appointments.',invalid:'This appointment has changed. Check its current details.',close:'Close',detail:'Appointment request'}:{summary:'Recordatorios',toggle:'Recordarme mis citas',check:'Comprobar guardado',updated:'Recordatorios activados.',message:'Consulte la fecha y hora en Citas.',invalid:'Esta cita cambió. Consulte los detalles actuales.',close:'Cerrar',detail:'Solicitud de cita'};
 function device(info:TestInfo){const {viewport,isMobile,hasTouch,userAgent,deviceScaleFactor}=info.project.use;return {viewport,isMobile,hasTouch,userAgent,deviceScaleFactor};}
