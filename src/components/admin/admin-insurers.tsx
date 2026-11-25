@@ -19,6 +19,44 @@ const STATUSES = [
   { id: "rejected", label: "Rechazadas" },
 ] as const;
 
+type Escrito = { texto: string; cantidad: number; ejemplo: { slug: string | null; nombre: string | null } };
+
+// Idiomas y aseguradoras que los profesionales escribieron a mano porque no
+// estaban en la lista. Salen en su perfil, no en los filtros.
+function EscritosPorProfesionales() {
+  const [datos, setDatos] = useState<{ idiomas: Escrito[]; aseguradoras: Escrito[] } | null>(null);
+  useEffect(() => {
+    fetch("/api/admin/otros-valores").then((r) => (r.ok ? r.json() : null)).then(setDatos).catch(() => setDatos(null));
+  }, []);
+  if (!datos || (datos.idiomas.length === 0 && datos.aseguradoras.length === 0)) return null;
+  const bloque = (titulo: string, items: Escrito[]) => items.length > 0 && (
+    <div className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3" data-testid="escritos-por-profesionales">
+      <p className="mb-2 text-sm font-semibold text-[#162543]">{titulo}</p>
+      <ul className="flex flex-col gap-1.5">
+        {items.map((i) => (
+          <li key={i.texto} className="flex items-baseline justify-between gap-3 text-sm text-[#374151]">
+            <span className="min-w-0 break-words">{i.texto}</span>
+            <span className="shrink-0 text-xs text-[#68778d]">
+              {i.cantidad === 1 ? "1 profesional" : `${i.cantidad} profesionales`}
+              {i.ejemplo.slug && <> · <a className="text-[#0089bb] underline" href={`/profesionales/${i.ejemplo.slug}`} target="_blank" rel="noreferrer">ver perfil</a></>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+  return (
+    <div className="mt-8">
+      <h2 className="mb-1 text-base font-bold text-[#162543]">Escritas por profesionales</h2>
+      <p className="mb-3 text-xs text-[#68778d]">No están en la lista oficial. Salen en el perfil de quien las escribió, no en los filtros de búsqueda. Si varias personas piden la misma, conviene agregarla a la lista.</p>
+      <div className="flex flex-col gap-3">
+        {bloque("Idiomas", datos.idiomas)}
+        {bloque("Aseguradoras", datos.aseguradoras)}
+      </div>
+    </div>
+  );
+}
+
 export function AdminInsurers() {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
   const [items, setItems] = useState<Insurer[]>([]);
@@ -92,6 +130,7 @@ export function AdminInsurers() {
           ))}
         </div>
       )}
+      <EscritosPorProfesionales />
     </div>
   );
 }
