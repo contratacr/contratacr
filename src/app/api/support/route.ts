@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { SUPPORT_MESSAGE_MAX_LENGTH, exceedsTrimmedLength, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { despuesDeResponder } from "@/lib/after-response";
 import { adjuntosValidos, firmarAdjuntos } from "@/lib/support/adjuntos";
@@ -118,7 +118,10 @@ export async function POST(req: Request) {
       "support.sync-email",
     );
   }
-  const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
+  if (exceedsTrimmedLength(body, SUPPORT_MESSAGE_MAX_LENGTH)) {
+    return NextResponse.json({ error: `El mensaje supera ${SUPPORT_MESSAGE_MAX_LENGTH} caracteres. Acórtelo o divídalo en dos mensajes.` }, { status: 400 });
+  }
+  const safeBody = limitTrimmedText(body, SUPPORT_MESSAGE_MAX_LENGTH);
 
   // CONFIRM — the user agrees the ticket is resolved (finalizes it).
   if (action === "confirm") {

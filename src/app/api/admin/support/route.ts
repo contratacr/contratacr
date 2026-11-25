@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getSupportAdmin as getApiAdmin } from "@/lib/moderation/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
-import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
+import { SUPPORT_MESSAGE_MAX_LENGTH, exceedsTrimmedLength, limitTrimmedText } from "@/lib/text-limits";
 import { sendNotificationPush } from "@/lib/push/notify";
 import { buildSupportCloseMessage, supportCloseReason } from "@/lib/support/close-reasons";
 import { adjuntosValidos, firmarAdjuntos } from "@/lib/support/adjuntos";
@@ -88,7 +88,7 @@ export async function PATCH(req: Request) {
 
   const now = new Date().toISOString();
   const cuerpoCierre = cerrando
-    ? buildSupportCloseMessage(String(reason), limitTrimmedText(note, LONG_TEXT_MAX_LENGTH))
+    ? buildSupportCloseMessage(String(reason), limitTrimmedText(note, SUPPORT_MESSAGE_MAX_LENGTH))
     : null;
 
   const { error } = await db
@@ -142,7 +142,10 @@ export async function POST(req: Request) {
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const { id, body, attachments } = await req.json();
-  const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
+  if (exceedsTrimmedLength(body, SUPPORT_MESSAGE_MAX_LENGTH)) {
+    return NextResponse.json({ error: `La respuesta supera ${SUPPORT_MESSAGE_MAX_LENGTH} caracteres. Acórtela o divídala en dos mensajes.` }, { status: 400 });
+  }
+  const safeBody = limitTrimmedText(body, SUPPORT_MESSAGE_MAX_LENGTH);
   const adjuntos = id ? adjuntosValidos(attachments, id) : [];
   if (!id || (!safeBody && !adjuntos.length)) {
     return NextResponse.json({ error: "Escriba una respuesta." }, { status: 400 });

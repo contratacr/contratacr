@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { FileText, Loader2, Paperclip, SendHorizontal, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { MAX_ADJUNTOS_SOPORTE, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
+import { SUPPORT_MESSAGE_MAX_LENGTH } from "@/lib/text-limits";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 
@@ -43,6 +44,7 @@ export function CompositorDeSoporte({
   const [enviando, setEnviando] = useState(false);
   const [preparando, setPreparando] = useState(false);
   const [error, setError] = useState("");
+  const contadorId = useId();
   const archivoRef = useRef<HTMLInputElement | null>(null);
   const campoRef = useRef<HTMLTextAreaElement | null>(null);
   const elegidosRef = useRef(elegidos);
@@ -125,6 +127,7 @@ export function CompositorDeSoporte({
     else { setTexto(limpio); setElegidos(guardados); }
   }
 
+  const cercaDelLimite = texto.length >= SUPPORT_MESSAGE_MAX_LENGTH * 0.85;
   const puedeEnviar = !enviando && !preparando && (!!texto.trim() || elegidos.length > 0);
 
   return (
@@ -149,6 +152,12 @@ export function CompositorDeSoporte({
         </div>
       )}
       {error && <p className="mb-2 text-xs font-semibold text-red-600">{error}</p>}
+      {cercaDelLimite && (
+        <p id={contadorId} aria-live="polite" className={`mb-2 text-right text-xs font-semibold ${texto.length >= SUPPORT_MESSAGE_MAX_LENGTH ? "text-red-600" : "text-[#6b7a90]"}`}>
+          {texto.length.toLocaleString(en ? "en-US" : "es-CR")}/{SUPPORT_MESSAGE_MAX_LENGTH.toLocaleString(en ? "en-US" : "es-CR")} {en ? "characters" : "caracteres"}
+          {texto.length >= SUPPORT_MESSAGE_MAX_LENGTH && (en ? " · Limit reached: send it in two messages." : " · Llegó al límite: envíelo en dos mensajes.")}
+        </p>
+      )}
       <div className="flex items-center gap-2">
         <input ref={archivoRef} type="file" multiple accept={IMAGE_DOC_ACCEPT} className="hidden" onChange={(e) => void agregar(e.target.files)} />
         <button
@@ -164,7 +173,9 @@ export function CompositorDeSoporte({
           ref={(el) => { campoRef.current = el; ajustarAlto(el); }}
           rows={1}
           value={texto}
-          onChange={(e) => { setTexto(e.target.value.slice(0, 4000)); ajustarAlto(e.currentTarget); }}
+          maxLength={SUPPORT_MESSAGE_MAX_LENGTH}
+          aria-describedby={cercaDelLimite ? contadorId : undefined}
+          onChange={(e) => { setTexto(e.target.value); ajustarAlto(e.currentTarget); }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void enviar(); }
           }}

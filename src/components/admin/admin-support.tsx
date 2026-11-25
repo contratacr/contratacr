@@ -15,6 +15,7 @@ import { conservarEnlaces, type AdjuntoDeSoporte } from "@/lib/support/adjuntos"
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { SUPPORT_MESSAGE_MAX_LENGTH } from "@/lib/text-limits";
 
 type Ticket = {
   id: string;
@@ -259,6 +260,7 @@ export function AdminSupport() {
                   value={notaCierre}
                   onChange={(e) => setNotaCierre(e.target.value)}
                   rows={2}
+                  maxLength={SUPPORT_MESSAGE_MAX_LENGTH}
                   placeholder="Nota adicional (opcional): se agrega debajo del mensaje."
                   className="mt-3 w-full rounded-xl border border-[#e5e7eb] bg-white p-3 text-sm text-[#374151] outline-none focus:border-[#009FD9]"
                 />
