@@ -16,10 +16,10 @@ function fail(status: number, error: string) {
   return Response.json({ error }, { status, headers });
 }
 
-// This staged feature must never reach a remote database, even in development.
+// This staged feature must never reach a remote database. The loopback Supabase URL is the guard: no deployed
+// environment points there, while local production builds (the Pro CI suite) still exercise the feature.
 function localRuntime() {
-  return process.env.NODE_ENV === 'development'
-    && /^http:\/\/127\.0\.0\.1:54321\/?$/.test(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
+  return /^http:\/\/127\.0\.0\.1:54321\/?$/.test(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
 }
 
 async function readInput(req: Request) {
