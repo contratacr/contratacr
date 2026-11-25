@@ -4,6 +4,7 @@ import {createServerClient} from '@supabase/ssr';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
+import {stableSnapshotRows} from './stable-rows';
 
 const api='/api/pro/work-costs';
 for(const language of ['es','en'] as const)test(`Job time and expense writes recover all six actions without changing customer money or stock [${language}]`,async({page,browser,baseURL},info)=>{
@@ -16,7 +17,7 @@ for(const language of ['es','en'] as const)test(`Job time and expense writes rec
  async function entries(){return (await db.from('pro_work_cost_entries').select('*').eq('user_id',owner.id).eq('work_id',workId).order('position').throwOnError()).data!;}
  async function receipts(){return (await db.from('pro_work_cost_requests').select('request_id,input,result').eq('user_id',owner.id).throwOnError()).data!;}
  async function expenseRow(id:string){return (await db.from('pro_internal_expenses').select('*').eq('user_id',owner.id).eq('id',id).single().throwOnError()).data!;}
- async function baseline(){const out:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_products','pro_work','pro_movements','pro_client_entries','pro_invoice_drafts'])out[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;return out;}
+ async function baseline(){const out:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_products','pro_work','pro_movements','pro_client_entries','pro_invoice_drafts'])out[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);return out;}
  async function ready(){await expect(page.locator('[data-work-cost-write-recovery]')).toBeVisible();await expect(page.getByRole('button',{name:text.check,exact:true})).toBeEnabled();}
  async function retry(){await page.getByRole('button',{name:text.check,exact:true}).click();}
  async function settled(title:string){await expect.poll(stored).toBeNull();await expect(page.getByRole('dialog',{name:title,exact:true})).toHaveCount(0);await expect(page).not.toHaveURL(/costosTrabajo=/);}

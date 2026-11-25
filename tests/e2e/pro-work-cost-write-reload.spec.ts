@@ -4,11 +4,12 @@ import {createServerClient} from '@supabase/ssr';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
+import {stableSnapshotRows} from './stable-rows';
 
 test('One 90-minute time entry retains its request across a committed lost ACK and reload',async({page,baseURL},info)=>{
  test.setTimeout(120000);expect(baseURL).toMatch(/^http:\/\/(?:127\.0\.0\.1|localhost):3185\/?$/);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
  const owner=await createDisposableAccount({prefix:'cost-reload-owner'}),db=regressionAdminClient(),workId=crypto.randomUUID(),clientId='cost-reload-client',api='/api/pro/work-costs',headers={origin:new URL(baseURL!).origin},bodies:string[]=[],statuses:number[]=[],errors:string[]=[];let bodyError:unknown,first=true;onAppPageError(page,message=>errors.push(message));
- async function snapshot(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_products','pro_work','pro_movements','pro_client_entries','pro_invoice_drafts'])result[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;return result;}
+ async function snapshot(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_products','pro_work','pro_movements','pro_client_entries','pro_invoice_drafts'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);return result;}
  async function read(){const response=await page.request.get(api+'?'+new URLSearchParams({clientId,workId}));expect(response.status()).toBe(200);return response.json();}
  async function entries(){return (await db.from('pro_work_cost_entries').select('*').eq('user_id',owner.id).eq('work_id',workId).throwOnError()).data!;}
  async function receipts(){return (await db.from('pro_work_cost_requests').select('request_id,input,result').eq('user_id',owner.id).throwOnError()).data!;}

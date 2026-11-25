@@ -5,6 +5,7 @@ import {regressionAdminClient} from './seed';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {gotoOK,expectNoHorizontalOverflow,PRO_SPACE_HOME_URL,proSpaceUrl,proSpaceTitle,proHubButton,proSpaceBack} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 test('Pro navigation: standard panel plus everyday destinations, optional tools and compatible direct links preserve existing data',async({page,baseURL},testInfo)=>{
  test.setTimeout(180000);
@@ -28,7 +29,7 @@ test('Pro navigation: standard panel plus everyday destinations, optional tools 
   // Normalize legacy records through the real scoped reads before comparing snapshots.
   for(const kind of ['clients','products'])expect((await page.request.get('/api/pro/catalog?kind='+kind,{timeout:30000})).status()).toBe(200);
   const tables=['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_products','pro_work','pro_movements','pro_client_entries','pro_invoice_drafts'];
-  const snapshot=async()=>Object.fromEntries(await Promise.all(tables.map(async table=>[table,(await db.from(table).select('*').eq('user_id',actor.id).throwOnError()).data?.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))])));
+  const snapshot=async()=>Object.fromEntries(await Promise.all(tables.map(async table=>[table,stableSnapshotRows((await db.from(table).select('*').eq('user_id',actor.id).throwOnError()).data)?.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))])));
   const before=await snapshot(),writes:string[]=[],fullDownloads:string[]=[];
   page.on('request',request=>{const url=new URL(request.url());if(request.method()!=='GET'&&url.pathname.startsWith('/api/pro/'))writes.push(url.pathname);});
   await page.route('**/api/pro/workspace**',route=>{fullDownloads.push(route.request().url());return route.abort();});

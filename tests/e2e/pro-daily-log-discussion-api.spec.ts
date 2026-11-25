@@ -6,6 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount}
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
+import {stableSnapshotRows} from './stable-rows';
 
 const origin='http://127.0.0.1:3185',api='/api/pro/daily-log-discussion',dailyApi='/api/pro/daily-logs';
 function local(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
@@ -41,7 +42,7 @@ async function prepare(f:Fixture,ownerContext:BrowserContext,authorContext:Brows
 }
 // Unordered selects can change physical order after updates; compare row sets, not heap order.
 const rowSet=(rows:unknown[]|null)=>(rows??[]).map(row=>JSON.stringify(row)).sort();
-async function preserved(f:Fixture,ids:string[]){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_work','pro_work_cost_entries'])result[table]=rowSet((await f.db.from(table).select('*').eq('user_id',f.owner.id).throwOnError()).data);for(const table of ['pro_daily_logs','pro_daily_log_versions','pro_daily_log_audiences','pro_daily_log_actions','pro_daily_log_history','pro_work_tasks','pro_work_task_history','pro_work_schedule_heads','pro_work_schedule_plans','pro_appointment_requests'])result[table]=rowSet((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,f.client.id,...ids]).order('id').throwOnError()).data;return result;}
+async function preserved(f:Fixture,ids:string[]){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_work','pro_work_cost_entries'])result[table]=rowSet(stableSnapshotRows((await f.db.from(table).select('*').eq('user_id',f.owner.id).throwOnError()).data));for(const table of ['pro_daily_logs','pro_daily_log_versions','pro_daily_log_audiences','pro_daily_log_actions','pro_daily_log_history','pro_work_tasks','pro_work_task_history','pro_work_schedule_heads','pro_work_schedule_plans','pro_appointment_requests'])result[table]=rowSet(stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data));for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,f.client.id,...ids]).order('id').throwOnError()).data;return result;}
 function assertPublic(body:unknown){const raw=JSON.stringify(body);for(const key of ['email','phone','hourlyCostCents','amountCents','privateNotes','client_user_id','source_invite_id'])expect(raw).not.toContain('"'+key+'"');}
 
 test('Daily log discussion API: current actors, generation binding, channel/version separation and immutable authors',async({page,browser,baseURL})=>{

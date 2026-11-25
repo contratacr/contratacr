@@ -9,6 +9,7 @@ import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
 import type {WorkTask,WorkTaskMutation,WorkTasksPage,WorkTaskDetail} from '../../src/lib/pro/work-tasks';
+import {stableSnapshotRows} from './stable-rows';
 
 const api='/api/pro/work-tasks';
 const origin='http://127.0.0.1:3185';
@@ -57,8 +58,8 @@ for(const language of ['es','en'] as const)test(`Private work tasks: form, dates
   const teamMember=await contributor(page.context(),owner,memberContext,member,workId),assigneeLabel=en?'Assignee (optional)':'Responsable (opcional)';
   const preserved=async()=>{
    const result:Record<string,unknown>={};
-   for(const table of ['pro_workspaces','pro_clients','pro_work','pro_client_entries','pro_quote_links'])result[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;
-   for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos'])result[table]=(await db.from(table).select('*').eq('owner_id',owner.id).throwOnError()).data;
+   for(const table of ['pro_workspaces','pro_clients','pro_work','pro_client_entries','pro_quote_links'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);
+   for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('owner_id',owner.id).throwOnError()).data);
    return result;
   };
   const before=await preserved(),runtime:string[]=[],bodies:string[]=[];let loseNextWrite=false,failNextRead=true;

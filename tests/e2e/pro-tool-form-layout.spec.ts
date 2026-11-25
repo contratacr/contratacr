@@ -4,6 +4,7 @@ import {createDisposableAccount,cleanupDisposableAccount} from './disposable-acc
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {expectNoHorizontalOverflow} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 // Read-only UI audit after disposable fixture setup: no form is submitted.
 for(const language of ['es','en'] as const)test(`Pro form controls and layout across supported widths [${language}]`,async({browser,browserName,baseURL},info)=>{
@@ -29,7 +30,7 @@ for(const language of ['es','en'] as const)test(`Pro form controls and layout ac
   for(const kind of ['clients','products'])expect((await context.request.get('/api/pro/catalog?kind='+kind)).status()).toBe(200);
   const snapshot=async()=>{
    const value:Record<string,unknown>={};
-   for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_quote_links'])value[table]=(await db.from(table).select('*').eq('user_id',actor.id).throwOnError()).data;
+   for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_quote_links'])value[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',actor.id).throwOnError()).data);
    return value;
   };
   const before=await snapshot();

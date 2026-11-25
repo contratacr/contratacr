@@ -6,6 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount}
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
+import {stableSnapshotRows} from './stable-rows';
 const origin='http://127.0.0.1:3185',api='/api/pro/team';
 const templates='/api/pro/task-templates';
 function assertLocal(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
@@ -47,7 +48,7 @@ async function readTemplate(context:BrowserContext,actor:DisposableAccount,templ
 async function rows(f:Fixture,workId=f.workId){return (await f.db.from('pro_work_tasks').select('*').eq('owner_id',f.owner.id).eq('work_id',workId).order('id').throwOnError()).data!;}
 async function sourceSnapshot(f:Fixture,actors:string[]=[]){const result:Record<string,unknown>={};
  for(const table of ['pro_workspaces','pro_clients','pro_work'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).order(table==='pro_workspaces'?'user_id':'id').throwOnError()).data;
- for(const table of ['pro_work_schedule_plans','pro_work_schedule_dependencies','pro_team_task_assignments','pro_team_task_comments','pro_team_task_files','pro_work_files','pro_work_updates'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;
+ for(const table of ['pro_work_schedule_plans','pro_work_schedule_dependencies','pro_team_task_assignments','pro_team_task_comments','pro_team_task_files','pro_work_files','pro_work_updates'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);
  for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,...actors]).order('id').throwOnError()).data;
  return result;
 }

@@ -8,6 +8,7 @@ import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount}
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
+import {stableSnapshotRows} from './stable-rows';
 
 const origin='http://127.0.0.1:3185',api='/api/pro/company-files',bucket='pro-company-files';
 const digest=(bytes:Uint8Array)=>createHash('sha256').update(bytes).digest('hex');
@@ -35,7 +36,7 @@ async function cleanup(f:Fixture){
  try{for(const [table,storage]of[['pro_company_files',bucket],['pro_work_files','pro-work-files']]as const){const paths=(await f.db.from(table).select('object_path').eq('owner_id',f.owner.id).throwOnError()).data!.map(row=>row.object_path as string);for(const path of paths)expect(path.startsWith(f.owner.id+'/')).toBe(true);if(paths.length)expect((await f.db.storage.from(storage).remove(paths)).error).toBeNull();const remaining=await f.db.storage.from(storage).list(f.owner.id,{limit:1000});expect(remaining.error).toBeNull();expect(remaining.data).toEqual([]);}}
  finally{await cleanupDisposableAccount(f.owner);await cleanupDisposableAccount(f.client);}
 }
-async function preserved(f:Fixture){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_work','pro_clients'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).throwOnError()).data;for(const table of ['pro_appointment_requests','pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_updates','pro_work_update_versions','pro_work_schedule_heads','pro_work_tasks'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,f.client.id]).order('id').throwOnError()).data;return result;}
+async function preserved(f:Fixture){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_work','pro_clients'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('user_id',f.owner.id).throwOnError()).data);for(const table of ['pro_appointment_requests','pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_updates','pro_work_update_versions','pro_work_schedule_heads','pro_work_tasks'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,f.client.id]).order('id').throwOnError()).data;return result;}
 const pdf=Buffer.from('%PDF-1.4\n% COMPANY_LOCAL_ONLY\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n');
 for(const language of ['es','en']as const)test(`Company file management: retained folder draft, nested search, moves, favorites and archive recovery [${language}]`,async({page,baseURL},info)=>{
  test.setTimeout(240000);local(baseURL);const en=language==='en',f=await fixture(page.context());

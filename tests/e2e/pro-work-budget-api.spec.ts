@@ -6,6 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount} from './disposable-acc
 import {estimateInput} from './pro-private-estimate-publications-fixture';
 import {workBudgetCodesPageSchema,workBudgetCostsPageSchema,workBudgetCostDetailSchema,workBudgetHistoryPageSchema,workBudgetOverviewSchema,workBudgetReceiptSchema} from '../../src/lib/pro/work-budget';
 import {budgetFixture,cleanup,local,login,post,read,json,budgetApi,budgetWrite,overview,seedBudgetActuals,budgetBusiness,costWrite,operation,expenseWrite,sourceCosts,type BudgetFixture} from './work-budget-fixture';
+import {stableSnapshotRows} from './stable-rows';
 const uuid=()=>crypto.randomUUID();
 async function codes(context:BrowserContext,f:BudgetFixture,query:Record<string,string>={}){return workBudgetCodesPageSchema.parse(await json(context,{view:'codes',workId:f.budgetWorkId,...query},budgetApi));}
 async function costs(context:BrowserContext,f:BudgetFixture,query:Record<string,string>={}){return workBudgetCostsPageSchema.parse(await json(context,{view:'costs',workId:f.budgetWorkId,...query},budgetApi));}
@@ -13,7 +14,7 @@ async function receipt(context:BrowserContext,actionId:string){return workBudget
 async function selectedCost(context:BrowserContext,f:BudgetFixture,kind:string,id:string){return workBudgetCostDetailSchema.parse(await json(context,{view:'cost',workId:f.budgetWorkId,kind,id},budgetApi));}
 async function budgetRows(f:BudgetFixture){
  const rows:Record<string,unknown>={};
- for(const table of ['pro_work_budget_state','pro_work_budget_codes','pro_work_budget_assignments','pro_work_budget_actions'])rows[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data?.toSorted((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+ for(const table of ['pro_work_budget_state','pro_work_budget_codes','pro_work_budget_assignments','pro_work_budget_actions'])rows[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data)?.toSorted((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
  return rows;
 }
 async function assign(context:BrowserContext,f:BudgetFixture,source:Awaited<ReturnType<typeof costs>>['items'][number],codeId:string|null){return budgetWrite(context,f,{action:'assign',source:{kind:source.kind,id:source.id,fingerprint:source.fingerprint},codeId});}

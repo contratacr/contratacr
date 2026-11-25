@@ -6,6 +6,7 @@ import {emptyBusiness} from '../../src/lib/pro/business';
 import type {ServicePackageInput,ServicePackagePage} from '../../src/lib/pro/service-packages';
 import {expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError} from './helpers';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
+import {stableSnapshotRows} from './stable-rows';
 
 const api='/api/pro/service-packages';
 const copy={
@@ -28,7 +29,7 @@ for(const language of ['es','en'] as const)test(`Frequent services keep exact wr
  async function preserved(){
   const result:Record<string,unknown>={};
   for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_legacy_quotes','pro_invoice_drafts']){
-   result[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;
+   result[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);
   }
   return result;
  }

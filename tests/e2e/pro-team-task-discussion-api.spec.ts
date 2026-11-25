@@ -41,7 +41,7 @@ async function login(context:BrowserContext,account:DisposableAccount){
 async function seedTasks(f:Fixture){const ids=[crypto.randomUUID(),crypto.randomUUID()];await f.db.from('pro_work_tasks').insert(ids.map((id,index)=>({owner_id:f.owner.id,work_id:index?f.otherWorkId:f.workId,id,title:index?'UNGRANTED_TASK_SECRET':'TEAM_TASK_LOCAL',details:'OWNER_ONLY_DETAILS_DO_NOT_EXPOSE',assignee:'OWNER_ONLY_ASSIGNEE',due_date:crTodayISO(),status:'open',archived:false,revision:1}))).throwOnError();return{taskId:ids[0],foreignTaskId:ids[1]};}
 async function preserved(f:Fixture,otherActors:string[]=[]){const result:Record<string,unknown>={};
  for(const table of ['pro_workspaces','pro_work','pro_clients','pro_client_entries'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).order(table==='pro_workspaces'?'user_id':'id').throwOnError()).data;
- for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos','pro_work_updates','pro_work_update_versions','pro_work_files'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;
+ for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos','pro_work_updates','pro_work_update_versions','pro_work_files'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);
  for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').in('user_id',[f.owner.id,...otherActors]).order('id').throwOnError()).data;
  return result;
 }

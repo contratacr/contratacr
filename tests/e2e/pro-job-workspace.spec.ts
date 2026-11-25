@@ -6,6 +6,7 @@ import {emptyBusiness} from '../../src/lib/pro/business';
 import {clientOperationRecoveryKey} from '../../src/lib/pro/client-operation-recovery';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 for(const language of ['es','en'] as const)test(`Job workspace preserves context, edits and data across management panels [${language}]`,async({page,baseURL},info)=>{
  test.setTimeout(180000);
@@ -35,9 +36,9 @@ for(const language of ['es','en'] as const)test(`Job workspace preserves context
   await db.from('pro_work_delivery_drafts').insert({owner_id:owner.id,work_id:workId,revision:1,content:{summary:'PRIVATE_REPORT_SUMMARY',checklist,recommendations:'PRIVATE_RECOMMENDATIONS',photoIds:[]},internal_note:'PRIVATE_INTERNAL_NOTE'}).throwOnError();
   const snapshot=async()=>{
    const result:Record<string,unknown>={};
-   for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_quote_links'])result[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;
-   for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos'])result[table]=(await db.from(table).select('*').eq('owner_id',owner.id).throwOnError()).data;
-   result.pro_work_delivery_actions=(await db.from('pro_work_delivery_actions').select('*').eq('actor_id',owner.id).throwOnError()).data;
+   for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_quote_links'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);
+   for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('owner_id',owner.id).throwOnError()).data);
+   result.pro_work_delivery_actions=stableSnapshotRows((await db.from('pro_work_delivery_actions').select('*').eq('actor_id',owner.id).throwOnError()).data);
    return result;
   };
   const before=await snapshot(),posts:string[]=[],runtime:string[]=[];

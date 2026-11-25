@@ -8,6 +8,7 @@ import {gotoOK,expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError} from '
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
 import {createWorkTaskWrite,workTaskWriteKey} from '../../src/lib/pro/work-task-recovery';
 import {workTaskSchema,type WorkTask} from '../../src/lib/pro/work-tasks';
+import {stableSnapshotRows} from './stable-rows';
 const origin='http://127.0.0.1:3185',api='/api/pro/work-tasks';
 function assertLocal(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
 async function fixture(context:BrowserContext){
@@ -43,7 +44,7 @@ async function seed(f:Fixture){
 async function task(page:Page,f:Fixture,id:string){const response=await page.request.get(api+'?'+new URLSearchParams({workId:f.workId,taskId:id}),{headers:{'X-Pro-Expected-Actor':f.owner.id}});expect(response.status()).toBe(200);return await response.json() as {task:WorkTask;history:{actionId:string;action:string}[]};}
 async function preserved(f:Fixture){const result:Record<string,unknown>={};
  for(const table of ['pro_workspaces','pro_work','pro_clients','pro_client_entries'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).order(table==='pro_workspaces'?'user_id':'id').throwOnError()).data;
- for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos','pro_work_updates','pro_work_update_versions','pro_work_files'])result[table]=(await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data;
+ for(const table of ['pro_work_delivery_drafts','pro_work_delivery_versions','pro_work_delivery_photos','pro_work_updates','pro_work_update_versions','pro_work_files'])result[table]=stableSnapshotRows((await f.db.from(table).select('*').eq('owner_id',f.owner.id).throwOnError()).data);
  for(const table of ['notifications','notification_push_outbox'])result[table]=(await f.db.from(table).select('*').eq('user_id',f.owner.id).order('id').throwOnError()).data;
  return result;
 }

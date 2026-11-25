@@ -4,6 +4,7 @@ import {createDisposableAccount,cleanupDisposableAccount} from './disposable-acc
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {expectNoHorizontalOverflow,gotoOK} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 test('English service journey: request, proposed time, quote approval and everyday forms preserve saved data',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(210000);
@@ -81,7 +82,7 @@ test('English section audit: everyday destinations and secondary tools have usab
  try{
   await db.from('profiles').update({is_provider:true,role:'professional'}).eq('id',owner.id).throwOnError();await db.from('pro_memberships').insert({user_id:owner.id,status:'active'}).throwOnError();await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1}).throwOnError();await db.from('pro_workspaces').insert({user_id:owner.id,document:emptyBusiness(),revision:1}).throwOnError();await db.from('professionals').insert({profile_id:owner.id,category_id:'desarrollo_web',business_name:'Empty English tools',slug:'english-empty-'+owner.id,whatsapp:'',provincia_id:'al',canton_id:'al-at',verification_status:'pending'}).throwOnError();
   const session=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{cookies:{getAll:()=>[],setAll:async cookies=>{await page.context().addCookies(cookies.map(cookie=>({name:cookie.name,value:cookie.value,url:baseURL!,sameSite:'Lax' as const})));}}});expect((await session.auth.signInWithPassword({email:owner.email,password:owner.password})).error).toBeNull();
-  async function snapshot(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_invoice_drafts'])result[table]=(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data;return result;}
+  async function snapshot(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_invoice_drafts'])result[table]=stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data);return result;}
   const before=await snapshot(),writes:string[]=[];page.on('request',r=>{if(r.method()!=='GET'&&new URL(r.url()).pathname.startsWith('/api/pro/'))writes.push(new URL(r.url()).pathname);});
   // Current ProSimple titles: catalog → «Products and services», work → «Appointments», advanced → «Invoice drafts».
   for(const [tab,title] of [['home','My panel'],['pro_clients','Customers'],['pro_inventory','Products and services'],['pro_agenda','Appointments'],['quotes','Quotes'],['pro_expenses','Expenses'],['pro_payments','Payments'],['pro_billing','Invoice drafts'],['pro_tools','Tools']]){

@@ -6,6 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount} from './disposable-acc
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {expectNoHorizontalOverflow,onAppPageError} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 const api='/api/pro/work-delivery',databaseName='ccr-pro-delivery-photo-recovery',storeName='attempts',limit=3*1024*1024;
 for(const language of ['es','en'] as const)test(`Private report photos recover binary checkpoints without extra slots or objects [${language}]`,async({page,browser,baseURL},info)=>{
@@ -18,7 +19,7 @@ for(const language of ['es','en'] as const)test(`Private report photos recover b
  async function photos(){return (await db.from('pro_work_delivery_photos').select('id,object_path,ready,sha256,size_bytes').eq('owner_id',owner.id).eq('work_id',workId).order('id').throwOnError()).data!;}
  async function objects(){const response=await db.storage.from('pro-work-delivery').list(owner.id,{limit:100});expect(response.error).toBeNull();return response.data??[];}
  async function receipts(){return (await db.from('pro_work_delivery_actions').select('action_id,input,result').eq('actor_id',owner.id).order('action_id').throwOnError()).data!;}
- async function untouched(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_work_delivery_versions','notifications']){const column=table==='pro_work_delivery_versions'?'owner_id':'user_id';result[table]=(await db.from(table).select('*').eq(column,owner.id).throwOnError()).data;}return result;}
+ async function untouched(){const result:Record<string,unknown>={};for(const table of ['pro_workspaces','pro_clients','pro_products','pro_work','pro_client_entries','pro_work_delivery_versions','notifications']){const column=table==='pro_work_delivery_versions'?'owner_id':'user_id';result[table]=stableSnapshotRows((await db.from(table).select('*').eq(column,owner.id).throwOnError()).data);}return result;}
  async function stored(target=workId){return page.evaluate(async scope=>{
   const record=await new Promise<Record<string,unknown>|null>((resolve,reject)=>{const request=indexedDB.open(scope.databaseName,1);request.onupgradeneeded=()=>{request.transaction?.abort();reject(Error('Recovery DB not initialized'));};request.onerror=()=>reject(request.error);request.onsuccess=()=>{const database=request.result;const read=database.transaction(scope.storeName,'readonly').objectStore(scope.storeName).get([scope.accountId,scope.workId]);read.onerror=()=>{database.close();reject(read.error);};read.onsuccess=()=>{database.close();resolve(read.result??null);};};});
   if(!record)return null;const bytes=record.bytes as ArrayBuffer,actualSha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');return {...record,bodySha256:record.bodySha256 as string,rawSha256:record.rawSha256 as string,bytes:undefined,actualByteLength:bytes.byteLength,actualSha256};

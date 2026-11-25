@@ -6,6 +6,7 @@ import {createDisposableAccount,cleanupDisposableAccount} from './disposable-acc
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {gotoOK,expectNoHorizontalOverflow,openProSpaceFromPanel,proHubButton,proSpaceUrl} from './helpers';
+import {stableSnapshotRows} from './stable-rows';
 
 test('Pro sales workspace: standalone quotes, optional billing and payments, compatible deep links and preserved private records',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(240000);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');
@@ -35,7 +36,7 @@ test('Pro sales workspace: standalone quotes, optional billing and payments, com
   const creation=await page.request.post('/api/pro/invoice-drafts',{headers,data:{action:'create',kind:'work',sourceId:work.id,clientId:client.id,fingerprint:source.fingerprint,title:'Borrador de ventas conservado',notes:'No emitir ni modificar',receiver:source.receiver}});expect(creation.status()).toBe(200);const draftId=(await creation.json()).id;
   const paymentState=await (await page.request.get('/api/pro/invoice-payments?id='+draftId)).json();expect((await page.request.post('/api/pro/invoice-payments',{headers,data:{action:'apply',requestId:crypto.randomUUID(),draftId,draftRevision:paymentState.draft.revision,revision:paymentState.revision,source:'existing',candidateId:paymentId,amountCents:5000,receivedOn:'2026-10-01',method:'sinpe',reference:'SALES-PAY-ORIGINAL'}})).status()).toBe(200);
   const tables=['pro_workspaces','pro_workspace_core','pro_workspace_legacy_backup','pro_clients','pro_work','pro_quote_links','pro_products','pro_movements','pro_client_entries','pro_invoice_drafts','pro_invoice_lines','pro_invoice_materials','pro_invoice_preparation','pro_invoice_edited_detail','pro_invoice_edited_lines','pro_invoice_payments','pro_invoice_payment_applications','pro_invoice_payment_voids','pro_invoice_payment_state','pro_invoice_payment_requests'];
-  const snapshot=async()=>Object.fromEntries(await Promise.all(tables.map(async table=>[table,(await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data?.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))])));
+  const snapshot=async()=>Object.fromEntries(await Promise.all(tables.map(async table=>[table,stableSnapshotRows((await db.from(table).select('*').eq('user_id',owner.id).throwOnError()).data)?.sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))])));
   const original=await snapshot(),originalQuote=(await db.from('quotes').select('*').eq('id',quoteId).single().throwOnError()).data;
   expect((await foreign.request.get('/api/pro/invoice-drafts?id='+draftId)).status()).toBe(404);expect((await foreign.request.get('/api/pro/payment-overview?id='+paymentId)).status()).toBe(404);expect((await free.request.get('/api/pro/payment-overview')).status()).toBe(403);
   const fullDownloads:string[]=[],writes:string[]=[];await page.route('**/api/pro/workspace**',route=>{fullDownloads.push(route.request().url());return route.abort();});page.on('request',request=>{const url=new URL(request.url());if(request.method()!=='GET'&&(url.pathname.startsWith('/api/pro/')||url.pathname==='/api/quotes'))writes.push(url.pathname);});
