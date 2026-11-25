@@ -9,7 +9,7 @@ export function MeSheet({open,title,onClose,children,closeLabel}:{open:boolean;t
  useEffect(()=>{if(!open)return;closeRef.current?.focus();const k=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose();};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[open,onClose]);
  if(!open)return null;
  return <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/40 sm:items-center" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-  <div role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-md space-y-4 overflow-y-auto rounded-t-3xl bg-white p-5 text-[#162543] shadow-2xl sm:rounded-3xl">
+  <div role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-md space-y-4 overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] text-[#162543] shadow-2xl sm:rounded-3xl sm:pb-5">
    <div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">{title}</h2>
     <button ref={closeRef} type="button" aria-label={closeLabel} onClick={onClose} className={`grid h-10 w-10 place-items-center rounded-full hover:bg-slate-100 ${ring}`}><X aria-hidden="true" className="h-5 w-5"/></button></div>
    {children}</div></div>;

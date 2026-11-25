@@ -2401,6 +2401,46 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
   }
 }
 
+/* THE 5-TAB BAR ON MOBILE WEB (DirectoryTabs, z-[90], body.ccr-dir-tabs-visible; layers in src/lib/capas.ts).
+   The bar reserves that the native app gets from `.ccr-native-app` rules did not exist on the website, so
+   bottom-anchored page elements stayed under the bar: the save notice, the status banner, the download notice
+   and the end of the /buscar results list. Overlays go above the bar (CAPA_HOJA); page elements stay below it
+   and use this reserve. */
+@media (max-width: 1023px) {
+  body.ccr-dir-tabs-visible {
+    --ccr-dir-tabs-reserva: calc(var(--ccr-native-bottom-nav-height, 76px) + 12px);
+    --ccr-aviso-barra-app: var(--ccr-dir-tabs-reserva);
+  }
+  html[data-keyboard-visible] body.ccr-dir-tabs-visible {
+    --ccr-dir-tabs-reserva: 0px;
+  }
+  body.ccr-dir-tabs-visible .ccr-search-sheet-scroll {
+    padding-bottom: calc(var(--ccr-cola-fuera, 0px) + var(--ccr-dir-tabs-reserva)) !important;
+    scroll-padding-bottom: calc(var(--ccr-cola-fuera, 0px) + var(--ccr-dir-tabs-reserva));
+  }
+  /* The download notice rests on the bar instead of under it; the bar already keeps the safe area. */
+  body.ccr-dir-tabs-visible .ccr-download-banner-wrap {
+    bottom: var(--ccr-native-bottom-nav-height, 76px);
+  }
+  body.ccr-dir-tabs-visible .ccr-download-banner {
+    padding-bottom: 12px;
+  }
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) body.ccr-dir-tabs-visible {
+    padding-bottom: calc(80px + var(--ccr-dir-tabs-reserva));
+  }
+  html:not(.ccr-native-app):is([data-web-download-banner], :has(.ccr-download-banner-wrap)) body.ccr-dir-tabs-visible .ccr-search-sheet-scroll {
+    padding-bottom: calc(var(--ccr-cola-fuera, 0px) + 80px + var(--ccr-dir-tabs-reserva)) !important;
+    scroll-padding-bottom: calc(var(--ccr-cola-fuera, 0px) + 80px + var(--ccr-dir-tabs-reserva));
+  }
+}
+/* A form's fixed action footer (.ccr-barra-fija, fixed only below 640 px) owns the bottom edge, as in the
+   native app (`html.ccr-native-app body.ccr-con-barra-accion`): the bar steps aside while it is shown. */
+@media (max-width: 639px) {
+  body.ccr-dir-tabs-visible.ccr-con-barra-accion [data-directory-tabs] {
+    display: none !important;
+  }
+}
+
 /* Authentication owns the viewport: no reserved navbar or bottom-tab band. */
 html:has([data-authentication-screen]) {
   scrollbar-gutter: auto;

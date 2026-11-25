@@ -18,6 +18,7 @@ import { HojaDeCrear } from "@/components/mobile/hoja-de-crear";
 import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
+import { CAPA_BARRA_ABAJO } from "@/lib/capas";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectoryTabs, directoryActiveTab } from "@/components/mobile/directory-tabs";
 
@@ -408,7 +409,8 @@ export function NativeBottomNav() {
         // FLOTANTE, como la de Facebook: una pastilla despegada de los bordes,
         // translúcida y con desenfoque, así lo que se desplaza debajo se ve
         // pasar a través de ella.
-        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 lg:hidden",
+        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 px-4 lg:hidden",
+        CAPA_BARRA_ABAJO,
       )}
     >
       <div

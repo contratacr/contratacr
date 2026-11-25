@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {ChevronDown,SlidersHorizontal,X} from 'lucide-react';
+import {CAPA_HOJA} from '@/lib/capas';
 
 /**
  * Filter chips + filters drawer of the places sections (/restaurantes, /farmacias…), 2026-11-19: the same row of pills
@@ -70,8 +71,8 @@ export function PlacesFiltersDrawer({title,closeLabel,children}:{title:string;cl
   panel.current?.focus({preventScroll:true});// the dialog itself: focusing the search field would pop the phone keyboard
   return ()=>document.removeEventListener('keydown',esc);
  },[open]);
- // z-[100]: above the mobile tab bar (z-[90], data-directory-tabs), which otherwise covered the «Aplicar filtros» footer.
- return <div className={open?'fixed inset-0 z-[100]':'hidden'} data-dir-filters-drawer={open?'open':'closed'}>
+ // CAPA_HOJA: above the mobile tab bar (data-directory-tabs), which otherwise covered the «Aplicar filtros» footer.
+ return <div className={open?`fixed inset-0 ${CAPA_HOJA}`:'hidden'} data-dir-filters-drawer={open?'open':'closed'}>
   <div className="absolute inset-0 bg-black/40" onClick={()=>setOpen(false)} aria-hidden="true"/>
   <div ref={panel} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="dir-filters-title" className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white shadow-xl outline-none">
    <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#eef2f6] px-4">

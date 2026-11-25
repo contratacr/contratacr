@@ -455,7 +455,7 @@ export function LeaveReviewModal({
     </div>
   );
 
-  const guard = <UnsavedChangesGuard dirty={dirty} onDiscard={discardDraft} elevated={!embedded} />;
+  const guard = <UnsavedChangesGuard dirty={dirty} onDiscard={discardDraft} />;
   if (embedded) return <>{panel}{guard}</>;
   return <><div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4">{panel}</div>{guard}</>;
 }

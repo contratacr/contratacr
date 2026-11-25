@@ -62,7 +62,9 @@ export function OperationalStatusBanner({
       role="status"
       aria-live="polite"
       className={cn(
-        "fixed inset-x-3 bottom-3 z-[80] mx-auto max-w-3xl rounded-xl border px-3 py-3 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.55)] sm:bottom-5 sm:px-4",
+        // Page-level notice: stays under the bottom tab bar (z-[90]) and sits above it instead.
+        // --ccr-aviso-barra-app is the bar's reserve (native app and mobile web), 0 without a bar.
+        "fixed inset-x-3 bottom-[calc(0.75rem+var(--ccr-aviso-barra-app,0px))] z-[80] mx-auto max-w-3xl rounded-xl border px-3 py-3 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.55)] sm:bottom-[calc(1.25rem+var(--ccr-aviso-barra-app,0px))] sm:px-4",
         styles.shell
       )}
     >

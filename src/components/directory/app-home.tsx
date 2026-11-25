@@ -65,7 +65,7 @@ function SaveBookmark({ slug, name, locale }: { slug: string; name: string; loca
       </button>
       {open && (
         <div className="fixed inset-0 z-[96] flex items-end bg-black/40" onClick={() => setOpen(false)} role="dialog" aria-modal="true" aria-label={t("Guardar en una lista", "Save to a list")}>
-          <div className="w-full rounded-t-3xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full rounded-t-3xl bg-white p-5 pb-[calc(2rem+env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between"><p className="text-[16px] font-extrabold">{name}</p>
               <button type="button" onClick={() => setOpen(false)} aria-label={t("Cerrar", "Close")} className="inline-flex h-9 w-9 items-center justify-center rounded-full"><X className="h-5 w-5" aria-hidden /></button></div>
             <SaveToList slug={slug} locale={locale} signedIn loginHref={null} />

@@ -56,7 +56,7 @@ export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,varia
    className={variant==='icon'?`grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] ${saved?'bg-[#eaf6fb] text-[#0089bb]':'bg-white text-[#162543]'} ${ring}`:`${secondary} ${saved?'bg-[#eaf6fb]':'bg-white'}`}
    onClick={async()=>{setOpen(true);if(lists===null)await load();}}><Bookmark aria-hidden="true" className={`h-4 w-4 ${saved?'fill-current':''}`}/>{variant==='icon'?null:saved?t('Guardado','Saved'):t('Guardar','Save')}</button>
   {open&&<div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/40 sm:items-center" onClick={e=>{if(e.target===e.currentTarget)setOpen(false);}}>
-   <div id="save-panel" role="dialog" aria-modal="true" aria-label={t('Guardar en','Save to')} className="max-h-[85vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl bg-white p-5 text-[#162543] shadow-2xl sm:rounded-3xl">
+   <div id="save-panel" role="dialog" aria-modal="true" aria-label={t('Guardar en','Save to')} className="max-h-[85vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] text-[#162543] shadow-2xl sm:rounded-3xl sm:pb-5">
     <div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">{t('Guardar en','Save to')}</h2>
      <button ref={closeRef} type="button" aria-label={t('Cerrar','Close')} onClick={()=>setOpen(false)} className={`grid h-10 w-10 place-items-center rounded-full hover:bg-slate-100 ${ring}`}><X aria-hidden="true" className="h-5 w-5"/></button></div>
     {lists===null?<p role="status">{t('Cargando…','Loading…')}</p>:<>

@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
+import {CAPA_HOJA} from '@/lib/capas';
 import {MOOD_COORD_MAX,MOOD_MIN_SIZE,MOOD_POINTS_MAX,clampBox,moodPageRatio,type MoodPageFormat,type MoodRotation} from '@/lib/pro/mood-boards';
 
 /**
@@ -151,9 +152,12 @@ export function MoodPresenter({format,title,pages,start=0,onClose,en}:{
  const page=pages[index],ratio=moodPageRatio[format];
  const t=en?{close:'Close presentation',prev:'Previous page',next:'Next page',page:(a:number,b:number)=>`Page ${a} of ${b}`}:{close:'Cerrar presentación',prev:'Página anterior',next:'Página siguiente',page:(a:number,b:number)=>`Página ${a} de ${b}`};
  if(!page)return null;
+ // CAPA_HOJA: at z-[90] it tied with the mobile tab bar, which is later in the DOM and covered the page buttons on
+ // phones (iPhone Safari has no element fullscreen, so this overlay is what people see). Not portalled: it can open
+ // inside a managed ProModal, whose focus trap and Escape handling must keep treating it as part of the dialog.
  return <div ref={root} role="dialog" aria-modal="true" aria-label={title} data-mood-presenter
   onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();onClose();}else if(event.key==='ArrowRight'||event.key==='PageDown'){event.preventDefault();setIndex(i=>Math.min(pages.length-1,i+1));}else if(event.key==='ArrowLeft'||event.key==='PageUp'){event.preventDefault();setIndex(i=>Math.max(0,i-1));}}}
-  className="fixed inset-0 z-[90] flex flex-col bg-[#0f1b2d] text-white">
+  className={`fixed inset-0 ${CAPA_HOJA} flex flex-col bg-[#0f1b2d] text-white`}>
   <div className="flex min-h-14 items-center gap-3 px-4 py-2">
    <p className="min-w-0 flex-1 truncate text-sm font-semibold">{title}{page.name?` · ${page.name}`:''}</p>
    <p aria-live="polite" className="shrink-0 text-sm text-white/80">{t.page(index+1,pages.length)}</p>
@@ -162,7 +166,7 @@ export function MoodPresenter({format,title,pages,start=0,onClose,en}:{
   <div className="flex min-h-0 flex-1 items-center justify-center px-3 pb-3">
    <div style={{width:`min(100%, calc((100dvh - 9.5rem) / ${ratio}))`}}><MoodCanvas format={format} background={page.background} items={page.items} label={t.page(index+1,pages.length)}/></div>
   </div>
-  <div className="flex min-h-16 items-center justify-center gap-3 px-4 pb-4">
+  <div className="flex min-h-16 items-center justify-center gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
    <button type="button" disabled={index===0} onClick={()=>setIndex(i=>Math.max(0,i-1))} className="min-h-11 rounded-xl bg-white/10 px-5 text-sm font-semibold hover:bg-white/20 disabled:opacity-40">{t.prev}</button>
    <button type="button" disabled={index>=pages.length-1} onClick={()=>setIndex(i=>Math.min(pages.length-1,i+1))} className="min-h-11 rounded-xl bg-white/10 px-5 text-sm font-semibold hover:bg-white/20 disabled:opacity-40">{t.next}</button>
   </div>

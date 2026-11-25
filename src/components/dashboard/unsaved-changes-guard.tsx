@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AlertTriangle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CAPA_CONFIRMACION } from "@/lib/capas";
 
 declare global {
   interface Window {
@@ -48,13 +49,11 @@ export function UnsavedChangesGuard({
   onSave,
   onDiscard,
   validationError,
-  elevated = false,
 }: {
   dirty: boolean;
   onSave?: () => Promise<boolean | void> | boolean | void;
   onDiscard?: () => void;
   validationError?: string | null;
-  elevated?: boolean;
 }) {
   const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
@@ -235,7 +234,7 @@ export function UnsavedChangesGuard({
   return (
     <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (nextOpen) setOpen(true); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className={`fixed inset-0 bg-[#162543]/55 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 ${elevated ? "z-[250]" : "z-50"}`} />
+        <Dialog.Overlay className={`fixed inset-0 bg-[#162543]/55 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 ${CAPA_CONFIRMACION}`} />
         <Dialog.Content
           // Sin cuerpo de texto no hay descripción que anunciar; sin esto Radix
           // deja un aviso en consola en cada apertura.
@@ -243,7 +242,7 @@ export function UnsavedChangesGuard({
           onEscapeKeyDown={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
-          className={`fixed left-1/2 top-1/2 w-[calc(100vw-2rem)] max-w-[24rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[#dbe7ef] bg-white shadow-[0_24px_80px_rgba(22,37,67,0.28)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 ${elevated ? "z-[250]" : "z-50"}`}
+          className={`fixed left-1/2 top-1/2 w-[calc(100vw-2rem)] max-w-[24rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[#dbe7ef] bg-white shadow-[0_24px_80px_rgba(22,37,67,0.28)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 ${CAPA_CONFIRMACION}`}
         >
           <div className="px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
             <div className="flex flex-col items-center text-center">

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Map as MapIcon, RefreshCw } from "lucide-react";
 import { SearchMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/search-map-panel";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
+import { CAPA_HOJA } from "@/lib/capas";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
@@ -521,7 +522,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           separate X row above it, so there's no wasted gap). X + backdrop both dismiss;
           filters apply INSTANTLY (no apply button). */}
       {showFilters && (
-        <div className="xl:hidden fixed inset-0 z-[100]">{/* above the mobile tab bar (z-[90]) */}
+        <div className={`xl:hidden fixed inset-0 ${CAPA_HOJA}`}>{/* above the mobile tab bar */}
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
           <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs overflow-y-auto bg-white p-2.5 shadow-xl">
             {drawerFilters ?? filters}
