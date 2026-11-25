@@ -54,6 +54,56 @@ test('@contract moderation decisions and appeals require a signed-in account',as
  for(const method of ['GET','POST'])expect((await route[method](new Request('https://example.test/api/moderation/decisions',{method}))).status).toBe(401);
 });
 
+// Encadenable mínimo para leer tablas desde un mock de Supabase.
+function tableMock(rows:Record<string,unknown[]>,log:string[]=[]){
+ return {from:(table:string)=>{const q:Record<string,unknown>={};const filters:[string,unknown][]=[];
+  const run=()=>{log.push(table);let out=[...(rows[table]??[])] as Record<string,unknown>[];for(const [k,v] of filters)out=out.filter(r=>Array.isArray(v)?v.includes(r[k]):r[k]===v);return out;};
+  Object.assign(q,{select:()=>q,eq:(k:string,v:unknown)=>{filters.push([k,v]);return q;},in:(k:string,v:unknown[])=>{filters.push([k,v]);return q;},order:()=>q,
+   maybeSingle:async()=>({data:run()[0]??null,error:null}),then:(ok:(v:unknown)=>unknown)=>Promise.resolve({data:run(),error:null}).then(ok)});
+  return q;}};
+}
+
+test('@contract a reported person only sees reports that ended in a sanction, never review notes',async()=>{
+ const rows=[
+  {id:'r-review',decision_reason:'Caso en revisión por el equipo de moderación.',status:'open',appealed_at:null,created_at:'2026-11-25T10:00:00Z'},
+  {id:'r-none',decision_reason:'Revisamos el reporte y no encontramos una infracción.',status:'resolved',appealed_at:null,created_at:'2026-11-25T11:00:00Z'},
+  {id:'r-hide',decision_reason:'Caso en revisión por el equipo de moderación.',status:'resolved',appealed_at:null,created_at:'2026-11-25T12:00:00Z'},
+ ];
+ const actions=[
+  {report_id:'r-review',action:'case_update',reason:'Caso en revisión por el equipo de moderación.',created_at:'2026-11-25T10:00:00Z'},
+  {report_id:'r-hide',action:'hide',reason:'Retiramos esta publicación porque incumple las normas.',created_at:'2026-11-25T12:05:00Z'},
+ ];
+ const route=load('src/app/api/moderation/decisions/route.ts',{
+  '@/lib/supabase/server':{createClient:async()=>({auth:{getUser:async()=>({data:{user:{id:'u1'}}})},rpc:async()=>({data:rows,error:null})})},
+  '@/lib/supabase/admin':{createAdminClient:()=>tableMock({moderation_actions:actions})},
+ });
+ const body=await (await route.GET(new Request('https://example.test/api/moderation/decisions'))).json();
+ expect(body.rows.map((r:{id:string})=>r.id)).toEqual(['r-hide']);
+ expect(body.rows[0].decision_reason).toBe('Retiramos esta publicación porque incumple las normas.');
+ expect(JSON.stringify(body)).not.toContain('Caso en revisión');
+});
+
+test('@contract a sanction emails only the owner recorded by the audited RPC, without reporter data',async()=>{
+ const sent:Record<string,unknown>[]=[];
+ const owner='00000000-0000-4000-8000-0000000000aa';
+ const mocks=(holds:unknown[])=>({
+  '@/lib/moderation/admin':{privateHeaders:headers,moderationAccess:async()=>({db:{rpc:async()=>({data:{ok:true,auditId:'audit-1'},error:null})}})},
+  '@/lib/supabase/admin':{createAdminClient:()=>tableMock({moderation_holds:holds,profiles:[{id:owner,email:'owner@example.test',full_name:'Persona Dueña'}]})},
+  '@/lib/rate-limit':{enforceRateLimit:()=>null},'next/cache':{revalidatePath:()=>{}},
+  '@/lib/support-notify':{notifyModerationDecision:async(o:Record<string,unknown>)=>{sent.push(o);}},
+ });
+ const body={kind:'job',id:'00000000-0000-4000-8000-000000000031',action:'hide',reason:'Retiramos esta publicación porque incumple las normas.',report:'00000000-0000-4000-8000-0000000000bb'};
+ const req=()=>new Request('https://example.test/api/admin/moderacion',{method:'POST',headers:{origin:'https://example.test'},body:JSON.stringify(body)});
+ let r=await load('src/app/api/admin/moderacion/route.ts',mocks([{target_type:'job',target_id:body.id,active:true,owner_id:owner}])).POST(req());
+ expect(r.status).toBe(200);
+ expect(sent).toHaveLength(1);
+ expect(sent[0]).toMatchObject({toEmail:'owner@example.test',action:'hide',kind:'job',eventKey:'moderation-decision:audit-1'});
+ expect(Object.keys(sent[0])).not.toContain('report');
+ // Sin un dueño registrado por la RPC no se adivina el destinatario.
+ r=await load('src/app/api/admin/moderacion/route.ts',mocks([])).POST(req());
+ expect(r.status).toBe(200);expect(sent).toHaveLength(1);
+});
+
 test('@contract scanner rejects unclean responses, outages and insecure configuration without network leakage',async()=>{
  const source=ts.transpileModule(readFileSync('src/lib/moderation/files.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const box={exports:{} as {scanUpload:(b:Uint8Array)=>Promise<void>}};let requests=0;

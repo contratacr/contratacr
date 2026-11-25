@@ -2658,6 +2658,8 @@
     "cat8Desc": "Cómo pedir un precio por escrito y comparar respuestas.",
     "cat9Title": "Mensajes",
     "cat9Desc": "Cómo escribirle a un profesional dentro de ContrataCR.",
+    "cat10Title": "Contratar con seguridad",
+    "cat10Desc": "Cómo evitar estafas",
     "faq12Q": "¿Cómo pido una cotización?",
     "faq12A": "Desde la ficha del profesional, pídale una cotización describiendo lo que necesita. Él responde con el precio y las condiciones, y la cotización queda guardada en su panel para que la compare con otras y la tenga por escrito.",
     "faq13Q": "¿Puedo escribirle a un profesional sin dar mi número?",
@@ -2665,7 +2667,9 @@
     "faq14Q": "¿Cómo elimino mi cuenta?",
     "faq14A": "En Mi perfil, abra Cuenta y seguridad y busque la opción para eliminar su cuenta. Antes de confirmar verá qué información se elimina y qué se conserva.",
     "faq15Q": "¿Qué reviso antes de contratar?",
-    "faq15A": "Compare reseñas y casos de éxito similares. Acuerde por escrito el precio, los plazos y las condiciones con el profesional. ContrataCR facilita el contacto; no garantiza el resultado del trabajo."
+    "faq15A": "Compare reseñas y casos de éxito similares. Acuerde por escrito el precio, los plazos y las condiciones con el profesional. ContrataCR facilita el contacto; no garantiza el resultado del trabajo.",
+    "faq16Q": "¿Cómo evito estafas al contratar?",
+    "faq16A": "Prefiera profesionales verificados y con reseñas, y converse por los mensajes de ContrataCR. Desconfíe si le piden pagar todo por adelantado, si le presionan para decidir rápido o si le piden contraseñas, códigos de verificación o datos de su tarjeta: ContrataCR nunca se los pedirá. Si algo no le parece correcto, reporte el perfil o la publicación; la persona reportada no sabrá quién la reportó."
   },
   "atraerClientes": {
     "eyebrow": "Para profesionales",

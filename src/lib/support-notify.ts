@@ -111,3 +111,38 @@ export async function notifyUserOfReply(opts: Parameters<typeof supportReplyEmai
   if (opts.topic === "service_suggestion") return;
   await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, supportReplyEmail(opts), undefined, opts.eventKey);
 }
+
+/** Aviso de una sanción de moderación a la persona afectada. Solo dice qué se
+ * decidió y por qué: nunca quién reportó ni cuántos reportes hubo. */
+export function moderationDecisionEmail(opts: {
+  toName?: string | null;
+  action: "hide" | "warn" | "restrict";
+  kind: string;
+  reason: string;
+  days?: number;
+}): { subject: string; html: string } {
+  const firstName = nombreDeSaludo(opts.toName);
+  const decision = opts.action === "warn"
+    ? "Registramos una advertencia en su cuenta."
+    : opts.action === "restrict"
+    ? `Restringimos temporalmente su cuenta por ${opts.days ?? 1} ${(opts.days ?? 1) === 1 ? "día" : "días"}.`
+    : opts.kind === "professional"
+    ? "Retiramos su perfil profesional de la búsqueda."
+    : opts.kind === "review"
+    ? "Ocultamos una reseña suya."
+    : "Retiramos una de sus publicaciones.";
+  const html = shell(
+    "Aviso de moderación",
+    `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}revisamos actividad de su cuenta en ContrataCR. ${escapeHtml(decision)}</p>
+     <p style="margin:0 0 6px 0;"><strong>Motivo:</strong></p>
+     <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.reason)}</div>
+     <p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puede ver esta decisión en Soporte. Si cree que es un error, puede pedir una revisión una sola vez cuando el caso se cierre.</p>`,
+    { href: `${SITE}/soporte`, label: "Ver en Soporte" },
+  );
+  return { subject: "Aviso de moderación | ContrataCR", html };
+}
+
+export async function notifyModerationDecision(opts: Parameters<typeof moderationDecisionEmail>[0] & { toEmail: string; eventKey: string }): Promise<void> {
+  const { subject, html } = moderationDecisionEmail(opts);
+  await sendEmail(opts.toEmail, subject, html, undefined, opts.eventKey);
+}

@@ -16,6 +16,7 @@ import {
   MessageCircle,
   ReceiptText,
   Search,
+  ShieldCheck,
   Smartphone,
   Star,
   Tags,
@@ -37,9 +38,11 @@ const TOPICS = [
   // de ayuda no los mencionaba en ninguna parte.
   { icon: ReceiptText, faq: 12, cat: 8 },
   { icon: MessageCircle, faq: 13, cat: 9 },
+  // Consejos contra estafas: aquí y no dentro del chat, para no estorbar.
+  { icon: ShieldCheck, faq: 16, cat: 10 },
 ].filter((topic) => EMPLEOS_VISIBLE || topic.cat !== 6);
 // La pregunta 9 es sobre postularse a un empleo.
-const FAQS = [0, 1, 2, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
+const FAQS = [0, 1, 2, 15, 16, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
 
 export default function AyudaPage() {
   const tSeccion = useTranslations("sectionTitles");

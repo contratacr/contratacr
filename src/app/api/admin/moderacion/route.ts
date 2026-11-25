@@ -5,6 +5,7 @@ import { moderationAccess, privateHeaders as headers } from "@/lib/moderation/ad
 import { revalidatePath } from "next/cache";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { invalidateProfessionalCache } from "@/lib/cache/professional-revision";
+import { notifyModerationDecision } from "@/lib/support-notify";
 
 const action = z.object({
   kind: z.enum(["project","job","offer","review","professional","account"]),
@@ -23,11 +24,41 @@ export async function POST(req: Request) {
   const p=parsed.data;
   const {data,error}=await access.db.rpc("moderate_content",{p_kind:p.kind,p_id:p.id,p_action:p.action,p_reason:p.reason,p_report:p.report,p_days:p.days});
   if(error) return NextResponse.json({error:"No se pudo guardar la decisión y su auditoría. Revise el contenido y los permisos."},{status:409,headers});
+  if(p.action==="hide"||p.action==="warn"||p.action==="restrict") await avisarSancion(p,(data as {auditId?:string}|null)?.auditId);
   if(p.kind === "professional" || p.kind === "review") await invalidateProfessionalCache();
   for(const path of ["/solicitudes","/empleos","/promociones","/profesionales","/buscar"]) {
     revalidatePath(path,"layout"); revalidatePath(`/en${path}`,"layout");
   }
   return NextResponse.json(data,{headers});
+}
+
+// La persona afectada se toma de lo que la función de base de datos acaba de
+// guardar (retiro, restricción o el reporte vinculado), no se recalcula aquí.
+// Si no se puede saber con certeza, no se envía nada. Nunca bloquea la decisión.
+async function avisarSancion(p: z.infer<typeof action>, auditId?: string) {
+  if(!auditId) return;
+  try {
+    const admin=createAdminClient();
+    let owner: string | null = null;
+    if(p.action==="hide") {
+      const {data:hold}=await admin.from("moderation_holds").select("owner_id").eq("target_type",p.kind).eq("target_id",p.id).eq("active",true).maybeSingle();
+      owner=hold?.owner_id??null;
+    } else if(p.action==="restrict") {
+      const {data:r}=await admin.from("moderation_restrictions").select("user_id").eq("user_id",p.id).maybeSingle();
+      owner=r?.user_id??null;
+    } else if(p.kind==="account") {
+      owner=p.id;
+    } else if(p.report) {
+      const {data:r}=await admin.from("reports").select("subject_user_id").eq("id",p.report).maybeSingle();
+      owner=r?.subject_user_id??null;
+    }
+    if(!owner) { console.warn("[moderacion] aviso de sanción sin destinatario seguro", auditId); return; }
+    const {data:prof}=await admin.from("profiles").select("email,full_name").eq("id",owner).maybeSingle();
+    if(!prof?.email) { console.warn("[moderacion] aviso de sanción sin correo", auditId); return; }
+    await notifyModerationDecision({ toEmail: prof.email, toName: prof.full_name, action: p.action as "hide"|"warn"|"restrict", kind: p.kind, reason: p.reason, days: p.days, eventKey: `moderation-decision:${auditId}` });
+  } catch (e) {
+    console.error("[moderacion] no se pudo enviar el aviso de sanción", auditId, e instanceof Error ? e.message : e);
+  }
 }
 
 export async function GET(req: Request) {
