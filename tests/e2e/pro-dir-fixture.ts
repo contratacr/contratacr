@@ -11,6 +11,20 @@ export const dirDb=()=>regressionAdminClient();
 export const uid=()=>crypto.randomUUID();
 export const label=()=>crypto.randomUUID().slice(0,8);
 
+/**
+ * True when the server under test is `next dev` (NODE_ENV=development), false for a production build (`next start`,
+ * e.g. the local production run of the suite). Read from the server itself, not from an env var of the runner: Next
+ * dev always uses the build id "development", which the App Router writes into every page's RSC payload ("b").
+ * Dev-only behaviour (claim test-mailbox hint, directory assistant tools) is asserted on or off from this.
+ */
+let devServer:Promise<boolean>|null=null;
+export function isNextDevServer(){
+ devServer??=(async()=>{const r=await fetch(`${origin}/terminos`);const html=await r.text();
+  const id=/\\?"b\\?":\\?"([^"\\]+)/.exec(html)?.[1];
+  if(r.status!==200||!id)throw new Error(`isNextDevServer: no build id in /terminos (status ${r.status})`);return id==='development';})();
+ return devServer;
+}
+
 async function rpc<T=Record<string,unknown>>(db:Db,fn:string,args:Record<string,unknown>):Promise<T>{
  const r=await db.rpc(fn,args);if(r.error)throw new Error(`${fn}: ${r.error.code} ${r.error.message} ${r.error.hint??''}`);return r.data as T;
 }

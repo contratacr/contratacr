@@ -37,7 +37,10 @@ async function openLeads(page:Page,language:'es'|'en'){await gotoOK(page,`/${lan
 
 // Leads area: contact form builder. Owner API (draft, publish, revisions), public page and API (validation, honeypot, idempotent submissions),
 // lead creation with the Website channel and the answers shown in the lead, and the builder journey ES/EN.
-const ns=()=>({'x-ccr-rate-limit-namespace':'cf-'+crypto.randomUUID().slice(0,16)});
+// Own rate-limit bucket per anonymous call: `next dev` honours the namespace header, a production build ignores it and
+// keys public buckets by client IP (x-forwarded-for on loopback), so each call also gets its own synthetic TEST-NET IP.
+const testIp=()=>{const b=crypto.getRandomValues(new Uint8Array(2));return `198.18.${b[0]}.${(b[1]%254)+1}`;};
+const ns=()=>({'x-ccr-rate-limit-namespace':'cf-'+crypto.randomUUID().slice(0,16),'x-forwarded-for':testIp()});
 const owner=(c:BrowserContext,actor:string)=>({get:()=>c.request.get(origin+formApi,{headers:{'X-Pro-Expected-Actor':actor}}),post:(data:unknown)=>c.request.post(origin+formApi,{headers:{Origin:origin,'X-Pro-Expected-Actor':actor},data})});
 const baseConfig=(question?:Record<string,unknown>)=>({labels:{name:'Nombre',email:'Correo electrónico',phone:'Teléfono',zip:'Código postal',address:'Dirección',message:'Mensaje'},zip:{show:true,required:false},address:{show:true,required:true},questions:question?[question]:[],order:['name','email','phone','zip','address','message',...(question?[question.id as string]:[])],confirmation:'Gracias, le respondemos pronto.'});
 

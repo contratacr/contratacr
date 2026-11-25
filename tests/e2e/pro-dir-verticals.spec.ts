@@ -18,17 +18,20 @@ async function openFilters(page:import('playwright/test').Page){const form=page.
 // price order, no price reports, claim still possible) and, since the owner decision of 2026-11-17, accept reviews about
 // service only (visible note, no rates/financial advice; claim benefits without anything price-related); health/vet places carry the neutral permit line
 // and the review-scope note; price filters only where prices apply.
-// E2E_HEALTH_OFF=1: the server runs with DIR_HEALTH_ENABLED off (default of a production build) → /salud answers 404,
-// so the health assertions are skipped (feature-flags.ts covers the 404 itself).
-const healthOff=process.env.E2E_HEALTH_OFF==='1';
-const NEW=PLACE_SECTIONS.filter(s=>s.added&&!(healthOff&&s.section==='salud'));
+// Health exists only with DIR_HEALTH_ENABLED (off by default in a production build): read the server's own flag from
+// /salud (200 on, 404 off; same probe as pro-dir-events) instead of a manual env var. Off → /salud, /en/salud and a
+// health place page must answer 404 and the health assertions are skipped.
+async function healthEnabled(page:import('playwright/test').Page){
+ const status=(await page.request.get(`${origin}/salud`,{maxRedirects:0})).status();expect([200,404],'/salud status').toContain(status);return status===200;}
 
 test.afterEach(()=>hideSeededPlaces());
 
 for(const language of ['es','en'] as const)test(`new sections: listings, type chips, kind labels and price modes [${language}]`,async({page},info)=>{
  test.setTimeout(420000);local(info.project.use.baseURL);
  const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page);
- for(const s of NEW){
+ const healthOn=await healthEnabled(page);
+ if(!healthOn)expect((await page.request.get(`${origin}${prefix}/salud`,{maxRedirects:0})).status(),'health listing while DIR_HEALTH_ENABLED is off').toBe(404);
+ for(const s of PLACE_SECTIONS.filter(x=>x.added&&(healthOn||x.section!=='salud'))){
   const kind=s.kinds[0]!;
   await seedPlace(db,{slug:`e2e-${s.section}-${tag}`,vertical:s.id,name:`E2E ${s.section} ${tag}`,adminArea1:'Heredia',adminArea2:'Heredia',locality:'Heredia',attributes:{kind:kind.value}});
   await gotoOK(page,`${prefix}/${s.section}`);
@@ -104,9 +107,12 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  const review=await page.request.post(`${origin}/api/lugar/e2e-banco-${tag}/resenas`,{data:{actionId:crypto.randomUUID(),rating:5,comment:'Muy buen banco',authorName:'Ana'}});
  expect(review.status(),'guest review without contact').toBe(403);
 
- if(!healthOff){
  // Health: neutral permit line on card and page, review-scope note, no consultation prices.
  await seedPlace(db,{slug:`e2e-clinica-${tag}`,vertical:'health',name:`E2E Clínica ${tag}`,adminArea1:'Heredia',attributes:{kind:'clinic',publicService:true}});
+ if(!(await healthEnabled(page))){
+  expect((await page.request.get(`${origin}${prefix}/salud`,{maxRedirects:0})).status(),'health listing while DIR_HEALTH_ENABLED is off').toBe(404);
+  expect((await page.request.get(`${origin}${prefix}/lugar/e2e-clinica-${tag}`,{maxRedirects:0})).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
+ }else{
  await gotoOK(page,`${prefix}/salud?q=${encodeURIComponent(`E2E Clínica ${tag}`)}`);
  const card=page.locator(`[data-search-item="p:e2e-clinica-${tag}"]`);
  await expect(card.locator('[data-health-permit="unverified"]')).toHaveText(en?'Permit not verified by ContrataCR':'Habilitación sin verificar por ContrataCR');

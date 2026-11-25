@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
-import {openPlaceTab, dirDb,hideSeededPlaces,label,postJson,readClaimMailbox,seedPlace,uid,visibleHtml} from './pro-dir-fixture';
+import {openPlaceTab, dirDb,hideSeededPlaces,isNextDevServer,label,postJson,readClaimMailbox,seedPlace,uid,visibleHtml} from './pro-dir-fixture';
 
 // Multivertical F3/F5 + P1 (LOCAL Pro): claim of a place by the e-mail already on it (email_listed, owner decision
 // 2026-11-17: e-mail instead of SMS; mock sender, the code is read from the local test mailbox, never shown on the page),
@@ -71,10 +71,10 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   await page.getByRole('button',{name:t('Enviar código al correo','Send code to the e-mail')}).click();
   await expect(page.locator(`[data-claim-sent-to="${masked}"]`)).toContainText(t('Enviamos un código al correo','We sent a code to the e-mail'));
   await expect(page.locator('[data-claim-dev-code]')).toHaveCount(0);
-  // A production build never shows the test-mailbox hint (claim-local-echo.ts); the loopback mirror (E2E_PROD_MIRROR=1)
-  // still reads the mock code through the DIR_TEST_MAILBOX route below.
-  if(process.env.E2E_PROD_MIRROR==='1')await expect(page.locator('[data-claim-test-mailbox]')).toHaveCount(0);
-  else await expect(page.locator('[data-claim-test-mailbox]')).toBeVisible();
+  // A production build never shows the test-mailbox hint (claim-local-echo.ts); a local production build still reads
+  // the mock code through the DIR_TEST_MAILBOX loopback route below. Which build runs is read from the server.
+  if(await isNextDevServer())await expect(page.locator('[data-claim-test-mailbox]')).toBeVisible();
+  else await expect(page.locator('[data-claim-test-mailbox]')).toHaveCount(0);
   const claimId=(await db.from('dir_place_claims').select('id,method,status,contact_email').eq('place_id',(await db.from('dir_places').select('id').eq('slug',slug).single()).data!.id).eq('status','code_sent').single()).data!;
   expect([claimId.method,claimId.contact_email]).toEqual(['email_listed',null]);
   const mail=await readClaimMailbox(context,claimId.id);

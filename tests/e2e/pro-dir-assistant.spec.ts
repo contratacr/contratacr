@@ -1,7 +1,7 @@
 import {test,expect,type Page} from 'playwright/test';
 import {collectPageErrors} from './helpers';
 import {local,origin} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,isNextDevServer} from './pro-dir-fixture';
 import {pricesShot,seedPriceComparison} from './pro-dir-prices-fixture';
 
 // Multivertical A1/A2 (LOCAL Pro): the public assistant answers directory questions with the directory tools (same
@@ -28,11 +28,16 @@ async function nativeAssistant(page:Page){
  });
 }
 
-// Launch mirror: directory assistant tools are development-only (DIRECTORY_ASSISTANT_ENABLED, assistant-tools-server.ts).
-test.skip(process.env.E2E_PROD_MIRROR==='1','directory assistant tools are development-only (DIRECTORY_ASSISTANT_ENABLED, assistant-tools-server.ts)');
+// Directory assistant tools are development-only (DIRECTORY_ASSISTANT_ENABLED, assistant-tools-server.ts). Which build
+// runs is read from the server (isNextDevServer), not from a runner env var: against a production build the test only
+// checks that a directory question gets no directory tool.
 for(const language of ['es','en'] as const)test(`A2: assistant directory tools — prices with sources, places, Rx refused [${language}]`,async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
  const en=language==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'',db=dirDb();
+ if(!(await isNextDevServer())){
+  const off=await ask(page,t('¿Cuánto cuesta el arroz?','How much is rice?'),language,'prod-'+language);
+  expect(off.directory,'no directory tool in a production build').toBeUndefined();return;
+ }
  const seed=await seedPriceComparison(db);
  try{
   // Price comparison: current prices, lowest per kg first, each with source and date; the stale price is not offered as current.
