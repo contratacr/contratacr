@@ -1,8 +1,9 @@
 import { test, expect, type Page } from "playwright/test";
 import { isMobileProject } from "./helpers";
 
-// IA 2026-11-21: with the directory ON, the native app bottom bar is Inicio, Servicios, Lugares, Solicitudes, Cuenta
-// (NativeBottomNav, data-directory-tabs). Mobile web never gets it; with the directory OFF the classic icon bar stays.
+// IA 2026-11-23 (Yelp structure): with the directory ON, the bottom bar is Buscar, Proyectos, Asistente, Mis listas, Yo
+// (DirectoryTabs, data-directory-tabs) in the native shell AND on mobile web. With the directory OFF the classic icon bar
+// stays in the native shell and mobile web has no bottom bar.
 // The directory flag is detected from /restaurantes (404 while DIR_ENABLED is off), so the spec is valid in both setups.
 async function nativeShell(page: Page, baseURL: string) {
   await page.context().addCookies([{ name: "ccr_platform", value: "native", url: baseURL }]);
@@ -29,20 +30,19 @@ test.describe("directory app tabs", () => {
     await expect(nav).toBeVisible();
     if (!on) { await expect(page.locator("[data-directory-tabs]")).toHaveCount(0); return; }
     const tabs = nav.locator("[data-native-tab]");
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(5);
     await expect(tabs.nth(0)).toHaveAttribute("href", "/");
-    await expect(tabs.nth(1)).toHaveAttribute("href", "/profesionales");
-    await expect(tabs.nth(2)).toHaveAttribute("href", "/servicios");
-    await expect(tabs.nth(3)).toHaveAttribute("href", "/solicitudes");
-    await expect(tabs.nth(4)).toHaveAttribute("href", /\/login/);
-    await expect(tabs.nth(5)).toHaveAttribute("href", /\/login/);
+    await expect(tabs.nth(1)).toHaveAttribute("href", "/solicitudes");
+    await expect(tabs.nth(2)).toHaveAttribute("href", "/asistente");
+    await expect(tabs.nth(3)).toHaveAttribute("href", "/listas");
+    await expect(tabs.nth(4)).toHaveAttribute("href", /\/login\?redirect=%2Fyo/);
     await expect(tabs.nth(0)).toHaveAttribute("aria-current", "page");
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       const box = await tabs.nth(i).boundingBox();
       expect(box!.height).toBeGreaterThanOrEqual(44);
       expect(box!.width).toBeGreaterThanOrEqual(44);
     }
-    await expect(tabs.nth(1)).toContainText(/Servicios|Services/);
+    await expect(tabs.nth(1)).toContainText(/Proyectos|Projects/);
   });
 
   test("native shell: hidden on place pages so it never covers their contact bar", async ({ page, baseURL }) => {
@@ -52,8 +52,11 @@ test.describe("directory app tabs", () => {
     await expect(page.locator("[data-directory-tabs]")).toHaveCount(0);
   });
 
-  test("outside the native shell (mobile web) the tabs are never rendered", async ({ page }) => {
+  test("mobile web: the same five tabs when the directory is on, none when it is off", async ({ page }) => {
+    const on = await directoryOn(page);
     await page.goto("/");
-    await expect(page.locator("[data-directory-tabs]")).toHaveCount(0);
+    if (!on) { await expect(page.locator("[data-directory-tabs]")).toHaveCount(0); return; }
+    await expect(page.locator("[data-directory-tabs] [data-directory-tab]")).toHaveCount(5);
+    await expect(page.locator("[data-directory-tabs]")).toBeVisible();
   });
 });

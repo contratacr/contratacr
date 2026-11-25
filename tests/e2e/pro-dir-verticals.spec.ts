@@ -86,7 +86,8 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(cafe!.name as string)}`);
  await expect(page.locator(`[data-search-item="p:${cafe!.slug}"]`)).toHaveCount(0);
  await gotoOK(page,`${prefix}/lugar/${cafe!.slug}`);
- await expect(page.getByRole('navigation',{name:en?'Breadcrumb':'Ruta de navegación'}).getByRole('link',{name:en?'Cafés, bakeries and bars':'Cafés, panaderías y bares'})).toHaveAttribute('href',`${prefix}/cafes`);
+ // The breadcrumb is desktop-only (hidden below sm since 2026-11-21); its link still names the new section on every width.
+ await expect(page.locator(`nav[aria-label="${en?'Breadcrumb':'Ruta de navegación'}"] a`,{hasText:en?'Cafés, bakeries and bars':'Cafés, panaderías y bares'})).toHaveAttribute('href',`${prefix}/cafes`);
 
  // Banks: map points only.
  await seedPlace(db,{slug:`e2e-banco-${tag}`,vertical:'banking',name:`E2E Banco ${tag}`,adminArea1:'Heredia',attributes:{kind:'bank',atm:true}});

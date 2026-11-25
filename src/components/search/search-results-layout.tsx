@@ -521,7 +521,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           separate X row above it, so there's no wasted gap). X + backdrop both dismiss;
           filters apply INSTANTLY (no apply button). */}
       {showFilters && (
-        <div className="xl:hidden fixed inset-0 z-50">
+        <div className="xl:hidden fixed inset-0 z-[100]">{/* above the mobile tab bar (z-[90]) */}
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
           <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs overflow-y-auto bg-white p-2.5 shadow-xl">
             {drawerFilters ?? filters}
