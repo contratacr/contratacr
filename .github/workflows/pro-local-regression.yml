@@ -2,7 +2,7 @@ name: Pro Local Regression
 run-name: Pro Local Regression · ${{ github.event.inputs.scope || github.event_name }}
 
 # The tests/e2e/pro-*.spec.ts suite is excluded from regression-tests.yml (playwright.config.ts testIgnore):
-# it needs its own dev server on 127.0.0.1:3185 and the loopback Supabase stack (playwright.pro-local.config.ts).
+# it needs its own server on 127.0.0.1:3185 and the loopback Supabase stack (playwright.pro-local.config.ts).
 # This workflow rebuilds that stack the same way regression-tests.yml does and runs the suite in shards.
 # How to run it and what it selects: docs/pro/ci-pro-local-regression.md and docs/test-selection-policy.md.
 on:
@@ -260,20 +260,29 @@ jobs:
         timeout-minutes: 10
         run: npx playwright install --with-deps chromium ${{ github.event.inputs.webkit == 'true' && 'webkit' || '' }}
 
-      - name: Start the Pro development server on 127.0.0.1:3185
+      - name: Build and start the Pro production server on 127.0.0.1:3185
         run: |
           set -euo pipefail
-          # Same server as `npm run dev` (scripts/dev-local-test-env.js) and scripts/pro/dev-lan.cjs; Pro is on in
-          # development (src/lib/pro/enabled.ts). The Playwright config does not start it (PLAYWRIGHT_BASE_URL is set).
-          setsid nohup node scripts/dev-local-test-env.js --webpack --hostname 127.0.0.1 --port 3185 > dev-server.log 2>&1 &
-          for i in $(seq 1 90); do
-            if curl -fsS --max-time 10 http://127.0.0.1:3185/api/health > /dev/null 2>&1; then echo "Dev server ready"; exit 0; fi
+          # A production build, not `next dev`: the dev server's cold webpack compiles caused most of the suite's
+          # timeouts, and dev-only branches (NODE_ENV === 'development') hid bugs a real deployment would show.
+          # Pro and the directory are switched on by flag, exactly as on test; production refuses the deterministic
+          # development secrets, so each job gets random throwaway ones. DIR_TEST_MAILBOX keeps claim codes in the
+          # local test mailbox the specs read. The Playwright config does not start it (PLAYWRIGHT_BASE_URL is set).
+          for name in PRO_BID_PORTAL_SECRET DIR_CLAIM_OTP_PEPPER DIR_VISITOR_PEPPER; do
+            value=$(openssl rand -hex 32); echo "::add-mask::$value"; echo "$name=$value" >> "$GITHUB_ENV"; export "$name=$value"
+          done
+          {
+            echo "PRO_ENABLED=true"; echo "NEXT_PUBLIC_PRO_ENABLED=true"
+            echo "DIR_ENABLED=true"; echo "NEXT_PUBLIC_DIR_ENABLED=true"; echo "DIR_TEST_MAILBOX=1"
+          } >> "$GITHUB_ENV"
+          export PRO_ENABLED=true NEXT_PUBLIC_PRO_ENABLED=true DIR_ENABLED=true NEXT_PUBLIC_DIR_ENABLED=true DIR_TEST_MAILBOX=1
+          npx next build --webpack > server.log 2>&1 || { tail -n 120 server.log; exit 1; }
+          setsid nohup npx next start -H 127.0.0.1 -p 3185 >> server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS --max-time 10 http://127.0.0.1:3185/api/health > /dev/null 2>&1; then echo "Production server ready"; exit 0; fi
             sleep 2
           done
-          echo "Dev server did not become ready"; tail -n 80 dev-server.log; exit 1
-
-      - name: Warm the first compilations (does not certify anything)
-        run: node scripts/pro/warm-local-preview.mjs --pro || echo "Warm-up failed; the specs compile what they need."
+          echo "Production server did not become ready"; tail -n 80 server.log; exit 1
 
       - name: Run the Pro specs
         env:
@@ -297,12 +306,12 @@ jobs:
         if: always() && !cancelled()
         run: PLAYWRIGHT_JSON_REPORT="test-results/results-${{ matrix.shard }}.json" npm run test:e2e:verify-results
 
-      - name: Show the development server and Supabase logs after a failure
+      - name: Show the server and Supabase logs after a failure
         if: failure()
         shell: bash
         run: |
-          echo "::group::dev-server.log (tail)"
-          tail -n 400 dev-server.log || true
+          echo "::group::server.log (tail)"
+          tail -n 400 server.log || true
           echo "::endgroup::"
           for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong|db)_' || true); do
             echo "::group::$name"
@@ -318,7 +327,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
-            dev-server.log
+            server.log
           retention-days: 7
           if-no-files-found: ignore
 
