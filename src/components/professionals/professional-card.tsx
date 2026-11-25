@@ -338,7 +338,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
   const placeFallback = professional.cantonName || professional.provinceName
     || (videoAplicaBusqueda && (professional.videoconsulta || professional.coverage?.country)
       ? tSchedule("videoconsulta")
-      : professional.coverage?.country ? tSchedule("countryCoverage") : "");
+      : professional.coverage?.country ? tSchedule("atiendeTodoElPais") : "");
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the

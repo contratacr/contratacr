@@ -456,9 +456,10 @@
     "call": "Contact us by phone",
     "contactPending": "Contact",
     "whatsappLong": "Contact via WhatsApp",
-    "countryCoverage": "All of Costa Rica",
     "moreZones": "+{count, plural, one {# more area} other {# more areas}}",
-    "provinciaEntera": "{provincia} province"
+    "atiendeTodoElPais": "Serves all of Costa Rica",
+    "aDomicilio": "Home visits",
+    "cubreLaZona": "Covers the area"
   },
   "selfAction": {
     "title": "This is your profile",
