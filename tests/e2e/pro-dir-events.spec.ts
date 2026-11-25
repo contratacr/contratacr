@@ -69,6 +69,7 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
   // Public /eventos (ES/EN): ordered by start, province filter; place page with upcoming events and «Pedir».
   const anon=await browser.newContext({baseURL:origin});const p=await anon.newPage();const pErrors=collectPageErrors(p);
   try{
+   const salud=(await p.request.get(`${origin}/salud`,{maxRedirects:0})).status();expect([200,404],'/salud status').toContain(salud);const healthOn=salud===200;
    for(const language of ['es','en'] as const){
     const prefix=language==='en'?'/en':'/es';
     await gotoOK(p,`${prefix}/eventos?provincia=Guanacaste`);
@@ -84,7 +85,10 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
     await expect(p.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688776655');
     await expect(p.locator('[data-place-action="order"]').first()).toHaveAttribute('rel',/nofollow/);
     await expect(p.locator('[data-place-order-note]')).toHaveCount(0);// 2026-11-19: the «Pedir» explanation lives in the Terms (13.1)
-    if(process.env.E2E_HEALTH_OFF!=='1'){await gotoOK(p,`${prefix}/lugar/${clinic}`);await expect(p.locator('[data-place-action="order"]')).toHaveCount(0);}// health pages 404 while DIR_HEALTH_ENABLED is off
+    // Health place pages exist only with DIR_HEALTH_ENABLED (off by default in a production build): read the server's
+    // own flag from /salud instead of a manual env var; off → the clinic page must answer 404, on → no «Pedir» button.
+    if(healthOn){await gotoOK(p,`${prefix}/lugar/${clinic}`);await expect(p.locator('[data-place-action="order"]')).toHaveCount(0);}
+    else expect((await p.request.get(`${origin}${prefix}/lugar/${clinic}`)).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
    }
    // Staff: the new events are in the queue; hiding one removes it from /eventos (logged with the reason).
    const queue=(await db.rpc('dir_admin_event_queue',{p_filter:'new',p_limit:200})).data as {id:string;title:string;revision:number}[];

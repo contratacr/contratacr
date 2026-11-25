@@ -80,6 +80,6 @@ for(const language of ['es','en'] as const)test(`Row 72: webhooks and meetings i
   expect((await page.request.post(mapi,{headers:h,data:{action:'cancel',id:list.meetings[0]!.id,revision:list.meetings[0]!.revision+5}})).status()).toBe(409);
   await item.locator('[data-meeting-cancel]').click();await page.getByRole('button',{name:tr('Cancelar reunión','Cancel meeting')}).last().click();
   await expect(meet.locator('[data-meeting-status="cancelled"]')).toHaveCount(1,{timeout:60000});
-  expect(errors).toEqual([]);
+  expect(errors()).toEqual([]);
  }finally{await f.cleanup();}
 });
