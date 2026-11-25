@@ -20701,7 +20701,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 330,
+          "line": 336,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => e.stopPropagation()}",
@@ -20709,7 +20709,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 366,
+          "line": 372,
           "tag": "button",
           "label": "{t(\"moreZones\", { count: zonasRestantes })}",
           "handler": "{onVerZonas}",
@@ -30531,7 +30531,7 @@
         },
         {
           "line": 26,
-          "title": "\"la marca: domicilio solo si está encendido de verdad\""
+          "title": "\"sin palabras extra: ni «A domicilio» ni «Cubre la zona»\""
         }
       ]
     },
