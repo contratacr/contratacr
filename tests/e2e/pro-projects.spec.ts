@@ -78,13 +78,13 @@ for(const language of ['es','en'] as const)test(`Projects hub: derived status, c
   await hub.locator('[data-projects-retry]').click();await expect(hub.locator(mobile?'[data-project-card]':'[data-project-row]')).toHaveCount(23);await expect(hub.locator('[data-projects-error]')).toHaveCount(0);
   const afterRequests=pageRequests.filter(value=>value!=='first');expect(afterRequests).toHaveLength(2);expect(afterRequests[1]).toBe(afterRequests[0]);expect(pageRequests.filter(value=>value==='first')).toHaveLength(0);
   // Mobile cards: the accessible name keeps the visible content (customer and status), not only the title.
-  if(mobile)await expect(entry('p-progress').getByRole('button')).toHaveAccessibleName(new RegExp(`^${en?'Open project':'Abrir proyecto'}: Remodelación de cocina\\s*${en?'In progress':'En curso'}\\s*Bruno Mora`));
+  if(mobile)await expect(entry('p-progress').getByRole('button',{name:/^(Abrir proyecto|Open project):/})).toHaveAccessibleName(new RegExp(`^${en?'Open project':'Abrir proyecto'}: Remodelación de cocina\\s*${en?'In progress':'En curso'}\\s*Bruno Mora`));
   await hub.locator('[data-projects-search]').fill('cocina');await expect(hub.locator(mobile?'[data-project-card]':'[data-project-row]')).toHaveCount(1);
   await expect(hub.locator('[data-projects-total]')).toHaveText(en?'23 projects in total · the search only filters the list':'23 proyectos en total · la búsqueda solo filtra la lista');
   await expectNoHorizontalOverflow(page);await page.screenshot({path:info.outputPath(`projects-${language}.png`),fullPage:true});
   await hub.locator('[data-projects-search]').fill('zzz-sin-resultados');await expect(hub.locator('[data-projects-empty]')).toHaveText(en?'There are no projects with this filter.':'No hay proyectos con este filtro.');
   await hub.locator('[data-projects-search]').fill('cocina');
-  await (mobile?entry('p-progress').getByRole('button'):entry('p-progress').getByRole('button',{name:'Remodelación de cocina',exact:true})).click();
+  await (mobile?entry('p-progress').getByRole('button',{name:/^(Abrir proyecto|Open project):/}):entry('p-progress').getByRole('button',{name:'Remodelación de cocina',exact:true})).click();
   await expect(page).toHaveURL(/tab=pro_agenda|\/dashboard\/pro\/trabajo\//);expect((new URL(page.url()).searchParams.get('cita')??(decodeURIComponent(new URL(page.url()).pathname.split('/trabajo/')[1]?.split('/')[0]??'')||null))).toBe('p-progress');
   const nav=page.getByRole('navigation',{name:en?'Job workspace':'Gestión del trabajo'});await expect(nav).toBeVisible({timeout:60000});
   // Planning was added after Overview (project-planning-local.md): four groups.

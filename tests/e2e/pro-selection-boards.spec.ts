@@ -66,7 +66,7 @@ for(const language of ['es','en'] as const)test(`Selection rooms, templates, vie
   await page.locator('[data-boards-assignees-toggle]').click();await page.locator('[data-boards-assignees-clear]').click();await page.locator('[data-boards-assignees-apply]').click();
   await page.locator('[data-selections-mode="global"]').click();
   await expect(page.locator('[data-selections-global]')).toBeVisible({timeout:60000});
-  await expect(page.locator('[data-global-row], [data-global-card]').first()).toBeVisible();
+  await expect(page.locator('[data-global-row], [data-global-card]').locator('visible=true').first()).toBeVisible();
   await page.locator('[data-global-filter="query"]').fill('zzzz-no-existe');await expect(page.locator('[data-global-empty]')).toBeVisible();
   await expectNoHorizontalOverflow(page);
   expect((await tpl({action:'delete',id:tplId})).status()).toBe(200);expect((await view({action:'delete',id:viewId})).status()).toBe(200);
