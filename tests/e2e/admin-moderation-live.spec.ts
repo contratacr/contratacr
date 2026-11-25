@@ -20,9 +20,17 @@ async function loginAdmin(page: Page, account: DisposableAccount) {
   await completeAdminMfa(page, account.email);
 }
 
-async function saveModeration(page: Page) {
+// trigger: "save" usa el botón principal de la escala; "confirm" añade la confirmación
+// de acciones destructivas; "restore" usa la herramienta de reversión del caso.
+async function saveModeration(page: Page, trigger: "save" | "confirm" | "restore" = "save") {
   const saved = page.waitForResponse(response => new URL(response.url()).pathname === "/api/admin/moderacion" && response.request().method() === "POST");
-  await page.getByRole("button", { name: "Guardar acción y auditoría", exact: true }).click();
+  if (trigger === "restore") {
+    await page.getByText("Revertir decisiones y otras herramientas", { exact: true }).click();
+    await page.getByRole("button", { name: "Restaurar contenido retirado", exact: true }).click();
+  } else {
+    await page.getByRole("button", { name: "Guardar acción y auditoría", exact: true }).click();
+    if (trigger === "confirm") await page.getByRole("button", { name: "Confirmar y guardar", exact: true }).click();
+  }
   const response = await saved;
   expect(response.status(), await response.text()).toBe(200);
   await expect(page.getByRole("button", { name: "Guardar acción y auditoría", exact: true })).toBeEnabled();
@@ -155,20 +163,19 @@ test("live moderation withdraws and restores an offer and resolves its case with
     reportId = report.data.id;
     await loginAdmin(page, administrator);
     await gotoOK(page, "/admin/reportes");
-    await page.getByLabel(/^Prioridad\b/).selectOption("urgent");
+    await page.getByRole("group", { name: "Prioridad", exact: true }).getByRole("button", { name: "Urgente", exact: true }).click();
     await page.locator("article").filter({ hasText: title }).getByRole("button", { name: "Atender y ver historial", exact: true }).click();
-    await expect(page.getByLabel("ID del contenido o cuenta", { exact: true })).toHaveValue(offerId);
+    await expect(page.getByRole("link", { name: "Abrir contenido", exact: true })).toHaveAttribute("href", new RegExp(`/promociones/${offerId}$`));
     const reason = page.getByRole("textbox", { name: "Motivo (visible al afectado si se registra como decisión)", exact: true });
-    const action = page.getByLabel("Acción de moderación", { exact: true });
     await reason.fill("Synthetic policy violation confirmed by the reviewer");
-    await action.selectOption("hide");
-    await saveModeration(page);
+    await page.getByRole("radio", { name: /^Retirar contenido/ }).check();
+    await expect(reason).toHaveValue("Synthetic policy violation confirmed by the reviewer");
+    await saveModeration(page, "confirm");
     await expect.poll(async () => (await db.from("moderation_holds").select("active").eq("target_type", "offer").eq("target_id", offerId).single()).data?.active).toBe(true);
     expect((await db.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
     await expect(page.getByRole("button", { name: "Guardar acción y auditoría", exact: true })).toBeEnabled();
     await reason.fill("Synthetic case reviewed; restore its previous publication state");
-    await action.selectOption("restore");
-    await saveModeration(page);
+    await saveModeration(page, "restore");
     await expect.poll(async () => (await db.from("moderation_holds").select("active").eq("target_type", "offer").eq("target_id", offerId).single()).data?.active).toBe(false);
     expect((await db.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("published");
     await expect(page.getByRole("button", { name: "Resolver con motivo", exact: true })).toBeEnabled();
