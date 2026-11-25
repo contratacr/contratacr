@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { INSURERS } from "@/lib/data/insurers";
+import { OTRA_ASEGURADORA, esValorLibre, textoDeValorLibre, valorLibre } from "@/lib/data/otros-valores";
 import { createClient } from "@/lib/supabase/client";
 
 // Chip/autocomplete for aseguradoras, fed only by an official approved list
-// (static list in code + admin-approved additions from the DB). There is no
-// free-text option here; keeping the list closed avoids noisy duplicate insurer
-// suggestions.
+// (static list in code + admin-approved additions from the DB). One that is not
+// on the list can be written as «otra»: it is stored with the "otra:" prefix, shows
+// on that profile only, never in the search filter, and the admin panel lists it.
 interface Props {
   value: string[];
   onChange: (next: string[]) => void;
@@ -53,7 +54,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
   }, [approved]);
 
   const selectedValues = value.filter((id) => !LEGACY_EMPTY_INSURER_IDS.has(id.toLowerCase()));
-  const labelFor = (id: string) => options.find((o) => o.id === id)?.label ?? id;
+  const labelFor = (id: string) => esValorLibre(id, OTRA_ASEGURADORA) ? textoDeValorLibre(id, OTRA_ASEGURADORA) : options.find((o) => o.id === id)?.label ?? id;
 
   const suggestions = useMemo(() => {
     const q = normalize(query.trim());
@@ -61,6 +62,13 @@ export function AseguradorasInput({ value, onChange }: Props) {
       .filter((o) => !selectedValues.includes(o.id) && (q === "" || normalize(o.label).includes(q)))
       .slice(0, 8);
   }, [query, selectedValues, options]);
+
+  // Lo escrito que no calza con ninguna de la lista se puede agregar como «otra»:
+  // sale en el perfil, no en el filtro, y el equipo lo revisa.
+  const otraEscrita = valorLibre(OTRA_ASEGURADORA, query);
+  const puedeAgregarOtra = !!otraEscrita
+    && !selectedValues.some((id) => id.toLowerCase() === otraEscrita.toLowerCase())
+    && !options.some((o) => normalize(o.label) === normalize(query.trim()));
 
   function add(id: string) {
     if (!selectedValues.includes(id)) onChange([...selectedValues, id]);
@@ -96,6 +104,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
               if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, suggestions.length - 1)); }
               else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
               else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
+              else if (e.key === "Enter" && puedeAgregarOtra) { e.preventDefault(); add(otraEscrita); }
               else if (e.key === "Backspace" && query === "" && selectedValues.length > 0) { remove(selectedValues[selectedValues.length - 1]); }
             }}
             placeholder={selectedValues.length === 0 ? t("insurerPlaceholder") : t("addAnotherInsurer")}
@@ -103,7 +112,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
           />
         </div>
 
-        <AnchoredDropdown anchorRef={fieldRef} open={open && suggestions.length > 0} maxHeight={264}>
+        <AnchoredDropdown anchorRef={fieldRef} open={open && (suggestions.length > 0 || puedeAgregarOtra)} maxHeight={264}>
           <ul className="py-1">
             {suggestions.map((s, i) => (
               <li key={s.id}>
@@ -117,6 +126,19 @@ export function AseguradorasInput({ value, onChange }: Props) {
                 </button>
               </li>
             ))}
+            {puedeAgregarOtra && (
+              <li>
+                <button
+                  type="button"
+                  data-testid="agregar-otra-aseguradora"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => add(otraEscrita)}
+                  className="w-full border-t border-[#eef2f6] px-3 py-2 text-left text-sm font-medium text-[#0089bb] transition-colors hover:bg-[#EBF5FB]"
+                >
+                  {t("addOtherInsurer", { name: textoDeValorLibre(otraEscrita, OTRA_ASEGURADORA) })}
+                </button>
+              </li>
+            )}
           </ul>
         </AnchoredDropdown>
       </div>

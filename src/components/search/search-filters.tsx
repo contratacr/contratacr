@@ -570,6 +570,26 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     })();
   }, []);
 
+  // Solo se ofrecen los idiomas y aseguradoras que tienen al menos un profesional
+  // publicado; mientras llega la respuesta (o si falla) se ofrece la lista completa.
+  const [disponibles, setDisponibles] = useState<{ languages: string[]; insurers: string[] } | null>(null);
+  useEffect(() => {
+    let vigente = true;
+    fetch("/api/buscar/opciones")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (vigente && d && Array.isArray(d.languages) && Array.isArray(d.insurers)) setDisponibles({ languages: d.languages, insurers: d.insurers });
+      })
+      .catch(() => {});
+    return () => { vigente = false; };
+  }, []);
+  const idiomasOfrecidos = disponibles
+    ? LANGUAGES.filter((item) => disponibles.languages.includes(item.id) || languages.includes(item.id))
+    : LANGUAGES;
+  const aseguradorasOfrecidas = disponibles
+    ? insurerOptions.filter((item) => disponibles.insurers.includes(item.id) || insurers.includes(item.id))
+    : insurerOptions;
+
   // Google Places is only for ADDRESS autocomplete: it loads the first time the
   // location field gets focus (like the home hero), never with the results map,
   // which now draws with MapLibre/OpenFreeMap.
@@ -651,7 +671,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     return options;
   }, [addressSuggestions, localLocationSug, locationQuery]);
   const areaActive = !!(params.get("n") && params.get("s") && params.get("e") && params.get("w"));
-  const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null);
+  const showInsurerFilter = isHealthCategory(category && category !== "todas" ? category : null) && aseguradorasOfrecidas.length > 0;
   const showVideoFilter = supportsVideoConsultCategory(category && category !== "todas" ? category : null);
 
   const applyFilters = useCallback(
@@ -994,7 +1014,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const sortOptions = selectableSortOptions.map((option) => ({ value: option, label: t(`sort.${option}`) }));
     const languageOptions = [
       { value: ANY_LANGUAGE, label: t("filters.allLanguages") },
-      ...LANGUAGES.map((item) => ({ value: item.id, label: languageLabel(item.id, locale) })),
+      ...idiomasOfrecidos.map((item) => ({ value: item.id, label: languageLabel(item.id, locale) })),
     ];
     const modalityOptions = [
       { value: "in_person", label: t("filters.attentionInPerson") },
@@ -1027,9 +1047,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
           {/* El idioma se usa poco: va de último para no empujar lo que sí depende de la categoría. */}
-          <button data-testid="mobile-language-filter" type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
+          {idiomasOfrecidos.length > 0 && <button data-testid="mobile-language-filter" type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
-          </button>
+          </button>}
           {trailingChips}
           {/* UNA FILA DE FILTROS NECESITA SALIDA. Con el orden, el precio, el
               idioma y la modalidad puestos, volver al principio pedía abrir
@@ -1064,7 +1084,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           }}
         />
         {showVideoFilter && <FilterSheet ancla={anclaChip} open={openChip === "modality"} title={t("filters.attention")} value={modalities[0] ?? ""} options={[{ value: "", label: t("filters.attentionAny") }, ...modalityOptions]} onClose={() => setOpenChip(null)} onSelect={(value) => { const next = isSearchModality(value) ? [value] : []; setModalities(next); applyFilters({ modalidad: serializeMultiParam(next) }); setOpenChip(null); }} />}
-        {showInsurerFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
+        {showInsurerFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={aseguradorasOfrecidas.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
       </Carril>
     );
   }
@@ -1322,6 +1342,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </div>
         )}
 
+        {idiomasOfrecidos.length > 0 && (
         <div>
           <label className={fieldLabel}>{t("filters.language")}</label>
           <Select
@@ -1341,12 +1362,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
               <SelectItem value={ANY_LANGUAGE}>{t("filters.anyLanguage")}</SelectItem>
-              {LANGUAGES.map((item) => (
+              {idiomasOfrecidos.map((item) => (
                 <SelectItem key={item.id} value={item.id}>{languageLabel(item.id, locale)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+        )}
 
         {showInsurerFilter && (
         <div>
@@ -1355,7 +1377,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             label={t("filters.insurer")}
             emptyLabel={t("filters.anyInsurer")}
             values={insurers}
-            options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))}
+            options={aseguradorasOfrecidas.map((item) => ({ value: item.id, label: item.label }))}
             onChange={(next) => {
               setInsurers(next);
               applyFilters({ aseguradora: serializeMultiParam(next) });

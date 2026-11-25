@@ -1,15 +1,19 @@
 // Insurance networks (aseguradoras) operating in Costa Rica. Professionals select
 // which networks they belong to; clients filter by them in /buscar.
+import { OTRA_ASEGURADORA, esValorLibre, textoDeValorLibre } from "@/lib/data/otros-valores";
+
 export type Insurer = { id: string; label: string };
 
 export const INSURERS: Insurer[] = [
   { id: "adisa", label: "ADISA" },
+  { id: "aetna", label: "Aetna International" },
   { id: "allianz", label: "Allianz" },
   { id: "american_fidelity", label: "American Fidelity" },
   { id: "assa", label: "ASSA" },
   { id: "best_doctors", label: "Best Doctors" },
   { id: "triple_s", label: "BlueCross BlueShield" },
   { id: "bmi", label: "BMI" },
+  { id: "bupa", label: "Bupa Global" },
   { id: "cigna", label: "Cigna" },
   { id: "davivienda", label: "Davivienda Seguros" },
   { id: "e_dental", label: "e-Dental" },
@@ -36,5 +40,6 @@ export const INSURERS: Insurer[] = [
 const BY_ID = new Map(INSURERS.map((i) => [i.id, i]));
 
 export function insurerLabel(id: string): string {
+  if (esValorLibre(id, OTRA_ASEGURADORA)) return textoDeValorLibre(id, OTRA_ASEGURADORA);
   return BY_ID.get(id)?.label ?? id;
 }

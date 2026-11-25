@@ -1,3 +1,5 @@
+import { OTRO_IDIOMA, esValorLibre, textoDeValorLibre } from "@/lib/data/otros-valores";
+
 // Languages a professional can declare they speak. IDs are stable (English),
 // `label` is Spanish-first UI copy, `labelEn` the English rendering. Used by the
 // profile language picker, filters and the public profile. Resolve with
@@ -13,6 +15,7 @@ export const LANGUAGES = [
 ] as const;
 
 export function languageLabel(id: string, locale?: string): string {
+  if (esValorLibre(id, OTRO_IDIOMA)) return textoDeValorLibre(id, OTRO_IDIOMA);
   const needle = id.trim().toLowerCase();
   const l = LANGUAGES.find((x) => x.id === id || x.label.toLowerCase() === needle || x.labelEn.toLowerCase() === needle);
   if (!l && ["english", "english program", "inglés", "ingles"].includes(needle)) {
@@ -23,6 +26,16 @@ export function languageLabel(id: string, locale?: string): string {
   }
   if (!l) return id;
   return locale === "en" ? l.labelEn : l.label;
+}
+
+/** Id de la lista oficial para un valor guardado ("es", "Español", "english"…); null si no es de la lista. */
+export function languageOfficialId(value: string): string | null {
+  const needle = value.trim().toLowerCase();
+  const match = LANGUAGES.find((x) => x.id === needle || x.label.toLowerCase() === needle || x.labelEn.toLowerCase() === needle);
+  if (match) return match.id;
+  if (["english", "english program", "inglés", "ingles"].includes(needle)) return "en";
+  if (["spanish", "español", "espanol"].includes(needle)) return "es";
+  return null;
 }
 
 export function languageSearchValues(value: string): string[] {
