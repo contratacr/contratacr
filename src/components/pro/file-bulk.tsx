@@ -62,7 +62,7 @@ export function FileBulkBar({bulk,scope,view,all,folders,onPickFolder,onSelectAl
  const btn=(label:string,onClick:()=>void,extra?:string)=><Button type="button" variant="outline" className={extra} disabled={bulk.busy||n===0} onClick={onClick}>{label}</Button>;
  return <section data-file-bulk={scope} aria-label={t('Operaciones masivas','Bulk actions')} className={card}>
   <div className="flex flex-wrap items-center justify-between gap-2">
-   <p data-file-bulk-count className="font-semibold">{n===0?t('Seleccione archivos para actuar sobre varios a la vez.','Select files to act on several at once.'):t(`${count} ${noun} seleccionados`,`${count} selected`)}</p>
+   <p data-file-bulk-count className="font-semibold">{n===0?t('Seleccione archivos para actuar sobre varios a la vez.','Select files to act on several at once.'):t(`${count} ${noun} ${n===1?'seleccionado':'seleccionados'}`,`${count} selected`)}</p>
    <div className="flex flex-wrap gap-2">{onSelectAll&&<Button type="button" variant="secondary" disabled={bulk.busy||all.length===0} onClick={onSelectAll}>{t('Seleccionar los de esta lista','Select all in this list')}</Button>}<Button type="button" variant="secondary" disabled={bulk.busy||n===0} onClick={bulk.clear}>{t('Quitar selección','Clear selection')}</Button></div></div>
   {n>0&&<div className="flex flex-wrap items-center gap-2">
    {view==='trash'?<>{btn(scope==='work'?t('Restaurar','Restore'):t('Restaurar','Restore'),()=>void bulk.run({action:'restore'},t('Archivos restaurados.','Files restored.')))}{btn(t('Eliminar definitivamente','Delete permanently'),()=>void purge())}</>

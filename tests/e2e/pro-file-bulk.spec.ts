@@ -74,7 +74,7 @@ for(const language of ['es','en'] as const)test(`File bulk operations, permanent
   await library.getByRole('button',{name:en?'Open folder':'Abrir carpeta'}).click({timeout:60000});
   const boxes=library.locator('[data-bulk-select]');await expect(boxes.first()).toBeVisible({timeout:60000});
   await boxes.first().check();
-  const bar=library.locator('[data-file-bulk="company"]');await expect(bar.locator('[data-file-bulk-count]')).toContainText(en?'1 selected':'1 archivos seleccionados');
+  const bar=library.locator('[data-file-bulk="company"]');await expect(bar.locator('[data-file-bulk-count]')).toContainText(en?'1 selected':'1 archivo seleccionado');
   await bar.getByRole('button',{name:en?'Remove favorite':'Quitar favoritos'}).click();
   await expect(bar.getByRole('status').filter({hasText:en?'Removed from favorites.':'Quitados de favoritos.'})).toBeVisible({timeout:60000});
   await library.getByRole('button',{name:en?'Trash':'Papelera'}).click();

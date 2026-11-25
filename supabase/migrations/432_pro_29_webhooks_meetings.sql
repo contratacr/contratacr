@@ -9,7 +9,7 @@ begin;
 create table if not exists public.pro_webhook_endpoints(
  owner_id uuid not null references public.profiles(id) on delete cascade,id uuid not null,
  name text not null check(length(btrim(name)) between 1 and 80),
- url text not null check(length(url)<=600 and url~'^https://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?(/[^[:space:]]{0,400})?$'),
+ url text not null check(length(url)<=600 and url~'^https://[A-Za-z0-9.-]{1,253}(:[0-9]{1,5})?(/[^[:space:]]*)?$'),
  events text[] not null check(cardinality(events) between 1 and 3 and events<@array['lead.created','quote.accepted','invoice.paid']::text[]),
  secret_box text not null check(public.pro_oauth_box_ok(secret_box) and secret_box is not null),
  secret_hint text not null check(secret_hint~'^[A-Za-z0-9_-]{4}$'),

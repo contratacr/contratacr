@@ -12,7 +12,7 @@ import {PlaceDirectionsMenu} from './place-directions-menu';
  */
 const ICONS:Record<PlaceActionId,LucideIcon>={reserve:CalendarCheck,call:Phone,whatsapp:MessageCircle,quote:FileText,order:ShoppingBag,directions:Navigation,hours:Clock,menu:UtensilsCrossed,prices:Banknote,website:ExternalLink,review:Star};
 export const actionIcon=(id:PlaceActionId,className:string)=>createElement(ICONS[id],{'aria-hidden':true,className});
-const ext=(a:PlaceAction)=>a.external?{target:'_blank',rel:a.id==='website'?'nofollow ugc noopener noreferrer':'noopener noreferrer'}:{};
+const ext=(a:PlaceAction)=>a.external?{target:'_blank',rel:a.id==='website'||a.id==='order'?'nofollow ugc noopener noreferrer':'noopener noreferrer'}:{};
 
 /** One button. `children` is the visible content; `className` the look. */
 export function ActionButton({action,slug,locale,className,menuVariant='pill',children,ariaLabel}:{action:PlaceAction;slug:string;locale:string;className:string;menuVariant?:'pill'|'bar';children:ReactNode;ariaLabel?:string}){

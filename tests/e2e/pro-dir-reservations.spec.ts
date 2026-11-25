@@ -141,7 +141,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
    await gotoOK(page,`${prefix}/lugar/${slug}`);
    await expect(page.locator('html')).toHaveAttribute('lang',language);
    await expect(page.locator('[data-place-reservations][data-ready]')).toBeVisible({timeout:45000});
-   await expect(page.locator('[data-place-order="whatsapp"]')).toHaveAttribute('href','https://wa.me/50688880101');
+   await expect(page.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688880101');
    await expect(page.locator('[data-place-questions]')).toContainText('¿Tienen mesas al aire libre?');
    await featureShots(page,`place-page-${language}`,info);
   }
