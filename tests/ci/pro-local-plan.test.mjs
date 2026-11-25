@@ -12,7 +12,7 @@ test('workflow push paths equal the selector trigger list', () => {
   assert.deepEqual(paths, TRIGGER_GLOBS);
 });
 test('workflow keeps the reviewed contract', () => {
-  for (const text of ['playwright.pro-local.config.ts', 'PLAYWRIGHT_BASE_URL: http://127.0.0.1:3185', '--port 3185', 'scripts/ci/pro-local-plan.mjs', 'test:e2e:verify-results', 'group: contratacr-pro-local-regression']) assert.ok(workflow.includes(text), text);
+  for (const text of ['playwright.pro-local.config.ts', 'PLAYWRIGHT_BASE_URL: http://127.0.0.1:3185', 'next build --webpack', 'next start -H 127.0.0.1 -p 3185', 'scripts/ci/pro-local-plan.mjs', 'test:e2e:verify-results', 'group: contratacr-pro-local-regression']) assert.ok(workflow.includes(text), text);
   assert.ok(!/\n\s+pull_request/.test(workflow) && !/\n\s+schedule:/.test(workflow));
 });
 test('irrelevant files never trigger Pro', () => {
