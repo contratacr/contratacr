@@ -11,7 +11,8 @@ export function DirectoryShell({children}:{children:ReactNode}){
  return <div className="flex min-h-screen flex-col bg-white">
   <LandingNavbar/>
   <div className="ccr-navbar-spacer h-16" aria-hidden/>
-  <DirectoryQuickNav/>
+  {/* Detail and task pages: the sections row is desktop-only; phones keep the screen's own header. */}
+  <DirectoryQuickNav className="max-lg:!hidden"/>
   <div className="flex-1">{children}</div>
   <LandingFooter/>
  </div>;
