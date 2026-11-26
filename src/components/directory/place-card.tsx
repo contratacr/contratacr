@@ -9,7 +9,7 @@ import {MapPin,Navigation,Star} from 'lucide-react';
 import {PlaceDirectionsMenu} from './place-directions-menu';
 import {actionIcon} from './place-action-buttons';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
-import {HeroTile,RatingLine} from './biz-ui';
+import {RatingLine} from './biz-ui';
 import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
@@ -118,18 +118,14 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
    {extra?.photo
     ?<span aria-hidden="true" className="shrink-0" data-place-thumb="photo">
-     <ResultThumb src={placePhotoSrc(extra.photo,320)} priority={rank!=null&&rank<=2} rank={rank} fallback={null}/>
+     <ResultThumb src={placePhotoSrc(extra.photo,320)} priority={rank!=null&&rank<=2} fallback={null}/>
     </span>
-    // Without an approved photo the card is text-first: a compact category badge (no photo-sized empty box).
-    // Without an approved photo (owner 2026-11-26): its position in the results, large, the same number as its map pin.
-    :rank!=null?<span aria-hidden="true" className="mt-0.5 grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#eef3f7] text-[20px] font-extrabold text-[#162543]" data-place-thumb="rank">{rank}</span>
-    :<span aria-hidden="true" className="relative mt-0.5 shrink-0" data-place-thumb="badge">
-     <HeroTile verticalId={item.vertical.id} className="h-10 w-10 rounded-xl lg:h-11 lg:w-11" iconClass="h-5 w-5"/>
-    </span>}
+    // Without an approved photo (owner 2026-11-26): text only; the position goes before the name.
+    :null}
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
      <H className="min-w-0 flex-1 text-[15px] font-bold leading-[1.15] text-[#111827]">
-      <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{item.name}</a>
+      <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{rank!=null?`${rank}. `:''}{item.name}</a>
       {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
      </H>
      {priceLevel&&<span className="shrink-0 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}

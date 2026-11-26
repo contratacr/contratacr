@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useSiteFeatures } from "@/components/site-features";
 import { Star } from "lucide-react";
 import { ProfessionalSchedule, type SearchedPlace } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
@@ -120,6 +121,8 @@ interface ProfessionalCardProps {
 }
 
 export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, searchReturnHref }: ProfessionalCardProps) {
+  // Directory on (owner 2026-11-26): the position goes before the name («1. Redes Bahía»), not as a badge on the photo.
+  const rankInName = useSiteFeatures().directorySections.length > 0 && rank != null;
   const tCard = useTranslations("card");
   const tSchedule = useTranslations("schedule");
   const locale = useLocale();
@@ -359,7 +362,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
         <Link href={profileHref} className="relative z-10 shrink-0" data-testid="professional-card-thumb">
           <ResultThumb
             alt={professional.fullName}
-            rank={rank}
+            rank={rankInName ? undefined : rank}
             kind="tile"
             fallback={
               <Avatar className="h-full w-full rounded-full">
@@ -386,7 +389,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
                 <div className="relative z-10 block min-w-0 flex-1">
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
-                      name={displayName.primaryDesktop}
+                      name={rankInName ? `${rank}. ${displayName.primaryDesktop}` : displayName.primaryDesktop}
                       href={profileHref}
                       verified={isVerified}
                       verifiedLabel={tCard("verifiedTitle")}

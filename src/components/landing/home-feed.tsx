@@ -132,17 +132,14 @@ function PlaceCard({ p, en, rank }: { p: FeedPlace; en: boolean; rank: number })
             {/* eslint-disable-next-line @next/next/no-img-element -- place photo served by our own photo route */}
             <img src={p.photo} alt="" className="aspect-[16/10] w-full object-cover" loading="lazy" />
             <span className="flex flex-1 flex-col gap-0.5 px-3 py-2.5">
-              <span className="line-clamp-1 text-[15px] font-extrabold text-[#162543]">{p.name}</span>
+              <span className="line-clamp-1 text-[15px] font-extrabold text-[#162543]">{rank}. {p.name}</span>
               <Rating avg={p.average} count={p.count} en={en} />
               <span className="line-clamp-1 text-[12.5px] text-[#6b7a8f]">{where}</span>
             </span>
           </>
         ) : (
           <span className="flex flex-1 flex-col gap-1.5 p-3.5">
-            <span className="flex items-start gap-2.5">
-              <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#eef3f7] text-[15px] font-extrabold text-[#162543]">{rank}</span>
-              <span className="line-clamp-2 text-[15.5px] font-extrabold leading-snug text-[#162543]">{p.name}</span>
-            </span>
+            <span className="line-clamp-2 text-[15.5px] font-extrabold leading-snug text-[#162543]">{rank}. {p.name}</span>
             <Rating avg={p.average} count={p.count} en={en} />
             {where && <span className="flex items-center gap-1 text-[12.5px] text-[#6b7a8f]"><MapPin className="h-3 w-3 shrink-0" aria-hidden /><span className="line-clamp-1">{where}</span></span>}
           </span>
