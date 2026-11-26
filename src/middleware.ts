@@ -2,6 +2,7 @@ import { iosAppStoreFallback } from "@/lib/mobile/ios-app-entry";
 import { enforceApiMfa } from "@/lib/auth/api-mfa";
 import { proWorkspaceGate, PRO_WS_HEADERS } from "@/lib/pro/workspace-gate";
 import { PRO_ENABLED, isProOnlyPath } from "@/lib/pro/enabled";
+import { proJobRoutePath } from "@/lib/pro/job-route";
 import { MIDDLEWARE_PRINT_ROUTES, PRINT_NONCE_HEADER, newPrintNonce, printContentPolicy } from "@/lib/pro/print-csp";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
@@ -154,6 +155,15 @@ export async function middleware(request: NextRequest) {
   if (!PRO_ENABLED && isProOnlyPath(sinPrefijoDeIdioma(pathname))) {
     if (pathname.startsWith("/api/")) return conCabecerasDeSeguridad(NextResponse.json({ error: "No disponible" }, { status: 404, headers: { "Cache-Control": "no-store" } }));
     return conCabecerasDeSeguridad(reescribirConIdioma(request, new URL(`/${idiomaDeRuta(pathname)}/pro-no-disponible`, request.url)));
+  }
+
+  // The old query form of a Pro job (/dashboard/pro?tab=pro_agenda&cita=<id>[&vistaTrabajo=<section>], still used by
+  // notifications, e-mails and bookmarks) answers a real 307 here. The page's own redirect() runs after
+  // dashboard/pro/loading.tsx has already streamed a 200, so the browser painted the Pro shell and then
+  // replaced the whole document (a surprise second load ~1 s later, losing anything done in between).
+  if (PRO_ENABLED && /^(?:\/en)?\/dashboard\/pro\/?$/.test(pathname)) {
+    const job = proJobRoutePath(idiomaDeRuta(pathname), request.nextUrl.searchParams);
+    if (job) return conCabecerasDeSeguridad(NextResponse.redirect(new URL(job, request.url), 307));
   }
 
   if (pathname.startsWith("/api/")) {
