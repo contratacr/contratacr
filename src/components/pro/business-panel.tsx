@@ -180,6 +180,7 @@ export function BusinessPanel({
     [detail, setDetail] = useState<string | null>(null),
     [stock, setStock] = useState<string | null>(null);
   const submitLock = useRef(false),detailRequest=useRef(0),discardPrompt=useRef(false);
+  const pendingClose=useRef<'edit'|'stock'|null>(null),[closeCheck,setCloseCheck]=useState(0);
   const formDirty=useRef(false),stockDirty=useRef(false);
   const [acceptedEstimateState,setAcceptedEstimateState]=useState({dirty:false,busy:false}),[filesState,setFilesState]=useState({dirty:false,busy:false}),[updatesState,setUpdatesState]=useState({dirty:false,busy:false}),[taskState,setTaskState]=useState({dirty:false,busy:false}),[deliveryState,setDeliveryState]=useState({dirty:false,busy:false}),[changeState,setChangeState]=useState({dirty:false,busy:false}),[nestedWarning,setNestedWarning]=useState(false),[rescheduleState,setRescheduleState]=useState({dirty:false,busy:false}),[clientViewState,setClientViewState]=useState({dirty:false,busy:false});
   const [operationsBlocked,setOperationsBlocked]=useState(false),[allowancesState,setAllowancesState]=useState({dirty:false,busy:false}),[selectionsState,setSelectionsState]=useState({dirty:false,busy:false}),[moodBoardsState,setMoodBoardsState]=useState({dirty:false,busy:false}),[takeoffsState,setTakeoffsState]=useState({dirty:false,busy:false}),[ordersState,setOrdersState]=useState({dirty:false,busy:false}),[creditsState,setCreditsState]=useState({dirty:false,busy:false}),[scheduleState,setScheduleState]=useState({dirty:false,busy:false}),[timeState,setTimeState]=useState({dirty:false,busy:false}),[notesState,setNotesState]=useState({dirty:false,busy:false}),[detailsState,setDetailsState]=useState({dirty:false,busy:false}),[bidsState,setBidsState]=useState({dirty:false,busy:false}),[contractsState,setContractsState]=useState({dirty:false,busy:false});
@@ -421,6 +422,7 @@ export function BusinessPanel({
     clearEdit(preserveDraft);
   }
   function clearEdit(preserveDraft=false){
+    pendingClose.current=null;
     formDirty.current=false;
     autoClientFields.current={};
     setEditing(null);
@@ -445,9 +447,16 @@ export function BusinessPanel({
     window.addEventListener(PRO_BEFORE_PATH_CHANGE,before);
     return()=>window.removeEventListener(PRO_BEFORE_PATH_CHANGE,before);
   },[editing,stock,en]);
-  function closeStock(){stockDirty.current=false;setStock(null);setFormError("");if(params.get("movimiento"))closeProStep("movimiento");}
+  function closeStock(){pendingClose.current=null;stockDirty.current=false;setStock(null);setFormError("");if(params.get("movimiento"))closeProStep("movimiento");}
+  // A close asked for while a save or the list refresh is running used to be dropped without a word: «Cerrar» did
+  // nothing and the editor (and its address) stayed open (CI run 45742172948, pro-navigation: the catalog list
+  // reload after back/forward shows as saving). It is now remembered and carried out once that work ends, with the
+  // same unsaved-changes question; a save that closes the editor itself makes it moot.
+  const flushPendingClose=useRef(()=>{});
   async function requestFormClose(close:()=>void,dirty:boolean){
-    if(saving||submitLock.current||discardPrompt.current||blockedRef.current)return;
+    if(discardPrompt.current||blockedRef.current)return;
+    if(saving||submitLock.current){pendingClose.current=close===closeStock?'stock':'edit';return;}
+    pendingClose.current=null;
     if(dirty){
       discardPrompt.current=true;
       try{
@@ -457,6 +466,14 @@ export function BusinessPanel({
     }
     close();
   }
+  flushPendingClose.current=()=>{
+    const kind=pendingClose.current;if(!kind||saving||submitLock.current)return;
+    pendingClose.current=null;
+    if(blockedRef.current||(kind==='stock'?!stock:!editing))return;
+    void requestFormClose(kind==='stock'?closeStock:closeEdit,kind==='stock'?stockDirty.current:formDirty.current);
+  };
+  // Runs after the save's own effects (clientDone/inventoryDone close the editor and clear the request first).
+  useEffect(()=>{if(!saving)flushPendingClose.current();},[saving,editing,stock,closeCheck]);
   function changeOrganization(name:"group"|"category",value:string){
     setDraft(old=>({...old,[name]:value}));
     queueMicrotask(()=>{const form=document.getElementById('pro-business-form');if(form instanceof HTMLFormElement)persist(form);});
@@ -517,6 +534,7 @@ export function BusinessPanel({
       );
     } finally {
       submitLock.current = false;
+      if(pendingClose.current)setCloseCheck(value=>value+1);
     }
   }
   async function finishWork(work:Business['work'][number]){

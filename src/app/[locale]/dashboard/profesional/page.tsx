@@ -17,7 +17,7 @@ import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { idiomaDe, prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { suspensionNoticeCopy } from "@/lib/pro/suspension-notice";
-import { irAlInicio, iniciarSeccionArriba } from "@/lib/ir-al-inicio";
+import { documentoRecienAbierto, irAlInicio, iniciarSeccionArriba } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
@@ -1257,7 +1257,12 @@ export default function DashboardPage() {
   // ANTES de pintar, no después: con `useEffect` el navegador alcanzaba a
   // dibujar la sección nueva en la altura de la anterior y el salto se veía.
   // Con `useLayoutEffect` la sección ya nace arriba.
+  // The section a fresh document opens on already starts at the top (see documentoRecienAbierto).
+  const primeraSeccion = useRef(true);
   useLayoutEffect(() => {
+    const primera = primeraSeccion.current;
+    primeraSeccion.current = false;
+    if (primera && documentoRecienAbierto()) return;
     iniciarSeccionArriba();
   }, [activeTab, mode]);
 

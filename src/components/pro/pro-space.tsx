@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,type ReactNode} from 'react';
+import {useEffect,useRef,type ReactNode} from 'react';
 import {ProAppSupport} from './pro-app-support';
 import dynamic from 'next/dynamic';
 import {reconnectingImport} from '@/lib/reconnecting-import';
@@ -10,7 +10,7 @@ import {ContrataCRLogo} from '@/components/landing/landing-navbar';
 import {Button} from '@/components/ui/button';
 import {usePathname} from 'next/navigation';
 import {backPro,navigatePro,proJobRoute,pushProPath,setProNavigationAccount} from '@/lib/pro/navigation';
-import {iniciarSeccionArriba} from '@/lib/ir-al-inicio';
+import {documentoRecienAbierto,iniciarSeccionArriba} from '@/lib/ir-al-inicio';
 import {useProSearchParams} from './use-pro-search-params';
 import {useProSectionNavigation} from './use-pro-section-navigation';
 import {useLocalProAccess} from './use-local-pro-access';
@@ -57,7 +57,9 @@ export function ProSpace({profile}:{profile:ProSpaceProfile}){
  const jobRoute=!!proJobRoute(usePathname()??'');
  useEffect(()=>{setProNavigationAccount(user?.id??null);return()=>setProNavigationAccount(null);},[user?.id]);
  const navigating=useProSectionNavigation(user?.id);
- useEffect(()=>{iniciarSeccionArriba();},[tab]);
+ // The section a fresh document opens on already starts at the top (see documentoRecienAbierto).
+ const firstSection=useRef(true);
+ useEffect(()=>{const first=firstSection.current;firstSection.current=false;if(first&&documentoRecienAbierto())return;iniciarSeccionArriba();},[tab]);
 
  if(loading||sameAccount&&!access.ready&&!access.error)return <main className="p-6" role="status" aria-busy="true">{en?'Loading Pro…':'Cargando Pro…'}</main>;
  if(!sameAccount||!access.enabled)return <main className="space-y-4 p-6"><p role="alert">{access.error?(en?'Could not verify Pro access. Your data is preserved.':'No se pudo comprobar el acceso a Pro. Sus datos se conservan.'):(en?'Pro access is unavailable for this session.':'Pro no está disponible para esta sesión.')}</p>{access.error&&<Button onClick={access.retry}>{en?'Retry':'Reintentar'}</Button>}<Button variant="secondary" onClick={()=>window.location.assign((en?'/en':'')+'/dashboard/profesional')}>{en?'Back to My panel':'Volver a Mi panel'}</Button></main>;

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { recoverBodyScrollLock } from "@/lib/body-scroll-lock";
-import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
+import { anotarCambioEnElDocumento, documentoRecienAbierto, irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
 import { anotarCambioDeRuta, anotarPosicion, posicionAnotada, reponer, volverSiEsLaAnterior } from "@/lib/volver-por-historial";
 
 // Volver o avanzar con el historial (flecha del navegador, gesto de iOS o una
@@ -11,6 +11,8 @@ import { anotarCambioDeRuta, anotarPosicion, posicionAnotada, reponer, volverSiE
 // de estrenar arriba.
 let porHistorial = false;
 let reponiendo = false;
+// The first route of this document (its initial load), as opposed to later client-side route changes.
+let primeraRuta = true;
 if (typeof window !== "undefined") {
   window.addEventListener("popstate", () => { porHistorial = true; });
   // LAS FLECHAS DE «VOLVER» de toda la app (enlaces con la flecha ← o rotulados
@@ -50,6 +52,9 @@ export function RouteScrollReset() {
 
   useEffect(() => {
     anotarCambioDeRuta();
+    const documentoNuevo = primeraRuta && documentoRecienAbierto();
+    if (!primeraRuta) anotarCambioEnElDocumento();
+    primeraRuta = false;
     if (window.location.hash) return;
     const volviendo = porHistorial;
     porHistorial = false;
@@ -82,6 +87,18 @@ export function RouteScrollReset() {
         window.removeEventListener("touchmove", cortar, { capture: true });
         window.removeEventListener("wheel", cortar, { capture: true });
       };
+    }
+    // A document freshly opened by a normal navigation (link, address bar, location.assign) already starts at the
+    // top, and none of the forces irAlInicio fights apply to it: no finger inertia carries over from another
+    // document, no body lock is waiting to restore a height, and the browser restores nothing on a new entry. Its
+    // 600 ms insistence there only undid scrolls the person or the page asked for meanwhile (scrollbar drag,
+    // focus moving to a control lower down, an automated scrollIntoView before a click), so the click then
+    // landed on whatever had slid under the pointer (CI run 45742172948: the Statistics entry of the team page
+    // side menu, clicked right after load, hit the «Gestión» heading and nothing opened). Reloads and
+    // back/forward still insist: there the browser may re-apply an old height after our effects.
+    if (documentoNuevo) {
+      recoverBodyScrollLock();
+      return;
     }
     const frame = window.requestAnimationFrame(() => {
       recoverBodyScrollLock();

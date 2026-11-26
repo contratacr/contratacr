@@ -87,6 +87,7 @@ function estaArriba() {
 
 export function irAlInicio() {
   if (typeof window === "undefined") return;
+  anotarCambioEnElDocumento();
 
   vigilarGestos();
 
@@ -136,6 +137,27 @@ export function irAlInicio() {
 
 /** A newly selected section is a new navigation, even immediately after a drag.
  * Delayed calls still use irAlInicio(), so subsequent user scrolling wins. */
+let documentoSinCambios = true;
+/**
+ * True while this document is still on the page it was opened on by a normal navigation (not a reload, not
+ * back/forward). Such a page already starts at the top and none of the three forces above applies to it, so
+ * insisting there only undoes scrolls asked for meanwhile (scrollbar, focus, scrollIntoView before a click).
+ */
+export function documentoRecienAbierto() {
+  if (!documentoSinCambios || typeof window === "undefined") return false;
+  try {
+    const entrada = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    // Still the address the document was opened on: any client-side section change alters it.
+    return entrada?.type === "navigate" && entrada.name === window.location.href;
+  } catch {
+    return false;
+  }
+}
+/** A client-side route or section change: from now on every opening goes to the top again. */
+export function anotarCambioEnElDocumento() {
+  documentoSinCambios = false;
+}
+
 export function iniciarSeccionArriba() {
   ultimaLlamada = -Infinity;
   irAlInicio();
