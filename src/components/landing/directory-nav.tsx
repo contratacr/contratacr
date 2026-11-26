@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, UserRound, Search, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Menu, Search, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -11,6 +11,7 @@ import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGr
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { SearchEntry } from "@/components/directory/search-entry";
+import { ContrataCRMark } from "@/components/brand/brand-logo";
 
 // Public navigation to the place directory (2026-11-18): the «Categorías» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
@@ -222,12 +223,12 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   ];
   return (
     <>
-    {/* Phones (owner, 2026-11-26, like Yelp): this row IS the header — sections on top, one search bar below, no logo.
-        The navbar's own phone row hides while this one is mounted (body.ccr-dir-header); its drawer still opens from ☰. */}
+    {/* Phones (owner, 2026-11-26): this IS the header, compact like Airbnb/Booking — the ContrataCR symbol, one search bar and
+        ☰ on the first row, the sections below. The navbar's own phone row hides while this one shows (body.ccr-dir-header). */}
     <PhoneHeaderFlag navRef={navRef} />
     {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
-    <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
-      <ul className="mx-auto grid max-w-[1920px] grid-cols-5 px-1 py-1 sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8">
+    <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
+      <ul className="mx-auto grid w-full max-w-[1920px] grid-cols-5 px-1 pb-1.5 sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8">
         {items.map(({ key, href, label, icon: Icon, active }) => (
           <li key={key} className="min-w-0 sm:shrink-0">
             <Link
@@ -236,23 +237,24 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
               aria-current={active ? "page" : undefined}
               data-quick-nav-link={key}
               className={cn(
-                "flex flex-col items-center justify-start gap-1.5 rounded-xl px-0.5 py-1.5 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                "flex flex-col items-center justify-start gap-1 rounded-xl px-0.5 py-1 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
                 active ? "font-bold text-[#0083b0] sm:bg-[#eaf7fd]" : "font-semibold text-[#162543] sm:hover:bg-[#f3f6f9] hover:text-[#0083b0]",
               )}
             >
-              <span className={cn("inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eef3f7] text-[#162543] sm:text-current")}><Icon className="h-6 w-6 sm:h-4 sm:w-4" strokeWidth={1.75} aria-hidden /></span><span className="max-w-full truncate">{label}</span>
+              <span className={cn("inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eef3f7] text-[#162543] sm:text-current")}><Icon className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={1.85} aria-hidden /></span><span className="max-w-full truncate">{label}</span>
             </Link>
           </li>
         ))}
       </ul>
-      <div className="flex items-center gap-1 px-3 pb-3 pt-1 lg:hidden">
+      <div className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
+        <Link href="/" aria-label="ContrataCR" prefetch={false} className="shrink-0"><ContrataCRMark /></Link>
         <button type="button" data-quick-nav-search onClick={() => setSearching(true)}
-          className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-full border border-[#d7e1ea] bg-white pl-1.5 pr-4 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[18px] w-[18px]" aria-hidden /></span>
-          <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
+          className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-1 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[17px] w-[17px]" aria-hidden /></span>
+          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
         </button>
         <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eef3f7] text-[#162543] active:scale-95"><UserRound className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden /></button>
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] hover:bg-gray-50 active:scale-95"><Menu className="h-5 w-5 stroke-[2.5]" aria-hidden /></button>
       </div>
     </nav>
     {/* The Yelp-style search screen: location, recent searches, trending and live suggestions. */}
