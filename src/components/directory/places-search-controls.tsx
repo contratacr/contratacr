@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
+import {createPortal} from 'react-dom';
 import {ChevronDown,SlidersHorizontal,X} from 'lucide-react';
 import {CAPA_HOJA} from '@/lib/capas';
 
@@ -36,7 +37,7 @@ export function PlacesFilterChips({variant,menus,toggles,filtersLabel,activeFilt
  const root=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   if(!openKey)return;
-  const away=(e:PointerEvent)=>{if(!root.current?.contains(e.target as Node))setOpenKey(null);};
+  const away=(e:PointerEvent)=>{const t=e.target as Element;if(!root.current?.contains(t)&&!t?.closest?.("[data-chip-sheet]"))setOpenKey(null);};
   const esc=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpenKey(null);};
   document.addEventListener('pointerdown',away);document.addEventListener('keydown',esc);
   return ()=>{document.removeEventListener('pointerdown',away);document.removeEventListener('keydown',esc);};
@@ -99,12 +100,13 @@ function SheetMenu({menu,openKey,setOpenKey,en}:{menu:ChipMenu;openKey:string|nu
  return <>
   <button type="button" data-chip-menu={menu.key} aria-haspopup="dialog" aria-expanded={open} onClick={()=>setOpenKey(open?null:menu.key)} className={menu.active?on:idle}>
    <span className="whitespace-nowrap">{menu.label}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/></button>
-  {open&&<div className={`fixed inset-0 ${CAPA_HOJA}`} role="dialog" aria-modal="true" aria-label={menu.label}>
+  {/* Portal: the results sheet is transformed, so a `fixed` child would be positioned (and clipped) inside it. */}
+  {open&&typeof document!=='undefined'&&createPortal(<div data-chip-sheet={menu.key} className={`fixed inset-0 ${CAPA_HOJA}`} role="dialog" aria-modal="true" aria-label={menu.label}>
    <button type="button" aria-label={en?'Close':'Cerrar'} className="absolute inset-0 bg-black/30" onClick={()=>setOpenKey(null)}/>
    <div className="absolute inset-x-0 bottom-0 max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2 shadow-2xl">
     <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-[#d1d5db]" aria-hidden="true"/>
     <ul>{menu.options.map(o=><li key={o.value}><a href={o.href} aria-current={o.current?'true':undefined} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-[15px] ${o.current?'font-bold text-[#007fae]':'font-semibold text-[#162543]'}`}>{o.label}{o.current&&<span aria-hidden="true">✓</span>}</a></li>)}</ul>
    </div>
-  </div>}
+  </div>,document.body)}
  </>;
 }
