@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { MapLibreModule } from "@/lib/maps/maplibre";
-import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL } from "@/lib/maps/maplibre";
+import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL, zoomForSheet } from "@/lib/maps/maplibre";
 // Static on purpose (route CSS, not a runtime <link>): see src/lib/maps/maplibre-runtime.ts.
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PIN_CSS, esc, initials, teardropEl } from "@/lib/maps/pins";
@@ -357,7 +357,7 @@ export function PlacesMap({
       const ctx = ctxRef.current;
       if (!ctx || !bare || !boxRef.current) return;
       const padding = sheetAwarePadding(boxRef.current, 48);
-      ctx.map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, duration: 250 });
+      ctx.map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, zoom: zoomForSheet(ctx.map), duration: 300 });
     };
     window.addEventListener("ccr:sheet-change", onSheet);
     return () => window.removeEventListener("ccr:sheet-change", onSheet);

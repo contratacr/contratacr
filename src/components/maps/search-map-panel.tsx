@@ -16,7 +16,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw } from "lucide-react";
 import type { LngLatBounds, Map as MapLibreMap, Marker, NavigationControl, FullscreenControl } from "maplibre-gl";
-import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL, type MapLibreModule } from "@/lib/maps/maplibre";
+import { createMap, loadMapLibre, sheetAwarePadding, supportsWebGL, zoomForSheet, type MapLibreModule } from "@/lib/maps/maplibre";
 import { areaView } from "@/lib/maps/cr-area-centers";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -114,7 +114,7 @@ export function SearchMapPanel({ professionals, locale = "es", numbering, focusT
       const map = mapInstanceRef.current;
       if (!map) return;
       const padding = sheetAwarePadding(map.getContainer(), 48);
-      map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, duration: 250 });
+      map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, zoom: zoomForSheet(map), duration: 300 });
     };
     window.addEventListener("ccr:sheet-change", onSheet);
     return () => window.removeEventListener("ccr:sheet-change", onSheet);

@@ -215,6 +215,13 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
   const navRef = useRef<HTMLElement>(null);
   const collapsed = useCollapseOnScroll();
+  // Floating card (like Yelp): taller while the map dominates, slimmer while the results list is up.
+  const [sheetList, setSheetList] = useState(false);
+  useEffect(() => {
+    const onSheet = (e: Event) => setSheetList(!!(e as CustomEvent<{ list?: boolean }>).detail?.list);
+    window.addEventListener("ccr:sheet-change", onSheet);
+    return () => window.removeEventListener("ccr:sheet-change", onSheet);
+  }, []);
   if (!sections.length) return null;
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
@@ -247,7 +254,7 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
           </li>
         ))}
       </ul>
-      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white py-1.5 pl-2 pr-2")}>
+      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white pl-2 pr-2 transition-[padding] duration-300", floating && (sheetList ? "py-0.5" : "py-2.5"))}>
         {/* Search and map screens (owner 2026-11-26, like Yelp): ← back to the home instead of the brand menu. */}
         {floating ? (
           <Link href="/" prefetch={false} data-quick-nav-back aria-label={floating.back ?? "Inicio"} className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[#162543]">

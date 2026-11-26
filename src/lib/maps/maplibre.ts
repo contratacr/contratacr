@@ -218,3 +218,16 @@ export function directionsLinks(lat: number, lng: number) {
     waze: `https://waze.com/ul?ll=${encodeURIComponent(ll)}&navigate=yes`,
   };
 }
+
+/** Like Yelp: as the results sheet rises the map zooms out, and as it lowers it zooms in, so the same area stays in the part
+ * of the map that is visible (zoom changes by log2 of the change in visible height). */
+const lastVisible = new WeakMap<object, number>();
+export function zoomForSheet(map: { getZoom(): number; getContainer(): HTMLElement }) {
+  const top = (window as unknown as { __ccrSheetTop?: number }).__ccrSheetTop ?? window.innerHeight * 0.5;
+  const rect = map.getContainer().getBoundingClientRect();
+  const visible = Math.max(80, Math.min(rect.bottom, top) - rect.top - 84);
+  const before = lastVisible.get(map) ?? visible;
+  lastVisible.set(map, visible);
+  const z = map.getZoom() + Math.log2(visible / before);
+  return Math.max(5, Math.min(18, z));
+}
