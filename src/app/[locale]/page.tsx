@@ -104,7 +104,7 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
   const list = services.length ? services : fallback;
   // Alternate (owner 2026-11-26): a professional service, then a company section, and so on — the most important ones.
   const enabled = sitemapSections().map((x) => x.section as string);
-  const companies: HeroSlide[] = ["restaurantes", "parqueos", "farmacias", "hospedaje", "lavacar", "gasolineras"]
+  const companies: HeroSlide[] = ["restaurantes", "hospedaje", "parqueos", "farmacias", "lavacar", "gasolineras"]
     .filter((id) => enabled.includes(id) && sectionPhoto(id, 900) && t.has(`places.${id}.title`))
     .slice(0, 4)
     .map((id) => ({ key: id, image: sectionPhoto(id, 900)!, title: t(`places.${id}.title`), button: t(`places.${id}.button`), href: `/${id}` }));
@@ -113,7 +113,7 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
     if (list[i]) slides.push(list[i]!);
     if (companies[i]) slides.push(companies[i]!);
   }
-  return <HomeHeroSlides slides={slides.slice(0, 6)} />;
+  return <HomeHeroSlides slides={slides.slice(0, 8)} />;
 }
 
 async function HomeZoneCoverage() {

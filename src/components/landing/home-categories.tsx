@@ -6,7 +6,8 @@ import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { categoryImageUrl } from "@/lib/data/category-images";
 import { sectionPhoto } from "@/lib/directory/section-photos";
 
-const ORDER = ["restaurantes", "farmacias", "supermercados", "gasolineras", "talleres", "cafes", "belleza"];
+// Professionals + 11 sections = 12 tiles (an even grid on phones and computers), the most used first (owner 2026-11-26).
+const ORDER = ["restaurantes", "hospedaje", "farmacias", "supermercados", "parqueos", "lavacar", "gasolineras", "talleres", "cafes", "belleza", "veterinarias"];
 
 /**
  * Home, directory on (owner 2026-11-26): «Categorías» with real photos, like the production service cards — Profesionales
