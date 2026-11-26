@@ -3054,12 +3054,12 @@
       "restaurantsButton": "Restaurantes",
       "groups": {
         "hogar": "Expertos para su hogar",
-        "construccion_ingenieria": "Obras con profesionales verificados",
+        "construccion_ingenieria": "Obras con quienes saben",
         "limpieza": "Todo impecable, sin esfuerzo",
         "salud": "Especialistas que lo cuidan",
         "bienestar": "Dese un respiro",
         "automotriz": "Su carro en manos expertas",
-        "tecnologia": "Expertos verificados, listos para ayudar",
+        "tecnologia": "Tecnología con las mejores reseñas",
         "profesional": "Asesores que impulsan su empresa",
         "creatividad": "Talento creativo cerca de usted",
         "eventos": "Su evento, sin preocupaciones",
@@ -3071,8 +3071,10 @@
         "belleza": "Luzca increíble hoy",
         "seguridad": "Su tranquilidad, primero"
       },
-      "default": "Profesionales verificados",
-      "search": "Busque profesionales o empresas"
+      "default": "Elegidos por sus reseñas",
+      "search": "Busque profesionales o empresas",
+      "default2": "Calificados por clientes reales",
+      "default3": "Recomendados en su zona"
     },
     "homeCategories": {
       "title": "Categorías",

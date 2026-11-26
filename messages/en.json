@@ -3054,12 +3054,12 @@
       "restaurantsButton": "Restaurants",
       "groups": {
         "hogar": "Experts for your home",
-        "construccion_ingenieria": "Build with verified professionals",
+        "construccion_ingenieria": "Build with people who know",
         "limpieza": "Spotless, effortless",
         "salud": "Specialists who care for you",
         "bienestar": "Take a break",
         "automotriz": "Your car in expert hands",
-        "tecnologia": "Verified experts, ready to help",
+        "tecnologia": "Tech with the best reviews",
         "profesional": "Advisors who grow your company",
         "creatividad": "Creative talent near you",
         "eventos": "Your event, worry-free",
@@ -3071,8 +3071,10 @@
         "belleza": "Look amazing today",
         "seguridad": "Your peace of mind first"
       },
-      "default": "Verified professionals",
-      "search": "Search professionals or companies"
+      "default": "Chosen by their reviews",
+      "search": "Search professionals or companies",
+      "default2": "Rated by real customers",
+      "default3": "Recommended near you"
     },
     "homeCategories": {
       "title": "Categories",

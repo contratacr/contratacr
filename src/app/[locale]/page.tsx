@@ -84,9 +84,10 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
   const t = await getTranslations("landing.heroSlides");
   // One short line per category (never the button's own words), so no two slides repeat the same text.
   const used = new Set<string>();
+  const spare = ["default", "default2", "default3"];
   const heroLine = (id: string) => {
     const group = categoryGroupId(id);
-    const key = t.has(`groups.${group}`) && !used.has(group) ? `groups.${group}` : "default";
+    const key = t.has(`groups.${group}`) && !used.has(group) ? `groups.${group}` : (spare.shift() ?? "default");
     used.add(group);
     return t(key);
   };
