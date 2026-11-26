@@ -11,6 +11,7 @@ registerHooks({ resolve(specifier, context, next) { return next(context.parentUR
 const U = await import("../../src/lib/r2-image-url.ts");
 const T = await import("../../src/lib/media/photo-thumb-check.ts");
 const P = await import("../../src/lib/directory/photo-pipeline.ts");
+const C = await import("../../src/lib/directory/client-variants.ts");
 
 const img = (w, h) => {
   const data = Buffer.alloc(w * h * 3);
@@ -69,8 +70,14 @@ test("client variants codec: accepted as-is when they fit, refused when they do 
   const tagged = await P.processListingPhoto(variants[1600], { photoId: id, codec: P.createClientVariantsCodec({ ...variants, 320: meta }) });
   assert.deepEqual(tagged, { ok: false, reason: "metadata" });
   const form = new FormData();
-  assert.equal(await P.clientVariantsOf(form, variants[1600]), null);
-  form.set("v800", new Blob([variants[800]])); form.set("v320", new Blob([variants[320]]));
-  assert.deepEqual(Object.keys(await P.clientVariantsOf(form, variants[1600])).sort(), ["1600", "320", "800"]);
+  assert.equal(await C.clientVariantsOf(form, variants[1600]), null);
+  form.set("v800", new Blob([variants[800]])); form.set("v320", new Blob([meta]));
+  const got = await C.clientVariantsOf(form, variants[1600]);
+  assert.deepEqual(Object.keys(got).sort(), ["1600", "320", "800"]);
+  assert.deepEqual(P.scanMetadata(got[320]), [], "EXIF/IPTC of canvas JPEGs (WebKit) is stripped");
+  const fixed = await P.processListingPhoto(got[1600], { photoId: id, codec: P.createClientVariantsCodec({ ...got, 320: new Uint8Array(await img(320, 213).withExif({ IFD0: { Artist: "x" } }).jpeg().toBuffer()) }) });
+  assert.deepEqual(fixed, { ok: false, reason: "metadata" }, "unstripped input still refused by the pipeline");
+  const stripped = { ...got, 320: (await C.clientVariantsOf(form, variants[1600]))[320] };
+  assert.equal((await P.processListingPhoto(got[1600], { photoId: id, codec: P.createClientVariantsCodec(stripped) })).ok, true);
   assert.match(P.photoRejectText("browser_prep", "es"), /Su navegador/);
 });

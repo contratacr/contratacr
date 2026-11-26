@@ -20,10 +20,14 @@ export async function uploadPlacePhotos(slug:string,files:File[],{review=false,c
  for(const original of files){
   // Storage plan 2026-11-26: the browser makes the 1600/800/320 variants itself (WebP, or JPEG without a WebP encoder),
   // so the server only validates them; without them it falls back to the single prepared file.
-  const variants=await makePlaceVariants(original).catch(()=>null);
+  // A source this browser cannot decode directly (e.g. HEIC) is converted first and the variants made from that JPEG.
+  let variants=await makePlaceVariants(original).catch(()=>null);
   let file:File;
   if(variants)file=variants.v1600;
-  else{try{file=await prepareImageForUpload(original,PUBLIC_IMAGE_OPTIONS);}catch{out.errors.push(`${original.name}: ${photoReasonText('format',en)}`);continue;}}
+  else{
+   try{file=await prepareImageForUpload(original,PUBLIC_IMAGE_OPTIONS);}catch{out.errors.push(`${original.name}: ${photoReasonText('format',en)}`);continue;}
+   variants=await makePlaceVariants(file).catch(()=>null);if(variants)file=variants.v1600;
+  }
   const form=new FormData();form.set('file',file);if(variants){form.set('v800',variants.v800);form.set('v320',variants.v320);}form.set('uploadId',crypto.randomUUID());if(caption)form.set('caption',caption);if(review)form.set('review','1');
   try{
    const r=await fetch(`/api/lugar/${encodeURIComponent(slug)}/fotos`,{method:'POST',body:form,headers:{'accept-language':en?'en':'es'}});

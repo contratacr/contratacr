@@ -64,13 +64,6 @@ export interface PhotoCodec{
 export function createClientVariantsCodec(variants:Record<PhotoVariantSize,Uint8Array>):PhotoCodec{
  return{name:'client',async resize(_input,box){const v=variants[box];if(!v)throw Error('missing variant');return v;}};
 }
-/** The client variants of an upload form (fields file / v800 / v320), or null when the browser sent the file alone. */
-export async function clientVariantsOf(form:FormData,main:Uint8Array):Promise<Record<PhotoVariantSize,Uint8Array>|null>{
- const v800=form.get('v800'),v320=form.get('v320');
- if(!(v800 instanceof Blob)||!(v320 instanceof Blob))return null;
- return{1600:main,800:new Uint8Array(await v800.arrayBuffer()),320:new Uint8Array(await v320.arrayBuffer())};
-}
-
 export type PhotoVariant={size:PhotoVariantSize;path:string;bytes:Uint8Array;contentType:PhotoOutputType;width:number;height:number;sizeBytes:number};
 export type ProcessedPhoto={
  id:string;sha256:string;sourceSha256:string;sourceType:PhotoSourceType;width:number;height:number;

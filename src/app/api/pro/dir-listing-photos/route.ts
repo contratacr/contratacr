@@ -4,8 +4,9 @@ import {enforceRateLimitKey} from '@/lib/rate-limit';
 import {ProBodyError,proActor,proBoundedForm,proBoundedJson,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {LISTING_ERROR_HINTS} from '@/lib/directory/listing-schemas';
 import {listingMediaMutationSchema,listingMediaSchema} from '@/lib/directory/listing-inventory';
-import {PHOTO_BUCKET,PHOTO_MAX_BYTES,PHOTO_VARIANTS,clientVariantsOf,createClientVariantsCodec,photoIdentity,photoRejectText,processListingPhoto,sha256Hex,toListingMediaInput,type PhotoVariant} from '@/lib/directory/photo-pipeline';
+import {PHOTO_BUCKET,PHOTO_MAX_BYTES,PHOTO_VARIANTS,createClientVariantsCodec,photoIdentity,photoRejectText,processListingPhoto,sha256Hex,toListingMediaInput,type PhotoVariant} from '@/lib/directory/photo-pipeline';
 import {NoServerCodecError,pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
+import {clientVariantsOf} from '@/lib/directory/client-variants';
 
 // LOCAL PRO ONLY (V3, development only): photos of directory listings (bucket dir-listing-photos-bucket-local.sql).
 //  POST multipart {file, listingId, uploadId, altEs?, altEn?} → validate (magic bytes, 20 MiB, 24 MP), re-encode without
@@ -93,7 +94,7 @@ export async function POST(req:Request){
   let codec;
   if(clientVariants)codec=createClientVariantsCodec(clientVariants);
   else{try{codec=await pickPhotoCodec();}catch(e){return e instanceof NoServerCodecError?fail(422,'photo_browser_prep',photoRejectText('browser_prep',locale)):fail(503,'unavailable','El procesamiento de fotos no está disponible.');}}
-  const processed=await processListingPhoto(input,{photoId,codec});
+  const processed=await processListingPhoto(clientVariants?.[1600]??input,{photoId,codec});
   if(!processed.ok)return fail(processed.reason==='too_large'?413:processed.reason==='codec'||processed.reason==='metadata'?422:400,
    processed.reason==='metadata'?'listing_media_exif':'photo_'+processed.reason,photoRejectText(processed.reason,locale));
   const media=listingMediaSchema.parse(toListingMediaInput(processed.photo,{altEs,altEn}));

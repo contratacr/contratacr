@@ -8,8 +8,9 @@ import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import {dirEnabledOnly,dirFail,dirOk} from '@/lib/directory/public-route';
 import {photoDbError} from '@/lib/directory/place-photos-server';
-import {PHOTO_MAX_BYTES,PHOTO_VARIANTS,clientVariantsOf,createClientVariantsCodec,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant} from '@/lib/directory/photo-pipeline';
+import {PHOTO_MAX_BYTES,PHOTO_VARIANTS,createClientVariantsCodec,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant} from '@/lib/directory/photo-pipeline';
 import {NoServerCodecError,pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
+import {clientVariantsOf} from '@/lib/directory/client-variants';
 import {placePhotoStoreOf,uploadPlacePhotoStore} from '@/lib/directory/place-photo-store';
 import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCaption,placePhotoFieldsSchema,placePhotoRemoveSchema,placePhotoUrl} from '@/lib/directory/place-photos';
 
@@ -85,7 +86,7 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  let codec;
  if(clientVariants)codec=createClientVariantsCodec(clientVariants);
  else{try{codec=await pickPhotoCodec();}catch(e){return e instanceof NoServerCodecError?dirFail(422,'photo_browser_prep',photoRejectText('browser_prep',locale)):dirFail(503,'unavailable','El procesamiento de fotos no está disponible.');}}
- const processed=await processListingPhoto(upload,{photoId:mediaId,codec});
+ const processed=await processListingPhoto(clientVariants?.[1600]??upload,{photoId:mediaId,codec});
  if(!processed.ok)return dirFail(processed.reason==='too_large'?413:processed.reason==='codec'||processed.reason==='metadata'?422:400,'photo_'+processed.reason,photoRejectText(processed.reason,locale));
  const photo=processed.photo;
  // Dedupe before storing anything (the SQL unique index is the real guard).
