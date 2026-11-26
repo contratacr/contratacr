@@ -4052,8 +4052,12 @@
   },
   "toolsPage": {
     "title": "Tools",
-    "freeGroup": "Free for everyone",
     "cv": "Resume",
-    "letter": "Cover letter"
+    "letter": "Cover letter",
+    "g_sales": "Customers and sales",
+    "g_work": "Jobs",
+    "g_money": "Money",
+    "g_company": "My company",
+    "g_free": "Free for everyone"
   }
 }

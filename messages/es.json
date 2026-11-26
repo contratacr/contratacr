@@ -4052,8 +4052,12 @@
   },
   "toolsPage": {
     "title": "Herramientas",
-    "freeGroup": "Gratis para todos",
     "cv": "Currículum",
-    "letter": "Carta de presentación"
+    "letter": "Carta de presentación",
+    "g_sales": "Clientes y ventas",
+    "g_work": "Trabajos",
+    "g_money": "Dinero",
+    "g_company": "Mi empresa",
+    "g_free": "Gratis para todos"
   }
 }
