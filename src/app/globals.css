@@ -2573,8 +2573,8 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
     clip-path: inset(0 0 0 0); opacity: 1;
     transition: clip-path 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease-out, visibility 0s;
   }
-  body.ccr-dir-header .ccr-menu-completo .ccr-menu-fila-superior,
-  html:has([data-ccr-brand-menu]) .ccr-menu-completo .ccr-menu-fila-superior { display: none; }
+  html:not(.ccr-menu-full) body.ccr-dir-header .ccr-menu-completo .ccr-menu-fila-superior,
+  html:not(.ccr-menu-full):has([data-ccr-brand-menu]) .ccr-menu-completo .ccr-menu-fila-superior { display: none; }
   body.ccr-dir-header .ccr-menu-fondo, html:has([data-ccr-brand-menu]) .ccr-menu-fondo { top: var(--ccr-menu-top, 56px) !important; }
   html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-chevron] { transform: rotate(180deg); }
   /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */

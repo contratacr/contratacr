@@ -24,6 +24,14 @@ export function toggleBrandMenu(button: HTMLElement) {
     open.forEach((menu) => menu.querySelector<HTMLElement>("[data-menu-close]")?.click());
     return;
   }
+  // Map screens (floating search card): the menu covers the whole screen with its own logo and close row.
+  const full = !!button.closest("[data-quick-nav-floating]");
+  document.documentElement.classList.toggle("ccr-menu-full", full);
+  if (full) {
+    document.documentElement.style.setProperty("--ccr-menu-top", "0px");
+    window.dispatchEvent(new Event("ccr:open-mobile-menu"));
+    return;
+  }
   const row = button.closest<HTMLElement>("[data-ccr-menu-row]") ?? button.closest<HTMLElement>("[data-ccr-section-brand]")?.parentElement ?? button.parentElement;
   const bottom = Math.round((row ?? button).getBoundingClientRect().bottom);
   document.documentElement.style.setProperty("--ccr-menu-top", `${Math.max(0, bottom)}px`);
