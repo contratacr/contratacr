@@ -62,7 +62,7 @@ export async function ProsSection() {
       id: "empresas-directorio",
       label: t("companiesTab"),
       icono: "store",
-      servicios: empresas.map((id) => ({ id, label: DIRECTORY_SECTION_LABELS[id]?.[locale === "en" ? "en" : "es"] ?? id, href: `/${id}`, place: placeSection(id)!.id })),
+      servicios: empresas.map((id) => ({ id, label: (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id, href: `/${id}`, place: placeSection(id)!.id })),
     });
   }
 
