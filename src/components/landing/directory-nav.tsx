@@ -10,6 +10,7 @@ import { DIRECTORY_SECTION_ICONS, groupPlaces, curatedGroupItems, pick } from "@
 import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { SearchEntry } from "@/components/directory/search-entry";
 
 // Public navigation to the place directory (2026-11-18): the «Categorías» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
@@ -211,6 +212,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const t = useTranslations("quickNav");
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
   const navRef = useRef<HTMLElement>(null);
+  const [searching, setSearching] = useState(false);
   if (!sections.length) return null;
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
@@ -244,7 +246,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
         ))}
       </ul>
       <div className="flex items-center gap-1 px-3 pb-3 pt-1 lg:hidden">
-        <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
+        <button type="button" data-quick-nav-search onClick={() => setSearching(true)}
           className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-full border border-[#d7e1ea] bg-white pl-1.5 pr-4 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[18px] w-[18px]" aria-hidden /></span>
           <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
@@ -253,6 +255,8 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eef3f7] text-[#162543] active:scale-95"><UserRound className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden /></button>
       </div>
     </nav>
+    {/* The Yelp-style search screen: location, recent searches, trending and live suggestions. */}
+    {searching && <SearchEntry onClose={() => setSearching(false)} />}
     </>
   );
 }
