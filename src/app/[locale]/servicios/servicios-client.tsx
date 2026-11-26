@@ -345,10 +345,10 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
                         className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white text-left shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
                         <span aria-hidden className="grid h-20 w-full place-items-center bg-[linear-gradient(135deg,#dff3fc,#b9e3f6)] text-[#0083b0] sm:h-24"><Users className="h-9 w-9 sm:h-11 sm:w-11" strokeWidth={1.75} /></span>
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
-                          <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{locale === "en" ? "Professionals" : "Profesionales"}</span>
+                          <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{tp("prosTile")}</span>
                           {typeof prosTotal === "number" && prosTotal > 0
-                            ? <span data-pros-tile-count={prosTotal} className="text-xs font-semibold text-[#0083b0]">{prosTotal.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? (prosTotal === 1 ? "professional" : "professionals") : (prosTotal === 1 ? "profesional" : "profesionales")}</span>
-                            : <span className="line-clamp-2 text-xs leading-snug text-[#64748b]">{locale === "en" ? "All services" : "Todos los servicios"}</span>}
+                            ? <span data-pros-tile-count={prosTotal} className="text-xs font-semibold text-[#0083b0]">{tp("prosTileCount", { count: prosTotal })}</span>
+                            : <span className="line-clamp-2 text-xs leading-snug text-[#64748b]">{tp("prosTileAll")}</span>}
                         </span>
                       </button>
                     </li>
@@ -357,7 +357,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               )}
               {conPestanas && vistaMovil === "profesionales" && (
                 <button type="button" data-services-back-to-tiles onClick={() => setVistaMovil("empresas")} className="mx-4 mt-4 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#0083b0]">
-                  <ArrowLeft className="h-4 w-4" aria-hidden />{locale === "en" ? "Categories" : "Categorías"}
+                  <ArrowLeft className="h-4 w-4" aria-hidden />{tp("backToCategories")}
                 </button>
               )}
               {!conPestanas && <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>}

@@ -181,7 +181,8 @@
     "downloadApp": "Download app",
     "publishRequest": "Post a request",
     "findProfessionals": "Find professionals",
-    "freeBadge": "Free"
+    "freeBadge": "Free",
+    "searchBusinesses": "Businesses"
   },
   "home": {
     "accountDeletion": {
@@ -2508,7 +2509,11 @@
     "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
     "optionsCount": "{count, plural, one {# option} other {# options}}",
     "messages": "Messages",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "prosTile": "Professionals",
+    "prosTileAll": "All services",
+    "prosTileCount": "{count, plural, =1 {# professional} other {# professionals}}",
+    "backToCategories": "Categories"
   },
   "installGuide": {
     "eyebrow": "Quick access",
@@ -4033,6 +4038,10 @@
     "prep_3": "Accounting (QuickBooks)",
     "prep_4": "Email and calendar",
     "endTitle": "Start today",
-    "endSub": "Create your professional account and try ContrataCR Pro with your own clients."
+    "endSub": "Create your professional account and try ContrataCR Pro with your own clients.",
+    "freeToolsTitle": "Free tools for everyone",
+    "freeToolsSub": "You do not need to be a professional to use them.",
+    "freeTool_cv": "Create a resume",
+    "freeTool_letter": "Create a cover letter"
   }
 }

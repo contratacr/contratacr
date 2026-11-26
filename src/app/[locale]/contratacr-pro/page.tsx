@@ -131,6 +131,22 @@ export default async function ContrataCRProPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
+        {/* Herramientas (menu): the free tools for everyone live on the same page as Pro. */}
+        <section data-free-tools className="border-t border-[#e5e9ee] px-4 py-10">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-2xl font-extrabold text-[#162543]">{t("freeToolsTitle")}</h2>
+            <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("freeToolsSub")}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[{ href: "/dashboard/profesional?tab=cv", k: "freeTool_cv" }, { href: "/dashboard/profesional?tab=carta", k: "freeTool_letter" }].map((o) => (
+                <Link key={o.k} href={o.href} prefetch={false} className="flex items-center justify-between gap-3 rounded-2xl border border-[#e5e9ee] bg-white px-4 py-4 text-[15px] font-bold text-[#162543] hover:border-[#009FD9]">
+                  <span className="flex items-center gap-3"><FileText className="h-5 w-5 text-[#009FD9]" aria-hidden />{t(o.k)}</span>
+                  <ArrowRight className="h-4 w-4 text-[#7a899d]" aria-hidden />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-2xl font-extrabold text-[#162543] sm:text-3xl">{t("endTitle")}</h2>

@@ -181,7 +181,8 @@
     "downloadApp": "Descargar app",
     "publishRequest": "Publicar solicitud",
     "findProfessionals": "Buscar profesionales",
-    "freeBadge": "Gratis"
+    "freeBadge": "Gratis",
+    "searchBusinesses": "Negocios"
   },
   "home": {
     "accountDeletion": {
@@ -2508,7 +2509,11 @@
     "suggestThanks": "Gracias. Enviamos su sugerencia al equipo para revisión.",
     "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
     "messages": "Mensajes",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "prosTile": "Profesionales",
+    "prosTileAll": "Todos los servicios",
+    "prosTileCount": "{count, plural, =1 {# profesional} other {# profesionales}}",
+    "backToCategories": "Categorías"
   },
   "installGuide": {
     "eyebrow": "Acceso rápido",
@@ -4033,6 +4038,10 @@
     "prep_3": "Contabilidad (QuickBooks)",
     "prep_4": "Correo y calendario",
     "endTitle": "Empiece hoy",
-    "endSub": "Cree su cuenta profesional y pruebe ContrataCR Pro con sus propios clientes."
+    "endSub": "Cree su cuenta profesional y pruebe ContrataCR Pro con sus propios clientes.",
+    "freeToolsTitle": "Herramientas gratis para todos",
+    "freeToolsSub": "No necesita ser profesional para usarlas.",
+    "freeTool_cv": "Crear currículum",
+    "freeTool_letter": "Crear carta de presentación"
   }
 }

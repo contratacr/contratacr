@@ -2592,7 +2592,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {directoryOn && searchFocused && !searchQuery.trim() && (
                     <div data-search-place-chips className="pb-3">
                       <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                        {locale === "en" ? "Businesses" : "Negocios"}
+                        {t("searchBusinesses")}
                       </p>
                       <div className="flex flex-wrap gap-2 px-1">
                         {directorySections.filter((id) => DIRECTORY_SECTION_LABELS[id]).map((id) => {
@@ -2606,7 +2606,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dbe5ee] bg-white px-3 text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
                             >
                               <Icon className="h-4 w-4 text-[#009FD9]" aria-hidden />
-                              {locale === "en" ? DIRECTORY_SECTION_LABELS[id].en : DIRECTORY_SECTION_LABELS[id].es}
+                              {(DIRECTORY_SECTION_LABELS[id] as Record<string, string>)[locale] ?? DIRECTORY_SECTION_LABELS[id].es}
                             </button>
                           );
                         })}
@@ -2801,8 +2801,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                {/* Herramientas se despliega como «Ayuda y soporte»: cada opción
-                    abre su herramienta directo, sin pasar por la lista del panel. */}
+                {/* Pro on (test): Herramientas opens one page with every ContrataCR Pro tool plus the free CV and letter. */}
+                {PRO_UI_ENABLED ? (
+                  <Link href="/contratacr-pro" prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
+                    <DrawerIcon><Wrench /></DrawerIcon>
+                    <span className="min-w-0 flex-1 whitespace-nowrap">{t("tools")}</span>
+                    <ChevronRight className="ml-auto h-[22px] w-[22px] shrink-0" strokeWidth={2.2} />
+                  </Link>
+                ) : (
+                /* Herramientas se despliega como «Ayuda y soporte»: cada opción
+                    abre su herramienta directo, sin pasar por la lista del panel. */
                 <div>
                   <button
                     type="button"
@@ -2830,6 +2838,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   )}
                 </div>
+                )}
                   <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                     <DrawerIcon><Compass /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{directoryOn ? t("categoriesMenu") : t("categories")}</span>
