@@ -28101,6 +28101,10 @@
         {
           "line": 127,
           "title": "'withdrawing from the footer settings stops measurement and the notice does not come back'"
+        },
+        {
+          "line": 139,
+          "title": "'cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target'"
         }
       ]
     },
