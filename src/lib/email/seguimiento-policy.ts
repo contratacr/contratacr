@@ -3,12 +3,14 @@ import type { CampaignHistory } from "./campaign-policy";
 /**
  * SEGUIMIENTOS: lo que recibe una cuenta DESPUÉS de las campañas de bienvenida.
  *
- * Interruptor general. Mientras sea `false` no se envía ninguno: el trabajo
- * diario ni siquiera carga sus datos. El panel de campañas igual muestra
- * cuántas cuentas califican si se encienden (simulación). Isaac los aprueba
- * antes de encenderlos (2026-11-25).
+ * Solo salen los tipos de esta lista. Isaac aprobó los textos el 2026-11-26 y
+ * encender primero diciembre y "¿Cómo le fue?"; los demás siguen apagados
+ * hasta ver cómo responden. Si la lista queda vacía, el trabajo diario ni
+ * siquiera carga sus datos. El panel de campañas igual muestra cuántas cuentas
+ * califican en cada tipo (simulación).
  */
-export const FOLLOWUP_CAMPAIGNS_ENABLED = false;
+export const FOLLOWUP_ENABLED_KINDS: ReadonlySet<string> = new Set(["seg-cli-resena", "seg-cli-diciembre", "seg-pro-diciembre"]);
+export const FOLLOWUP_CAMPAIGNS_ENABLED = FOLLOWUP_ENABLED_KINDS.size > 0;
 
 /** Todas las llaves empiezan así: sirve para contar seguimientos en el historial. */
 export const FOLLOWUP_PREFIX = "seg-";
@@ -194,6 +196,7 @@ export function clientRainsEmail(year: number): FollowupEmail {
  */
 export function followupCandidate(ctx: FollowupContext, now = Date.now(), includeUnapproved = false): FollowupEmail | null {
   if (!FOLLOWUP_CAMPAIGNS_ENABLED && !includeUnapproved) return null;
+  const aprobado = (c: FollowupEmail | null): c is FollowupEmail => c !== null && (includeUnapproved || FOLLOWUP_ENABLED_KINDS.has(c.kind));
   if (ctx.unsubscribed || !ctx.onboardingDone || ctx.accountAgeDays < FOLLOWUP_GAP_DAYS) return null;
   if (followupBlocked(ctx.history, now)) return null;
   const yaRecibio = (key: string) => ctx.history.some((r) => r.campana === key);
@@ -203,14 +206,15 @@ export function followupCandidate(ctx: FollowupContext, now = Date.now(), includ
   if (!ctx.professional) {
     // Pedir la reseña responde a algo que la persona hizo: va aunque esté activa.
     const ask = ctx.client?.reviewAsk;
-    if (ask && !yaRecibio(`seg-cli-resena-${ask.id}`)) return clientReviewEmail(ask);
+    const resena = ask && !yaRecibio(`seg-cli-resena-${ask.id}`) ? clientReviewEmail(ask) : null;
+    if (aprobado(resena)) return resena;
     if (activo) return null;
     const candidatos = [
       w.diciembre ? clientDecemberEmail(w.year) : null,
       w.lluvias ? clientRainsEmail(w.year) : null,
       w.mensual && ctx.client?.province && ctx.client.province.newPros >= MIN_NEW_PROS ? clientNewProsEmail(w.period, ctx.client.province) : null,
     ];
-    return candidatos.find((c) => c && !yaRecibio(c.key)) ?? null;
+    return candidatos.find((c) => aprobado(c) && !yaRecibio(c.key)) ?? null;
   }
 
   if (activo || !ctx.pro) return null;
@@ -222,5 +226,5 @@ export function followupCandidate(ctx: FollowupContext, now = Date.now(), includ
   ];
   // Un solo seguimiento por mes al profesional, aunque califique para los dos.
   const delMes = (c: FollowupEmail) => c.key.endsWith(w.period) && ctx.history.some((r) => r.campana.startsWith("seg-pro-") && r.campana.endsWith(w.period));
-  return candidatos.find((c) => c && !yaRecibio(c.key) && !delMes(c)) ?? null;
+  return candidatos.find((c) => aprobado(c) && !yaRecibio(c.key) && !delMes(c)) ?? null;
 }

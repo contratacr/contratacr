@@ -168,7 +168,7 @@ export function AdminCampaigns() {
         <h2 className="font-bold text-[#162543]">Seguimientos (después de la bienvenida)</h2>
         <p className="mt-1 text-sm text-[#68778d]">Como máximo uno cada 30 días por cuenta, solo con datos reales, nunca a quien usó la app en los últimos 14 días. Tres seguimientos seguidos sin un clic pausan la cuenta 6 meses.</p>
         <ul className="mt-3 space-y-2 text-sm">{followups.map((f) => <li key={f.kind}>
-          <strong>{f.nombre}</strong> · {f.audience === "professional" ? "Profesionales" : "Clientes"} · {f.cuando} · {f.enabled ? "Activo" : "Apagado, pendiente de aprobar"}
+          <strong>{f.nombre}</strong> · {f.audience === "professional" ? "Profesionales" : "Clientes"} · {f.cuando} · {f.enabled ? "Activo" : "Apagado"}
         </li>)}</ul>
       </section>}
       {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}

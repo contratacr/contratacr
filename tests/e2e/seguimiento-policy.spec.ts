@@ -1,7 +1,7 @@
 import { expect, test } from "playwright/test";
 import type { CampaignHistory } from "../../src/lib/email/campaign-policy";
 import {
-  FOLLOWUP_CAMPAIGNS_ENABLED, FOLLOWUP_CATALOG, followupCandidate, followupWindows, proSummaryEmail, clientNewProsEmail,
+  FOLLOWUP_ENABLED_KINDS, FOLLOWUP_CATALOG, followupCandidate, followupWindows, proSummaryEmail, clientNewProsEmail,
   type FollowupContext,
 } from "../../src/lib/email/seguimiento-policy";
 
@@ -26,10 +26,15 @@ const client = (now: number, extra: Partial<FollowupContext> = {}): FollowupCont
 });
 const pick = (ctx: FollowupContext, now: number) => followupCandidate(ctx, now, true)?.key;
 
-test("apagados por defecto: sin aprobación no sale ninguno", () => {
-  expect(FOLLOWUP_CAMPAIGNS_ENABLED).toBe(false);
+test("solo salen los aprobados: diciembre y la reseña; el resto sigue apagado", () => {
+  expect([...FOLLOWUP_ENABLED_KINDS].sort()).toEqual(["seg-cli-diciembre", "seg-cli-resena", "seg-pro-diciembre"]);
   expect(followupCandidate(pro(nov5), nov5)).toBeNull();
   expect(followupCandidate(client(nov5), nov5)).toBeNull();
+  expect(followupCandidate(client(apr25), apr25)).toBeNull();
+  expect(followupCandidate(pro(dec3), dec3)?.key).toBe("seg-pro-diciembre-2026");
+  expect(followupCandidate(client(dec3), dec3)?.key).toBe("seg-cli-diciembre-2026");
+  const ask = { id: "f9", professionalName: "Ana Mora", serviceName: null };
+  expect(followupCandidate(client(nov20, { client: { reviewAsk: ask, province: null } }), nov20)?.key).toBe("seg-cli-resena-f9");
 });
 
 test("ventanas: días 1 a 10, del 1 al 12 de diciembre y del 20 al 30 de abril", () => {
