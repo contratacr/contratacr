@@ -1684,6 +1684,7 @@
     "requestLoadError": "Could not open your service. Please try again."
   },
   "profileEditor": {
+    "localNotSaved": "Your location is not saved yet: tap \"Save location\" first.",
     "secBasic": "Basic info",
     "secBasicDesc": "Photo, name and description",
     "secCerts": "Resume",

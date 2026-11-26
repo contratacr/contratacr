@@ -1684,6 +1684,7 @@
     "requestLoadError": "No pudimos abrir su servicio. Intente nuevamente."
   },
   "profileEditor": {
+    "localNotSaved": "Falta guardar su local: toque \"Guardar lugar\" primero.",
     "secBasic": "Datos básicos",
     "secBasicDesc": "Foto, nombre y descripción",
     "secCerts": "Currículum",

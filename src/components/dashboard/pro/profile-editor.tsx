@@ -390,6 +390,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
   // Un local con su punto puesto pero sin «Guardar lugar»: se perdería al guardar.
   const [localDraftPending, setLocalDraftPending] = useState(false);
+  const localDraftPendingText = t("localNotSaved");
   const hasWorkplace = workplaces.some(w => (w.homeService !== false && (w.level === "country" || !!w.provinciaId)) || (isFixedWorkplace(w) && w.receivesClients !== false)) || (canOfferVideoConsult && videoConsult);
   const socialIsValid =
     (!website.trim() || isValidWebsiteUrl(website)) &&
@@ -404,9 +405,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       if (!bio.trim()) return locale === "en" ? "Description is required." : "La descripción es obligatoria.";
     }
     if (sectionId === "location" && localDraftPending) {
-      return locale === "en"
-        ? "Your location is not saved yet: tap \"Save location\" first."
-        : "Falta guardar su local: toque \"Guardar lugar\" primero.";
+      return localDraftPendingText;
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
@@ -1044,7 +1043,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           ) : null}
           {localDraftPending ? (
             <p role="status" className="mt-2 text-xs font-medium text-[#b45309]">
-              {locale === "en" ? "Your location is not saved yet: tap \"Save location\" first." : "Falta guardar su local: toque \"Guardar lugar\" primero."}
+              {localDraftPendingText}
             </p>
           ) : null}
         </div>
