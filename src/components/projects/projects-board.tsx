@@ -3,6 +3,7 @@ import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { ProjectQuoteAction } from "./project-quote-action";
 import { PromotionHistory } from "@/components/pro/promotion-history";
 import { useSiteFeatures } from "@/components/site-features";
+import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
@@ -369,7 +370,7 @@ export function ProjectsBoard({
   misProyectos?: string[];
 }) {
   // Directory on (test), phones: brand ▾ and this screen's search share the first row, like the home header.
-  const dirHeader = useSiteFeatures().directorySections.length > 0;
+  const dirHeader = PHONE_DIRECTORY_HEADER && useSiteFeatures().directorySections.length > 0;
   const locale = marketplaceLocale(useLocale());
   const en = locale === "en";
   const copy = COPY[locale];

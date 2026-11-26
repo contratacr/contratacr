@@ -111,6 +111,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
  const verified=VERIFIED.has(level);
+ // Owner tools (reservations, WhatsApp order link) only count on claimed places, like the place page.
+ const claimed=level==='claimed'||verified;
  const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
@@ -122,10 +124,10 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   :item.openNow===true?{label:t('Abierto ahora','Open now'),detail:null,open:true}:item.openNow===false?{label:t('Cerrado','Closed'),detail:null,open:false}:null;
  // Every action this place has, in this order, each with its own icon and in the ContrataCR colours.
  const maps=item.location?mapLinks(item.location.lat,item.location.lng):null;
- const wa=extra?.whatsapp?`https://wa.me/${extra.whatsapp.replace(/[^0-9]/g,'').replace(/^(\d{8})$/,'506$1')}`:null;
+ const wa=claimed&&extra?.whatsapp?`https://wa.me/${extra.whatsapp.replace(/[^0-9]/g,'').replace(/^(\d{8})$/,'506$1')}`:null;
  const call=resolvePlaceAction('call',actionInput);
  const actions:{id:string;label:string;href:string;icon:ReactNode;external?:boolean}[]=[
-  ...(extra?.reservation?[{id:'reserve',label:t('Reservar','Reserve'),href:`${href}#place-reservations`,icon:<CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
+  ...(claimed&&extra?.reservation?[{id:'reserve',label:t('Reservar','Reserve'),href:`${href}#place-reservations`,icon:<CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
   ...(wa?[{id:'whatsapp',label:'WhatsApp',href:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,external:true}]:[]),
   ...(call?[{id:'call',label:t('Llamar','Call'),href:call.href,icon:<Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
   {id:'review',label:t('Reseñar','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>},

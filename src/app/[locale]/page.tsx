@@ -173,12 +173,22 @@ export default async function HomePage({
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         {/* Directory on: the best-rated professionals and companies instead of the brands strip (owner 2026-11-26). */}
-        {directoryOn ? <Suspense fallback={null}><HomeTopRated /></Suspense> : <FeaturedBrands />}
-
-        {/* Services carousel. */}
-        <FadeInUp>
-          <Suspense fallback={null}><ProsSection /></Suspense>
-        </FadeInUp>
+        {/* Directory on (owner 2026-11-26): Lo más buscado (every category) right under the photos, then the best-rated
+            professionals and companies instead of the brands strip. Directory off: production order. */}
+        {directoryOn ? (
+          <>
+            <Suspense fallback={null}><ProsSection /></Suspense>
+            <Suspense fallback={null}><HomeTopRated /></Suspense>
+          </>
+        ) : (
+          <>
+            <FeaturedBrands />
+            {/* Services carousel. */}
+            <FadeInUp>
+              <Suspense fallback={null}><ProsSection /></Suspense>
+            </FadeInUp>
+          </>
+        )}
 
 
         {/* How it works + trust, merged into one sticky-phone story. */}

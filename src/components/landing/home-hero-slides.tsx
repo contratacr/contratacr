@@ -46,7 +46,7 @@ export function HomeHeroSlides({ slides }: { slides: HeroSlide[] }) {
       <span aria-hidden className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,20,40,0.78)_0%,rgba(10,20,40,0.35)_45%,rgba(10,20,40,0.15)_100%)]" />
 
       {/* Progress bars, like stories: the current one fills over the slide's time. */}
-      <div className="absolute inset-x-4 top-3 z-10 flex gap-1.5">
+      <div className="absolute inset-x-5 bottom-[132px] z-10 flex gap-1.5">
         {slides.map((s, i) => (
           <button key={s.key} type="button" aria-label={s.button} onClick={() => setCurrent(i)} className="h-4 flex-1 py-1.5">
             <span className="block h-1 w-full overflow-hidden rounded-full bg-white/35">
@@ -61,7 +61,7 @@ export function HomeHeroSlides({ slides }: { slides: HeroSlide[] }) {
       </div>
 
       <div key={slide.key} className="absolute inset-x-0 bottom-0 z-10 px-5 pb-7 animate-[ccr-hero-text_600ms_ease-out]">
-        <h1 className="truncate whitespace-nowrap text-[clamp(1.35rem,6.4vw,2.2rem)] font-extrabold leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" data-titular-portada="">{slide.title}</h1>
+        <h1 className="text-[clamp(1.25rem,5.6vw,2.2rem)] font-extrabold leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" data-titular-portada="">{slide.title}</h1>
         <Link href={slide.href} prefetch={false} data-hero-slide-search={slide.key} className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-[#009FD9] px-5 text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)]">
           <Search className="h-[18px] w-[18px]" strokeWidth={2.4} aria-hidden />{slide.button}
         </Link>

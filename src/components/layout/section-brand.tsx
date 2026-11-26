@@ -7,6 +7,7 @@ import { ContrataCRMark } from "@/components/brand/brand-logo";
 import { BrandMenuMark, toggleBrandMenu } from "@/components/layout/brand-menu-mark";
 import { useSiteFeatures } from "@/components/site-features";
 import { cn } from "@/lib/utils";
+import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 
 /** Same 32px mark and zero added gap as the home brand lockup. */
 export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className, compact = false }: {
@@ -19,7 +20,7 @@ export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className
 }) {
   // Directory on (test, owner 2026-11-26): on phones the brand + title is the menu button (chevron, menu from the left),
   // like the home header; the separate ☰ of the screen steps aside. With the directory off nothing changes.
-  const menuMode = useSiteFeatures().directorySections.length > 0;
+  const menuMode = PHONE_DIRECTORY_HEADER && useSiteFeatures().directorySections.length > 0;
   const t = useTranslations("quickNav");
   return (
     <div data-ccr-section-brand="" className={cn("flex min-w-0 items-center gap-0", className)}>

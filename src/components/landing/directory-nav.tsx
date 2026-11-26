@@ -11,6 +11,7 @@ import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGr
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { BrandMenuMark, toggleBrandMenu } from "@/components/layout/brand-menu-mark";
+import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 
 // Public navigation to the place directory (2026-11-18): the «Categorías» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
@@ -235,7 +236,7 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
         (opens the menu) and one search bar on the first row, the sections below. The navbar's own phone row hides while this one shows (body.ccr-dir-header). */}
     <PhoneHeaderFlag navRef={navRef} floating={!!floating} />
     {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
-    <nav ref={navRef} data-quick-nav data-quick-nav-floating={floating ? "" : undefined} aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", floating && "max-lg:fixed max-lg:inset-x-3 max-lg:top-0 max-lg:bg-transparent max-lg:pt-[calc(env(safe-area-inset-top)+10px)] max-lg:shadow-none", className)}>
+    <nav ref={navRef} data-quick-nav data-quick-nav-floating={floating ? "" : undefined} aria-label={t("label")} className={cn(!floating && !PHONE_DIRECTORY_HEADER && "max-lg:!hidden","bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", floating && "max-lg:fixed max-lg:inset-x-3 max-lg:top-0 max-lg:bg-transparent max-lg:pt-[calc(env(safe-area-inset-top)+10px)] max-lg:shadow-none", className)}>
       <ul data-quick-nav-collapsed={collapsed ? "" : undefined} className={cn(floating && "max-lg:!hidden", "mx-auto grid w-full max-w-[1920px] grid-cols-5 overflow-hidden px-1 pb-1.5 transition-[max-height,opacity,padding] duration-200 max-lg:max-h-24", collapsed && "max-lg:max-h-0 max-lg:pb-0 max-lg:opacity-0", "sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8")}>
         {items.map(({ key, href, label, icon: Icon, active }) => (
           <li key={key} className="min-w-0 sm:shrink-0">

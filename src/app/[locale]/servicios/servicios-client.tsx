@@ -31,6 +31,7 @@ import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, 
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
 import { DirectoryQuickNav } from "@/components/landing/directory-nav";
+import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 import { useSiteFeatures } from "@/components/site-features";
 import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
 
@@ -240,8 +241,8 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-                <SectionBrand title={servicesTitle} as="p" compact={directorySections.length > 0} />
-                {directorySections.length > 0 && <div data-section-header-search className="min-w-0 flex-1">{renderServiciosSearch(true)}</div>}
+                <SectionBrand title={servicesTitle} as="p" compact={PHONE_DIRECTORY_HEADER && directorySections.length > 0} />
+                {PHONE_DIRECTORY_HEADER && directorySections.length > 0 && <div data-section-header-search className="min-w-0 flex-1">{renderServiciosSearch(true)}</div>}
                 {/* El icono de Mensajes es de la barra de la APP: en la web se
                     llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -257,7 +258,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               </div>
             )}
 
-            {!(directorySections.length > 0) && renderServiciosSearch(false)}
+            {!(PHONE_DIRECTORY_HEADER && directorySections.length > 0) && renderServiciosSearch(false)}
           </header>
 
           {hasQuery && matchedPlaceSections.length > 0 && !mobileGroup ? (
