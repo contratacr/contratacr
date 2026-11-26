@@ -22,6 +22,8 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").re
 const PATH = "/contratacr-pro";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
+// Each family opens its own Pro section; logged out, the middleware sends to login with ?redirect= and comes back here.
+const FAMILY_TAB: Record<string, string> = { clients: "pro_clients", agenda: "pro_agenda", jobs: "pro_projects", team: "pro_team", quotes: "quotes", money: "pro_payments", files: "pro_files", portal: "pro_projects" };
 const FAMILIES: { id: string; icon: IconComponent; items: number }[] = [
   { id: "clients", icon: UserRound, items: 3 },
   { id: "agenda", icon: CalendarDays, items: 2 },
@@ -106,6 +108,9 @@ export default async function ContrataCRProPage({ params }: { params: Promise<{ 
                       </li>
                     ))}
                   </ul>
+                  <Link href={`/dashboard/pro?tab=${FAMILY_TAB[id]}`} prefetch={false} data-pro-family-open={id} className="mt-4 inline-flex min-h-10 items-center gap-1.5 self-start rounded-full bg-[#eaf7fd] px-4 text-sm font-bold text-[#0083b0] hover:bg-[#d9f0fb]">
+                    {t("openFamily")}<ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
                 </li>
               ))}
             </ul>

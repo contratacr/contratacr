@@ -2806,7 +2806,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href="/contratacr-pro" prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
                     <DrawerIcon><Wrench /></DrawerIcon>
                     <span className="min-w-0 flex-1 whitespace-nowrap">{t("tools")}</span>
-                    <ChevronRight className="ml-auto h-[22px] w-[22px] shrink-0" strokeWidth={2.2} />
                   </Link>
                 ) : (
                 /* Herramientas se despliega como «Ayuda y soporte»: cada opción
