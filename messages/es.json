@@ -2925,7 +2925,7 @@
       "puertaLugar": "Explorar categorías",
       "intentServicio": "Contratar un servicio",
       "intentLugar": "Ver empresas",
-      "botonBuscar": "Buscar profesional",
+      "botonBuscar": "Buscar",
       "botonPublicar": "Publicar solicitud"
     },
     "inicio": {
@@ -2945,7 +2945,11 @@
       "titlePre": "Los servicios",
       "titleHighlight": "más buscados",
       "viewAll": "Ver todos los servicios",
-      "moreSections": "Más secciones"
+      "moreSections": "Más secciones",
+      "titleDirectoryPre": "Lo más",
+      "titleDirectoryHighlight": "buscado",
+      "companiesTab": "Empresas",
+      "viewAllCategories": "Ver todas las categorías"
     },
     "zones": {
       "eyebrow": "Cobertura local",

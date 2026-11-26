@@ -2925,7 +2925,7 @@
       "puertaLugar": "Explore categories",
       "intentServicio": "Hire a service",
       "intentLugar": "See businesses",
-      "botonBuscar": "Find a professional",
+      "botonBuscar": "Search",
       "botonPublicar": "Post a request"
     },
     "inicio": {
@@ -2945,7 +2945,11 @@
       "titlePre": "Most searched",
       "titleHighlight": "services",
       "viewAll": "View all services",
-      "moreSections": "More sections"
+      "moreSections": "More sections",
+      "titleDirectoryPre": "Most",
+      "titleDirectoryHighlight": "searched",
+      "companiesTab": "Companies",
+      "viewAllCategories": "See all categories"
     },
     "zones": {
       "eyebrow": "Local coverage",

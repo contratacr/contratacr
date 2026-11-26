@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Store } from "lucide-react";
+import { HeroTile } from "@/components/directory/biz-ui";
 import { Link } from "@/i18n/navigation";
 import { ServiceImage } from "@/components/professionals/service-image";
 import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
@@ -10,7 +11,9 @@ import { cn } from "@/lib/utils";
 export type SeccionDeServicios = {
   id: string;
   label: string;
-  servicios: { id: string; label: string; href: string }[];
+  servicios: { id: string; label: string; href: string; place?: string }[];
+  /** "store": the Empresas tab (directory on) — its items are business sections drawn with their brand tile, not photos. */
+  icono?: "store";
 };
 
 // SERVICIOS POR SECCIÓN, como Thumbtack: una fila de pestañas con el ícono de
@@ -59,7 +62,7 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
         className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-[#e3e9ef] px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-flow-col lg:auto-cols-fr lg:gap-0"
       >
         {secciones.map((s, indice) => {
-          const { Icon } = getCategoryGroupVisual(s.id);
+          const Icon = s.icono === "store" ? Store : getCategoryGroupVisual(s.id).Icon;
           const elegida = indice === activa;
           return (
             <button
@@ -126,7 +129,9 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
                 {/* Start the four prepared photos together, including the second
                     mobile row. Unvisited groups still mount no photos, and the
                     hero retains high network priority over these normal requests. */}
-                <ServiceImage categoryId={servicio.id} badge={false} loading="eager" diferida={indice !== activa && !preparadas.has(indice)} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />
+                {servicio.place
+                  ? <HeroTile verticalId={servicio.place} className="pointer-events-none absolute inset-0 h-full w-full" iconClass="h-12 w-12 lg:h-16 lg:w-16" />
+                  : <ServiceImage categoryId={servicio.id} badge={false} loading="eager" diferida={indice !== activa && !preparadas.has(indice)} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />}
                 <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />
                 <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
                   {servicio.label}

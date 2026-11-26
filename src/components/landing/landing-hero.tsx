@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
 import { createPortal, preload } from "react-dom";
-import { Loader2, Search, MapPin } from "lucide-react";
+import { Loader2, Search, MapPin, Plus } from "lucide-react";
 import { useSiteFeatures } from "@/components/site-features";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -753,11 +753,13 @@ export function LandingHero() {
       {/* ── Buscador ── */}
       <div className="mx-auto max-w-3xl lg:mx-0 lg:max-w-none">
         {heroButtons && (
-          <div className="grid grid-cols-1 gap-2.5 lg:hidden" data-hero-buttons>
-            <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#009FD9] text-[16px] font-bold text-white">
-              <Search className="h-5 w-5" strokeWidth={2.4} aria-hidden />{t("botonBuscar")}
+          <div className="grid grid-cols-2 gap-2.5 lg:hidden" data-hero-buttons>
+            <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] text-[15px] font-bold text-white">
+              <Search className="h-[18px] w-[18px]" strokeWidth={2.4} aria-hidden />{t("botonBuscar")}
             </button>
-            <Link href="/publicar-solicitud" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[16px] font-bold text-[#162543]">{t("botonPublicar")}</Link>
+            <Link href="/publicar-solicitud" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-white text-[15px] font-bold text-[#162543]">
+              <Plus className="h-[18px] w-[18px]" strokeWidth={2.6} aria-hidden />{t("botonPublicar")}
+            </Link>
           </div>
         )}
         <form
