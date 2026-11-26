@@ -27,7 +27,7 @@ export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className
         <ContrataCRMark />
       </Link>
       {menuMode && (
-        <button type="button" data-ccr-brand-menu="" aria-label={t("menu")} onClick={(e) => toggleBrandMenu(e.currentTarget)} className="group mr-1.5 flex shrink-0 items-center lg:hidden">
+        <button type="button" data-ccr-brand-menu="" aria-label={t("menu")} onClick={(e) => toggleBrandMenu(e.currentTarget)} className="group mr-2 flex shrink-0 items-center lg:hidden">
           <BrandMenuMark />
         </button>
       )}

@@ -2576,10 +2576,15 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   body.ccr-dir-header .ccr-menu-completo .ccr-menu-fila-superior,
   html:has([data-ccr-brand-menu]) .ccr-menu-completo .ccr-menu-fila-superior { display: none; }
   body.ccr-dir-header .ccr-menu-fondo, html:has([data-ccr-brand-menu]) .ccr-menu-fondo { top: var(--ccr-menu-top, 56px) !important; }
-  html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-chevron] svg { transform: rotate(180deg); }
+  html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-menu-icon] .ccr-bm-open { opacity: 0; transform: rotate(90deg) scale(0.5); }
+  html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-menu-icon] .ccr-bm-close { opacity: 1; transform: none; }
   /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */
   html:has([data-ccr-brand-menu]) [data-ccr-menu-burger] { display: none !important; }
   /* The search beside the brand looks like the home header's pill. */
   [data-section-header-search] .ccr-section-search { border-radius: 9999px; border-color: #d7e1ea; padding-left: 0.875rem; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }
+
+/* Brand menu button: ≡ and ✕ swap with a quarter turn (the open state is set inside the phone media query). */
+[data-brand-menu-icon] .ccr-bm-open, [data-brand-menu-icon] .ccr-bm-close { transition: opacity 250ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+[data-brand-menu-icon] .ccr-bm-close { opacity: 0; transform: rotate(-90deg) scale(0.5); }

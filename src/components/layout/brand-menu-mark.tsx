@@ -1,14 +1,16 @@
-import { ChevronDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { ContrataCRMark } from "@/components/brand/brand-logo";
 
-/** The ContrataCR symbol as the menu button: the symbol untouched, and a small round chevron badge beside its lower
- * right corner. The chevron turns up while the menu is open (globals.css, data-brand-chevron). */
+/** The menu button (owner, 2026-11-26): a light pill with the ContrataCR symbol untouched and a small ≡ that becomes ✕
+ * while the menu is open. The account stays inside the menu. */
 export function BrandMenuMark() {
   return (
-    <span className="inline-flex shrink-0 items-end gap-0.5">
+    <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-[#eef3f7] pl-1.5 pr-3">
       <ContrataCRMark />
-      <span aria-hidden data-brand-chevron className="mb-px grid h-4 w-4 place-items-center rounded-full bg-[#eef3f7]">
-        <ChevronDown className="h-3 w-3 text-[#162543] transition-transform duration-300" strokeWidth={3} />
+      {/* ≡ turns into ✕ while the menu is open (globals.css: data-brand-menu-icon). */}
+      <span aria-hidden data-brand-menu-icon className="relative h-4 w-4 text-[#162543]">
+        <Menu className="ccr-bm-open absolute inset-0 h-4 w-4" strokeWidth={2.6} />
+        <X className="ccr-bm-close absolute inset-0 h-4 w-4" strokeWidth={2.6} />
       </span>
     </span>
   );
