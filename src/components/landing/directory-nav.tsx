@@ -201,7 +201,7 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
 /** Second row under the main bar (Yelp style): quick links to the most used directory sections, "Profesionales" and "Más"
  * (all categories). In flow (not fixed), so it never changes the navbar height other layouts measure. Renders nothing while
  * the directory is off. On phones the five links are equal columns, icon above label. */
-// Owner, 2026-11-26: the most important ones only, like Yelp (Restaurantes, Profesionales, Gasolineras, Farmacias, Más).
+// Owner, 2026-11-26: the most important ones only, like Yelp (Profesionales, Restaurantes, Gasolineras, Farmacias, Más).
 export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasolineras", "farmacias"];
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
 export function DirectoryQuickNav({ className, spacer }: { className?: string; spacer?: boolean }) {
@@ -214,7 +214,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
   const items: { key: string; href: string; label: string; icon: LucideIcon; active: boolean }[] = [
-    ...sections.slice(0, 1).map(place), pros, ...sections.slice(1).map(place),
+    pros, ...sections.map(place),
     { key: "more", href: "/servicios", label: t("more"), icon: MoreHorizontal, active: pathname === "/servicios" || pathname === "/lugares" },
   ];
   return (
@@ -230,11 +230,11 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
               aria-current={active ? "page" : undefined}
               data-quick-nav-link={key}
               className={cn(
-                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:min-h-0 sm:flex-row sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
-                active ? "bg-[#eaf7fd] font-bold text-[#0083b0]" : "font-semibold text-[#162543] hover:bg-[#f3f6f9] hover:text-[#0083b0]",
+                "flex flex-col items-center justify-start gap-1 rounded-xl px-0.5 py-1 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                active ? "font-bold text-[#0083b0] sm:bg-[#eaf7fd]" : "font-semibold text-[#162543] sm:hover:bg-[#f3f6f9] hover:text-[#0083b0]",
               )}
             >
-              <Icon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" aria-hidden /><span className="max-w-full truncate">{label}</span>
+              <span className={cn("inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eaf7fd] text-[#009FD9] sm:text-current")}><Icon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden /></span><span className="max-w-full truncate">{label}</span>
             </Link>
           </li>
         ))}

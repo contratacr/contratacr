@@ -78,13 +78,13 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expectNoHorizontalOverflow(page);
 });
 
-test("quick links row on phones: Restaurantes, Profesionales, Gasolineras, Farmacias and Más, without widening the page", async ({ page }, testInfo) => {
+test("quick links row on phones: Profesionales, Restaurantes, Gasolineras, Farmacias and Más, without widening the page", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile only");
   await gotoOK(page, "/");
   const row = page.locator("[data-quick-nav]").filter({ visible: true });
   await expect(row).toHaveCount(1);
   const keys = await row.locator("[data-quick-nav-link]").evaluateAll((links) => links.map((l) => l.getAttribute("data-quick-nav-link")));
-  expect(keys).toEqual(["restaurantes", "pros", "gasolineras", "farmacias", "more"]);
+  expect(keys).toEqual(["pros", "restaurantes", "gasolineras", "farmacias", "more"]);
   await expectNoHorizontalOverflow(page);
 });
 
