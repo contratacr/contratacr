@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { recoverBodyScrollLock } from "@/lib/body-scroll-lock";
+// Registers the shared early popstate listener while the page hydrates, before Next's router listener.
+import "@/lib/popstate-first";
 import { anotarCambioEnElDocumento, documentoRecienAbierto, irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
 import { anotarCambioDeRuta, anotarPosicion, posicionAnotada, reponer, volverSiEsLaAnterior } from "@/lib/volver-por-historial";
 

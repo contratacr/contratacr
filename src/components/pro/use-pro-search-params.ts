@@ -2,6 +2,7 @@
 import {useMemo,useSyncExternalStore} from 'react';
 import {usePathname,useSearchParams} from 'next/navigation';
 import {PRO_PATH_CHANGED,proCanonicalPath} from '@/lib/pro/navigation';
+import {onPopstateFirst} from '@/lib/popstate-first';
 let traversalGuard:((event:PopStateEvent)=>boolean)|null=null;
 // External-store updates can synchronously replace the active modal guard. A
 // single browser traversal must keep the decision made before those updates.
@@ -12,9 +13,10 @@ function blocksTraversal(event:PopStateEvent){
 }
 // N1: Next's own popstate listener commits the popped URL synchronously (React
 // renders transitions started in popstate immediately), which unmounted a dirty
-// editor and its guard before the bubbling store listener could ask it. A
-// capture listener decides first; a blocking guard stops Next's traversal.
-if(typeof window!=='undefined')window.addEventListener('popstate',event=>{blocksTraversal(event);},true);
+// editor and its guard before the bubbling store listener could ask it. The guard
+// decides in a listener registered before Next's (lib/popstate-first: on window a
+// capture flag does not reorder listeners); a blocking guard stops Next's traversal.
+onPopstateFirst(event=>{blocksTraversal(event);});
 export function registerProTraversalGuard(guard:(event:PopStateEvent)=>boolean){traversalGuard=guard;return()=>{if(traversalGuard===guard)traversalGuard=null;};}
 function subscribe(update:()=>void){const notify=(event:Event)=>{if(event.type==='popstate'&&blocksTraversal(event as PopStateEvent))return;update();};window.addEventListener('popstate',notify);window.addEventListener(PRO_PATH_CHANGED,notify);return()=>{window.removeEventListener('popstate',notify);window.removeEventListener(PRO_PATH_CHANGED,notify);};}
 // Round 9: a job route (/dashboard/pro/trabajo/<id>/<section>) reads as its query form

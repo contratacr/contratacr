@@ -1,3 +1,4 @@
+import {onPopstateFirst} from '@/lib/popstate-first';
 // Pro navigation owns only its namespace; Next retains its router tree/history fields.
 export const PRO_PATH_CHANGED='ccr:pro-path-changed';
 export const PRO_BEFORE_PATH_CHANGE='ccr:pro-before-path-change';
@@ -104,7 +105,7 @@ function reuseCommittedTreeOnTraversal(event:PopStateEvent){
  const state=event.state as Record<string,unknown>|null;
  if(!committedTree||!state||typeof state!=='object'||state.__NA!==true||!state[routerTreeKey])return;
  if(documentKey(committedTree.path)!==documentKey(window.location.pathname)||!/^\/(?:es\/|en\/)?dashboard\/profesional$/.test(window.location.pathname)&&!proJobRoute(window.location.pathname))return;
- // Next reads event.state in its own (later, bubbling) popstate listener.
+ // Next reads event.state in its own (later) popstate listener.
  state[routerTreeKey]=committedTree.value;
 }
 function preserveProEntryOnRouterRewrites(){
@@ -121,8 +122,8 @@ function preserveProEntryOnRouterRewrites(){
   return replace.call(this,data,unused,url);
  };
  history.pushState=function(this:History,data:unknown,unused:string,url?:string|URL|null){rememberRouterTree(data,url);return push.call(this,data,unused,url);};
- // Capture runs before Next's bubbling listener on window.
- window.addEventListener('popstate',reuseCommittedTreeOnTraversal,true);
+ // Must run before Next's listener on window, which a capture flag does not ensure (lib/popstate-first).
+ onPopstateFirst(reuseCommittedTreeOnTraversal);
 }
 export function setProNavigationAccount(id:string|null){account=id;preserveProEntryOnRouterRewrites();if(id!==null&&pendingSection?.account!==id)pendingSection=null;}
 export function proDashboardPath(value:unknown):string|null{
