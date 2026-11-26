@@ -37,6 +37,7 @@ import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
+import {CHIP} from '@/components/directory/place-card';
 import {proMoney} from '@/lib/pro/money';
 
 // LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
@@ -117,7 +118,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const orderLink=order.error?null:order.data as OrderLink|null,placeBrand=brand.error?null:brand.data as PlaceBrand|null;
  const reservationConfig=reservation&&!reservation.error?reservation.data as ReservationConfig|null:null;
  const unclaimed=claim.data?.claim_status==='unclaimed'&&place.status==='published';
- // Claim (2026-11-19, Yelp model): a compact link in the side card; the flow and its benefits live in /lugar/<slug>/reclamar.
+ // Claim (2026-11-19, Yelp model): a compact link in the side card (after the tabs on phones); the flow and its benefits live in /lugar/<slug>/reclamar.
  const menuData=menu&&!menu.error?menu.data as PublicMenu|null:null;
  const placeListings=(listings?.data??[]).map(r=>mapPublicListing(r as Record<string,unknown>)).filter((l):l is PublicListing=>!!l);
  const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/lugar/${slug}`)}`;
@@ -126,7 +127,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // Managers (or their Pro team with listing.publish, see replyTargets) answer questions as the business instead of asking.
  // The review reply editor posts to /api/pro/review-replies, so it is offered only while Pro is on.
  const isManager=!!manage;
- // «Mi negocio» (free, outside Pro): only the owner/managers of THIS claimed place see the shortcut (not Pro team members).
+ // «Mi empresa» shortcut (free, outside Pro): only the owner/managers of THIS claimed place see the shortcut (not Pro team members).
  const managesHere=!!user&&(await businessPlaces(db,user.id)).some(p=>p.slug===slug);
  const appUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://contratacr.com').replace(/\/$/,'');
  const reviewData=reviews.data&&!reviews.error?reviews.data as PublicPlaceReviews:null;
@@ -147,10 +148,10 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const fuelPrices=vertical==='fuel'&&prices.data&&!prices.error?(prices.data as PublicPriceCurrent).items.filter(i=>i.current&&i.item.unitBase==='l').map(i=>i.current!):[];
  const priceNote=fuelPrices.length?`${en?'From':'Desde'} ${proMoney(Math.min(...fuelPrices.map(o=>o.price)),en)} /${en?'liter':'litro'}`:null;
  const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
- return <DirectoryShell>{/* Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). */}<SectionHeaderTitle title={en?place.vertical.nameEn:place.vertical.nameEs} fallbackHref='/' tambienEnLaWeb/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
+ return <DirectoryShell>{/* Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). */}<SectionHeaderTitle title={en?place.vertical.nameEn:place.vertical.nameEs} fallbackHref='/' tambienEnLaWeb centrado/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
   orderLink={orderLink} brand={placeBrand} priceNote={priceNote} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
-  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={BIZ.secondary}/>:null}
-  saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref}/>:null}
+  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={CHIP}/>:null}
+  saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={CHIP}/>:null}
   slots={{
    top:(managesHere||reservationConfig)?<>
     {managesHere&&<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">

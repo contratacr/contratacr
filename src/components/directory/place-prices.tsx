@@ -8,7 +8,7 @@ import {proMoney} from '@/lib/pro/money';
  * observations (blocked in SQL): this list never shows them and there is no report form for them.
  */
 const CONFIDENCE:Record<PublicPriceObservation['confidence'],{es:string;en:string}>={
- official:{es:'Precio oficial',en:'Official price'},business:{es:'Informado por el negocio',en:'Reported by the business'},
+ official:{es:'Precio oficial',en:'Official price'},business:{es:'Informado por la empresa',en:'Reported by the business'},
  // M1: user reports carry the source «reportado por usuarios» and their confidence (one person = unconfirmed).
  community_verified:{es:'Reportado por usuarios · confirmado por varias personas',en:'Reported by users · confirmed by several people'},community:{es:'Reportado por usuarios · sin confirmar',en:'Reported by users · unconfirmed'},
 };

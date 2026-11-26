@@ -27,8 +27,8 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
   const editor=page.locator(`[data-owner-reply-editor="${reviewId}"]`);await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
   await expect(page.locator('[data-place-review-manager]')).toBeVisible();await expect(page.locator('[data-place-review-form]')).toHaveCount(0);
-  await editor.getByRole('button',{name:t('Responder como el negocio','Reply as the business')}).click();
-  const box=editor.getByLabel(t('Respuesta pública del negocio (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)'));
+  await editor.getByRole('button',{name:t('Responder como la empresa','Reply as the business')}).click();
+  const box=editor.getByLabel(t('Respuesta pública de la empresa (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)'));
   await box.fill(t('Gracias por su visita. Ya reforzamos el equipo de cocina.','Thank you for visiting. We have added staff in the kitchen.'));
   await editor.getByRole('button',{name:t('Publicar respuesta','Post reply')}).click();
   await expect(editor.locator('[data-owner-reply-saved]')).toBeVisible();

@@ -19,7 +19,7 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
  const updated=new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'long',timeZone:'America/Costa_Rica'}).format(new Date(menu.updatedAt));
  const priceNote=service
   ?t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}) y servicio (${pct(pricing.serviceRateBps)}).`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) and service (${pct(pricing.serviceRateBps)}) included.`)
-  :t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}). Este negocio indica que no cobra servicio.`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) included. This business states it does not charge service.`);
+  :t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}). Esta empresa indica que no cobra servicio.`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) included. This business states it does not charge service.`);
  return <main id="contenido" data-place-menu={menu.slug} className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-[#162543] sm:py-12">
   <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="text-sm">
    <a className={`underline underline-offset-2 ${ring}`} href={placeHref}>← {menu.name}</a>
@@ -29,7 +29,7 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
    <p data-menu-price-note className="rounded-xl bg-[#eef6fb] px-4 py-3 text-sm font-medium">{priceNote}</p>
   </header>
 
-  {menu.sections.length===0?<p className="text-slate-700">{t('Este negocio aún no publicó su menú.','This business has not published its menu yet.')}</p>:<>
+  {menu.sections.length===0?<p className="text-slate-700">{t('Esta empresa aún no publicó su menú.','This business has not published its menu yet.')}</p>:<>
    {menu.sections.length>1&&<nav aria-label={t('Secciones del menú','Menu sections')}>
     <ul className="flex flex-wrap gap-2">{menu.sections.map((s,i)=><li key={i}>
      <a href={`#menu-s-${i}`} className={`inline-flex min-h-11 items-center rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-semibold ${ring}`}>{(en?s.nameEn:null)??s.nameEs}</a></li>)}</ul>
@@ -42,7 +42,7 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
   </>}
 
   <footer className="space-y-1 border-t border-[#d7e1ea] pt-4 text-sm text-slate-700">
-   <p>{t('Menú y precios informados por el negocio.','Menu and prices provided by the business.')} {t('Actualizado el','Updated on')} {updated}.</p>
+   <p>{t('Menú y precios informados por la empresa.','Menu and prices provided by the business.')} {t('Actualizado el','Updated on')} {updated}.</p>
   </footer>
  </main>;
 }

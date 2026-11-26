@@ -17,6 +17,7 @@ export function SectionHeaderTitle({
   raiz = false,
   menu = false,
   tambienEnLaWeb = false,
+  centrado = false,
   alVolver,
 }: {
   title: string;
@@ -27,6 +28,9 @@ export function SectionHeaderTitle({
   raiz?: boolean;
   // La barra del teléfono también toma el título en la web.
   tambienEnLaWeb?: boolean;
+  // Ficha de detalle (lugar): título centrado de verdad entre la flecha y el
+  // hueco de la derecha (solo en la web; la app no cambia).
+  centrado?: boolean;
   // Una vista DENTRO de la pantalla (Archivados en Mensajes): la flecha vuelve
   // a la pantalla, no a la anterior del historial.
   alVolver?: () => void;
@@ -45,21 +49,24 @@ export function SectionHeaderTitle({
       __ccrSectionRoot?: boolean;
       __ccrSectionShare?: boolean;
       __ccrSectionMenu?: boolean;
+      __ccrSectionCentrado?: boolean;
     };
     global.__ccrSectionHeader = title;
     global.__ccrSectionActive = true;
     global.__ccrSectionRoot = raiz;
     global.__ccrSectionShare = false;
     global.__ccrSectionMenu = menu;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title, root: raiz, menu } }));
+    global.__ccrSectionCentrado = centrado;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title, root: raiz, menu, centrado } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
       global.__ccrSectionRoot = false;
       global.__ccrSectionMenu = false;
+      global.__ccrSectionCentrado = false;
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [menu, publica, raiz, title]);
+  }, [centrado, menu, publica, raiz, title]);
 
   useEffect(() => {
     if (!publica) return;

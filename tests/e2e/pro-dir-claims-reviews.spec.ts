@@ -150,13 +150,13 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
   await g.getByLabel(t('Su nombre','Your name')).fill('Lucía Mora');
   await g.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Buen servicio.','Good service.'));
   await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
-  await expect(g.locator('[data-place-review-error]')).toContainText(t('contacte primero al negocio','first contact the business'));
+  await expect(g.locator('[data-place-review-error]')).toContainText(t('contacte primero a la empresa','first contact the business'));
   const contact=await postJson(g,`/api/lugar/${slug}/contacto`,{channel:'call'});expect(contact.status).toBe(200);
   await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
   await expect(g.locator('[data-place-review-sent]')).toBeVisible();
   await g.reload();await openPlaceTab(g,'reviews');
   await expect(g.locator('[data-place-review]')).toHaveCount(2);
-  await expect(g.locator('[data-place-reviews]')).toContainText(t('sin cuenta, contactó al negocio','no account, contacted the business'));
+  await expect(g.locator('[data-place-reviews]')).toContainText(t('sin cuenta, contactó a la empresa','no account, contacted the business'));
  }finally{await guest.close();}
  expect(errors()).toEqual([]);
 });
@@ -183,7 +183,7 @@ for(const language of ['es','en'] as const)test(`P1: prices with source and date
  const prices=page.locator('[data-place-prices]');
  await expect(prices.getByRole('heading',{name:t('Precios','Prices')})).toBeVisible();
  const rice=prices.locator(`[data-price-item="arroz-${tag}"]`);
- await expect(rice).toContainText(t('Informado por el negocio','Reported by the business'));await expect(rice).toContainText(/1[\s.,\u00a0\u202f]?250/);
+ await expect(rice).toContainText(t('Informado por la empresa','Reported by the business'));await expect(rice).toContainText(/1[\s.,\u00a0\u202f]?250/);
  await expect(rice.locator('[data-price-stale]')).toHaveCount(0);
  await expect(prices.locator(`[data-price-item="frijol-${tag}"] [data-price-stale]`)).toHaveText(t('desactualizado','out of date'));
  await expectNoHorizontalOverflow(page);

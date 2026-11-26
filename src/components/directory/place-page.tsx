@@ -11,15 +11,16 @@ import {PlacePhotoGallery} from './place-photo-gallery';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {placeAmenities,placeCuisines,placePriceLevel} from '@/lib/directory/place-amenities';
-import {BIZ,HeroTile,RatingLine,ring} from './biz-ui';
+import {BIZ,RatingLine,ring} from './biz-ui';
 import {PlaceTabs,type PlaceTab} from './place-tabs';
-import {ProfileIdentityName} from '@/components/professionals/profile-identity-name';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
-import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {ShareButton} from './share-button';
 import {PlaceRecommend} from './place-recommend';
-import {mapLinks,placeBarActions,placeHeadActions,placeSideActions,type PlaceActionInput} from '@/lib/directory/place-actions';
-import {ActionButton,PlaceMobileBar,actionIcon} from './place-action-buttons';
+import {mapLinks,placeSideActions,resolvePlaceAction,type PlaceAction,type PlaceActionInput} from '@/lib/directory/place-actions';
+import {ActionButton,actionIcon} from './place-action-buttons';
+import {CHIP,PlaceStatusLine} from './place-card';
+import {WhatsAppLogo} from '@/components/ui/whatsapp-logo';
+import {GoogleMapsIcon,WazeIcon} from '@/components/ui/nav-app-icons';
 
 /**
  * Canonical page of a place, /lugar/<slug> — Yelp «biz page» MODEL in the ContrataCR look (2026-11-19, owner request
@@ -41,13 +42,15 @@ import {ActionButton,PlaceMobileBar,actionIcon} from './place-action-buttons';
 const bilingual=(text:string,en:boolean)=>{const parts=text.split(' / ');return parts.length===2?parts[en?1:0]!.trim():text;};
 const AMENITY_ICONS:Record<string,LucideIcon>={ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Landmark,Leaf,CircleParking,PawPrint,Percent,Pill,ShoppingBag,Siren,Smartphone,Store,Truck,Waves,Wifi,Wind,Wrench,Zap};
 const iconOf=(name:string)=>AMENITY_ICONS[name]??Check;
+/** Chip row of the page (same chips as the result card): one tab stop per action, slides sideways on phones, wraps from lg. */
+const CHIP_ROW='scrollbar-none -mx-1 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [touch-action:pan-x_pan-y] lg:flex-wrap lg:overflow-visible';
 
 
 export type PlacePageSlots={
  /** Owner shortcut and reservations, first in the «Información» tab. */top?:ReactNode;
  /** Menu link, prices, price report, dealer/agency listings («Menú» / «Precios» tab). */offer?:ReactNode;
  events?:ReactNode;questions?:ReactNode;reviews?:ReactNode;
- /** Compact «¿Es su negocio?» row of the side card (only while unclaimed). */claim?:ReactNode;
+ /** Compact «¿Es su empresa?» row (only while unclaimed). */claim?:ReactNode;
  /** «Otras sucursales» of the same brand. */branches?:ReactNode;
 };
 /** Label of the offer tab per section (menu for food, prices for fuel, products and prices for shops, listings for dealers). */
@@ -78,15 +81,22 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const brandAbout=brand?(en?brand.descriptionEn:brand.descriptionEs):null;
  const address=place.address.line?`${place.address.line}${place.address.locality?`, ${place.address.locality}`:''}`:null;
  const order=orderLink&&place.status==='published'?orderLink:null;
- const hasMobileBar=place.status==='published';
+ const published=place.status==='published';
  const actionInput:PlaceActionInput={slug:place.slug,name:place.name,verticalId:place.vertical.id,locale,phone:place.phone,website:place.website,location:place.location,
-  hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:place.status==='published'};
- const barActions=hasMobileBar?placeBarActions(actionInput):[],barIds=barActions.map(a=>a.id);
- const headActions=hasMobileBar?placeHeadActions(actionInput):[],sideActions=placeSideActions(actionInput);
+  hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:published};
+ const sideActions=placeSideActions(actionInput);
+ // ONE chip row, same chips and order as the result card (owner 2026-11-26): Reservar, WhatsApp, Llamar, Reseñar, Maps,
+ // Waze; then «Pedir» (web/phone link), «Sitio web», and the page tools (Guardar, Compartir, Agregar fotos). Only what exists.
+ const pick=(id:Parameters<typeof resolvePlaceAction>[0])=>published?resolvePlaceAction(id,actionInput):null;
+ const chipActions:{action:PlaceAction;icon:ReactNode;label:string}[]=[];
+ const reserve=reservation?pick('reserve'):null;if(reserve)chipActions.push({action:reserve,icon:<CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>,label:t('Reservar','Reserve')});
+ const wa=pick('whatsapp');if(wa)chipActions.push({action:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,label:'WhatsApp'});
+ const call=pick('call');if(call)chipActions.push({action:call,icon:actionIcon('call','h-4 w-4 shrink-0'),label:t('Llamar','Call')});
+ const orderAction=order&&order.channel!=='whatsapp'?pick('order'):null;
+ const site=pick('website');
+ const maps=published&&directions?directions:null;
  // Short description from typed data only (never invented): «<kind> en <zona>. Cocina: …».
  const summary=[kind&&area?t(`${kind} en ${place.address.adminArea2??area}.`,`${kind} in ${place.address.adminArea2??area}.`):null,cuisines.length?t(`Cocina: ${cuisines.slice(0,3).join(', ')}.`,`Cuisine: ${cuisines.slice(0,3).join(', ')}.`):null].filter(Boolean).join(' ')||(brandAbout??'');
- const avatarClass=cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full');
- const pageBtn='h-12 w-full text-base font-semibold';
  const hoursTable=place.hours.length>0&&<section aria-labelledby="place-hours" className="space-y-3">
   <h3 id="place-hours" className="text-base font-bold text-[#162543]">{t('Horario','Opening hours')}</h3>
   <dl className="grid grid-cols-[max-content_1fr] overflow-hidden rounded-2xl border border-[#e3e9ef] text-[15px]">
@@ -104,25 +114,23 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   <a className={cn(BIZ.secondary,'px-3.5 text-[13px]')} href={directions.osm} rel="noopener noreferrer" target="_blank">OpenStreetMap</a></p>;
 
 
- // Contact card: same anatomy as the professional contact card («Consultar precio» heading, location line, stacked
- // pill buttons), adapted to a business. Rendered once; on phones it sits right under the identity card.
- const row='flex flex-col gap-2';
- const sideCard=<div className={cn(BIZ.card,'p-5')} data-place-side-card>
-  <div className="mx-auto flex w-full max-w-md flex-col gap-1.5 lg:max-w-none">
-   <p className={BIZ.cardTitle}>{t('Contacte a este negocio','Contact this business')}</p>
+ // Side card. From lg: the sticky right column (contact buttons, «¿Recomienda este lugar?», claim, «Sugerir un cambio»).
+ // On phones the chip row under the name already holds every contact action, so only the last three show, after the tabs.
+ const sideCard=<div className={cn(BIZ.card,'overflow-hidden')} data-place-side-card>
+  <div className="flex flex-col gap-1.5 p-5 max-lg:hidden">
+   <p className={BIZ.cardTitle}>{t('Contacte a esta empresa','Contact this business')}</p>
    {area&&<p className="flex items-center gap-1 text-[12px] font-semibold text-[#5f6f86]"><MapPin aria-hidden="true" className="h-3 w-3 shrink-0"/><span className="min-w-0">{area}</span></p>}
    {priceNote&&<p data-place-price-note className="text-[15px] font-bold text-[#162543]">{priceNote}</p>}
-   <div className={cn(row,'mt-2')} data-place-side-actions={sideActions.map(x=>x.id).join(' ')}>
-    {sideActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(i===0?BIZ.primary:BIZ.secondary,pageBtn)}>
+   <div className="mt-2 flex flex-col gap-2" data-place-side-actions={sideActions.map(x=>x.id).join(' ')}>
+    {sideActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(i===0?BIZ.primary:BIZ.secondary,'h-12 w-full text-base font-semibold')}>
      {actionIcon(x.id,'h-5 w-5')}{x.label}{x.id==='call'&&phone?.kind==='cr'&&<>{' '}<span className="whitespace-nowrap">{phone.display}</span></>}
      {x.id==='order'&&order&&<span className="text-sm font-normal">{order.channel==='whatsapp'?t('por WhatsApp','on WhatsApp'):order.channel==='web'?t('en su sitio','on its website'):t('por teléfono','by phone')}</span>}</ActionButton>)}
    </div>
    {address&&<p className="mt-1 text-center text-[13px] text-[#68778d]">{address}</p>}
-   {phone?.kind==='other'&&<p data-place-phone-other={phone.reason} className="mt-1 text-sm text-slate-700"><span className="font-semibold">{t('Otros datos:','Other details:')}</span>{' '}
-    {phone.reason==='foreign'?t('teléfono registrado de otro país (sin verificar)','phone registered in another country (not verified)'):t('teléfono registrado con un formato que no es costarricense válido (sin verificar)','phone on file not in a valid Costa Rican format (not verified)')}: <span className="whitespace-nowrap">{phone.display}</span></p>}
   </div>
-  {slots.claim&&<div className="mt-4 border-t border-[#eef2f6] pt-4">{slots.claim}</div>}
-  <div className="mt-3 border-t border-[#eef2f6] pt-3 text-center"><a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-sm ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></div>
+  {published&&<div className="p-3 lg:border-t lg:border-[#eef2f6]"><PlaceRecommend locale={locale}/></div>}
+  {slots.claim&&<div className="border-t border-[#eef2f6]">{slots.claim}</div>}
+  <div className="border-t border-[#eef2f6] py-2 text-center"><a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-sm ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></div>
  </div>;
 
  // ── Tabs (only the ones with content; reviews always) ──
@@ -158,7 +166,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const moreTab=<section id="mas" aria-labelledby="place-more" data-place-more className="scroll-mt-24 space-y-3">
   <h2 id="place-more" className={BIZ.h2}>{t('Más sobre este lugar','More about this place')}</h2>
   <ul className="divide-y divide-[#eef2f6] rounded-2xl border border-[#e3e9ef] text-[15px]">
-   {place.website&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={place.website} rel="noopener noreferrer nofollow" target="_blank">{t('Sitio web del negocio','Business website')}</a></li>}
+   {place.website&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={place.website} rel="noopener noreferrer nofollow" target="_blank">{t('Sitio web de la empresa','Business website')}</a></li>}
    {brand&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={`${prefix}/marca/${brand.slug}`}>{t(`Todas las sucursales de ${brand.name}`,`All ${brand.name} branches`)}</a></li>}
    {sectionHref&&<li><a className={`flex min-h-12 items-center px-4 ${BIZ.link}`} href={sectionHref}>{t(`Más lugares en ${vertical}`,`More places in ${vertical}`)}</a></li>}
    <li><a href="#reportar" data-place-suggest-more className={`flex min-h-12 items-center gap-2 px-4 ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></li>
@@ -178,45 +186,50 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // Gas stations lead with their prices; every other section opens on «Información».
  const defaultTab=place.vertical.id==='fuel'&&slots.offer?'offer':'info';
 
- const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex align-middle"><VerifiedSeal className="h-4 w-4" label={verification}/></span>:null;
- return <main id="contenido" data-place-page={place.slug} className={`mx-auto max-w-7xl px-4 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8 ${hasMobileBar?'pb-28 lg:pb-14':'pb-14'}`}>
+ const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="ml-1.5 inline-flex -translate-y-0.5 align-middle"><VerifiedSeal className="h-5 w-5" label={verification}/></span>:null;
+ // Category line, like the result card: «Restaurantes · Soda · Comida típica · ₡₡ · No reclamado».
+ const dot=<span aria-hidden="true"> · </span>;
+ const chips=<div className={CHIP_ROW} data-place-actions-bar data-place-quick-actions={chipActions.map(c=>c.action.id).join(' ')}>
+  {chipActions.map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
+  {published&&<a href="#escribir-resena" data-place-write-review data-place-action="review" className={CHIP}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>}
+  {maps&&<a href={maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={CHIP}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
+  {maps&&<a href={maps.waze} data-place-action="waze" target="_blank" rel="noopener noreferrer" className={CHIP}><WazeIcon className="h-4 w-4 shrink-0"/>Waze</a>}
+  {orderAction&&<ActionButton action={orderAction} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('order','h-4 w-4 shrink-0')}{orderAction.label}</ActionButton>}
+  {site&&<ActionButton action={site} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('website','h-4 w-4 shrink-0')}{site.label}</ActionButton>}
+  {saveSlot}
+  {published&&<ShareButton title={place.name} locale={locale} suggest sheet className={CHIP}/>}
+  {photoSlot}
+ </div>;
+ return <main id="contenido" data-place-page={place.slug} className="mx-auto max-w-7xl px-4 pb-14 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
   <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="mb-4 hidden text-sm text-[#526277] sm:block">
    <ol className="flex flex-wrap items-center gap-1"><li><a className={`hover:underline ${ring}`} href={en?'/en':'/'}>{t('Inicio','Home')}</a></li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li>
     <li>{sectionHref?<a className={`hover:underline ${ring}`} href={sectionHref}>{vertical}</a>:vertical}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="min-w-0 truncate text-[#162543]">{place.name}</li></ol>
   </nav>
 
   <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_352px]">
-   {/* ── Identity card: same grid as the professional profile (avatar | name, rating, tags | actions) ── */}
+   {/* ── Header, Yelp/Maps order (owner 2026-11-26): real photos only → name → rating → category · price → status → area → chips ── */}
    <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-    <div className="relative rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-     {photos.length>0&&<div className="mb-4 sm:mb-5"><PlacePhotoGallery variant="strip" en={en} placeName={place.name} photos={photos}/></div>}
-     {photos.length===0&&<HeroTile verticalId={place.vertical.id} className="mb-4 h-16 w-full rounded-xl sm:h-20" iconClass="h-8 w-8 sm:h-10 sm:w-10"/>}
-     <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-      {photos.length>0&&<span data-place-avatar="photo" className={avatarClass}>{/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
-        <img src={placePhotoSrc(photos[0]!.url,320)} alt="" loading="eager" className="absolute inset-0 h-full w-full bg-white object-cover"/></span>}
-      <div className="min-w-0 flex-1">
-       <ProfileIdentityName testId="place-name" name={place.name} badge={nameBadge}/>
-       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mt-2">
-        <RatingLine average={place.rating.average} count={place.rating.count} en={en} href="#resenas"/>
-        {priceLevel&&<span data-place-price-level className="text-[13px] font-bold text-[#334155]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
-       </div>
-       <ul className="mt-2 flex flex-wrap items-center gap-1.5" aria-label={t('Datos principales','Key facts')}>
-        {/* Imported / unverified listings: a quiet «No reclamado» (sources in Terms 13.1 and the footer line). */}
-        {!trusted&&<li data-place-verification={place.verificationLevel} className={cn(BIZ.chip,'border border-[#d7e1ea] bg-white')}>{verification}</li>}
-        {trusted&&<li className="sr-only">{verification}</li>}
-        {place.status==='closed_permanently'&&<li data-place-closed className="rounded-full bg-red-50 px-2.5 py-1 text-[12px] font-semibold text-red-800">{t('Cerrado definitivamente','Permanently closed')}</li>}
-        <li>{sectionHref?<a href={sectionHref} className={cn(BIZ.chip,'hover:bg-[#e5e7eb]',ring)}>{vertical}</a>:<span className={BIZ.chip}>{vertical}</span>}</li>
-        {kind&&<li><span data-place-kind={String(place.attributes.kind)} className={BIZ.chip}>{kind}</span></li>}
-        {cuisines.slice(0,4).map(c=><li key={c}><span className={BIZ.chip}>{c}</span></li>)}
-       </ul>
-       {statusText&&<p data-place-open-status={status!.state} className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
-        <span className={`font-bold ${statusText.open?'text-emerald-700':'text-red-700'}`}>{statusText.label}</span>
-        {statusText.detail&&<>{' '}<span className="text-[#334155]">· {statusText.detail}</span></>}
-        <a href="#horario" className={`ml-1 text-[13px] ${BIZ.link}`}>{t('Ver horario','See hours')}</a></p>}
-       {summary&&<p data-place-summary className="mt-2 max-w-2xl text-[14px] leading-6 text-[#334155]">{summary}</p>}
-       {area&&<p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/>{area}</p>}
-      </div>
-     </div>
+    <div data-place-header className="relative rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
+     {photos.length>0&&<div className="mb-4"><PlacePhotoGallery variant="strip" en={en} placeName={place.name} photos={photos}/></div>}
+     <h1 data-testid="place-name" className="break-words text-[24px] font-extrabold leading-tight text-[#111827] sm:text-[28px]">{place.name}{nameBadge}</h1>
+     <div className="mt-1.5"><RatingLine average={place.rating.average} count={place.rating.count} en={en} href="#resenas"/></div>
+     <p className="mt-1 text-[13.5px] font-semibold leading-snug text-[#6b7280]" data-place-tags>
+      {sectionHref?<a href={sectionHref} className={`hover:text-[#009FD9] ${ring}`}>{vertical}</a>:vertical}
+      {kind&&<>{dot}<span data-place-kind={String(place.attributes.kind)}>{kind}</span></>}
+      {cuisines.slice(0,3).map(c=><span key={c}>{dot}{c}</span>)}
+      {priceLevel&&<>{dot}<span data-place-price-level className="font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span></>}
+      {/* Imported / unverified listings: a quiet «No reclamado» (sources in Terms 13.1 and the footer line). */}
+      {!trusted&&<>{dot}<span data-place-verification={place.verificationLevel} className="font-medium">{verification}</span></>}
+      {trusted&&<span className="sr-only">{verification}</span>}
+     </p>
+     {place.status==='closed_permanently'&&<p data-place-closed className="mt-2 inline-flex rounded-full bg-red-50 px-2.5 py-1 text-[12px] font-semibold text-red-800">{t('Cerrado definitivamente','Permanently closed')}</p>}
+     {statusText&&<PlaceStatusLine status={statusText} className="mt-1.5 text-[14px]" data-place-open-status={status!.state}>
+      {' '}<a href="#horario" className={`ml-1 text-[13px] ${BIZ.link}`}>{t('Ver horario','See hours')}</a></PlaceStatusLine>}
+     {(address||area)&&<p className="mt-1.5 flex items-start gap-1 text-[13px] font-medium text-[#68778d]"><MapPin aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0"/><span className="min-w-0">{address?`${address}${area?` · ${area}`:''}`:area}</span></p>}
+     {phone?.kind==='other'&&<p data-place-phone-other={phone.reason} className="mt-1.5 text-sm text-slate-700"><span className="font-semibold">{t('Otros datos:','Other details:')}</span>{' '}
+      {phone.reason==='foreign'?t('teléfono registrado de otro país (sin verificar)','phone registered in another country (not verified)'):t('teléfono registrado con un formato que no es costarricense válido (sin verificar)','phone on file not in a valid Costa Rican format (not verified)')}: <span className="whitespace-nowrap">{phone.display}</span></p>}
+     {published&&<div className="mt-3">{chips}</div>}
+     {summary&&<p data-place-summary className="mt-3 max-w-2xl text-[14px] leading-6 text-[#334155]">{summary}</p>}
      {place.vertical.id==='pharmacy'&&(place.verificationLevel==='license_verified'
       ?<p data-pharmacy-license="verified" className="mt-3 text-sm text-slate-700">{t('ContrataCR verificó el permiso de funcionamiento de esta farmacia.','ContrataCR verified this pharmacy\'s operating license.')}</p>
       :<p data-pharmacy-license="unverified" className="mt-3 text-sm text-slate-700">{t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.')}</p>)}
@@ -227,25 +240,17 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
      {brand&&<p data-place-brand={brand.slug} className="mt-3 text-[14px] text-[#334155]">{t('Sucursal de','Branch of')}{' '}
       <a className={BIZ.link} href={`${prefix}/marca/${brand.slug}`}>{brand.name}</a>
       {brand.branches>1&&<>{' · '}<a className={BIZ.link} href={`${prefix}/marca/${brand.slug}#sucursales`}>{t(`ver las ${brand.branches} sucursales`,`see all ${brand.branches} branches`)}</a></>}</p>}
-     {place.status==='published'&&<div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-[#eef2f6] pt-4" data-place-actions-bar>
-      {headActions.map(x=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(BIZ.secondary,'max-lg:hidden')}>{actionIcon(x.id,'h-4 w-4')}{x.label}</ActionButton>)}
-      <a href="#escribir-resena" data-place-write-review className={cn(BIZ.primary,barIds.includes('review')&&'max-lg:hidden')}><Star aria-hidden="true" className="h-4 w-4"/>{t('Dejar una reseña','Leave a review')}</a>
-      {photoSlot}
-      <ShareButton title={place.name} locale={locale} suggest className={BIZ.secondary}/>
-      {saveSlot}
-     </div>}
-     {place.status==='published'&&<div className="mt-4"><PlaceRecommend locale={locale}/></div>}
     </div>
    </div>
 
-   {/* ── Contact card: right column from lg (sticky), right under the identity card on phones ── */}
+   {/* Tabs before the side card in the DOM: on phones they follow the header; from lg the card is the right column. */}
+   <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+    <PlaceTabs tabs={tabs} label={t('Secciones de la empresa','Business sections')} defaultTab={defaultTab}/>
+   </div>
+
    <aside aria-label={t('Contacto y ubicación','Contact and location')} className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
     <div className="lg:sticky lg:top-20">{sideCard}</div>
    </aside>
-
-   <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-    <PlaceTabs tabs={tabs} label={t('Secciones del negocio','Business sections')} defaultTab={defaultTab}/>
-   </div>
   </div>
 
   <footer className="mt-12 space-y-4 border-t border-[#e8edf2] pt-6 text-sm text-slate-600">
@@ -257,7 +262,5 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    </section>
    <PlaceReportForm slug={place.slug} locale={locale}/>
   </footer>
-
-  {hasMobileBar&&<PlaceMobileBar actions={barActions} slug={place.slug} locale={locale} label={t('Acciones rápidas','Quick actions')} open={status?(statusText?.open?'open':'closed'):null}/>}
  </main>;
 }

@@ -84,7 +84,13 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 
 const VERIFIED=new Set(['verified','license_verified']);
 // Quick action chip on result cards (Google Maps style): outline, icon + one word, 32px.
-const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf7fd] px-3 text-[12.5px] font-bold text-[#0083b0] transition-colors hover:bg-[#d9f0fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
+export const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf7fd] px-3 text-[12.5px] font-bold text-[#0083b0] transition-colors hover:bg-[#d9f0fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
+/** Maps-like status line shared by the card and the place page: «Abierto · cierra a las 21:00», «Cerrado · abre…». */
+export function PlaceStatusLine({status,className='',children,...rest}:{status:{label:string;detail:string|null;open:boolean};className?:string;children?:ReactNode}&Record<`data-${string}`,string|undefined>){
+ return <p className={`font-semibold leading-snug ${className}`} data-open={status.open?'open':'closed'} {...rest}>
+  <span className={status.open?'text-[#047857]':'text-[#b91c1c]'}>{status.label.replace(/ ahora$/,'').replace(/ now$/,'')}</span>
+  {status.detail&&<span className="text-[#526277]"> · {status.detail}</span>}{children}</p>;
+}
 const DAYS_ES=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] as const,DAYS_EN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as const;
 
 /**
@@ -139,9 +145,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   {/* Photos the owner or the reviewers added go right under the name (owner 2026-11-26). */}
   {photos.length>0&&<ResultPhotoStrip className="mt-1" photos={photos}/>}
   {rated&&<div data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
-  {statusText&&<p className="text-[12.5px] font-semibold leading-snug" data-open={statusText.open?'open':'closed'}>
-   <span className={statusText.open?'text-[#047857]':'text-[#b91c1c]'}>{statusText.label.replace(/ ahora$/,'').replace(/ now$/,'')}</span>
-   {statusText.detail&&<span className="text-[#526277]"> · {statusText.detail}</span>}</p>}
+  {statusText&&<PlaceStatusLine status={statusText} className="text-[12.5px]"/>}
   {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
    <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
   {(permit||item.attributes.publicService===true||level==='claimed')&&<ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>

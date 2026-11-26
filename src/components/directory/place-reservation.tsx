@@ -50,9 +50,9 @@ export function PlaceReservation({slug,locale,config}:{slug:string;locale:string
  return <section aria-labelledby="place-reservations" data-place-reservations data-ready={ready||undefined} className="space-y-4 rounded-2xl border border-[#d7e1ea] p-5 text-[#162543]">
   <h2 id="place-reservations" className="text-lg font-bold">{t('Reservar mesa','Book a table')}</h2>
   {done?<div role="status" data-reservation-done={done.kind} className="space-y-2 rounded-xl bg-emerald-50 p-4 text-emerald-950">
-   <p className="font-semibold">{done.kind==='booking'?t('Solicitud enviada. El negocio la confirmará.','Request sent. The business will confirm it.'):t('Está en la lista de espera de hoy.','You are on today’s waitlist.')}</p>
+   <p className="font-semibold">{done.kind==='booking'?t('Solicitud enviada. La empresa la confirmará.','Request sent. The business will confirm it.'):t('Está en la lista de espera de hoy.','You are on today’s waitlist.')}</p>
    <p>{t('Referencia','Reference')}: <strong data-reservation-reference>{done.reference}</strong>{done.position?` · ${t('Puesto','Position')} ${done.position}`:''}</p>
-   <p className="text-sm">{done.kind==='booking'?t('Le avisaremos cuando el negocio confirme o rechace la reserva.','We will let you know when the business confirms or declines the reservation.')
+   <p className="text-sm">{done.kind==='booking'?t('Le avisaremos cuando la empresa confirme o rechace la reserva.','We will let you know when the business confirms or declines the reservation.')
     :t('Le avisaremos cuando su mesa esté lista.','We will let you know when your table is ready.')}</p>
    {done.link&&<div data-reservation-link className="space-y-2 rounded-lg border border-emerald-200 bg-white p-3 text-[#162543]">
     <p className="text-sm font-semibold">{t('Su enlace privado para ver el estado o cancelar:','Your private link to check the status or cancel:')}</p>
@@ -91,11 +91,11 @@ export function PlaceReservation({slug,locale,config}:{slug:string;locale:string
     <label className="space-y-1 text-sm font-semibold">{t('Nombre','Name')}<input data-reservation-name name="name" className={field} autoComplete="name" required minLength={2} maxLength={80}/></label>
     <label className="space-y-1 text-sm font-semibold">{t('Teléfono','Phone')}<input data-reservation-phone name="phone" type="tel" inputMode="tel" className={field} autoComplete="tel" maxLength={23}/></label>
     <label className="space-y-1 text-sm font-semibold sm:col-span-2">{t('Correo (opcional si dio teléfono)','E-mail (optional if you gave a phone)')}<input data-reservation-email name="email" type="email" className={field} autoComplete="email" maxLength={254}/></label>
-    {mode==='booking'&&<label className="space-y-1 text-sm font-semibold sm:col-span-2">{t('Nota para el negocio (opcional)','Note for the business (optional)')}<input name="note" className={field} maxLength={300}/></label>}
+    {mode==='booking'&&<label className="space-y-1 text-sm font-semibold sm:col-span-2">{t('Nota para la empresa (opcional)','Note for the business (optional)')}<input name="note" className={field} maxLength={300}/></label>}
     {error&&<p role="alert" data-reservation-error className="text-sm font-semibold text-red-800 sm:col-span-2">{error}</p>}
     <div className="sm:col-span-2"><button data-reservation-submit type="submit" className={button} disabled={busy||!ready}>{busy?t('Enviando…','Sending…'):mode==='booking'?t('Pedir reserva','Request a reservation'):t('Unirme a la lista','Join the waitlist')}</button></div>
    </form>
-   <p className="text-xs text-slate-700">{t('Sin depósitos ni pagos: la reserva la confirma el negocio. Sus datos solo se comparten con este negocio.','No deposits or payments: the business confirms the booking. Your details are only shared with this business.')}</p>
+   <p className="text-xs text-slate-700">{t('Sin depósitos ni pagos: la reserva la confirma la empresa. Sus datos solo se comparten con esta empresa.','No deposits or payments: the business confirms the booking. Your details are only shared with this business.')}</p>
   </>}
  </section>;
 }

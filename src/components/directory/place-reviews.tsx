@@ -14,8 +14,8 @@ import {RECOMMEND_EVENT} from './place-recommend';
  * reply («editada»); everyone else can report a review to the moderators.
  */
 const REASONS:Record<string,[string,string]>={
- review_contact_required:['Para reseñar sin cuenta, contacte primero al negocio desde ContrataCR (botón "Llamar") o inicie sesión.','To review without an account, first contact the business from ContrataCR ("Call" button) or sign in.'],
- review_own_place:['No puede reseñar un negocio que usted administra.','You cannot review a business you manage.'],
+ review_contact_required:['Para reseñar sin cuenta, contacte primero a la empresa desde ContrataCR (botón "Llamar") o inicie sesión.','To review without an account, first contact the business from ContrataCR ("Call" button) or sign in.'],
+ review_own_place:['No puede reseñar una empresa que usted administra.','You cannot review a business you manage.'],
  review_cap:['Alcanzó el máximo de reseñas por hoy.','You reached the daily limit of reviews.'],
  name_required:['Escriba su nombre.','Please write your name.'],
  reload:['La reseña cambió en otra pestaña. Recargue la página.','The review changed in another tab. Please reload the page.'],
@@ -76,15 +76,15 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    <div className="flex items-center gap-3">
     <span aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf6fb] text-base font-bold text-[#0b4f6c]">{r.name.trim().charAt(0).toUpperCase()}</span>
     <div className="min-w-0"><p className="truncate font-bold text-[#162543]">{r.name}</p>
-     {r.guest&&<p className="text-xs text-slate-600">{t('sin cuenta, contactó al negocio','no account, contacted the business')}</p>}</div>
+     {r.guest&&<p className="text-xs text-slate-600">{t('sin cuenta, contactó a la empresa','no account, contacted the business')}</p>}</div>
    </div>
    <p className="flex flex-wrap items-center gap-2 text-sm"><Stars value={r.rating} size="sm" label={t(`${String(r.rating).replace('.',',')} de 5`,`${r.rating} out of 5`)}/><span className="text-slate-600">{date(r.createdAt)}{r.edited?` · ${t('editada','edited')}`:''}</span></p>
    <p className="break-words text-[15px] leading-6 text-[#1f2937]">{r.comment}</p>
-   {r.ownerReply&&<div className="mt-2 rounded-xl bg-[#f7fafc] p-3 text-sm" data-owner-reply><p><span className="font-semibold">{t('Respuesta del negocio: ','Reply from the business: ')}</span><span className="break-words">{r.ownerReply.text}</span></p>
+   {r.ownerReply&&<div className="mt-2 rounded-xl bg-[#f7fafc] p-3 text-sm" data-owner-reply><p><span className="font-semibold">{t('Respuesta de la empresa: ','Reply from the business: ')}</span><span className="break-words">{r.ownerReply.text}</span></p>
     <p className="text-xs text-slate-600">{date(r.ownerReply.at)}{r.ownerReply.edited?` · ${t('editada','edited')}${r.ownerReply.editedAt?` ${date(r.ownerReply.editedAt)}`:''}`:''}</p></div>}
    {manage?(()=>{const target=manage.find(m=>m.reviewId===r.id);return target?<OwnerReplyEditor target={target} locale={locale}/>:null;})():<FlagReview slug={slug} reviewId={r.id} locale={locale}/>}
   </li>)}</ul>}
-  {manage?<p className="rounded-2xl bg-[#F7FAFC] p-4 text-sm text-slate-700" data-place-review-manager>{t('Usted administra este negocio: puede responder las reseñas, pero no reseñarlo.','You manage this business: you can reply to reviews, but not review it.')}</p>
+  {manage?<p className="rounded-2xl bg-[#F7FAFC] p-4 text-sm text-slate-700" data-place-review-manager>{t('Usted administra esta empresa: puede responder las reseñas, pero no reseñarla.','You manage this business: you can reply to reviews, but not review it.')}</p>
   :state==='sent'
    ?<p role="status" data-place-review-sent className="rounded-2xl bg-emerald-50 p-4 text-emerald-900">{t('Gracias. Su reseña se publicó; recargue la página para verla.','Thank you. Your review was published; reload the page to see it.')}
     {photoResult&&photoResult.pending>0&&<span className="mt-1 block text-sm" data-place-review-photos-pending>{t(`${photoResult.pending===1?'Su foto quedó pendiente':`Sus ${photoResult.pending} fotos quedaron pendientes`} de revisión.`,`${photoResult.pending===1?'Your photo is':`Your ${photoResult.pending} photos are`} awaiting review.`)}</span>}

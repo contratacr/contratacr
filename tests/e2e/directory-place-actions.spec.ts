@@ -56,30 +56,27 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  const href=(await link.getAttribute('href'))!;
  await gotoOK(page,href);
  const mobile=isMobileProject(info);
- const bar=page.locator('[data-place-mobile-bar]');
+ const chips=page.locator('[data-place-actions-bar]');
  await expect(page.locator('[data-place-page]')).toBeVisible();
- // Sin foto de perfil no hay círculo vacío: o hay foto real o la franja de categoría.
- const avatars=page.locator('[data-place-avatar]');
- if(await avatars.count())await expect(avatars.first().locator('img')).toHaveCount(1);
- else await expect(page.locator('[data-hero-tile]').first()).toBeVisible();
+ // 2026-11-26 (owner): only real photos above the name — no section tile, no empty circle, no placeholder.
+ await expect(page.locator('[data-place-header] [data-hero-tile]')).toHaveCount(0);
  await expect(page.locator('[data-place-photo-placeholder]')).toHaveCount(0);
- if(mobile){
-  await expect(bar).toBeVisible();
-  const items=bar.locator('[data-place-bar-item]');
-  expect(await items.count()).toBeLessThanOrEqual(4);expect(await items.count()).toBeGreaterThan(0);
- }else{
-  await expect(bar).toBeHidden();
-  await expect(page.locator('[data-place-side-card]')).toBeVisible();
- }
+ // One chip row like the result card (Reseñar always; Guardar/Compartir at the end); no fixed bottom bar.
+ await expect(chips).toBeVisible();
+ await expect(chips.locator('[data-place-write-review]')).toHaveAttribute('href','#escribir-resena');
+ await expect(page.locator('[data-place-mobile-bar]')).toHaveCount(0);
+ if(!mobile)await expect(page.locator('[data-place-side-card] [data-place-side-actions]')).toBeVisible();
  // Ningún botón de acción sin destino.
- for(const a of await page.locator('[data-place-side-actions] a, [data-place-mobile-bar] a, [data-place-actions-bar] a').all()){
+ for(const a of await page.locator('[data-place-side-actions] a, [data-place-actions-bar] a').all()){
   const h=await a.getAttribute('href');expect(h,'botón sin enlace').toBeTruthy();expect(h).not.toBe('#');
  }
  // La ficha no se desborda (el encabezado global se mide aparte en navbar-brand-consistency).
  expect(await page.locator('[data-place-page]').evaluate(m=>m.scrollWidth<=m.clientWidth+1),'la ficha desborda').toBe(true);
  // Cómo llegar: elección de aplicación.
- const cta=(mobile?bar:page.locator('[data-place-side-card]')).locator('[data-place-directions-cta]').first();
- if(await cta.count()){
+ // Phones: Maps and Waze chips; from lg: «Cómo llegar» in the side card opens the app chooser.
+ if(mobile){const maps=chips.locator('[data-place-action="maps"]');if(await maps.count())await expect(maps).toHaveAttribute('href',/^https:/);}
+ const cta=page.locator('[data-place-side-card]').locator('[data-place-directions-cta]').first();
+ if(!mobile&&await cta.count()){
   // Clic real en el centro del botón (la barra es fija: sin el desplazamiento automático de Playwright).
   const opts=page.locator('[data-place-directions-options]');
   // Antes de hidratar el toque se pierde: se repite hasta que el menú abre (nunca se alterna dos veces).

@@ -34,7 +34,8 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   await claimByEmail(context,slug);await context.setExtraHTTPHeaders(randomIp());
   // Owner: «Agregar fotos» → published at once.
   await gotoOK(page,`/lugar/${slug}`);
-  await expect(page.locator('[data-hero-tile]')).toBeVisible();
+  // 2026-11-26: no photos → no tile at all (only real photos are shown above the name).
+  await expect(page.locator('[data-hero-tile]')).toHaveCount(0);await expect(page.locator('[data-place-photo-strip]')).toHaveCount(0);
   await upload(page,{name:'terraza.jpg',buffer:await jpeg('#2a9d8f')},'Terraza al atardecer');
   await expect(page.locator('[data-place-photo-result]')).toContainText('Se publicó 1 foto');
   await expectNoHorizontalOverflow(page);

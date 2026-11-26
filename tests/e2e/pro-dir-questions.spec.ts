@@ -6,7 +6,7 @@ import {openPlaceTab, claimByEmail,dirDb,hideSeededPlaces,label,postJson,seedPla
 import {randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): questions & answers on every place page. Anonymous visitors read and get a
-// sign-in link; a signed-in person asks (UI); the business answers (UI, marked «Respuesta del negocio» and listed first);
+// sign-in link; a signed-in person asks (UI); the business answers (UI, marked «Respuesta de la empresa» and listed first);
 // another person answers; links and own-question answers are refused; daily cap → 429; a report lands in the staff
 // queue (dir_admin_qa_queue) and a staff decision hides the answer (immutable moderation log); the admin API refuses
 // non-admins. Banks have Q&A too. Owner of /api/lugar/[slug]/preguntas.
@@ -52,7 +52,7 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   await expect(page.locator('[data-place-questions][data-ready]')).toBeVisible({timeout:45000});
   await expect(page.locator('[data-qa-ask]')).toHaveCount(0);// managers answer, they do not ask
   await page.locator(`[data-qa-answer-open="${questionId}"]`).click();
-  await expect(page.locator(`[data-qa-answer-open="${questionId}"]`)).toHaveText(t('Responder como el negocio','Answer as the business'));
+  await expect(page.locator(`[data-qa-answer-open="${questionId}"]`)).toHaveText(t('Responder como la empresa','Answer as the business'));
   await page.locator(`#qa-answer-${questionId}`).fill(t('Sí, todos los días.','Yes, every day.'));
   await page.locator('[data-qa-answer-submit]').click();
   await expect(page.locator('[data-qa-notice="ok"]')).toBeVisible();
@@ -64,7 +64,7 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   const answers=ap.locator(`[data-qa-question="${questionId}"] [data-qa-answer]`);
   await expect(answers).toHaveCount(2);
   await expect(answers.first()).toHaveAttribute('data-qa-owner','true');
-  await expect(answers.first()).toContainText(t('Respuesta del negocio','Answer from the business'));
+  await expect(answers.first()).toContainText(t('Respuesta de la empresa','Answer from the business'));
   await expectNoHorizontalOverflow(ap);
 
   // The asker reports the neighbour's answer (UI) → staff queue; staff hides it with a reason → gone, logged.

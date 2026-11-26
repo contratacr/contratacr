@@ -82,8 +82,8 @@ for(const language of ['es','en'] as const)test(`Mi negocio without Pro: profile
   await page.locator('[data-place-manage]').scrollIntoViewIfNeeded();await shot(page,`negocio-ficha-administrar-${language}`,project);await openPlaceTab(page,'reviews');
   const editor=page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`);await expect(editor).toBeVisible({timeout:45000});
   const replyReq=page.waitForRequest(r=>r.url().endsWith('/api/negocio/respuestas')&&r.method()==='POST');
-  await editor.getByRole('button',{name:t('Responder como el negocio','Reply as the business')}).click();
-  await editor.getByLabel(t('Respuesta pública del negocio (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)')).fill(t('Gracias por venir.','Thanks for coming.'));
+  await editor.getByRole('button',{name:t('Responder como la empresa','Reply as the business')}).click();
+  await editor.getByLabel(t('Respuesta pública de la empresa (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)')).fill(t('Gracias por venir.','Thanks for coming.'));
   await editor.getByRole('button',{name:t('Publicar respuesta','Post reply')}).click();await replyReq;
   await expect(editor.locator('[data-owner-reply-saved]')).toBeVisible();
 

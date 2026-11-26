@@ -59,7 +59,8 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
  const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();const panel=useRef<HTMLDivElement>(null);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
  const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
- const float=popover?'absolute left-0 top-full z-30 mt-2 w-[min(26rem,calc(100vw-2rem))] bg-white shadow-xl':'';
+ // Phones: a bottom sheet (the button lives in a sliding chip row that clips anything hanging below it); lg: a card under the button.
+ const float=popover?'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-[120] max-h-[80vh] overflow-y-auto bg-white shadow-2xl lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-0 lg:top-full lg:z-30 lg:mt-2 lg:max-h-none lg:w-[26rem] lg:shadow-xl':'';
  if(!signedIn)return <span data-place-photo-add className="inline-flex"><a href={loginHref??'/login'} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</a></span>;
  let summary:ReactNode=null;
  if(result){
@@ -72,7 +73,7 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
  return <div className={popover?'relative inline-flex':'space-y-3'} data-place-photo-add>
   {(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>}
   {open&&<div ref={panel} className={`space-y-3 rounded-2xl border border-[#d7e1ea] p-4 ${float}`} data-place-photo-panel>
-   <p className="text-sm text-slate-700">{isManager?t('Como administrador del negocio, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
+   <p className="text-sm text-slate-700">{isManager?t('Como administrador de la empresa, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
     :t('Sus fotos se revisan antes de publicarse. Suba solo fotos tomadas por usted, sin personas reconocibles ni datos privados.','Your photos are reviewed before they are published. Only upload photos you took, without recognisable people or private data.')}</p>
    <PhotoPicker files={files} onChange={setFiles} en={en} disabled={busy}/>
    <label htmlFor={captionId} className="flex flex-col gap-1 text-sm font-medium">{t('Descripción (opcional)','Caption (optional)')}

@@ -49,7 +49,7 @@ export function PlaceQuestions({slug,locale,initial,signedIn,loginHref,isManager
   {signedIn&&!isManager?<form data-qa-ask className="space-y-2" onSubmit={async e=>{e.preventDefault();const el=e.currentTarget,body=String(new FormData(el).get('body')??'').trim();
     if(body.length<5){setNotice({ok:false,text:t('Escriba una pregunta de al menos 5 caracteres.','Write a question of at least 5 characters.'),at:'ask'});return;}
     if(await send('ask',{type:'question',body},'ask'))el.reset();}}>
-   <label htmlFor="qa-ask" className="block text-sm font-semibold">{t('Pregunte algo a este negocio o a la comunidad','Ask this business or the community')}</label>
+   <label htmlFor="qa-ask" className="block text-sm font-semibold">{t('Pregunte algo a esta empresa o a la comunidad','Ask this business or the community')}</label>
    <textarea id="qa-ask" name="body" rows={2} maxLength={300} className={field} placeholder={t('Ej.: ¿Tienen parqueo?','E.g. Is there parking?')}/>
    {note('ask')}
    <button type="submit" className={button} disabled={busy!==null||!ready} data-qa-ask-submit>{t('Publicar pregunta','Post question')}</button>
@@ -59,12 +59,12 @@ export function PlaceQuestions({slug,locale,initial,signedIn,loginHref,isManager
     <p className="font-semibold">{q.body}</p>
     <p className="text-xs text-slate-700">{q.name} · {date(q.createdAt)}</p>
     {q.answers.length>0&&<ul className="space-y-2 border-l-2 border-[#d7e1ea] pl-3">{q.answers.map(a=><li key={a.id} data-qa-answer={a.id} data-qa-owner={a.isOwner||undefined}>
-     {a.isOwner&&<span className="mb-1 inline-block rounded-full bg-[#eaf6fb] px-2 py-0.5 text-xs font-bold text-[#0b4f6c]">{t('Respuesta del negocio','Answer from the business')}</span>}
+     {a.isOwner&&<span className="mb-1 inline-block rounded-full bg-[#eaf6fb] px-2 py-0.5 text-xs font-bold text-[#0b4f6c]">{t('Respuesta de la empresa','Answer from the business')}</span>}
      <p>{a.body}</p><p className="text-xs text-slate-700">{a.name} · {date(a.createdAt)}
       {signedIn&&<>{' · '}<button type="button" className={`text-xs underline ${ring}`} data-qa-report="answer" onClick={()=>setReporting(reporting===a.id?null:a.id)}>{t('Reportar','Report')}</button></>}</p>
      {reporting===a.id&&reportForm('answer',a.id)}{note('item:'+a.id)}</li>)}</ul>}
     <div className="flex flex-wrap gap-4">
-     {signedIn&&<button type="button" className={link} data-qa-answer-open={q.id} onClick={()=>setAnswering(answering===q.id?null:q.id)}>{isManager?t('Responder como el negocio','Answer as the business'):t('Responder','Answer')}</button>}
+     {signedIn&&<button type="button" className={link} data-qa-answer-open={q.id} onClick={()=>setAnswering(answering===q.id?null:q.id)}>{isManager?t('Responder como la empresa','Answer as the business'):t('Responder','Answer')}</button>}
      {signedIn&&<button type="button" className={link} data-qa-report="question" onClick={()=>setReporting(reporting===q.id?null:q.id)}>{t('Reportar pregunta','Report question')}</button>}
     </div>
     {reporting===q.id&&reportForm('question',q.id)}

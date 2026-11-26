@@ -1115,6 +1115,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // El rótulo de la barra es la etiqueta de la FLECHA («Volver a favoritos»), no
   // un título: va pegado a ella, no centrado.
   const [sectionVolver, setSectionVolver] = useState(false);
+  // Fichas de detalle (lugar, perfil del profesional): el rótulo va centrado de
+  // verdad entre la flecha y el hueco de la derecha, aunque sea un «Volver a…»
+  // (Isaac, 26-nov-2026). Solo en la web; la app conserva su barra.
+  const [sectionCentrado, setSectionCentrado] = useState(false);
   useEffect(() => {
     // La pantalla puede haber publicado su título antes de que esta barra
     // montara, así que se lee también el valor global.
@@ -1130,6 +1134,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       // mismo cuadro). La confirmación queda también aquí para que la pantalla
       // la lea al montar; si no, se veían dos «Volver a resultados».
       __ccrSectionVolver?: boolean;
+      __ccrSectionCentrado?: boolean;
       __ccrSectionAck?: boolean;
     };
     const inicial = global.__ccrSectionHeader ?? null;
@@ -1141,11 +1146,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionMenu(!!global.__ccrSectionMenu);
       setSectionPaso(!!global.__ccrSectionPaso);
       setSectionVolver(!!global.__ccrSectionVolver);
+      setSectionCentrado(!!global.__ccrSectionCentrado);
       global.__ccrSectionAck = true;
       window.dispatchEvent(new Event("ccr:section-header-ack"));
     }
     const onHeader = (event: Event) => {
-      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean; paso?: boolean; volver?: boolean } | null>).detail;
+      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean; paso?: boolean; volver?: boolean; centrado?: boolean } | null>).detail;
       const title = detail?.title ?? null;
       setSectionTitle(title);
       setSectionActive(detail !== null);
@@ -1154,6 +1160,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionMenu(!!detail?.menu);
       setSectionPaso(!!detail?.paso);
       setSectionVolver(!!detail?.volver);
+      setSectionCentrado(!!detail?.centrado);
       global.__ccrSectionAck = detail !== null;
       if (detail !== null) window.dispatchEvent(new Event("ccr:section-header-ack"));
     };
@@ -1741,7 +1748,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         formularios de publicar. Un «Volver a…» no: es la
                         etiqueta de la flecha que tiene al lado, y centrado se
                         leía como el nombre de la pantalla. */}
-                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, sectionVolver ? "mr-auto min-w-0 truncate" : "flex-1 text-center")}>{sectionTitle}</p>
+                    {sectionCentrado && !nativeHeaderShell ? (
+                      // Centrado sobre la fila entera (56 px por lado, como
+                      // CABECERA_FILA_CENTRADA), no sobre el espacio que queda:
+                      // con flex-1 se corría hacia la derecha si el hueco de la
+                      // derecha medía distinto que la flecha.
+                      <>
+                        <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "pointer-events-none absolute inset-x-14 text-center")}>{sectionTitle}</p>
+                        <span className="flex-1" aria-hidden />
+                      </>
+                    ) : (
+                      <p data-ccr-section-title="" className={cn(CABECERA_TITULO, sectionVolver ? "mr-auto min-w-0 truncate" : "flex-1 text-center")}>{sectionTitle}</p>
+                    )}
                     {!sectionTitle && <span className="flex-1" aria-hidden />}
                   </>
                 ) : (

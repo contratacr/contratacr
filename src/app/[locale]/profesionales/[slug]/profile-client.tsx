@@ -60,6 +60,7 @@ import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { useSiteFeatures } from "@/components/site-features";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
@@ -318,6 +319,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // servidor por la cookie): la fila propia de la ficha no se pinta para
   // luego esconderse, que subía toda la ficha 85 px al llegar la confirmación.
   const appNativa = useNativeApp();
+  // Directorio encendido (test): la ficha toma el aspecto de las tarjetas de resultados (Isaac, 26-nov-2026). Con el
+  // directorio apagado (producción) todo queda igual.
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(() => appNativa && searchParams.get("preview") !== "1");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
@@ -383,6 +387,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       __ccrSectionShare?: boolean;
       __ccrSectionMenu?: boolean;
       __ccrSectionVolver?: boolean;
+      __ccrSectionCentrado?: boolean;
     };
     global.__ccrSectionHeader = tituloBarra;
     global.__ccrSectionActive = true;
@@ -391,19 +396,22 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     // guardar, compartir y reportar en el mismo orden y en la misma hoja.
     global.__ccrSectionMenu = hayFicha;
     global.__ccrSectionVolver = true;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: hayFicha, volver: true } }));
+    // Con el directorio encendido el rótulo va centrado, como en la ficha de un lugar.
+    global.__ccrSectionCentrado = directoryOn;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: hayFicha, volver: true, centrado: directoryOn } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
       global.__ccrSectionShare = false;
       global.__ccrSectionMenu = false;
       global.__ccrSectionVolver = false;
+      global.__ccrSectionCentrado = false;
       // En la app la barra nunca suelta el «volver»: bajar la bandera aquí
       // pintaba la fila propia un cuadro entre un rótulo y el siguiente.
       if (!appNativa) setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [previewMode, tituloBarra, hayFicha, appNativa]);
+  }, [previewMode, tituloBarra, hayFicha, appNativa, directoryOn]);
 
   const volverRef = useRef<(() => void) | null>(null);
   const compartirRef = useRef<(() => void) | null>(null);
@@ -790,6 +798,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         // Las redes van después de esta tarjeta: si no hay, la raya que cierra
         // la ubicación no separa nada y queda suelta contra el borde.
         hayContenidoDespues={redesDelProfesional.length > 0}
+        onResenar={() => {
+          setActiveTab("resenas");
+          requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        }}
         onVerZonas={() => {
           setActiveTab("sobre");
           requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));

@@ -15,7 +15,7 @@ const noSubscribe=()=>()=>{};
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 const REPLY_REASONS:Record<string,[string,string]>={
  reload:['La respuesta cambió en otra pestaña o por otra persona. Recargue la página.','The reply was changed in another tab or by someone else. Please reload the page.'],
- reply_not_manager:['Solo el negocio que administra este lugar puede responder.','Only the business that manages this place can reply.'],
+ reply_not_manager:['Solo la empresa que administra este lugar puede responder.','Only the business that manages this place can reply.'],
  reply_role:['Su rol en el equipo no permite publicar respuestas. Pida a un administrador o gerente.','Your team role cannot publish replies. Ask an admin or manager.'],
  not_found:['Esta reseña ya no está disponible.','This review is no longer available.'],
  unavailable:['No se pudo guardar. Intente de nuevo.','Could not save. Please try again.'],
@@ -43,9 +43,9 @@ export function OwnerReplyEditor({target,locale}:{target:ReplyTarget;locale:stri
   {saved&&<p role="status" className="rounded-xl bg-emerald-50 p-2 text-sm text-emerald-900" data-owner-reply-saved>{t('Respuesta publicada: ','Reply published: ')}<span className="break-words">&quot;{saved.text}&quot;</span></p>}
   {target.replyStatus==='hidden'&&!saved&&<p className="text-sm text-slate-700">{t('El equipo de ContrataCR ocultó su respuesta. Puede corregirla; seguirá oculta hasta que la revisen.','The ContrataCR team hid your reply. You may correct it; it stays hidden until they review it.')}</p>}
   {!open?<button type="button" onClick={()=>{setOpen(true);setState('idle');}} className={`inline-flex min-h-11 items-center rounded-full border border-[#162543] px-4 text-sm font-semibold ${ring}`}>
-    {current?t('Editar respuesta','Edit reply'):t('Responder como el negocio','Reply as the business')}</button>
+    {current?t('Editar respuesta','Edit reply'):t('Responder como la empresa','Reply as the business')}</button>
    :<form className="space-y-2" onSubmit={e=>{e.preventDefault();void submit();}}>
-    <label className="flex flex-col gap-1 text-sm font-medium">{t('Respuesta pública del negocio (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)')}
+    <label className="flex flex-col gap-1 text-sm font-medium">{t('Respuesta pública de la empresa (máximo 1000 caracteres, sin enlaces)','Public reply from the business (up to 1000 characters, no links)')}
      <textarea ref={text} name="reply" rows={3} maxLength={1000} required defaultValue={current?.text??''} onChange={()=>{action.current='';}} className={`${field} py-2`}/></label>
     <div className="flex flex-wrap gap-2"><button type="submit" disabled={state==='sending'} className={`inline-flex min-h-11 items-center rounded-full bg-[#162543] px-5 text-sm font-semibold text-white disabled:opacity-60 ${ring}`}>{current?t('Guardar cambios','Save changes'):t('Publicar respuesta','Post reply')}</button>
      <button type="button" onClick={()=>setOpen(false)} className={`inline-flex min-h-11 items-center rounded-full border border-slate-300 px-4 text-sm font-semibold ${ring}`}>{t('Cancelar','Cancel')}</button></div>

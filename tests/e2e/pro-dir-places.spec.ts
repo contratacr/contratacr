@@ -33,11 +33,14 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  // claim link, the section-colour hero instead of an empty photo box, and the phones' fixed action bar.
  await expect(page.locator('[data-rating-line="none"]')).toHaveText(t('Sin reseñas todavía','No reviews yet'));
  await expect(page.locator('[data-place-open-status]')).toHaveCount(1);
- await expect(page.locator('[data-hero-tile="restaurant"]')).toBeVisible();
+  // 2026-11-26 (owner: card-like header): no tile without photos; ONE chip row (Llamar…, Guardar, Compartir) replaces the
+ // phones' fixed bar; the side card keeps «Llamar» from lg and the claim link (after the tabs on phones).
+ await expect(page.locator('[data-place-header] [data-hero-tile]')).toHaveCount(0);
  await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
+ await expect(page.locator('[data-place-actions-bar] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();
- await expect(page.locator('[data-place-mobile-bar]')).toBeVisible({visible:/mobile/.test(info.project.name)});
+ await expect(page.locator('[data-place-mobile-bar]')).toHaveCount(0);
  await expectNoHorizontalOverflow(page);
  const robots=await page.locator('meta[name="robots"]').getAttribute('content');expect(robots).not.toContain('noindex');// indexing rule 2026-11-18 (DIR_INDEX_IMPORTED): an imported place with a phone/hours is indexable
  // pharmacy: published but not license_verified → public, with a neutral note (owner decision 2026-11-17)

@@ -20,9 +20,9 @@ export function PlaceRecommend({locale}:{locale:string}){
  };
  return <section data-place-recommend aria-labelledby="place-recommend" className="space-y-2.5 rounded-2xl bg-[#f7fafc] p-4">
   <h2 id="place-recommend" className="text-[15px] font-bold text-[#162543]">{en?'Would you recommend this place?':'¿Recomienda este lugar?'}</h2>
-  <div role="group" aria-labelledby="place-recommend" className="flex flex-wrap gap-2">
+  <div role="group" aria-labelledby="place-recommend" className="flex gap-2">
    {OPTIONS.map(o=>{const Icon=o.icon;return <button key={o.id} type="button" data-place-recommend-option={o.id} aria-pressed={picked===o.id} onClick={()=>pick(o)}
-    className={`inline-flex h-11 min-w-24 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold ${picked===o.id?'border-[#009FD9] bg-[#eaf6fb] text-[#0b4f6c]':'border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]'}`}>
+    className={`inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold ${picked===o.id?'border-[#009FD9] bg-[#eaf6fb] text-[#0b4f6c]':'border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]'}`}>
     <Icon aria-hidden="true" className="h-4 w-4"/>{en?o.en:o.es}</button>;})}
   </div>
  </section>;

@@ -62,6 +62,8 @@ interface ProfessionalScheduleProps {
    * queda una línea suelta contra el borde de la tarjeta.
    */
   hayContenidoDespues?: boolean;
+  /** Perfil con el directorio encendido: «Reseñar» de la franja abre la pestaña Reseñas (la ficha sabe cómo). */
+  onResenar?: () => void;
   /** STACKED single-column layout for the professional-profile contact card:
    *  location → buttons. Default false = the /profesionales card layout. */
   stacked?: boolean;
@@ -88,7 +90,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, videoConsultApplies = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, alLadoDeLaZona, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, hayContenidoDespues = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, videoConsultApplies = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, alLadoDeLaZona, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, hayContenidoDespues = false, onResenar }: ProfessionalScheduleProps) {
   // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
   const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
@@ -526,6 +528,30 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     </>
   );
 
+
+  // Directory on (owner 2026-11-26): the profile's sticky strip uses the same brand chips as the result card —
+  // WhatsApp, Llamar, Reseñar — 40 px tall and sharing the row, instead of the two 48 px buttons.
+  const barChip = "!h-10 min-w-0 flex-1 !rounded-full !border-0 !bg-[#eaf7fd] !px-3 !text-[13px] !font-bold !text-[#0083b0] hover:!bg-[#d9f0fb]";
+  const profileChips = (
+    <div className="flex w-full gap-2" data-pro-profile-actions>
+      <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="profile" className={barChip} buttonLabel="WhatsApp" />
+      {showCall && renderCall(`${secondaryContactBase} ${barChip}`)}
+      <button type="button" onClick={onResenar} data-pro-profile-review className={`${secondaryContactBase} ${barChip}`}><Star className="h-4 w-4 shrink-0" aria-hidden />{t("reviewShort")}</button>
+    </div>
+  );
+  // Compact strip: less padding than the 48 px-button strip, same safe area.
+  const compactBar = "flex flex-col gap-2 max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]";
+  if (stacked && directoryOn) {
+    return (
+      <>
+        <div className="flex flex-col gap-3">
+          {locationControl}
+          {PRO_UI_ENABLED ? <PublicReservations professional={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} service={categoryName} isOwn={isOwn} pinned pinnedClass={compactBar} fallback={profileChips}/> : <AccionesAlPie className={compactBar}>{profileChips}</AccionesAlPie>}
+        </div>
+        {selfModal}
+      </>
+    );
+  }
 
   if (stacked) {
     return (
