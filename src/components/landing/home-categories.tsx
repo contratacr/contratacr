@@ -4,20 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { categoryImageUrl } from "@/lib/data/category-images";
+import { sectionPhoto } from "@/lib/directory/section-photos";
 
-// Real, licence-free photos (Unsplash CDN, same approach as the production service cards), no visible commercial brands.
-const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=700&auto=format&fit=crop&q=70`;
-const PHOTOS: Record<string, string> = {
-  restaurantes: U("1517248135467-4c7edcad34c4"), // dining room
-  farmacias: U("1576602976047-174e57a47881"),    // pharmacy aisles
-  supermercados: U("1542838132-92c53300491e"),   // produce shelves
-  gasolineras: U("1527018601619-a508a2be00cd"),  // fuel pumps at night, no brand
-  talleres: U("1487754180451-c456f719a1fc"),     // mechanic topping up oil
-  cafes: U("1495474472287-4d71bcdd2085"),        // two lattes
-  belleza: U("1560066984-138dadb4c035"),         // salon chairs
-  veterinarias: U("1628009368231-7bb7cfcb0def"), // vet with a cat
-  ferreterias: U("1581783898377-1c85bf937427"),  // tools and nails
-};
 const ORDER = ["restaurantes", "farmacias", "supermercados", "gasolineras", "talleres", "cafes", "belleza"];
 
 /**
@@ -33,7 +21,7 @@ export async function HomeCategories() {
   const label = (id: string) => (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id;
   const items = [
     { key: "pros", href: "/profesionales", label: tp("prosTile"), photo: categoryImageUrl("electricidad")!.replace("w=1100", "w=700") },
-    ...ORDER.filter((id) => enabled.includes(id) && PHOTOS[id]).map((id) => ({ key: id, href: `/${id}`, label: label(id), photo: PHOTOS[id]! })),
+    ...ORDER.filter((id) => enabled.includes(id) && sectionPhoto(id)).map((id) => ({ key: id, href: `/${id}`, label: label(id), photo: sectionPhoto(id)! })),
   ];
   return (
     <section data-home-categories className="bg-white px-4 pb-6 pt-5">

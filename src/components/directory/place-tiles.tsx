@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
 import { HeroTile } from "@/components/directory/biz-ui";
+import { sectionPhoto } from "@/lib/directory/section-photos";
 import { placeSection } from "@/lib/directory/place-verticals";
 import { CURATED_PLACE_SECTIONS, DIRECTORY_SECTION_BLURBS, pick } from "@/lib/directory/directory-groups";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
@@ -34,7 +35,11 @@ export function PlaceTiles({ sections, totals, locale, className, leading }: { s
         return (
           <li key={s}>
             <Link href={`/${s}`} prefetch={false} data-place-tile={s} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-              <HeroTile verticalId={def.id} className="h-20 w-full sm:h-24" iconClass="h-9 w-9 sm:h-11 sm:w-11" />
+              {/* A real photo of the section (owner 2026-11-26); the brand tile only where there is none. */}
+              {sectionPhoto(s)
+                // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL
+                ? <img src={sectionPhoto(s, 500)!} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                : <HeroTile verticalId={def.id} className="h-20 w-full sm:h-24" iconClass="h-9 w-9 sm:h-11 sm:w-11" />}
               <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
                 <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0] [overflow-wrap:anywhere]">{pick(DIRECTORY_SECTION_LABELS[s], locale)}</span>
                 {typeof total === "number" && total > 0

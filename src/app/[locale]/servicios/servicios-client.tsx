@@ -25,12 +25,12 @@ import {
   Search,
   Wrench,
   X,
-  Users,
 } from "lucide-react";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
 import { DirectoryQuickNav } from "@/components/landing/directory-nav";
+import { categoryImageUrl } from "@/lib/data/category-images";
 import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 import { useSiteFeatures } from "@/components/site-features";
 import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
@@ -348,7 +348,8 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
                     <li>
                       <button type="button" data-services-pros-tile onClick={() => { setVistaMovil("profesionales"); window.scrollTo({ top: 0 }); }}
                         className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white text-left shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-                        <span aria-hidden className="grid h-20 w-full place-items-center bg-[linear-gradient(135deg,#dff3fc,#b9e3f6)] text-[#0083b0] sm:h-24"><Users className="h-9 w-9 sm:h-11 sm:w-11" strokeWidth={1.75} /></span>
+                        {/* eslint-disable-next-line @next/next/no-img-element -- remote CDN photo */}
+                        <img src={categoryImageUrl("electricidad")!.replace("w=1100", "w=500")} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
                           <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{tp("prosTile")}</span>
                           {typeof prosTotal === "number" && prosTotal > 0
