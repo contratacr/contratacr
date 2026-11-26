@@ -2587,6 +2587,7 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   html:has(.ccr-native-search-panel) body { overflow: hidden; }
   /* «Buscar en esta zona» sits under the floating search card. */
   html:has([data-quick-nav-floating]) .ccr-search-area-pill { top: calc(env(safe-area-inset-top) + 84px) !important; }
+  html:has([data-floating-filters]) .ccr-search-area-pill { top: calc(env(safe-area-inset-top) + 132px) !important; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }
 

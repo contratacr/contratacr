@@ -41,6 +41,8 @@ interface SearchResultsLayoutProps {
   mapaPrimero?: boolean;
   /** Phones: only the map and pins (owner, 2026-11-26: businesses) — the sheet keeps the filters and the count, no cards. */
   soloMapa?: boolean;
+  /** Map-only screens (phones): chips floating over the map under the search card, instead of a bottom sheet. */
+  floatingFilters?: React.ReactNode;
   /** Mobile title row of the sheet header (Yelp app model): bold category, grey place and a Map/List toggle that
    *  moves the sheet between its lowest and highest stops. */
   titleRow?: { title: string; subtitle?: string; mapLabel: string; listLabel: string };
@@ -122,7 +124,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, mapaPrimero = false, soloMapa = false, titleRow }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, mapaPrimero = false, soloMapa = false, floatingFilters, titleRow }: SearchResultsLayoutProps) {
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -604,7 +606,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           ref={sheetRef}
-          className={(soloMapa ? "max-lg:!h-auto max-lg:![transform:none] " : "")+"ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"}
+          className={(soloMapa ? "max-lg:!hidden " : "")+"ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"}
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
@@ -690,8 +692,13 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             {children}
           </div>
         </div>
+        {soloMapa && floatingFilters && (
+          <div data-floating-filters className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+84px)] z-40 flex justify-center gap-2 px-4 lg:hidden">
+            <div className="pointer-events-auto flex gap-2">{floatingFilters}</div>
+          </div>
+        )}
         {searchAreaVisible && (
-        <div className={`ccr-search-area-pill pointer-events-none fixed inset-x-0 ${soloMapa ? "top-[calc(env(safe-area-inset-top)+84px)]" : "top-[calc(var(--ccr-native-header-height,124px)+0.75rem)]"} z-40 flex justify-center px-4 lg:hidden`}>
+        <div className={`ccr-search-area-pill pointer-events-none fixed inset-x-0 ${soloMapa ? "top-[calc(env(safe-area-inset-top)+132px)]" : "top-[calc(var(--ccr-native-header-height,124px)+0.75rem)]"} z-40 flex justify-center px-4 lg:hidden`}>
           <button
             type="button"
             onClick={() => {
