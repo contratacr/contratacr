@@ -163,7 +163,8 @@ export function claimBenefits(verticalId:string,proEnabled=true):[string,string]
  if(has(RESERVATION_VERTICALS,verticalId))out.push(['Recibir reservas de mesa y manejar una lista de espera (si las activa).','Take table reservations and run a waitlist (if you turn them on).']);
  if(has(ORDER_VERTICALS,verticalId))out.push(['Agregar un botón "Pedir" que lleva a su propio WhatsApp, sitio web o teléfono.','Add an "Order" button that leads to your own WhatsApp, website or phone.']);
  if(!isMapOnlyVertical(verticalId))out.push(['Publicar eventos de su negocio en la agenda de ContrataCR.','Publish your business events on the ContrataCR events page.']);
- out.push(['Responder las reseñas y preguntas de sus clientes.','Reply to your customers’ reviews and questions.']);
+ out.push(reviewsOn(verticalId)?['Responder las reseñas y preguntas de sus clientes.','Reply to your customers’ reviews and questions.']
+  :['Responder las preguntas de las personas.','Reply to people’s questions.']);
  out.push(['Mostrar que la ficha la administra el negocio (y el sello de verificado si presenta documentos o cédula jurídica).','Show that the business manages its page (and the verified badge if you submit documents or your corporate ID).']);
  if(proEnabled&&!isMapOnlyVertical(verticalId))out.push(['Recibir mensajes de clientes.','Receive messages from customers.']);
  if(proEnabled)out.push(['Usar las herramientas Pro gratis durante el lanzamiento.','Use the Pro tools for free during the launch.']);

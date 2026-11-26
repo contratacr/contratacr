@@ -97,9 +97,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const wa=pick('whatsapp');if(wa)chipActions.push({action:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,label:'WhatsApp'});
  const call=pick('call');if(call)chipActions.push({action:call,icon:actionIcon('call','h-4 w-4 shrink-0'),label:t('Llamar','Call')});
  const orderAction=order&&order.channel!=='whatsapp'?pick('order'):null;
- // «Sitio web» chip only where people decide on the website (owner 2026-11-26): lodging and education. Every place keeps the
- // link under «Más».
- const site=place.vertical.id==='lodging'||place.vertical.id==='education'?pick('website'):null;
+ const site=pick('website');
  const maps=published&&directions?directions:null;
  // Short description from typed data only (never invented): «<kind> en <zona>. Cocina: …».
  const summary=[kind&&area?t(`${kind} en ${place.address.adminArea2??area}.`,`${kind} in ${place.address.adminArea2??area}.`):null,cuisines.length?t(`Cocina: ${cuisines.slice(0,3).join(', ')}.`,`Cuisine: ${cuisines.slice(0,3).join(', ')}.`):null].filter(Boolean).join(' ')||(brandAbout??'');

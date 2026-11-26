@@ -2,7 +2,7 @@ import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types'
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
-import {CalendarCheck,MapPin,Phone,Star} from 'lucide-react';
+import {CalendarCheck,Globe,MapPin,Phone,Star} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {mapLinks} from '@/lib/directory/place-actions';
@@ -134,6 +134,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   ...(wa?[{id:'whatsapp',label:'WhatsApp',href:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,external:true}]:[]),
   ...(call?[{id:'call',label:t('Llamar','Call'),href:call.href,icon:<Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
   ...(maps?[{id:'waze',label:'Waze',href:maps.waze,icon:<WazeIcon className="h-4 w-4 shrink-0"/>,external:true},{id:'maps',label:'Maps',href:maps.google,icon:<GoogleMapsIcon className="h-4 w-4 shrink-0"/>,external:true}]:[]),
+  // «Sitio web» last, only on lodging and education cards (card-extras.ts fills it for those sections only).
+  ...(extra?.website?[{id:'website',label:t('Sitio web','Website'),href:extra.website,icon:<Globe className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}]:[]),
  ];
  const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}

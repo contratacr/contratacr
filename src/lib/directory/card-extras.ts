@@ -8,14 +8,16 @@ import {createAdminClient} from '@/lib/supabase/admin';
  */
 import type {PlaceHour} from './open-status';
 /** `hours`: dir_place_hours rows for the Maps-like status line; `reservation`/`whatsapp`: what the owner turned on. */
-export type CardExtra={photo:string|null;photos:string[];snippet:string|null;hours?:PlaceHour[];reservation?:boolean;whatsapp?:string|null};
+export type CardExtra={photo:string|null;photos:string[];snippet:string|null;hours?:PlaceHour[];reservation?:boolean;whatsapp?:string|null;
+ /** Website, only for the sections whose card shows «Sitio web» (lodging and education, owner 2026-11-26). */website?:string|null};
 const MAX_PHOTOS=4;
+const CARD_WEBSITE=new Set(['lodging','education']);
 export async function placeCardExtras(slugs:string[]):Promise<Record<string,CardExtra>>{
  const out:Record<string,CardExtra>={};
  const list=[...new Set(slugs)].slice(0,40);if(!list.length)return out;
  try{
   const db=createAdminClient();
-  const places=await db.from('dir_places').select('id,slug').in('slug',list).in('status',['published','closed_permanently']);
+  const places=await db.from('dir_places').select('id,slug,vertical_id,website').in('slug',list).in('status',['published','closed_permanently']);
   if(places.error||!places.data?.length)return out;
   const bySlug=new Map(places.data.map(p=>[p.id as string,p.slug as string]));const ids=[...bySlug.keys()];
   const [media,reviews,hours,reservations,orders]=await Promise.all([
@@ -28,6 +30,7 @@ export async function placeCardExtras(slugs:string[]):Promise<Record<string,Card
    db.from('dir_place_order_links').select('place_id,channel,value').in('place_id',ids).eq('channel','whatsapp'),
   ]);
   const ensure=(s:string)=>(out[s]??={photo:null,photos:[],snippet:null});
+  for(const p of places.data)if(CARD_WEBSITE.has(p.vertical_id as string)&&typeof p.website==='string'&&/^https?:\/\//i.test(p.website))ensure(p.slug as string).website=p.website;
   for(const h of hours.data??[]){const s=bySlug.get(h.place_id as string);if(!s)continue;const e=ensure(s);(e.hours??=[]).push({weekday:Number(h.weekday),opens:String(h.opens).slice(0,5),closes:String(h.closes).slice(0,5)});}
   for(const r of reservations.data??[]){const s=bySlug.get(r.place_id as string);if(s)ensure(s).reservation=true;}
   for(const o of orders.data??[]){const s=bySlug.get(o.place_id as string);if(s)ensure(s).whatsapp=String(o.value);}
