@@ -1,7 +1,7 @@
 import {notFound,redirect} from 'next/navigation';
 import {ProSpace} from '@/components/pro/pro-space';
 import {proSpaceProfile} from '@/lib/pro/pro-space-profile';
-import {JOB_SECTIONS,validJobId} from '@/lib/pro/job-route';
+import {JOB_SECTIONS,proJobCanonicalPath,validJobId} from '@/lib/pro/job-route';
 import {prefijoDeIdioma} from '@/lib/prefijo-de-idioma';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 export const dynamic='force-dynamic';
@@ -19,9 +19,9 @@ export default async function JobPage({params,searchParams}:{params:Promise<{loc
  const section=vista?.[0];if(section&&!JOB_SECTIONS.has(section))notFound();
  const search=new URLSearchParams();for(const [key,value] of Object.entries(query))if(typeof value==='string'&&!['tab','cita'].includes(key))search.set(key,value);
  const base=prefijoDeIdioma(locale)+'/dashboard/pro/trabajo/'+encodeURIComponent(job);
- // An explicit «summary» or a section passed as a query parameter use the canonical route form.
- const querySection=search.get('vistaTrabajo');
- if(section==='summary'||querySection&&JOB_SECTIONS.has(querySection)){search.delete('vistaTrabajo');const target=querySection&&JOB_SECTIONS.has(querySection)&&querySection!=='summary'?querySection:section!=='summary'?section:undefined;redirect(base+(target?'/'+target:'')+(search.size?'?'+search:''));}
+ // An explicit «summary» or a section passed as a query parameter use the canonical route form. The middleware
+ // already answers these with a 307; this is only the fallback (here the redirect lands after loading.tsx streamed).
+ const canonical=proJobCanonicalPath(locale,id,section,search);if(canonical)redirect(canonical);
  const returnTo=base+(section?'/'+section:'')+(search.size?'?'+search:'');
  return <ProSpace profile={await proSpaceProfile(returnTo,locale)}/>;
 }

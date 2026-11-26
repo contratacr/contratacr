@@ -2,7 +2,7 @@ import { iosAppStoreFallback } from "@/lib/mobile/ios-app-entry";
 import { enforceApiMfa } from "@/lib/auth/api-mfa";
 import { proWorkspaceGate, PRO_WS_HEADERS } from "@/lib/pro/workspace-gate";
 import { PRO_ENABLED, isProOnlyPath } from "@/lib/pro/enabled";
-import { proJobRoutePath } from "@/lib/pro/job-route";
+import { proJobCanonicalPath, proJobRoutePath } from "@/lib/pro/job-route";
 import { MIDDLEWARE_PRINT_ROUTES, PRINT_NONCE_HEADER, newPrintNonce, printContentPolicy } from "@/lib/pro/print-csp";
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
@@ -163,6 +163,12 @@ export async function middleware(request: NextRequest) {
   // replaced the whole document (a surprise second load ~1 s later, losing anything done in between).
   if (PRO_ENABLED && /^(?:\/en)?\/dashboard\/pro\/?$/.test(pathname)) {
     const job = proJobRoutePath(idiomaDeRuta(pathname), request.nextUrl.searchParams);
+    if (job) return conCabecerasDeSeguridad(NextResponse.redirect(new URL(job, request.url), 307));
+  }
+  // Same for the job route itself: /trabajo/<id>/summary and /trabajo/<id>[/<section>]?vistaTrabajo=<section>.
+  if (PRO_ENABLED) {
+    const route = /^(?:\/en)?\/dashboard\/pro\/trabajo\/([^/]+)(?:\/([^/]+))?\/?$/.exec(pathname);
+    const job = route ? proJobCanonicalPath(idiomaDeRuta(pathname), route[1], route[2], request.nextUrl.searchParams) : null;
     if (job) return conCabecerasDeSeguridad(NextResponse.redirect(new URL(job, request.url), 307));
   }
 
