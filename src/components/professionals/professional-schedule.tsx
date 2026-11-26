@@ -3,6 +3,7 @@ import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { useSiteFeatures } from "@/components/site-features";
 import { Link } from "@/i18n/navigation";
 import { Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -459,7 +460,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // El rótulo «WhatsApp» lo pone el propio lanzador y es el mismo en todo el
   // app; aquí solo se le da la medida de la tarjeta.
   const whatsappDeLaTarjeta = (
-    <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
+    <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={directoryOn ? "WhatsApp" : t("whatsappLong")} />
   );
   const contactButtonsClassic = showCall ? (
     // Uno arriba del otro, en todos los tamaños, con el rótulo que dice qué
@@ -473,12 +474,12 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   ) : (
     whatsappDeLaTarjeta
   );
-  // Directory on (test, owner 2026-11-26): the same layout as the place cards — WhatsApp and Llamar side by side (or the
-  // one there is, full width), then «Escribir reseña».
+  // Directory on (test, owner 2026-11-26): the same layout as the place cards — one row: WhatsApp and Llamar (or the one
+  // there is), then a square «Escribir reseña» button.
   const contactButtons = !directoryOn ? contactButtonsClassic : (
-    <div className="flex flex-col gap-2" data-pro-card-actions>
-      {showCall ? <div className="grid grid-cols-2 gap-2">{whatsappDeLaTarjeta}{renderCall()}</div> : whatsappDeLaTarjeta}
-      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={secondaryContactClass}><Star className="h-4 w-4 shrink-0" aria-hidden />{t("writeReview")}</Link>
+    <div className="flex items-center gap-2" data-pro-card-actions>
+      <div className={cn("min-w-0 flex-1", showCall && "grid grid-cols-2 gap-2")}>{whatsappDeLaTarjeta}{showCall && renderCall()}</div>
+      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review aria-label={t("writeReview")} title={t("writeReview")} className={cn(secondaryContactClass, "!w-11 shrink-0 !px-0")}><Star className="h-[18px] w-[18px] shrink-0" aria-hidden /></Link>
     </div>
   );
 

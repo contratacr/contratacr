@@ -146,20 +146,18 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
-  {/* Owner 2026-11-26: one big contact button (WhatsApp and Llamar side by side when it has both; «Cómo llegar» when it has
-      neither), then «Escribir reseña» and «Ver en el mapa». */}
+  {/* Owner 2026-11-26: contact (WhatsApp and Llamar when it has both; «Cómo llegar» when it has neither), then review and map. */}
   <div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions data-place-card-actions={contact.map(a=>a.id).join(' ')}>
-   <div className={contact.length>1?'grid grid-cols-2 gap-2':'flex'}>
+   <div className="flex items-center gap-2">
     {contact.map(a=>{
-     if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${actionPrimary} relative z-10 w-full`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
-     // Both channels: WhatsApp green and Llamar white side by side; only one: the brand primary at full width.
+     if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${actionPrimary} relative z-10 !w-auto flex-1`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
+     // Both channels: WhatsApp green and Llamar white; only one: the brand primary.
      const cls=contact.length>1?(a.id==='whatsapp'?`${actionPrimary} !bg-[#25D366] hover:!bg-[#1ebe5b]`:actionSecondary):actionPrimary;
-     return <a key={a.id} className={`${cls} w-full`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
+     return <a key={a.id} className={`${cls} !w-auto min-w-0 flex-1`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
     })}
-   </div>
-   <div className="flex gap-2">
-    <a className={`${actionSecondary} flex-1`} href={`${href}#escribir-resena`} data-place-action="review"><Star className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Escribir reseña','Write a review')}</a>
-    {item.location&&<PlaceMapFocusButton id={item.slug} label={t('Ver en el mapa','Show on the map')} className={`${actionSecondary} relative z-10 !w-12 shrink-0 !px-0 lg:hidden`}/>}
+    {/* Owner 2026-11-26: one row — contact wide, then two square icon buttons (review, map). */}
+    <a className={`${actionSecondary} !w-11 shrink-0 !px-0`} href={`${href}#escribir-resena`} data-place-action="review" aria-label={t('Escribir reseña','Write a review')} title={t('Escribir reseña','Write a review')}><Star className="h-[18px] w-[18px] shrink-0" aria-hidden="true"/></a>
+    {item.location&&<PlaceMapFocusButton id={item.slug} label={t('Ver en el mapa','Show on the map')} className={`${actionSecondary} relative z-10 !w-11 shrink-0 !px-0 lg:hidden`}/>}
    </div>
   </div>
   {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
