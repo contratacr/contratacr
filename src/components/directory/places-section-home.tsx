@@ -31,6 +31,9 @@ import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} fro
  * longer shown here: their substance lives in the Terms («Directorio de lugares y negocios») and /como-ordenamos
  * (Ley 10.946 ranking parameters), linked from the footer and the Terms.
  */
+// Owner, 2026-11-26: people pick these by photos and reviews, so they keep result cards; every other business section is
+// map and pins only on phones (the nearest one open now).
+const CARD_SECTIONS=new Set(['restaurantes','cafes','belleza']);
 export type PlaceSection='restaurantes'|'farmacias'|'supermercados'|'gasolineras'|'cafes'|'pulperias'|'ferreterias'|'hospedaje'|'salud'|
  'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos';
 type Copy={title:[string,string]};
@@ -116,7 +119,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0} soloMapa={points.length>0}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&!CARD_SECTIONS.has(section)} soloMapa={points.length>0&&!CARD_SECTIONS.has(section)}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
