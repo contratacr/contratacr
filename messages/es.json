@@ -4047,17 +4047,18 @@
     "openFamily": "Abrir"
   },
   "homeFeed": {
-    "exploring": "Explorando:",
-    "country": "Costa Rica",
+    "orderLabel": "Ordenar recomendaciones",
+    "orderReviews": "Más reseñas",
+    "orderNear": "Cerca de mí",
+    "locating": "Ubicando…",
+    "locationDenied": "No pudimos obtener su ubicación. Revise el permiso del navegador.",
+    "prosReviews": "Profesionales con más reseñas",
+    "prosNear": "Profesionales cerca de usted",
+    "placesReviews": "Negocios con más reseñas",
+    "placesNear": "Negocios cerca de usted",
+    "seeAllPros": "Ver todos los profesionales",
+    "seeAllPlaces": "Ver todas las categorías",
     "emptyTitle": "Todavía no hay recomendaciones",
-    "emptyBody": "Busque arriba o elija una sección para explorar.",
-    "topPros": "Profesionales mejor calificados",
-    "seeAll": "Ver todos",
-    "top_restaurantes": "Restaurantes mejor calificados",
-    "top_cafes": "Cafés mejor calificados",
-    "top_farmacias": "Farmacias mejor calificadas",
-    "top_supermercados": "Supermercados mejor calificados",
-    "top_talleres": "Talleres mejor calificados",
-    "top_belleza": "Belleza mejor calificada"
+    "emptyBody": "Busque arriba o elija una sección para explorar."
   }
 }
