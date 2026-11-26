@@ -2580,6 +2580,6 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */
   html:has([data-ccr-brand-menu]) [data-ccr-menu-burger] { display: none !important; }
   /* The search beside the brand looks like the home header's pill. */
-  [data-section-header-search] .ccr-section-search { border-radius: 9999px; border-color: #d7e1ea; box-shadow: 0 6px 18px -10px rgba(22,37,67,0.45); padding-left: 0.875rem; }
+  [data-section-header-search] .ccr-section-search { border-radius: 9999px; border-color: #d7e1ea; padding-left: 0.875rem; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }

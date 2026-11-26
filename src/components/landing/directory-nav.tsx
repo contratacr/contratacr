@@ -251,7 +251,7 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
         <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
           className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
-          className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)]", floating && "border-transparent shadow-none pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
+          className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left", floating && "border-transparent pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
           <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />
           <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? floating.title : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
