@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
-import {ChevronDown,SlidersHorizontal,X} from 'lucide-react';
+import {Check,ChevronDown,SlidersHorizontal,X} from 'lucide-react';
 import {CAPA_HOJA} from '@/lib/capas';
 
 /**
@@ -45,7 +45,8 @@ export function PlacesFilterChips({variant,menus,toggles,filtersLabel,activeFilt
  },[openKey]);
  const filters=<button type="button" data-dir-filters-button aria-haspopup="dialog" onClick={()=>window.dispatchEvent(new Event(OPEN_DIR_FILTERS))} className={activeFilters>0?on:idle}>
   <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/><span>{filtersLabel}{activeFilters>0?` (${activeFilters})`:''}</span></button>;
- const toggleChips=toggles.map(x=><a key={x.key} href={x.href} data-chip={x.key} aria-pressed={x.active} className={x.active?on:idle}>{x.label}</a>);
+ // A toggle that is on reads as on (owner 2026-11-26): filled brand blue, white text and a check.
+ const toggleChips=toggles.map(x=><a key={x.key} href={x.href} data-chip={x.key} aria-pressed={x.active} className={x.active?`${pill} border-[#009FD9] !bg-[#009FD9] text-white`:idle}>{x.active&&<Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden="true"/>}{x.label}</a>);
  // Phones (owner 2026-11-26, like Yelp): «Ordenar ▾», the toggles, then the other menus; each menu opens a bottom sheet
  // (a dropdown would be clipped by the chip rail).
  if(variant==='sheet'){
