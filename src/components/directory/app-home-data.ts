@@ -4,6 +4,7 @@ import { parseSearchParams, type DirectorySearchResult, type SearchVertical } fr
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { placeCardExtras } from "@/lib/directory/card-extras";
 import { placePhotoSrc } from "@/lib/directory/place-photos";
+import { sectionRatingSort } from "@/lib/directory/place-verticals";
 
 /** Plain, serialisable data of one ranked card of the app home (no functions, no server-only values). */
 export type TopPlace = { slug: string; name: string; section: string; area: string; photo: string | null; average: number | null; count: number };
@@ -19,7 +20,7 @@ export async function loadTopPlaces(only?: string): Promise<TopPlace[]> {
   const section = (only ? (enabled.includes(only) ? only : undefined) : ORDER.find((s) => enabled.includes(s))) as SearchVertical | undefined;
   if (!section) return [];
   const work = (async () => {
-    const parsed = parseSearchParams(new URLSearchParams({ vertical: section, sort: "best_rated", limit: "10" }));
+    const parsed = parseSearchParams(new URLSearchParams({ vertical: section, sort: sectionRatingSort(section) ? "best_rated" : "relevance", limit: "10" }));
     if (!parsed.ok) return [];
     const { data, error } = await createAdminClient().rpc("dir_search", {
       p_vertical: parsed.vertical, p_q: parsed.q, p_filters: parsed.filters, p_lat: parsed.lat, p_lng: parsed.lng,

@@ -67,6 +67,8 @@ export async function ProsSection() {
       ferreterias: "construccion_ingenieria", farmacias: "salud", salud: "salud", veterinarias: "mascotas",
       gimnasios: "bienestar", belleza: "belleza", talleres: "automotriz", gasolineras: "automotriz", parqueos: "automotriz", lavacar: "automotriz",
       hospedaje: "turismo", tours: "turismo", bancos: "profesional",
+      atracciones: "turismo", tiendas: "comercios", "centros-comerciales": "comercios", "mercados-y-carnicerias": "comercios",
+      tramites: "profesional", educacion: "educacion", transporte: "automotriz",
     };
     const place = (id: string) => ({ id, label: (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id, href: `/${id}`, place: placeSection(id)!.id });
     for (const [section, group] of Object.entries(GROUP_OF)) {

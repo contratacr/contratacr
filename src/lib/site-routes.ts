@@ -34,6 +34,8 @@ export const RUTAS_DEL_SITIO = new Set([
   "cafes", "pulperias", "ferreterias", "hospedaje", "salud", "veterinarias", "talleres", "belleza", "gimnasios", "tours", "bancos",
   // Parqueos y lavacar (2026-11-26, solo desarrollo): lugares que agrega el equipo de ContrataCR.
   "parqueos", "lavacar",
+  // Secciones de la migración 537 (2026-11-26, solo desarrollo): todo lo que la gente busca en OSM.
+  "atracciones", "tiendas", "centros-comerciales", "mercados-y-carnicerias", "tramites", "educacion", "transporte",
   // src/app/actions: módulo de acciones del servidor (no es una página), declarado para que nunca se tome como perfil.
   "actions",
   // P3 (solo desarrollo): comparador de precios de supermercados y farmacias (solo venta libre).

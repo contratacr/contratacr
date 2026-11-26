@@ -1,4 +1,4 @@
-import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, SquareParking, Droplets, type LucideIcon } from "lucide-react";
+import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, SquareParking, Droplets, Mountain, ShoppingBag, Building2, Beef, FileText, GraduationCap, Bus, type LucideIcon } from "lucide-react";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { idiomaDe } from "@/lib/prefijo-de-idioma";
 
@@ -11,17 +11,20 @@ export const DIRECTORY_SECTION_ICONS: Record<string, LucideIcon> = {
   restaurantes: Utensils, cafes: Coffee, supermercados: ShoppingCart, pulperias: Store, farmacias: Pill, ferreterias: Hammer,
   gasolineras: Fuel, talleres: Wrench, hospedaje: BedDouble, tours: Compass, belleza: Scissors, gimnasios: Dumbbell,
   veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark, parqueos: SquareParking, lavacar: Droplets,
+  atracciones: Mountain, tiendas: ShoppingBag, "centros-comerciales": Building2, "mercados-y-carnicerias": Beef, tramites: FileText,
+  educacion: GraduationCap, transporte: Bus,
 };
 export type Bilingual = { es: string; en: string };
 export type DirectoryGroup = { id: string; es: string; en: string; icon: LucideIcon; sections: readonly string[] };
 
 export const DIRECTORY_GROUPS: readonly DirectoryGroup[] = [
   { id: "comer", es: "Comer y beber", en: "Food and drink", icon: Utensils, sections: ["restaurantes", "cafes"] },
-  { id: "compras", es: "Compras", en: "Shopping", icon: ShoppingCart, sections: ["supermercados", "pulperias", "ferreterias", "farmacias"] },
+  { id: "compras", es: "Compras", en: "Shopping", icon: ShoppingCart, sections: ["supermercados", "pulperias", "ferreterias", "farmacias", "mercados-y-carnicerias", "tiendas", "centros-comerciales"] },
   { id: "salud", es: "Salud y bienestar", en: "Health and wellness", icon: HeartPulse, sections: ["salud", "veterinarias", "belleza", "gimnasios"] },
   { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: Car, sections: ["gasolineras", "talleres", "parqueos", "lavacar"] },
-  { id: "viajes", es: "Viajes", en: "Travel", icon: Plane, sections: ["hospedaje", "tours"] },
+  { id: "viajes", es: "Viajes", en: "Travel", icon: Plane, sections: ["hospedaje", "atracciones", "tours", "transporte"] },
   { id: "dinero", es: "Dinero", en: "Money", icon: Landmark, sections: ["bancos"] },
+  { id: "servicios-publicos", es: "Trámites y educación", en: "Public services and education", icon: GraduationCap, sections: ["tramites", "educacion"] },
 ];
 
 /** One line per section (hub cards). */
@@ -39,10 +42,17 @@ export const DIRECTORY_SECTION_BLURBS: Record<string, Bilingual> = {
   gasolineras: { es: "Gasolineras y precios de combustible", en: "Fuel stations and fuel prices" },
   talleres: { es: "Talleres mecánicos, llantas y repuestos", en: "Auto repair, tires and parts" },
   hospedaje: { es: "Hoteles, cabinas y alojamientos", en: "Hotels, cabins and lodging" },
-  tours: { es: "Tours y actividades turísticas", en: "Tours and tourist activities" },
+  tours: { es: "Tours, museos y agencias de viajes", en: "Tours, museums and travel agencies" },
   bancos: { es: "Bancos y cajeros automáticos", en: "Banks and ATMs" },
   parqueos: { es: "Parqueos públicos, techados y para motos", en: "Public, covered and motorcycle parking" },
   lavacar: { es: "Lavacar, autolavado y detallado", en: "Car washes, self-service and detailing" },
+  atracciones: { es: "Cataratas, playas, miradores y parques nacionales", en: "Waterfalls, beaches, viewpoints and national parks" },
+  tiendas: { es: "Ropa, celulares, electrónica, muebles y más", en: "Clothing, phones, electronics, furniture and more" },
+  "centros-comerciales": { es: "Centros y plazas comerciales", en: "Malls and shopping plazas" },
+  "mercados-y-carnicerias": { es: "Carnicerías, pescaderías, mercados y ferias", en: "Butchers, fish markets and farmers markets" },
+  tramites: { es: "Municipalidades, Correos, tribunales y oficinas públicas", en: "Municipalities, post offices, courts and public offices" },
+  educacion: { es: "Universidades, colegios, escuelas e idiomas", en: "Universities, schools and language schools" },
+  transporte: { es: "Terminales, aeropuertos y alquiler de carros", en: "Bus stations, airports and car rental" },
 };
 
 export type ResolvedDirectoryGroup = { id: string; label: Bilingual; icon: LucideIcon; sections: { section: string; label: Bilingual }[] };
@@ -62,7 +72,9 @@ export function enabledDirectoryGroups(enabled: readonly string[]): ResolvedDire
 /** CURATED menu (owner decision 2026-11-22, Yelp style): only the place categories people actually search for appear in the
  * Categorías menu, the mobile drawer, the footer and the home tiles; the rest (pulperias, ferreterias, tours, gimnasios,
  * talleres) stay reachable from /lugares ("Ver todos los lugares"). Order = order shown. */
-export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "parqueos", "lavacar", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
+export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "parqueos", "lavacar", "bancos", "hospedaje", "atracciones", "tours", "salud", "gimnasios", "veterinarias", "belleza",
+  // 2026-11-26 (migration 537)
+  "tiendas", "centros-comerciales", "mercados-y-carnicerias", "tramites", "educacion", "transporte"];
 
 /** The curated place sections that are enabled, in curated order. */
 export function curatedPlaces(enabled: readonly string[]): { section: string; label: Bilingual }[] {
@@ -95,14 +107,15 @@ export const SERVICE_MENU_LIMIT = 10;
  * reachable from /lugares and the footer. Restaurantes and cafés live in Comercios (no thin "Comida y bebida" group: the
  * catalogue already keeps food shops there), farmacias with Salud, veterinarias with Mascotas, bancos with Empresas. */
 export const PLACE_MENU_GROUPS: Record<string, readonly string[]> = {
-  comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias"],
+  comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "tiendas", "centros-comerciales", "mercados-y-carnicerias"],
   salud: ["salud", "farmacias"],
   bienestar: ["gimnasios"],
-  automotriz: ["gasolineras", "talleres", "parqueos", "lavacar"],
+  automotriz: ["gasolineras", "talleres", "parqueos", "lavacar", "transporte"],
   belleza: ["belleza"],
   mascotas: ["veterinarias"],
-  turismo: ["hospedaje", "tours"],
-  profesional: ["bancos"],
+  turismo: ["hospedaje", "atracciones", "tours"],
+  profesional: ["bancos", "tramites"],
+  educacion: ["educacion"],
 };
 
 /** Service categories that duplicate a place section of the same group: hidden from the menus (still in /servicios). */

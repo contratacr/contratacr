@@ -2,7 +2,7 @@ import type {ReactNode} from 'react';
 import {DirectoryQuickNav} from '@/components/landing/directory-nav';
 import {Check} from 'lucide-react';
 import {CR_PROVINCES} from '@/lib/directory/listing-public';
-import {placeSection} from '@/lib/directory/place-verticals';
+import {placeSection,reviewsOn,sectionRatingSort} from '@/lib/directory/place-verticals';
 import {encodeCursor,placePriceMode,type SearchSort} from '@/lib/directory/search-schemas';
 import {searchProblemText,type DirectorySearchPage} from '@/lib/directory/search-server';
 import {LandingNavbar} from '@/components/landing/landing-navbar';
@@ -37,7 +37,8 @@ import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} fro
 // map and pins only on phones (the nearest one open now).
 const CARD_SECTIONS=new Set(['restaurantes','cafes','belleza']);
 export type PlaceSection='restaurantes'|'farmacias'|'supermercados'|'gasolineras'|'cafes'|'pulperias'|'ferreterias'|'hospedaje'|'salud'|
- 'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos'|'parqueos'|'lavacar';
+ 'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos'|'parqueos'|'lavacar'|
+ 'atracciones'|'tiendas'|'centros-comerciales'|'mercados-y-carnicerias'|'tramites'|'educacion'|'transporte';
 type Copy={title:[string,string]};
 /** H1 of each section (the metadata title of its page). */
 const COPY:Record<PlaceSection,Copy>={
@@ -54,10 +55,17 @@ const COPY:Record<PlaceSection,Copy>={
  talleres:{title:['Talleres y servicios para vehículos en Costa Rica','Car services in Costa Rica']},
  belleza:{title:['Belleza en Costa Rica','Beauty in Costa Rica']},
  gimnasios:{title:['Gimnasios en Costa Rica','Gyms in Costa Rica']},
- tours:{title:['Tours y atracciones en Costa Rica','Tours and attractions in Costa Rica']},
+ tours:{title:['Tours y museos en Costa Rica','Tours and museums in Costa Rica']},
  bancos:{title:['Bancos y cajeros en Costa Rica','Banks and ATMs in Costa Rica']},
  parqueos:{title:['Parqueos en Costa Rica','Parking in Costa Rica']},
  lavacar:{title:['Lavacar en Costa Rica','Car washes in Costa Rica']},
+ atracciones:{title:['Atracciones en Costa Rica','Attractions in Costa Rica']},
+ tiendas:{title:['Tiendas en Costa Rica','Stores in Costa Rica']},
+ 'centros-comerciales':{title:['Centros comerciales en Costa Rica','Shopping centers in Costa Rica']},
+ 'mercados-y-carnicerias':{title:['Mercados y carnicerías en Costa Rica','Markets and butchers in Costa Rica']},
+ tramites:{title:['Trámites y oficinas públicas en Costa Rica','Public offices in Costa Rica']},
+ educacion:{title:['Educación en Costa Rica','Education in Costa Rica']},
+ transporte:{title:['Transporte en Costa Rica','Transport in Costa Rica']},
 };
 const fmt=(n:number,en:boolean)=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,en?',':'.');
 const NOT_FILTERS=['q','sort','cursor','page','lat','lng'];
@@ -70,11 +78,13 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  // Same sort rule as the filters form: price sorts only where a price exists; distance only with the visitor's position.
  const priceSorts=priceMode==='menu'||(priceMode==='product'&&!!values.product);
  // Like the professionals search in production (owner 2026-11-26): Mejor calificados by default, Más cercanos (asks for the
- // position), and the price sorts where prices exist. The chip shows the current order.
- const sorts=(['best_rated','distance',...(priceSorts?['price_asc','price_desc'] as const:[])] as SearchSort[]);
- const sort=(values.sort as SearchSort|undefined)??'best_rated';
+ // position), and the price sorts where prices exist. The chip shows the current order. Sections where some or all places
+ // take no reviews (trámites, centros comerciales, educación, transporte) never sort by rating: Más relevantes by default.
+ const rated=sectionRatingSort(section),defSort:SearchSort=rated?'best_rated':'relevance';
+ const sorts=([defSort,'distance',...(priceSorts?['price_asc','price_desc'] as const:[])] as SearchSort[]);
+ const sort=(values.sort as SearchSort|undefined)??defSort;
  const menus:ChipMenu[]=[
-  {key:'sort',label:sortLabel(sorts.includes(sort)?sort:'best_rated',en),active:false,options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s==='best_rated'?undefined:s}),current:s===sort,...(s==='distance'&&!values.lat?{needsLocation:true}:{})}))},
+  {key:'sort',label:sortLabel(sorts.includes(sort)?sort:defSort,en),active:false,options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s===defSort?undefined:s}),current:s===sort,...(s==='distance'&&!values.lat?{needsLocation:true}:{})}))},
   {key:'province',label:values.province??t('Provincia','Province'),active:!!values.province,options:[{value:'province-all',label:t('Todo el país','Whole country'),href:link({province:undefined,canton:undefined}),current:!values.province},
    ...CR_PROVINCES.map(p=>({value:p,label:p,href:link({province:p,canton:undefined}),current:values.province===p}))]},
   ...(kinds.length?[{key:'kind',label:kinds.find(k=>k.value===values.kind)?.[en?'en':'es']??t('Tipo','Type'),active:!!values.kind,
@@ -94,7 +104,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
  // Yelp result-card model (2026-11-19): cover photo + newest review snippet for the places of this page.
  const extras=await placeCardExtras(places.map(p=>p.slug));
- const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1,name:p.name,sub:[en?p.vertical.nameEn:p.vertical.nameEs,kindLabel(p.vertical.id,p.attributes.kind,en)].filter(Boolean).join(' · '),rating:p.rating.average!=null?Number(p.rating.average):null,ratingCount:p.rating.count,
+ const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1,name:p.name,sub:[en?p.vertical.nameEn:p.vertical.nameEs,kindLabel(p.vertical.id,p.attributes.kind,en)].filter(Boolean).join(' · '),rating:p.rating.average!=null&&reviewsOn(p.vertical.id,p.attributes.kind)?Number(p.rating.average):null,ratingCount:reviewsOn(p.vertical.id,p.attributes.kind)?p.rating.count:0,
   // Map-first sections (owner 2026-11-26): the pin card carries open-now and the two card actions (Llamar, Cómo llegar).
   open:p.openNow===true?t('Abierto ahora','Open now'):p.openNow===false?t('Cerrado ahora','Closed now'):undefined,openNow:p.openNow,
   actions:placeCardActions({slug:p.slug,name:p.name,verticalId:p.vertical.id,locale,phone:p.phone,location:p.location}).map(a=>({id:a.id,label:a.short||a.label,href:a.type==='directions'&&p.location?`https://www.google.com/maps/dir/?api=1&destination=${p.location.lat},${p.location.lng}`:a.href,external:a.type==='directions'||!!a.external}))}]:[]);

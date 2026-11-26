@@ -27,6 +27,13 @@ export const DIRECTORY_SECTION_LABELS: Record<string, { es: string; en: string }
   bancos: { es: "Bancos y cajeros", en: "Banks and ATMs" },
   parqueos: { es: "Parqueos", en: "Parking" },
   lavacar: { es: "Lavacar", en: "Car washes" },
+  atracciones: { es: "Atracciones", en: "Attractions" },
+  tiendas: { es: "Tiendas", en: "Stores" },
+  "centros-comerciales": { es: "Centros comerciales", en: "Shopping centers" },
+  "mercados-y-carnicerias": { es: "Mercados y carnicerías", en: "Markets and butchers" },
+  tramites: { es: "Trámites", en: "Public offices" },
+  educacion: { es: "Educación", en: "Education" },
+  transporte: { es: "Transporte", en: "Transport" },
 };
 
 export function directorySectionLabel(section: string, locale: string): string {
@@ -90,10 +97,10 @@ export function suggestDirectorySections(text: string, enabled: readonly string[
 // mechanics) keep the professionals search; their section is still offered in
 // the suggestions. Words that also name a trade («bomba» de agua, «pinturas»,
 // «delivery», «a domicilio»…) never redirect on their own.
-const FREE_TEXT_SECTIONS = new Set(["restaurantes", "cafes", "gasolineras", "farmacias", "supermercados", "pulperias", "ferreterias", "hospedaje", "tours", "bancos", "gimnasios", "parqueos"]);
+const FREE_TEXT_SECTIONS = new Set(["restaurantes", "cafes", "gasolineras", "farmacias", "supermercados", "pulperias", "ferreterias", "hospedaje", "tours", "bancos", "gimnasios", "parqueos", "atracciones", "centros-comerciales", "tramites", "transporte"]);
 const NOT_ON_THEIR_OWN = new Set([
   "bomba", "bombas", "a domicilio", "delivery", "lunch", "menu", "pinturas", "materiales de construccion", "kiosco", "pub",
-  "agencia de viajes", "crossfit", "artes marciales", "pilates", "casa de cambio", "carniceria", "verduleria", "mas x menos",
+  "agencia de viajes", "terminal", "ferry", "crossfit", "artes marciales", "pilates", "casa de cambio", "carniceria", "verduleria", "mas x menos",
 ].map(normalizeIntentText));
 
 export function directorySectionForQuery(text: string, enabled: readonly string[]): string | null {

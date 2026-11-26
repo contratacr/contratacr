@@ -38,6 +38,14 @@ export const PLACE_ACTIONS:Record<string,PlaceActionSpec>={
  banking:{bar:['directions','call','hours','review'],side:['directions','call','hours','website'],head:[],card:['directions','call']},
  parking:{bar:['directions','call','hours','review'],side:['directions','call','whatsapp','hours','website'],head:[],card:['directions','call']},
  car_wash:{bar:['call','whatsapp','directions','review'],side:['call','whatsapp','directions','hours','website'],head:[],card:['call','directions']},
+ // 2026-11-26 (migration 537). `review` is dropped at render time where reviewsOn() is false (public offices, malls, schools, terminals).
+ attraction:{bar:['directions','call','hours','review'],side:['directions','call','whatsapp','hours','website'],head:[],card:['directions','call']},
+ retail:{bar:['call','whatsapp','directions','review'],side:['call','whatsapp','directions','hours','website'],head:[],card:['call','directions']},
+ mall:{bar:['directions','call','hours'],side:['directions','call','hours','website'],head:[],card:['directions','call']},
+ food_shop:{bar:['call','whatsapp','directions','review'],side:['call','whatsapp','directions','hours','website'],head:[],card:['call','directions']},
+ government:{bar:['directions','call','hours'],side:['directions','call','hours','website'],head:[],card:['directions','call']},
+ education:{bar:['call','website','directions','review'],side:['call','website','whatsapp','directions','hours'],head:[],card:['call','directions']},
+ transport:{bar:['directions','call','hours','review'],side:['directions','call','whatsapp','hours','website'],head:[],card:['directions','call']},
  vehicle_dealer:{bar:['call','directions','website','review'],side:['call','directions','website'],head:[],card:['call','directions']},
  real_estate:{bar:['call','directions','website','review'],side:['call','directions','website'],head:[],card:['call','directions']},
 };

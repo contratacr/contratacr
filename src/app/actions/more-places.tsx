@@ -5,6 +5,7 @@ import { encodeCursor, type SearchVertical } from "@/lib/directory/search-schema
 import { placeCardExtras } from "@/lib/directory/card-extras";
 import { DIR_ENABLED } from "@/lib/directory/feature-flags";
 import { PlaceCard } from "@/components/directory/place-card";
+import { sectionRatingSort } from "@/lib/directory/place-verticals";
 
 /**
  * The next page of a directory section for the infinite results list (owner 2026-11-26: 20 at a time while the person
@@ -13,7 +14,7 @@ import { PlaceCard } from "@/components/directory/place-card";
 export async function morePlaces(section: string, values: Record<string, string>, locale: string, cursor: string, startRank: number): Promise<{ items: ReactNode; next: string | null; count: number }> {
   if (!DIR_ENABLED) return { items: null, next: null, count: 0 };
   const sp: SearchPageParams = { ...values, cursor };
-  const page = await loadDirectorySearch(section as SearchVertical, sp, { defaultSort: "best_rated" });
+  const page = await loadDirectorySearch(section as SearchVertical, sp, { defaultSort: sectionRatingSort(section) ? "best_rated" : "relevance" });
   if (!page.ok) return { items: null, next: null, count: 0 };
   const places = page.result.items.flatMap((it) => (it.kind === "place" ? [it] : []));
   const extras = await placeCardExtras(places.map((p) => p.slug));

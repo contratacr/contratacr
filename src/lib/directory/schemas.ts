@@ -46,6 +46,14 @@ export const verticalAttributeSchemas={
  // 2026-11-26: parking and car washes (added by the team).
  parking:z.object({...contact,kind:kindOf('parking')}).strict(),
  car_wash:z.object({...contact,kind:kindOf('car_wash')}).strict(),
+ // 2026-11-26 (migration 537): kind only.
+ attraction:z.object({...contact,kind:kindOf('attraction')}).strict(),
+ retail:z.object({...contact,kind:kindOf('retail')}).strict(),
+ mall:z.object({...contact,kind:kindOf('mall')}).strict(),
+ food_shop:z.object({...contact,kind:kindOf('food_shop')}).strict(),
+ government:z.object({...contact,kind:kindOf('government')}).strict(),
+ education:z.object({...contact,kind:kindOf('education')}).strict(),
+ transport:z.object({...contact,kind:kindOf('transport')}).strict(),
 } satisfies Record<DirectoryVertical,z.ZodType>;
 export function placeAttributesSchema(vertical:DirectoryVertical){return verticalAttributeSchemas[vertical];}
 

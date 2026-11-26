@@ -18,7 +18,8 @@ export type ToolLocale='es'|'en';
 // prices (the answer says so and recalls 9-1-1); bancos = map points only (no rates, fees or products; a price question
 // about a bank is answered with places and that limit, never with figures).
 export const PLACE_TOOL_VERTICALS=['restaurantes','farmacias','supermercados','gasolineras',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar',
+ 'atracciones','tiendas','centros-comerciales','mercados-y-carnicerias','tramites','educacion','transporte'] as const;
 export type PlaceToolVertical=typeof PLACE_TOOL_VERTICALS[number];
 
 export const DIRECTORY_TOOLS=[
@@ -82,10 +83,17 @@ const SECTION_TERMS:Record<PlaceToolVertical,string[]>={
  talleres:['taller mecanico','talleres mecanicos','talleres','llantera','llanteras','car repair shop','tyre shop'],
  belleza:['salon de belleza','salones de belleza','barberia','barberias','peluqueria','peluquerias','beauty salon','barber shop','nail salon'],
  gimnasios:['gimnasio','gimnasios','gym','gyms'],
- tours:['tour','tours','atraccion','atracciones','museo','museos','attraction','attractions','museum','museums'],
+ tours:['tour','tours','museo','museos','museum','museums','agencia de viajes','travel agency'],
  bancos:['banco','bancos','cajero','cajeros','cajero automatico','cajeros automaticos','atm','atms','bank','banks'],
  parqueos:['parqueo','parqueos','parqueadero','estacionamiento','car park','parking lot'],
  lavacar:['lavacar','lavacarros','lava car','autolavado','car wash','car washes'],
+ atracciones:['atraccion','atracciones','catarata','cataratas','playa','playas','mirador','aguas termales','parque nacional','volcan','attraction','attractions','waterfall','beach','national park'],
+ tiendas:['tienda de ropa','tiendas de ropa','zapateria','zapaterias','tienda de celulares','muebleria','electrodomesticos','libreria','jugueteria','joyeria','clothing store','shoe store'],
+ 'centros-comerciales':['centro comercial','centros comerciales','mall','malls','plaza comercial','shopping mall'],
+ 'mercados-y-carnicerias':['carniceria','carnicerias','pescaderia','mercado municipal','feria del agricultor','butcher','fish market','farmers market'],
+ tramites:['municipalidad','correos','oficina de correos','tribunales','registro civil','migracion','delegacion policial','city hall','post office'],
+ educacion:['universidad','universidades','colegio','colegios','escuela de idiomas','escuela de manejo','guarderia','university','language school'],
+ transporte:['terminal de buses','aeropuerto','ferry','alquiler de carros','rent a car','car rental','bus station','airport'],
 };
 /** Sections whose prices the compare tool may look up (products only; never consultations, rates or room prices). */
 const PRICE_SECTIONS=new Set<PlaceToolVertical>(['farmacias','supermercados','pulperias','ferreterias','veterinarias']);
@@ -132,15 +140,18 @@ const SECTION_NAME:Record<PlaceToolVertical,[string,string]>={restaurantes:['res
  cafes:['cafés, panaderías y bares','cafés, bakeries and bars'],pulperias:['pulperías y minisúper','corner stores'],ferreterias:['ferreterías','hardware stores'],
  hospedaje:['hospedajes','places to stay'],salud:['establecimientos de salud','health facilities'],veterinarias:['veterinarias y tiendas de mascotas','vets and pet shops'],
  talleres:['talleres y servicios para vehículos','car services'],belleza:['salones de belleza y barberías','beauty salons and barbers'],gimnasios:['gimnasios','gyms'],
- tours:['tours y atracciones','tours and attractions'],bancos:['bancos y cajeros','banks and ATMs'],
- parqueos:['parqueos','parking'],lavacar:['lavacar','car washes']};
+ tours:['tours y museos','tours and museums'],bancos:['bancos y cajeros','banks and ATMs'],
+ parqueos:['parqueos','parking'],lavacar:['lavacar','car washes'],
+ atracciones:['atracciones','attractions'],tiendas:['tiendas','stores'],'centros-comerciales':['centros comerciales','shopping centers'],
+ 'mercados-y-carnicerias':['mercados y carnicerías','markets and butchers'],tramites:['oficinas públicas','public offices'],educacion:['centros educativos','schools and universities'],
+ transporte:['terminales, aeropuertos y alquiler de carros','bus stations, airports and car rental']};
 /** Fixed limit line per sensitive section (2026-11-17 policy, pending lawyer review). */
 function sectionLimit(v:PlaceToolVertical,en:boolean):string{
  const t=(es:string,english:string)=>en?english:es;
  if(v==='salud')return t('Solo listo establecimientos; no doy consejo médico ni precios de consultas. En una emergencia llame al 9-1-1.','I only list facilities; I give no medical advice or consultation prices. In an emergency, call 9-1-1.');
  if(v==='veterinarias')return t('Solo listo establecimientos; no doy consejo veterinario ni precios de consultas.','I only list facilities; I give no veterinary advice or consultation prices.');
  if(v==='bancos')return t('Solo muestro ubicación y horario; no comparo tasas, comisiones ni productos financieros.','I only show location and hours; I do not compare rates, fees or financial products.');
- if(v==='hospedaje'||v==='tours')return t('ContrataCR no indica si tienen declaratoria turística del ICT; confírmelo con el negocio.','ContrataCR does not state whether they hold an ICT tourism declaration; please confirm with the business.');
+ if(v==='hospedaje'||v==='tours'||v==='atracciones')return t('ContrataCR no indica si tienen declaratoria turística del ICT; confírmelo con el negocio.','ContrataCR does not state whether they hold an ICT tourism declaration; please confirm with the business.');
  return '';
 }
 const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);

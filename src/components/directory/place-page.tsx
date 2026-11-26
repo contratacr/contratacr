@@ -4,7 +4,7 @@ import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,Chevr
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
 import {DIRECTORY_LISTINGS_ENABLED} from '@/lib/directory/feature-flags';
-import {kindLabel,placeSectionById} from '@/lib/directory/place-verticals';
+import {kindLabel,placeSectionById,reviewsOn} from '@/lib/directory/place-verticals';
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
 import {PlacesMap} from '@/components/maps/places-map';
 import {PlacePhotoGallery} from './place-photo-gallery';
@@ -84,8 +84,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const teamWa=typeof place.attributes?.whatsapp==='string'&&place.attributes.whatsapp?{channel:'whatsapp' as const,value:place.attributes.whatsapp}:null;
  const order=(orderLink??teamWa)&&place.status==='published'?(orderLink??teamWa):null;
  const published=place.status==='published';
+ // Owner 2026-11-26: no reviews for public offices, malls, schools and terminals (no rating, no «Reseñar», no Reseñas tab).
+ const reviews=reviewsOn(place.vertical.id,place.attributes.kind);
  const actionInput:PlaceActionInput={slug:place.slug,name:place.name,verticalId:place.vertical.id,locale,phone:place.phone,website:place.website,location:place.location,
-  hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:published};
+  hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:published&&reviews};
  const sideActions=placeSideActions(actionInput);
  // ONE chip row, same chips and order as the result card (owner 2026-11-26): Reservar, Reseñar, WhatsApp, Llamar, Waze,
  // Maps; then «Pedir» (web/phone link), «Sitio web», and the page tools (Guardar, Compartir, Agregar fotos). Only what exists.
@@ -95,7 +97,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const wa=pick('whatsapp');if(wa)chipActions.push({action:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,label:'WhatsApp'});
  const call=pick('call');if(call)chipActions.push({action:call,icon:actionIcon('call','h-4 w-4 shrink-0'),label:t('Llamar','Call')});
  const orderAction=order&&order.channel!=='whatsapp'?pick('order'):null;
- const site=pick('website');
+ // «Sitio web» chip only where people decide on the website (owner 2026-11-26): lodging and education. Every place keeps the
+ // link under «Más».
+ const site=place.vertical.id==='lodging'||place.vertical.id==='education'?pick('website'):null;
  const maps=published&&directions?directions:null;
  // Short description from typed data only (never invented): «<kind> en <zona>. Cocina: …».
  const summary=[kind&&area?t(`${kind} en ${place.address.adminArea2??area}.`,`${kind} in ${place.address.adminArea2??area}.`):null,cuisines.length?t(`Cocina: ${cuisines.slice(0,3).join(', ')}.`,`Cuisine: ${cuisines.slice(0,3).join(', ')}.`):null].filter(Boolean).join(' ')||(brandAbout??'');
@@ -178,7 +182,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const tabs:PlaceTab[]=[
   {id:'info',label:t('Información','Information'),anchors:['horario','comodidades','acerca','eventos','sucursales','place-reservations'],content:infoTab},
   ...(slots.offer?[{id:'offer',label:offerLabel,anchors:['precios'],content:<div className="space-y-6">{slots.offer}</div>}]:[]),
-  {id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={BIZ.h2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>},
+  ...(!reviews?[]:[{id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={BIZ.h2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>}]),
   ...(photos.length>0?[{id:'photos',label:t('Fotos','Photos'),anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-24 space-y-4">
    <h2 id="place-photos" className={BIZ.h2}>{t('Fotos','Photos')} ({photos.length})</h2>
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
@@ -194,7 +198,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const chips=<div className={CHIP_ROW} data-place-actions-bar data-place-quick-actions={chipActions.map(c=>c.action.id).join(' ')}>
   {/* Order (owner 2026-11-26): Reservar first where it exists, then Reseñar, then contact, then Waze and Maps. */}
   {chipActions.filter(c=>c.action.id==='reserve').map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
-  {published&&<a href="#escribir-resena" data-place-write-review data-place-action="review" className={CHIP}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>}
+  {published&&reviews&&<a href="#escribir-resena" data-place-write-review data-place-action="review" className={CHIP}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>}
   {chipActions.filter(c=>c.action.id!=='reserve').map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
   {maps&&<a href={maps.waze} data-place-action="waze" target="_blank" rel="noopener noreferrer" className={CHIP}><WazeIcon className="h-4 w-4 shrink-0"/>Waze</a>}
   {maps&&<a href={maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={CHIP}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
@@ -216,7 +220,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     <div data-place-header className="relative rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
      {photos.length>0&&<div className="mb-4"><PlacePhotoGallery variant="strip" en={en} placeName={place.name} photos={photos}/></div>}
      <h1 data-testid="place-name" className="break-words text-[24px] font-extrabold leading-tight text-[#111827] sm:text-[28px]">{place.name}{nameBadge}</h1>
-     <div className="mt-1.5"><RatingLine average={place.rating.average} count={place.rating.count} en={en} href="#resenas"/></div>
+     {reviews&&<div className="mt-1.5"><RatingLine average={place.rating.average} count={place.rating.count} en={en} href="#resenas"/></div>}
      <p className="mt-1 text-[13.5px] font-semibold leading-snug text-[#6b7280]" data-place-tags>
       {sectionHref?<a href={sectionHref} className={`hover:text-[#009FD9] ${ring}`}>{vertical}</a>:vertical}
       {kind&&<>{dot}<span data-place-kind={String(place.attributes.kind)}>{kind}</span></>}

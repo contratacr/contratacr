@@ -4,7 +4,9 @@
 // 2026-11-17: + the eleven place sections approved by the owner (src/lib/directory/place-verticals.ts).
 export const DIRECTORY_VERTICALS=['restaurant','fuel','pharmacy','grocery','vehicle_dealer','real_estate',
  'cafe_bar','convenience','hardware','lodging','health','vet_pets','auto_services','beauty','fitness','tours','banking',
- 'parking','car_wash'] as const;
+ 'parking','car_wash',
+ // 2026-11-26 (migration 537): everything else people look for in OSM.
+ 'attraction','retail','mall','food_shop','government','education','transport'] as const;
 export type DirectoryVertical=typeof DIRECTORY_VERTICALS[number];
 export const PLACE_STATUSES=['draft','published','hidden','closed_permanently','removed'] as const;
 export type PlaceStatus=typeof PLACE_STATUSES[number];

@@ -2,9 +2,9 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1370,
-    "controls": 6494,
-    "pages": 139,
+    "files": 1377,
+    "controls": 6495,
+    "pages": 146,
     "handlers": 432,
     "components": 730,
     "hooks": 29,
@@ -693,6 +693,29 @@
       "priority": "P1"
     },
     {
+      "file": "src/app/[locale]/atracciones/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/atracciones",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/app/[locale]/ayuda/layout.tsx",
       "kind": "Layout / estado / módulo de ruta",
       "group": "Servicios, ayuda y legales",
@@ -1045,6 +1068,29 @@
         "tests/e2e/mobile-search-focus.spec.ts",
         "tests/e2e/contact-channel-stability.spec.ts",
         "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/[locale]/centros-comerciales/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/centros-comerciales",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -2129,6 +2175,29 @@
         "tests/e2e/projects-board.spec.ts",
         "tests/e2e/seeded-regression.spec.ts",
         "tests/e2e/publication-access.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/[locale]/educacion/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/educacion",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -3326,6 +3395,29 @@
         "tests/e2e/web-chat-parity.spec.ts",
         "tests/e2e/contact-channel-stability.spec.ts",
         "tests/e2e/search-progressive-loading.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/[locale]/mercados-y-carnicerias/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/mercados-y-carnicerias",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "directReferences": [],
       "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
@@ -5584,7 +5676,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 707,
+          "line": 709,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -5592,7 +5684,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 709,
+          "line": 711,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -5613,10 +5705,79 @@
       "priority": "P1"
     },
     {
+      "file": "src/app/[locale]/tiendas/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/tiendas",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/app/[locale]/tours/page.tsx",
       "kind": "Página",
       "group": "Shell, portada y utilidades compartidas",
       "route": "/[locale]/tours",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/[locale]/tramites/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/tramites",
+      "exports": [
+        "generateMetadata",
+        "SectionRoute"
+      ],
+      "methods": [],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [
+        "tests/e2e/public-smoke.spec.ts",
+        "tests/e2e/cabeceras.spec.ts",
+        "tests/e2e/interaction-surfaces.spec.ts"
+      ],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/app/[locale]/transporte/page.tsx",
+      "kind": "Página",
+      "group": "Shell, portada y utilidades compartidas",
+      "route": "/[locale]/transporte",
       "exports": [
         "generateMetadata",
         "SectionRoute"
@@ -26292,7 +26453,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 142,
+          "line": 144,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26300,7 +26461,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 160,
+          "line": 162,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26308,7 +26469,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 163,
+          "line": 165,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26771,7 +26932,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 113,
+          "line": 117,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26779,7 +26940,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 114,
+          "line": 118,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26787,7 +26948,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 115,
+          "line": 119,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26795,7 +26956,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 116,
+          "line": 120,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26803,7 +26964,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 135,
+          "line": 139,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26811,7 +26972,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 171,
+          "line": 175,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26819,7 +26980,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 172,
+          "line": 176,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26827,7 +26988,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 173,
+          "line": 177,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26835,7 +26996,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 174,
+          "line": 178,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26843,7 +27004,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 197,
+          "line": 201,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26851,7 +27012,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 199,
+          "line": 203,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26859,7 +27020,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 200,
+          "line": 204,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26867,7 +27028,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 209,
+          "line": 213,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26875,7 +27036,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 210,
+          "line": 214,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26883,7 +27044,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 221,
+          "line": 225,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26891,7 +27052,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 231,
+          "line": 235,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26899,7 +27060,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 245,
+          "line": 249,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26907,7 +27068,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 246,
+          "line": 250,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26915,7 +27076,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 264,
+          "line": 268,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -28144,23 +28305,31 @@
       "methods": [],
       "controls": [
         {
-          "line": 123,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 130,
-          "tag": "a",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "",
-          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
           "line": 134,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 137,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{toggles[0]!.href}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 141,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 145,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -28168,7 +28337,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 143,
+          "line": 154,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -31252,7 +31421,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 32,
+          "line": 33,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -31260,7 +31429,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 41,
+          "line": 42,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -79796,7 +79965,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 541,
+          "line": 543,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setShowFilters(false)}",
@@ -79804,7 +79973,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 632,
+          "line": 634,
           "tag": "div",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -79812,7 +79981,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 663,
+          "line": 665,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n                    const points = mobileSheetSnapPoints();\n                    setHeightFr(heightFr > points[0] + 0.05 ? points[0] : points[points.length - 1]);\n                  }}",
@@ -79820,7 +79989,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 681,
+          "line": 683,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -79828,7 +79997,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 695,
+          "line": 702,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => {\n              setAreaSearching(true);\n              window.dispatchEvent(new CustomEvent(\"ccr:search-this-area\"));\n            }}",
@@ -85692,34 +85861,38 @@
         },
         {
           "line": 29,
+          "title": "'sin reseñas (dueño 2026-11-26): trámites y centros comerciales nunca; educación y transporte solo en algunos tipos'"
+        },
+        {
+          "line": 38,
           "title": "'restaurantes: Reservar usa la herramienta de reservas o \"Llamar para reservar\", sin duplicar el teléfono'"
         },
         {
-          "line": 39,
+          "line": 48,
           "title": "'Cómo llegar ofrece Waze, Google Maps y Apple Maps; WhatsApp y Cotizar salen del enlace del dueño'"
         },
         {
-          "line": 49,
+          "line": 58,
           "title": "`ficha de ${section}: botones por categoría sin botones muertos [${locale}]`"
         },
         {
-          "line": 52,
+          "line": 61,
           "title": "true"
         },
         {
-          "line": 55,
+          "line": 64,
           "title": "true"
         },
         {
-          "line": 94,
+          "line": 103,
           "title": "`ficha: recomendación, pestañas y hoja de compartir [${locale}]`"
         },
         {
-          "line": 97,
+          "line": 106,
           "title": "true"
         },
         {
-          "line": 99,
+          "line": 108,
           "title": "true"
         }
       ]
@@ -88421,39 +88594,39 @@
           "title": "`/negocios-y-profesionales no longer exists: old links go to the professional registration [${language}]`"
         },
         {
-          "line": 35,
+          "line": 36,
           "title": "\"desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry\""
         },
         {
-          "line": 36,
+          "line": 37,
           "title": "isMobileProject(testInfo)"
-        },
-        {
-          "line": 58,
-          "title": "\"quick links row under the navbar: sections, Profesionales and Más, active state, keyboard\""
         },
         {
           "line": 59,
+          "title": "\"quick links row under the navbar: sections, Profesionales and Más, active state, keyboard\""
+        },
+        {
+          "line": 60,
           "title": "isMobileProject(testInfo)"
         },
         {
-          "line": 81,
+          "line": 82,
           "title": "\"quick links row on phones: Profesionales, Restaurantes, Gasolineras, Farmacias and Más, without widening the page\""
         },
         {
-          "line": 82,
+          "line": 83,
           "title": "!isMobileProject(testInfo)"
         },
         {
-          "line": 91,
+          "line": 92,
           "title": "\"footer: cookie and privacy settings is a discreet link in the legal row\""
         },
         {
-          "line": 103,
+          "line": 104,
           "title": "\"mobile drawer: Categorías is a plain link to the full page and there is no business entry\""
         },
         {
-          "line": 104,
+          "line": 105,
           "title": "!isMobileProject(testInfo)"
         }
       ]

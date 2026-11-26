@@ -1,6 +1,6 @@
 import {PROPERTY_OPERATIONS,PROPERTY_TYPES,VEHICLE_FUELS,VEHICLE_TRANSMISSIONS,VEHICLE_TYPES,isListingVertical,placePriceMode,
  type DirectoryFacets,type FacetValue,type SearchSort,type SearchVertical} from '@/lib/directory/search-schemas';
-import {PLACE_SECTIONS,placeSection} from '@/lib/directory/place-verticals';
+import {PLACE_SECTIONS,placeSection,sectionRatingSort} from '@/lib/directory/place-verticals';
 import {proMoney} from '@/lib/pro/money';
 import {FiltersDisclosure} from './filters-disclosure';
 
@@ -56,7 +56,9 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts,panel=
  const listing=isListingVertical(vertical),priceMode=placePriceMode(vertical);
  // Price sorts: listings and restaurants always; pharmacies/supermarkets only once a product is typed; never fuel stations.
  const priceSorts=listing||priceMode==='menu'||(priceMode==='product'&&!!values.product);
- const sortOptions=sorts??(['relevance','best_rated','distance',...(priceSorts?['price_asc','price_desc'] as const:[]),'newest'] as SearchSort[]);
+ // Sections with places that take no reviews (trámites, centros comerciales, educación, transporte) never offer the rating order.
+ const sortOptions=(sorts??(['relevance','best_rated','distance',...(priceSorts?['price_asc','price_desc'] as const:[]),'newest'] as SearchSort[]))
+  .filter(s=>s!=='best_rated'||listing||sectionRatingSort(vertical));
  const range=facets?.price&&facets.price.min!=null&&facets.price.max!=null?facets.price:null;
  const money=(n:number)=>proMoney(Math.round(n),en);
  const provinces=facets?.province?.map(p=>String(p.value))??[];

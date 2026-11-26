@@ -30,7 +30,8 @@ for (const language of ["es", "en"] as const) {
 // Categorías (2026-11-23, Yelp style): the directory sections are a grid of brand tiles ("Empresas") ABOVE the professional
 // categories, each section once; the professional groups no longer repeat them. A section whose total is a confirmed 0 is
 // not offered, so the tiles asserted are the ones present, never a fixed list.
-const ALL_SECTIONS = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "parqueos", "lavacar", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
+const ALL_SECTIONS = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "parqueos", "lavacar", "bancos", "hospedaje", "atracciones", "tours", "salud", "gimnasios", "veterinarias", "belleza",
+  "tiendas", "centros-comerciales", "mercados-y-carnicerias", "tramites", "educacion", "transporte"];
 
 test("desktop navbar: Categorías is a link to the full page, with no dropdown and no business entry", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "Desktop navigation only");
@@ -49,7 +50,7 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   // The page renders a mobile and a desktop tree; only the one for this viewport is visible.
   await expect(tiles.filter({ visible: true }).first()).toBeVisible();
   for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).filter({ visible: true }).count(), section).toBeLessThanOrEqual(1);
-  for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+$/);
+  for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+(?:-[a-z]+)*$/);
   await expect(page.locator("[data-nav-directory-section]")).toHaveCount(0);
   await expect(page.getByTestId("services-group-option").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);

@@ -22,7 +22,10 @@ export type PlaceSectionDef={
  /** Price filter: 'menu' (median of the published menu) | 'product' (current price of one typed product) | null. */
  priceMode:'menu'|'product'|null;
  kinds:readonly PlaceKindDef[];
- policy:{health?:boolean;mapOnly?:boolean;tourism?:boolean};
+ policy:{health?:boolean;mapOnly?:boolean;tourism?:boolean;
+  /** 2026-11-26 (owner): sections or kinds without reviews (public offices, schools, terminals, malls): no Reseñar, no
+   *  rating, no review form, never sorted by rating. true = the whole section; a list = only those kinds. */
+  noReviews?:true|readonly string[]};
  /** True for the verticals added on 2026-11-17 (they carry `kind`). */
  added:boolean;
 };
@@ -61,9 +64,9 @@ export const PLACE_SECTIONS=[
  {section:'gimnasios',id:'fitness',nameEs:'Gimnasios',nameEn:'Gyms',pathEn:'gyms',priceMode:null,added:true,policy:{},
   kinds:[k('gym','Gimnasio','Gym'),k('yoga','Yoga','Yoga'),k('crossfit','CrossFit y funcional','CrossFit and functional'),k('pilates','Pilates','Pilates'),
    k('dance','Baile','Dance'),k('martial_arts','Artes marciales','Martial arts'),k('sports_centre','Centro deportivo','Sports center')]},
- {section:'tours',id:'tours',nameEs:'Tours y atracciones',nameEn:'Tours and attractions',pathEn:'tours',priceMode:null,added:true,policy:{tourism:true},
-  kinds:[k('attraction','Atracción','Attraction'),k('museum','Museo','Museum'),k('zoo','Zoológico o centro de rescate','Zoo or wildlife center'),k('theme_park','Parque temático','Theme park'),
-   k('aquarium','Acuario','Aquarium'),k('gallery','Galería de arte','Art gallery'),k('water_park','Parque acuático','Water park'),k('tour_operator','Operador de tours','Tour operator'),
+ // 2026-11-26: attractions, zoos and theme/water parks moved to /atracciones (migration 537); tours keeps museums and operators.
+ {section:'tours',id:'tours',nameEs:'Tours y museos',nameEn:'Tours and museums',pathEn:'tours',priceMode:null,added:true,policy:{tourism:true},
+  kinds:[k('museum','Museo','Museum'),k('gallery','Galería de arte','Art gallery'),k('tour_operator','Operador de tours','Tour operator'),
    k('travel_agency','Agencia de viajes','Travel agency')]},
  {section:'bancos',id:'banking',nameEs:'Bancos y cajeros',nameEn:'Banks and ATMs',pathEn:'banks',priceMode:null,added:true,policy:{mapOnly:true},
   kinds:[k('bank','Banco','Bank'),k('atm','Cajero automático','ATM'),k('exchange','Casa de cambio','Currency exchange')]},
@@ -74,6 +77,36 @@ export const PLACE_SECTIONS=[
  {section:'lavacar',id:'car_wash',nameEs:'Lavacar',nameEn:'Car washes',pathEn:'car-wash',priceMode:null,added:true,policy:{},
   kinds:[k('car_wash','Lavado completo','Full-service car wash'),k('detailing','Detallado y estética automotriz','Car detailing'),k('self_service','Autolavado','Self-service car wash'),
    k('motorcycle_wash','Lavado de motos','Motorcycle wash')]},
+ // 2026-11-26 (owner «todo lo de OSM», migration 537): attractions, stores, malls, food shops, public offices, education and transport.
+ {section:'atracciones',id:'attraction',nameEs:'Atracciones',nameEn:'Attractions',pathEn:'attractions',priceMode:null,added:true,policy:{tourism:true},
+  kinds:[k('waterfall','Catarata','Waterfall'),k('hot_spring','Aguas termales','Hot springs'),k('beach','Playa','Beach'),k('viewpoint','Mirador','Viewpoint'),
+   k('national_park','Parque nacional o reserva','National park or reserve'),k('volcano','Volcán','Volcano'),k('pool','Balneario o piscina','Swimming pool'),
+   k('theme_park','Parque temático o acuático','Theme or water park'),k('zoo','Zoológico, acuario o centro de rescate','Zoo, aquarium or wildlife center'),
+   k('park','Parque','Park'),k('other','Otra atracción','Other attraction')]},
+ {section:'tiendas',id:'retail',nameEs:'Tiendas',nameEn:'Stores',pathEn:'stores',priceMode:null,added:true,policy:{},
+  kinds:[k('clothes','Ropa y accesorios','Clothing and accessories'),k('shoes','Zapatería','Shoe store'),k('electronics','Electrónica','Electronics'),
+   k('mobile_phone','Celulares','Mobile phones'),k('furniture','Muebles y artículos para el hogar','Furniture and home goods'),k('appliance','Electrodomésticos','Appliances'),
+   k('computer','Computadoras','Computers'),k('books','Librería','Bookstore'),k('stationery','Papelería y fotocopias','Stationery and copies'),
+   k('florist','Floristería','Florist'),k('toys','Juguetería','Toy store'),k('jewelry','Joyería y relojería','Jewelry and watches'),
+   k('sports','Artículos deportivos','Sporting goods'),k('gift','Regalos y manualidades','Gifts and crafts'),k('variety_store','Bazar y variedades','Variety store'),
+   k('department_store','Tienda por departamentos','Department store'),k('bicycle','Bicicletas','Bicycle shop'),k('other','Otra tienda','Other store')]},
+ {section:'centros-comerciales',id:'mall',nameEs:'Centros comerciales',nameEn:'Shopping centers',pathEn:'shopping-centers',priceMode:null,added:true,policy:{noReviews:true},
+  kinds:[k('mall','Centro comercial','Shopping mall'),k('plaza','Plaza comercial','Strip mall')]},
+ {section:'mercados-y-carnicerias',id:'food_shop',nameEs:'Mercados y carnicerías',nameEn:'Markets and butchers',pathEn:'markets-and-butchers',priceMode:null,added:true,policy:{},
+  kinds:[k('butcher','Carnicería','Butcher'),k('seafood','Pescadería y marisquería','Fish market'),k('market','Mercado o feria','Market'),
+   k('dairy','Quesos y lácteos','Cheese and dairy'),k('deli','Delicatessen','Deli'),k('natural','Tienda naturista','Health food store')]},
+ {section:'tramites',id:'government',nameEs:'Trámites y oficinas públicas',nameEn:'Public offices',pathEn:'public-offices',priceMode:null,added:true,policy:{noReviews:true},
+  kinds:[k('municipality','Municipalidad','Municipality'),k('post_office','Correos','Post office'),k('court','Tribunales y juzgados','Courts'),
+   k('registry','Registro o migración','Registry or immigration'),k('police','Policía','Police'),k('office','Oficina de gobierno','Government office')]},
+ // Reviews only where people choose a provider (universities, academies, language/driving/music schools, daycares); schools and high schools never.
+ {section:'educacion',id:'education',nameEs:'Educación',nameEn:'Education',pathEn:'education',priceMode:null,added:true,policy:{noReviews:['school','college']},
+  kinds:[k('university','Universidad','University'),k('college','Colegio o instituto','High school or institute'),k('school','Escuela','School'),
+   k('kindergarten','Guardería o kínder','Daycare or kindergarten'),k('language_school','Escuela de idiomas','Language school'),
+   k('driving_school','Escuela de manejo','Driving school'),k('music_school','Academia de música','Music school')]},
+ // Reviews only for car rental; terminals and airports are public infrastructure.
+ {section:'transporte',id:'transport',nameEs:'Transporte',nameEn:'Transport',pathEn:'transport',priceMode:null,added:true,policy:{noReviews:['bus_station','airport','ferry']},
+  kinds:[k('bus_station','Terminal de buses','Bus station'),k('airport','Aeropuerto o aeródromo','Airport or airfield'),k('ferry','Terminal de ferry','Ferry terminal'),
+   k('car_rental','Alquiler de carros','Car rental')]},
 ] as const satisfies readonly PlaceSectionDef[];
 
 export type PlaceSectionKey=typeof PLACE_SECTIONS[number]['section'];
@@ -92,6 +125,18 @@ export const isHealthVertical=(id:string)=>!!placeSectionById(id)?.policy.health
 export const isMapOnlyVertical=(id:string)=>!!placeSectionById(id)?.policy.mapOnly;
 /** Reviews limited to attention/service (visible note): health-like sections and banks. */
 export const isServiceReviewVertical=(id:string)=>isHealthVertical(id)||isMapOnlyVertical(id);
+
+/**
+ * Reviews ON for this place? (owner 2026-11-26: off for public offices, malls, schools and terminals). Without a kind, a
+ * section whose reviews are off only for some kinds counts as ON.
+ */
+export function reviewsOn(verticalId:string,kind?:unknown):boolean{
+ const off=placeSectionById(verticalId)?.policy.noReviews;
+ if(!off)return true;if(off===true)return false;
+ return !(typeof kind==='string'&&off.includes(kind));
+}
+/** «Mejor calificados» is the default order only where every place takes reviews. */
+export const sectionRatingSort=(section:string):boolean=>!placeSection(section)?.policy.noReviews;
 
 /** Sections with the reservations/waitlist tool (owner opt-in). */
 export const RESERVATION_VERTICALS=['restaurant','cafe_bar'] as const;

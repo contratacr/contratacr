@@ -7,6 +7,7 @@ import {enforceRateLimit} from '@/lib/rate-limit';
 import {proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
 import {guestReviewDbInputSchema,reviewCursorSchema,reviewSubmitSchema} from '@/lib/directory/review-schemas';
 import {placeSlugSchema} from '@/lib/directory/schemas';
+import {reviewsOn} from '@/lib/directory/place-verticals';
 import {dirContactId,dirDbError,dirDeviceId,dirEnabledOnly,dirFail,dirOk,dirPepper,hmacHex} from '@/lib/directory/public-route';
 
 // LOCAL PRO ONLY (multivertical F5, development only): reviews of a place.
@@ -33,7 +34,12 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  const locale=req.headers.get('accept-language')?.toLowerCase().startsWith('en')?'en':'es';
  let raw:unknown;try{raw=await proBoundedJson(req,4096);}catch{return dirFail(400,'invalid');}
  const body=postSchema.safeParse(raw);if(!body.success)return dirFail(400,'invalid');
- const db=createAdminClient(),user=await safeGetUser(await createClient());
+ const db=createAdminClient();
+ // Owner 2026-11-26: public offices, malls, schools and terminals take no reviews (the page shows no form either).
+ const target=await db.from('dir_places').select('vertical_id,attributes').eq('slug',slug).maybeSingle();
+ if(target.error)return dirDbError(target.error);
+ if(target.data&&!reviewsOn(target.data.vertical_id as string,(target.data.attributes as Record<string,unknown>|null)?.kind))return dirFail(403,'reviews_off','Este lugar no recibe reseñas.');
+ const user=await safeGetUser(await createClient());
  if(user){
   const [mine,profile]=await Promise.all([db.rpc('dir_review_mine',{p_actor:user.id,p_slug:slug}),db.from('profiles').select('full_name').eq('id',user.id).maybeSingle()]);
   if(mine.error)return dirDbError(mine.error);

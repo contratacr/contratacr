@@ -53,7 +53,7 @@ export async function HomeFeed() {
 
 /** Owner, 2026-11-26: professionals top to bottom; every few of them, one business section left to right, in this order. */
 const PROS_PER_STRIP = 3;
-const STRIP_SECTIONS = ["restaurantes", "farmacias", "cafes", "supermercados", "gasolineras", "talleres", "belleza", "ferreterias", "veterinarias", "gimnasios", "hospedaje", "tours", "salud", "pulperias", "bancos", "parqueos", "lavacar"];
+const STRIP_SECTIONS = ["restaurantes", "farmacias", "cafes", "supermercados", "gasolineras", "talleres", "belleza", "ferreterias", "veterinarias", "gimnasios", "hospedaje", "tours", "salud", "pulperias", "bancos", "parqueos", "lavacar", "atracciones", "tiendas", "mercados-y-carnicerias"];
 
 async function feedProfessionals(): Promise<ProfessionalCardData[]> {
   try {

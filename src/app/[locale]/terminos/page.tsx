@@ -273,13 +273,14 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "ContrataCR publica un directorio de lugares y negocios: restaurantes, cafés, farmacias, supermercados, pulperías, ferreterías, gasolineras, hospedaje, establecimientos de salud, veterinarias, talleres, belleza, gimnasios, tours, bancos y otros. Estas reglas se aplican a esas secciones, a la ficha de cada lugar y a la comparación de precios."
+        "text": "ContrataCR publica un directorio de lugares y negocios: restaurantes, cafés, farmacias, supermercados, pulperías, ferreterías, gasolineras, parqueos, lavacar, hospedaje, atracciones, establecimientos de salud, veterinarias, talleres, belleza, gimnasios, tours y museos, bancos, tiendas, centros comerciales, mercados y carnicerías, trámites y oficinas públicas, educación, transporte y otros. Estas reglas se aplican a esas secciones, a la ficha de cada lugar y a la comparación de precios."
       },
       {
         "k": "ul",
         "items": [
           "**Orden de los resultados:** ningún pago, plan, suscripción ni anuncio cambia la posición de un lugar, y no existe una posición \"destacada\" pagada. \"Más relevantes\" combina, en este orden, la coincidencia con su búsqueda, la zona elegida, la calificación de clientes (con un ajuste cuando hay pocas reseñas), la cantidad de reseñas, la verificación y qué tan completa está la ficha. También puede ordenar por calificación, cercanía, fecha o precio cuando la sección lo permite. Los criterios completos están en la página Cómo ordenamos los resultados.",
           "**Origen de los datos:** la información inicial de las fichas proviene de fuentes públicas y abiertas, como OpenStreetMap (© colaboradores de OpenStreetMap, licencia ODbL), y de lo que aportan los negocios y las personas usuarias. Cada ficha indica sus fuentes. Una ficha \"No reclamado\" todavía no la administra el negocio y sus datos no están verificados por ContrataCR. Confirme horario, dirección, servicios y precios directamente con el negocio antes de ir o de comprar.",
+          "**Lugares sin reseñas:** las oficinas públicas, los centros comerciales, las escuelas y colegios, y las terminales y aeropuertos no reciben reseñas ni muestran calificación, y esas secciones no se ordenan por calificación.",
           "**Horarios:** se muestran en hora de Costa Rica. Los horarios tomados de OpenStreetMap se identifican como tales y pueden no estar al día.",
           "**Reclamar una ficha:** cualquier negocio puede reclamar y verificar su ficha gratis para corregir y mantener sus datos, o pedir que la retiremos. Reclamarla o verificarla no mejora su posición por sí misma, más allá del criterio \"verificado\" descrito arriba.",
           "**Precios:** cada precio indica su origen (precio oficial, informado por el negocio o reportado por personas usuarias), su fecha y, cuando corresponde, su vigencia. Un precio viejo se marca como desactualizado y nunca cuenta como vigente. Los precios pueden cambiar: confírmelos con el comercio antes de comprar.",
@@ -599,13 +600,14 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "ContrataCR publishes a directory of places and businesses: restaurants, cafés, pharmacies, supermarkets, corner stores, hardware stores, fuel stations, lodging, health facilities, vets, car services, beauty, gyms, tours, banks and others. These rules apply to those sections, to each place page and to the price comparison."
+        "text": "ContrataCR publishes a directory of places and businesses: restaurants, cafés, pharmacies, supermarkets, corner stores, hardware stores, fuel stations, parking, car washes, lodging, attractions, health facilities, vets, car services, beauty, gyms, tours and museums, banks, stores, shopping centers, markets and butchers, public offices, education, transport and others. These rules apply to those sections, to each place page and to the price comparison."
       },
       {
         "k": "ul",
         "items": [
           "**Order of results:** no payment, plan, subscription or advertising changes where a place appears, and there is no paid \"featured\" position. \"Most relevant\" combines, in this order, how well it matches your search, the chosen area, the customer rating (adjusted when there are few reviews), the number of reviews, verification and how complete the listing is. You can also sort by rating, distance, date or price where the section allows it. The full criteria are on the How we rank results page.",
           "**Where the data comes from:** the initial information on listings comes from public and open sources such as OpenStreetMap (© OpenStreetMap contributors, ODbL licence) and from what businesses and users provide. Each listing names its sources. An \"Unclaimed\" listing is not yet managed by the business and its details are not verified by ContrataCR. Please confirm hours, address, services and prices directly with the business before going or buying.",
+          "**Places without reviews:** public offices, shopping centers, schools and high schools, and bus stations and airports take no reviews and show no rating, and those sections are not sorted by rating.",
           "**Opening hours:** shown in Costa Rica time. Hours taken from OpenStreetMap are labelled as such and may be out of date.",
           "**Claiming a listing:** any business can claim and verify its listing for free to correct and maintain its details, or ask us to remove it. Claiming or verifying does not improve its position by itself, beyond the \"verified\" criterion described above.",
           "**Prices:** every price states its origin (official price, reported by the business or reported by users), its date and, where applicable, its validity. An old price is marked as out of date and never counts as current. Prices may change: please confirm them with the store before buying.",

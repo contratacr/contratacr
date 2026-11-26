@@ -11,10 +11,12 @@ import {NEW_PLACE_SECTIONS,PLACE_SECTIONS,placeSection} from './place-verticals'
 
 // 2026-11-17: + cafes, pulperias, ferreterias, hospedaje, salud, veterinarias, talleres, belleza, gimnasios, tours, bancos.
 export const SEARCH_VERTICALS=['restaurantes','gasolineras','farmacias','supermercados','agencias','lugares','vehiculos','inmuebles',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar',
+ 'atracciones','tiendas','centros-comerciales','mercados-y-carnicerias','tramites','educacion','transporte'] as const;
 export type SearchVertical=typeof SEARCH_VERTICALS[number];
 export const PLACE_SEARCH_VERTICALS=['restaurantes','gasolineras','farmacias','supermercados','agencias','lugares',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar',
+ 'atracciones','tiendas','centros-comerciales','mercados-y-carnicerias','tramites','educacion','transporte'] as const;
 export const SEARCH_SORTS=['relevance','best_rated','distance','price_asc','price_desc','newest'] as const;
 export type SearchSort=typeof SEARCH_SORTS[number];
 export const SEARCH_PAGE_SIZE=20;
@@ -156,7 +158,14 @@ const GENERIC_TERMS:Partial<Record<SearchVertical,string[]>>={
  talleres:['taller','talleres','taller mecanico','mecanico','car repair','garage','mechanic'],
  belleza:['belleza','salon de belleza','estetica','beauty','beauty salon'],
  gimnasios:['gimnasio','gimnasios','gym','gyms'],
- tours:['tour','tours','atraccion','atracciones','attraction','attractions'],
+ tours:['tour','tours','museo','museos','tours and museums','museum','museums'],
+ atracciones:['atraccion','atracciones','attraction','attractions','que hacer','things to do'],
+ tiendas:['tienda','tiendas','store','stores','shop','shops'],
+ 'centros-comerciales':['centro comercial','centros comerciales','mall','malls','plaza comercial','shopping center','shopping mall'],
+ 'mercados-y-carnicerias':['mercado','mercados','carniceria','carnicerias','market','markets','butcher','butchers'],
+ tramites:['tramite','tramites','oficina publica','oficinas publicas','public office','public offices','government office'],
+ educacion:['educacion','centro educativo','centros educativos','education','school','schools'],
+ transporte:['transporte','transport','terminal','terminales'],
  bancos:['banco','bancos','cajero','cajeros','cajero automatico','bank','banks','atm','atms'],
  parqueos:['parqueo','parqueos','parqueadero','estacionamiento','parking','car park'],
  lavacar:['lavacar','lavacarros','lava car','autolavado','car wash','car washes'],

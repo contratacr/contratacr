@@ -10,7 +10,7 @@ export const dynamic='force-dynamic';
 export async function generateMetadata({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<Record<string,string|string[]|undefined>>}):Promise<Metadata>{
  if(!DIR_ENABLED)return {};
  const {locale}=await params,en=locale==='en',path='/tours';
- const title=en?'Tours and attractions in Costa Rica':'Tours y atracciones en Costa Rica',description=en?'Attractions, museums, parks and tour agencies in Costa Rica with location and hours.':'Atracciones, museos, parques y agencias de tours de Costa Rica con ubicación y horario.';
+ const title=en?'Tours and museums in Costa Rica':'Tours y museos en Costa Rica',description=en?'Museums, galleries, tour operators and travel agencies in Costa Rica with location and hours.':'Museos, galerías, operadores de tours y agencias de viajes de Costa Rica con ubicación y horario.';
  // Search/filter results (any query parameter: province, open now, page…) stay out of the index; the plain section is indexed.
  const filtered=Object.keys(await searchParams).length>0;
  return {title:`${title} | ContrataCR`,description,...(filtered?{robots:{index:false,follow:true}}:{}),alternates:{canonical:(en?'/en':'')+path,languages:{es:path,en:'/en'+path}},openGraph:{title,description,type:'website'}};

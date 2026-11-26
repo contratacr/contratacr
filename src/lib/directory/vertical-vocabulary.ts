@@ -24,7 +24,15 @@ export type DirectoryVertical =
   | "gimnasios"
   | "tours"
   | "bancos"
-  | "lavacar";
+  | "lavacar"
+  // 2026-11-26 (migration 537)
+  | "atracciones"
+  | "tiendas"
+  | "centros-comerciales"
+  | "mercados-y-carnicerias"
+  | "tramites"
+  | "educacion"
+  | "transporte";
 
 export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> = {
   vehiculos: [
@@ -102,8 +110,8 @@ export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> =
     "gimnasio", "gimnasios", "gym", "gyms", "crossfit", "yoga", "pilates", "artes marciales", "fitness",
   ],
   tours: [
-    "tour", "tours", "atraccion", "atracciones", "museo", "museos", "canopy", "zoologico", "parque tematico", "agencia de viajes",
-    "attraction", "museum", "things to do",
+    "tour", "tours", "museo", "museos", "canopy", "galeria de arte", "agencia de viajes", "operador de tours",
+    "museum", "museums", "art gallery", "travel agency",
   ],
   bancos: [
     "banco", "bancos", "cajero", "cajeros", "cajero automatico", "atm", "bank", "banks", "casa de cambio", "sucursal bancaria",
@@ -115,6 +123,36 @@ export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> =
   // 2026-11-26: own section (/lavacar), split out of talleres.
   lavacar: [
     "lavacar", "lavacarros", "lava car", "autolavado", "lavado de carros", "lavado de autos", "car wash", "car detailing",
+  ],
+  // 2026-11-26 (migration 537): new sections. Words that also name a professional service stay out.
+  atracciones: [
+    "atraccion", "atracciones", "catarata", "cataratas", "cascada", "playa", "playas", "mirador", "miradores", "aguas termales",
+    "termales", "parque nacional", "parques nacionales", "volcan", "balneario", "zoologico", "acuario", "parque de diversiones",
+    "parque acuatico", "que hacer", "attraction", "attractions", "waterfall", "beach", "viewpoint", "hot springs", "national park", "things to do",
+  ],
+  tiendas: [
+    "tiendas", "tienda de ropa", "ropa", "zapateria", "zapaterias", "zapatos", "celulares", "tienda de celulares", "electronica",
+    "muebleria", "mueblerias", "electrodomesticos", "libreria", "librerias", "papeleria", "floristeria", "jugueteria", "joyeria",
+    "bazar", "tienda por departamentos", "stores", "clothing store", "shoe store", "bookstore", "furniture store", "toy store",
+  ],
+  "centros-comerciales": [
+    "centro comercial", "centros comerciales", "mall", "malls", "plaza comercial", "plazas comerciales", "shopping center", "shopping mall",
+  ],
+  "mercados-y-carnicerias": [
+    "carniceria", "carnicerias", "pescaderia", "pescaderias", "mercado", "mercado municipal", "mercado central", "feria del agricultor",
+    "quesos", "lacteos", "tienda naturista", "butcher", "fish market", "farmers market",
+  ],
+  tramites: [
+    "tramites", "municipalidad", "municipalidades", "correos", "oficina de correos", "tribunales", "juzgado", "registro nacional",
+    "registro civil", "migracion", "delegacion policial", "policia", "fuerza publica", "city hall", "post office", "courthouse", "police station",
+  ],
+  educacion: [
+    "universidad", "universidades", "colegio", "colegios", "escuela", "escuelas", "kinder", "guarderia", "guarderias",
+    "escuela de idiomas", "escuela de manejo", "academia de musica", "university", "school", "schools", "daycare", "language school", "driving school",
+  ],
+  transporte: [
+    "terminal de buses", "terminales", "terminal", "aeropuerto", "aeropuertos", "aerodromo", "ferry", "alquiler de carros",
+    "alquiler de autos", "rent a car", "car rental", "bus station", "airport",
   ],
 };
 

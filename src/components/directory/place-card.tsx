@@ -1,7 +1,7 @@
 import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types';
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
-import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
+import {isHealthVertical,kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
 import {CalendarCheck,MapPin,Phone,Star} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
@@ -116,7 +116,9 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
- const rated=item.rating.count>0&&item.rating.average!=null;
+ // No reviews at all for public offices, malls, schools and terminals (owner 2026-11-26): no rating, no «Reseñar».
+ const reviews=reviewsOn(item.vertical.id,item.attributes.kind);
+ const rated=reviews&&item.rating.count>0&&item.rating.average!=null;
  const tags=[en?item.vertical.nameEn:item.vertical.nameEs,kind,brand].filter(Boolean) as string[];
  // Maps-like status line (owner 2026-11-26): «Abierto · cierra a las 21:00», «Abierto 24 horas», «Cerrado · abre mañana…».
  const status=extra?.hours?.length?openStatus(extra.hours):null;
@@ -128,7 +130,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const call=resolvePlaceAction('call',actionInput);
  const actions:{id:string;label:string;href:string;icon:ReactNode;external?:boolean}[]=[
   ...(claimed&&extra?.reservation?[{id:'reserve',label:t('Reservar','Reserve'),href:`${href}#place-reservations`,icon:<CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
-  {id:'review',label:t('Reseñar','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>},
+  ...(reviews?[{id:'review',label:t('Reseñar','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
   ...(wa?[{id:'whatsapp',label:'WhatsApp',href:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,external:true}]:[]),
   ...(call?[{id:'call',label:t('Llamar','Call'),href:call.href,icon:<Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
   ...(maps?[{id:'waze',label:'Waze',href:maps.waze,icon:<WazeIcon className="h-4 w-4 shrink-0"/>,external:true},{id:'maps',label:'Maps',href:maps.google,icon:<GoogleMapsIcon className="h-4 w-4 shrink-0"/>,external:true}]:[]),

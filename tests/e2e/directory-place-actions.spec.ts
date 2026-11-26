@@ -1,7 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {gotoOK,isMobileProject} from './helpers';
 import {PLACE_ACTIONS,resolvePlaceActions,placeActionSpec,placeBarActions,placeCardActions,type PlaceActionInput} from '../../src/lib/directory/place-actions';
-import {PLACE_SECTIONS} from '../../src/lib/directory/place-verticals';
+import {PLACE_SECTIONS,reviewsOn,sectionRatingSort} from '../../src/lib/directory/place-verticals';
 
 // Botones principales por categoría (estilo app móvil de Yelp): el mapa vive en src/lib/directory/place-actions.ts.
 // Regla: un botón existe solo si el lugar tiene el dato (nunca un botón muerto). Parte 1: el mapa puro. Parte 2: páginas
@@ -24,6 +24,15 @@ test('mapa de botones: cada sección tiene su juego y nunca hay botones muertos'
    expect(none.every(a=>a.id==='review')).toBe(true);
   }
  }
+});
+
+test('sin reseñas (dueño 2026-11-26): trámites y centros comerciales nunca; educación y transporte solo en algunos tipos',()=>{
+ expect(reviewsOn('government','municipality')).toBe(false);expect(reviewsOn('mall')).toBe(false);
+ expect(reviewsOn('education','school')).toBe(false);expect(reviewsOn('education','college')).toBe(false);expect(reviewsOn('education','university')).toBe(true);
+ expect(reviewsOn('transport','bus_station')).toBe(false);expect(reviewsOn('transport','car_rental')).toBe(true);
+ expect(reviewsOn('attraction','waterfall')).toBe(true);expect(reviewsOn('restaurant')).toBe(true);
+ for(const s of ['tramites','centros-comerciales','educacion','transporte'])expect(sectionRatingSort(s),s).toBe(false);
+ for(const s of ['restaurantes','atracciones','tiendas','mercados-y-carnicerias'])expect(sectionRatingSort(s),s).toBe(true);
 });
 
 test('restaurantes: Reservar usa la herramienta de reservas o "Llamar para reservar", sin duplicar el teléfono',()=>{
