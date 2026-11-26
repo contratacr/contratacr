@@ -1,6 +1,5 @@
 import type {ReactNode} from 'react';
 import {DirectoryQuickNav} from '@/components/landing/directory-nav';
-import {ChevronLeft,ChevronRight} from 'lucide-react';
 import {CR_PROVINCES} from '@/lib/directory/listing-public';
 import {placeSection} from '@/lib/directory/place-verticals';
 import {encodeCursor,placePriceMode,type SearchSort} from '@/lib/directory/search-schemas';
@@ -12,6 +11,8 @@ import {PlacesMap} from '@/components/maps/places-map';
 import {hrefWith} from './listing-home-parts';
 import {PlaceCard} from './place-card';
 import {placeCardActions} from '@/lib/directory/place-actions';
+import {InfiniteMore} from '@/components/search/infinite-more';
+import {morePlaces} from '@/app/actions/more-places';
 import {kindLabel} from '@/lib/directory/place-verticals';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
@@ -84,6 +85,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const total=facets?.total??null,where=values.canton??values.province;
  const count=total==null?null:`${fmt(total,en)} ${t(total===1?'empresa':'empresas',total===1?'business':'businesses')} ${where?t(`en ${where}`,`in ${where}`):t('en Costa Rica','in Costa Rica')}`;
  const items=page.ok?page.result.items:[];
+ const plainValues=Object.fromEntries(Object.entries(values).filter(([k,v])=>k!=='cursor'&&typeof v==='string'&&v)) as Record<string,string>;
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
  // Yelp result-card model (2026-11-19): cover photo + newest review snippet for the places of this page.
  const extras=await placeCardExtras(places.map(p=>p.slug));
@@ -91,12 +93,10 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
   // Map-first sections (owner 2026-11-26): the pin card carries open-now and the two card actions (Llamar, Cómo llegar).
   open:p.openNow===true?t('Abierto ahora','Open now'):p.openNow===false?t('Cerrado ahora','Closed now'):undefined,openNow:p.openNow,
   actions:placeCardActions({slug:p.slug,name:p.name,verticalId:p.vertical.id,locale,phone:p.phone,location:p.location}).map(a=>({id:a.id,label:a.short||a.label,href:a.type==='directions'&&p.location?`https://www.google.com/maps/dir/?api=1&destination=${p.location.lat},${p.location.lng}`:a.href,external:a.type==='directions'||!!a.external}))}]:[]);
- const next=page.ok&&page.result.nextCursor?link({cursor:encodeCursor(page.result.nextCursor)}):null;
  const filtersLabel=t('Filtros','Filters');
  const chips=(variant:'bar'|'sheet')=><PlacesFilterChips variant={variant} menus={menus} toggles={toggles} filtersLabel={filtersLabel} activeFilters={activeFilters} clear={clear} en={en}/>;
  const map=points.length?<PlacesMap cluster bare cooperative={false} points={points} locale={locale} zoom={14} className="h-full w-full"
   label={t(`Mapa de ${points.length} resultados`,`Map of ${points.length} results`)}/>:null;
- const nav='inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 text-sm font-bold transition-colors';
  return <div className="ccr-buscar-pagina flex min-h-screen flex-col bg-white" data-places-home={section}>
   <LandingNavbar forceCompactSearch mobileSearch/>
   <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden/>
@@ -140,11 +140,9 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
          </div>
         :<ol className="ccr-search-results-list -mx-4 flex w-[calc(100%+2rem)] min-w-0 flex-col gap-1.5 bg-white lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent" aria-label={t('Resultados','Results')}>
           {places.map((item,n)=><li key={item.key} className="ccr-search-card-slot min-w-0"><PlaceCard item={item} locale={locale} rank={n+1} extra={extras[item.slug]??null}/></li>)}
+          {/* Owner 2026-11-26: the next 20 load by themselves while scrolling (skeleton meanwhile). */}
+          <InfiniteMore initialNext={page.ok&&page.result.nextCursor?encodeCursor(page.result.nextCursor):null} startRank={places.length+1} load={morePlaces.bind(null,section,plainValues,locale)} label={t('Cargando más resultados','Loading more results')}/>
          </ol>}
-      {(next||values.cursor)&&<nav aria-label={t('Más resultados','More results')} className="flex items-center justify-between gap-3 py-4 lg:border-t lg:border-[#e5e7eb] lg:pt-4">
-       {values.cursor?<a href={link({cursor:undefined})} className={`${nav} border border-[#d7e2ea] bg-white text-[#1A2744] hover:border-[#009FD9] hover:text-[#009FD9]`}><ChevronLeft className="h-4 w-4" aria-hidden="true"/>{t('Primeros resultados','First results')}</a>:<span/>}
-       {next&&<a href={next} rel="next" className={`${nav} bg-[#009FD9] text-white hover:bg-[#0089bb]`}>{t('Siguiente','Next')}<ChevronRight className="h-4 w-4" aria-hidden="true"/></a>}
-      </nav>}
      </div>
     </SearchResultsLayout>
    </div>
