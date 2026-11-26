@@ -135,3 +135,19 @@ test('withdrawing from the footer settings stops measurement and the notice does
  await expect(page.locator('[data-cookie-banner]')).toHaveCount(0);
  expect(await page.evaluate(()=>document.cookie)).toContain('ccr_ads_consent_v2=declined');
 });
+
+test('cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target', async ({ page }) => {
+ await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
+ await page.setViewportSize({width:390,height:844});
+ await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
+ await page.route('**/cookie-harness',r=>r.fulfill({contentType:'text/html',body:`<!doctype html><html lang="es"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>`}));
+ await page.goto('http://localhost/cookie-harness');
+ await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
+ const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ const box=(await banner.boundingBox())!;
+ expect(box.height).toBeLessThanOrEqual(844*0.33);
+ const close=(await page.locator('[data-cookie-close]').boundingBox())!;
+ expect(close.width).toBeGreaterThanOrEqual(44);expect(close.height).toBeGreaterThanOrEqual(44);
+ const continuar=(await banner.getByRole('button',{name:'Continuar',exact:true}).boundingBox())!;
+ expect(continuar.height).toBeGreaterThanOrEqual(44);
+});
