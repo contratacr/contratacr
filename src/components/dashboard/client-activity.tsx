@@ -12,7 +12,8 @@ import { cargarCotizaciones } from "@/lib/quotes-store";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { FolderOpen, ClipboardList, Plus, FileText, CheckCircle2 } from "lucide-react";
+import { FolderOpen, ClipboardList, Plus, FileText, CheckCircle2, Bookmark, ChevronRight } from "lucide-react";
+import { useSiteFeatures } from "@/components/site-features";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const tEtapas = useTranslations("statusTabs");
   const locale = useLocale();
   const cs = useTranslations("ClientSurfaceCopy");
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
   const searchParams = useSearchParams();
   const { dialogNode, showMessage } = useAppDialog();
   const errorTitle = cs("activityError");
@@ -292,7 +294,19 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   }
 
   if (section === "saved") {
-    return <SavedProfessionalsTab />;
+    // Directory on (owner 2026-11-26): saved companies (the lists) are managed from here too, with the panel's row style.
+    return (
+      <>
+        {directoryOn && (
+          <Link href="/listas" prefetch={false} data-saved-companies className="mb-4 flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a]"><Bookmark className="h-5 w-5" aria-hidden /></span>
+            <span className="min-w-0 flex-1 truncate">{cs("savedCompanies")}</span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
+          </Link>
+        )}
+        <SavedProfessionalsTab />
+      </>
+    );
   }
 
   if (loading) {

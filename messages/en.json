@@ -3954,7 +3954,8 @@
     "emailPlaceholder": "you@email.com",
     "activityError": "Something went wrong",
     "receivedQuotes": "Received quotes",
-    "noPublicRequests": "You have not posted any public request. Need another professional?"
+    "noPublicRequests": "You have not posted any public request. Need another professional?",
+    "savedCompanies": "Saved companies (My lists)"
   },
   "ProRegistrationCopy": {
     "backToLead": "Back to lead",

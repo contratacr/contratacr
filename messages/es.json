@@ -3954,7 +3954,8 @@
     "emailPlaceholder": "nombre@correo.com",
     "activityError": "No se pudo completar la acción",
     "receivedQuotes": "Cotizaciones recibidas",
-    "noPublicRequests": "No ha publicado solicitudes. ¿Necesita otro profesional?"
+    "noPublicRequests": "No ha publicado solicitudes. ¿Necesita otro profesional?",
+    "savedCompanies": "Empresas guardadas (Mis listas)"
   },
   "ProRegistrationCopy": {
     "backToLead": "Volver a solicitud",
