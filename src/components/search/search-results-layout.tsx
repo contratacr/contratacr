@@ -699,7 +699,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
               window.dispatchEvent(new CustomEvent("ccr:search-this-area"));
             }}
             disabled={areaSearching}
-            className="pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-white px-4 text-[12px] font-extrabold text-[#162543] shadow-[0_10px_28px_-18px_rgba(15,23,42,0.65)] ring-1 ring-[#dbe5ec]"
+            className="pointer-events-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-[#d7dde3] bg-white px-4 text-[13px] font-bold text-[#162543] disabled:opacity-70"
           >
             {areaSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#009FD9]" /> : <RefreshCw className="h-3.5 w-3.5" />}
             {areaSearching

@@ -40,7 +40,7 @@ import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { NativeAppInicial } from "@/hooks/native-app-inicial";
-import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
+import { CATEGORY_GROUPS, CATEGORY_GROUP_LABELS_EN, ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
@@ -56,6 +56,7 @@ import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
+import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -2608,15 +2609,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       DESPUÉS de los recientes: quien ya buscó algo ve primero
                       lo suyo, y de todos modos tiene ideas debajo. */}
                   {directoryOn && searchFocused && !searchQuery.trim() && (
-                    <div data-search-pro-chips className="pb-3">
+                    <div data-search-pro-chips className="pb-4">
+                      {/* Everything, in order (owner 2026-11-26): every professional category, then every company section. */}
                       <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">{t("searchPros")}</p>
-                      <div className="-mx-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {serviciosMasBuscados.map((id) => (
-                          <button key={id} type="button" data-search-pro-chip={id} onClick={() => selectNativeCompactSuggestion(id)}
-                            className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dbe5ee] bg-white px-3 text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]">
-                            <UserRound className="h-4 w-4 text-[#009FD9]" aria-hidden />{getCategoryLabel(id, locale)}
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-2 gap-2">
+                        {CATEGORY_GROUPS.filter((g) => g.id !== "otro" && g.id !== "restaurantes").map((g) => {
+                          const Icon = getCategoryGroupVisual(g.id).Icon;
+                          return (
+                            <button key={g.id} type="button" data-search-pro-group={g.id} onClick={() => { closeNativeSearch(); router.push(`/profesionales?grupo=${g.id}`); }}
+                              className="flex h-12 min-w-0 items-center gap-2.5 rounded-xl border border-[#e5e9ee] bg-white px-3 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]">
+                              <Icon className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" aria-hidden />
+                              <span className="min-w-0 truncate">{(locale === "en" && CATEGORY_GROUP_LABELS_EN[g.id]) || g.label}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -2626,7 +2632,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
                         {t("searchBusinesses")}
                       </p>
-                      <div className="-mx-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="grid grid-cols-2 gap-2">
                         {directorySections.filter((id) => DIRECTORY_SECTION_LABELS[id]).map((id) => {
                           const Icon = DIRECTORY_SECTION_ICONS[id] ?? Search;
                           return (
@@ -2635,9 +2641,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               type="button"
                               data-search-place-chip={id}
                               onClick={() => { closeNativeSearch(); router.push(`/${id}`); }}
-                              className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dbe5ee] bg-white px-3 text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
+                              className="flex h-12 min-w-0 items-center gap-2.5 rounded-xl border border-[#e5e9ee] bg-white px-3 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
                             >
-                              <Icon className="h-4 w-4 text-[#009FD9]" aria-hidden />
+                              <Icon className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" aria-hidden />
                               {(DIRECTORY_SECTION_LABELS[id] as Record<string, string>)[locale] ?? DIRECTORY_SECTION_LABELS[id].es}
                             </button>
                           );
