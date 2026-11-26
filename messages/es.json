@@ -3064,7 +3064,9 @@
       "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita."
     },
     "topRated": {
-      "title": "Mejor calificados"
+      "title": "Mejor calificados",
+      "review": "reseña",
+      "reviews": "reseñas"
     },
     "heroSlides": {
       "restaurants": "Dónde comer cerca de usted",

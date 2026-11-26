@@ -3064,7 +3064,9 @@
       "subtitle": "From personalized guides to effortless planning — all in one free app."
     },
     "topRated": {
-      "title": "Top rated"
+      "title": "Top rated",
+      "review": "review",
+      "reviews": "reviews"
     },
     "heroSlides": {
       "restaurants": "Where to eat near you",
