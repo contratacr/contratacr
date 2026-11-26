@@ -15,6 +15,7 @@ import {BIZ,RatingLine,ring} from './biz-ui';
 import {PlaceTabs,type PlaceTab} from './place-tabs';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {ShareButton} from './share-button';
+import {PlaceMoreMenu} from './place-more-menu';
 import {PlaceRecommend} from './place-recommend';
 import {mapLinks,placeSideActions,resolvePlaceAction,type PlaceAction,type PlaceActionInput} from '@/lib/directory/place-actions';
 import {ActionButton,actionIcon} from './place-action-buttons';
@@ -202,9 +203,12 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {maps&&<a href={maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={CHIP}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
   {orderAction&&<ActionButton action={orderAction} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('order','h-4 w-4 shrink-0')}{orderAction.label}</ActionButton>}
   {site&&<ActionButton action={site} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('website','h-4 w-4 shrink-0')}{site.label}</ActionButton>}
-  {saveSlot}
-  {published&&<ShareButton title={place.name} locale={locale} suggest sheet className={CHIP}/>}
-  {photoSlot}
+  {/* Guardar, Compartir, Agregar fotos: in the bar's «…» on phones (like the professional profile), inline on computers. */}
+  <PlaceMoreMenu title={place.name} closeLabel={t('Cerrar','Close')} desktop={<>{saveSlot}{published&&<ShareButton title={place.name} locale={locale} suggest sheet className={CHIP}/>}{photoSlot}</>}>
+   {saveSlot}
+   {published&&<ShareButton title={place.name} locale={locale} suggest sheet className={CHIP}/>}
+   {photoSlot}
+  </PlaceMoreMenu>
  </div>;
  return <main id="contenido" data-place-page={place.slug} className="mx-auto max-w-7xl px-4 pb-14 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
   <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="mb-4 hidden text-sm text-[#526277] sm:block">
