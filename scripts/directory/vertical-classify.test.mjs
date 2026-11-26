@@ -26,10 +26,11 @@ test("priority: lodging over its restaurant, pharmacy never health, dealer over 
   assert.deepEqual(classifyTags({ amenity: "vehicle_inspection" }), { vertical: "auto_services", attributes: { kind: "inspection" } });
 });
 
-test("exclusions: locksmith, fitness stations, adult venues, cosmetics, viewpoints, plain sports centres", () => {
+test("exclusions: locksmith, fitness stations, adult venues, shop=yes/vacant, plain sports centres", () => {
   for (const tags of [{ shop: "locksmith" }, { leisure: "fitness_station" }, { amenity: "stripclub" }, { amenity: "nightclub" }, { shop: "erotic" },
-    { amenity: "bar", adult: "yes" }, { shop: "cosmetics" }, { tourism: "viewpoint" }, { leisure: "sports_centre", sport: "soccer" }, { healthcare: "blood_donation" }])
+    { amenity: "bar", adult: "yes" }, { shop: "yes" }, { shop: "vacant" }, { leisure: "sports_centre", sport: "soccer" }, { healthcare: "blood_donation" }])
     assert.equal(classifyTags(tags), null, JSON.stringify(tags));
+  assert.equal(verticalFromTags({ shop: "cosmetics" }), "retail", "cosmetics shops are stores, never beauty salons");
   assert.equal(classifyTags({ leisure: "sports_centre", sport: "fitness" }).vertical, "fitness");
   assert.equal(classifyTags({ leisure: "sports_centre", name: "Gimnasio Municipal" }).vertical, "fitness");
 });
@@ -139,4 +140,42 @@ test("--inside-only: rows outside every level-4 boundary are dropped", () => {
   const rows = [{ ref: "in", lat: 9.9, lng: -84.1 }, { ref: "out", lat: 11.3, lng: -85.9 }, { ref: "nopoint" }];
   assert.equal(dropOutsideAreas(rows, areas), 2);
   assert.deepEqual(rows.map((r) => r.ref), ["in"]);
+});
+
+test("2026-11-26 sections: atracciones, tiendas, centros comerciales, mercados, trámites, educación, transporte", () => {
+  const c = (tags) => { const r = classifyTags(tags); return r && [r.vertical, r.attributes?.kind]; };
+  assert.deepEqual(c({ tourism: "attraction", name: "Catarata Río Celeste" }), ["attraction", "waterfall"]);
+  assert.deepEqual(c({ tourism: "attraction", name: "Casa de la Cultura" }), ["attraction", "other"]);
+  assert.deepEqual(c({ tourism: "viewpoint" }), ["attraction", "viewpoint"]);
+  assert.deepEqual(c({ tourism: "aquarium" }), ["attraction", "zoo"]);
+  assert.deepEqual(c({ leisure: "water_park" }), ["attraction", "theme_park"]);
+  assert.deepEqual(c({ natural: "hot_spring" }), ["attraction", "hot_spring"]);
+  assert.deepEqual(c({ boundary: "national_park" }), ["attraction", "national_park"]);
+  assert.deepEqual(c({ boundary: "protected_area", protect_class: "2" }), ["attraction", "national_park"]);
+  assert.equal(c({ boundary: "protected_area", protect_class: "6" }), null);
+  assert.deepEqual(c({ leisure: "swimming_pool", access: "public" }), ["attraction", "pool"]);
+  assert.equal(c({ leisure: "swimming_pool", access: "private", sport: "swimming" }), null);
+  assert.equal(c({ leisure: "park" }), null, "neighbourhood parks stay out");
+  assert.deepEqual(c({ leisure: "park", wikidata: "Q1" }), ["attraction", "park"]);
+  assert.deepEqual(c({ tourism: "museum" }), ["tours", "museum"]);
+  assert.deepEqual(c({ shop: "clothes" }), ["retail", "clothes"]);
+  assert.deepEqual(c({ shop: "mobile_phone" }), ["retail", "mobile_phone"]);
+  assert.deepEqual(c({ shop: "optician" }), ["health", "optician"], "opticians keep salud");
+  assert.deepEqual(c({ shop: "pet" }), ["vet_pets", "pet_shop"], "pet shops keep veterinarias");
+  assert.deepEqual(c({ shop: "mall", name: "Plaza Real" }), ["mall", "plaza"]);
+  assert.deepEqual(c({ shop: "mall", name: "Multiplaza Escazú" }), ["mall", "mall"]);
+  assert.deepEqual(c({ shop: "butcher" }), ["food_shop", "butcher"]);
+  assert.deepEqual(c({ amenity: "marketplace" }), ["food_shop", "market"]);
+  assert.equal(verticalFromTags({ shop: "greengrocer" }), "grocery");
+  assert.deepEqual(c({ amenity: "townhall" }), ["government", "municipality"]);
+  assert.deepEqual(c({ office: "government", name: "Dirección General de Migración" }), ["government", "registry"]);
+  assert.deepEqual(c({ amenity: "police" }), ["government", "police"]);
+  assert.deepEqual(c({ amenity: "school" }), ["education", "school"]);
+  assert.deepEqual(c({ amenity: "university" }), ["education", "university"]);
+  assert.deepEqual(c({ amenity: "bus_station" }), ["transport", "bus_station"]);
+  assert.deepEqual(c({ aeroway: "aerodrome" }), ["transport", "airport"]);
+  assert.deepEqual(c({ amenity: "car_rental" }), ["transport", "car_rental"]);
+  for (const tags of [{ amenity: "place_of_worship" }, { amenity: "grave_yard" }, { shop: "funeral_directors" }, { leisure: "pitch" }, { amenity: "community_centre" }, { amenity: "nightclub" }])
+    assert.equal(classifyTags(tags), null, JSON.stringify(tags));
+  assert.ok(isGenericName("Escuela") && isGenericName("Municipalidad") && isGenericName("Playa") && isGenericName("Centro Comercial"));
 });

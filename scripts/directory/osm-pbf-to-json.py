@@ -2,7 +2,8 @@
 # LOCAL PRO ONLY (directory seed). Offline converter: reads ONE local OpenStreetMap .osm.pbf extract (e.g. Geofabrik
 # costa-rica-latest.osm.pbf, ODbL) with pyosmium and writes the two local inputs of stage-import.mjs:
 #  (a) <out-dir>/osm-pois.json       Overpass-style JSON {elements:[{type,id,lat,lon|center,timestamp,tags}]} of the
-#      elements that carry a directory key (amenity, shop, tourism, leisure, healthcare, office, craft) and a name
+#      elements that carry a directory key (amenity, shop, tourism, leisure, healthcare, office, craft; since 2026-11-26 also
+#      natural=waterfall/hot_spring/beach/volcano/cave_entrance and boundary=national_park/protected_area, aeroway=aerodrome) and a name
 #      (or an ATM with an operator). Nodes keep lat/lon; ways and multipolygon relations get a `center` (mean of the
 #      outer-ring vertices). Refs are the real OSM ids (way/<id>, relation/<id>). All tags of a selected element are
 #      kept because classifyTags/stage-osm-extras read many of them; stage-import.mjs never copies raw tags.
@@ -19,10 +20,16 @@ import sys
 import osmium
 
 KEYS = ('amenity', 'shop', 'tourism', 'leisure', 'healthcare', 'office', 'craft')
+# 2026-11-26 (/atracciones): named natural sights and protected areas that carry none of the keys above.
+NATURAL = ('waterfall', 'hot_spring', 'beach', 'volcano', 'cave_entrance')
+BOUNDARY = ('national_park', 'protected_area')
+# (/transporte) named airports and aerodromes.
+AEROWAY = ('aerodrome',)
 
 
 def selected(tags):
-    if not any(k in tags for k in KEYS):
+    if not any(k in tags for k in KEYS) and tags.get('natural') not in NATURAL and tags.get('boundary') not in BOUNDARY \
+            and tags.get('aeroway') not in AEROWAY:
         return False
     if tags.get('name') or tags.get('name:es'):
         return True

@@ -72,7 +72,48 @@ const AUTO={car_repair:'repair',motorcycle_repair:'motorcycle_repair',tyres:'tyr
 const BEAUTY={hairdresser:'hairdresser',barber:'barber',beauty:'beauty',nail_salon:'nails',massage:'massage',tattoo:'tattoo'};
 const FIT_SPORTS=/\b(fitness|yoga|crossfit|pilates|martial_arts|karate|taekwondo|judo|jiu_jitsu|boxing|kickboxing|dance|aerobics|weightlifting|gymnastics|bodybuilding|muay_thai|mma)\b/;
 const FIT_NAME=/\b(gym|gimnasio|fitness|crossfit|yoga|pilates|dojo|box|muay|karate|taekwondo|jiu|academia de baile|dance|zumba)\b/i;
-const TOURS={attraction:'attraction',museum:'museum',zoo:'zoo',theme_park:'theme_park',aquarium:'aquarium',gallery:'gallery'};
+// 2026-11-26: attractions left «tours» for their own section (/atracciones); tours keeps museums, galleries and operators.
+const TOURS={museum:'museum',gallery:'gallery'};
+/** 2026-11-26 atracciones: OSM tourism/natural/leisure/boundary tags → kind (a tourism=attraction is refined by its name). */
+const ATTRACTION_TOURISM={viewpoint:'viewpoint',theme_park:'theme_park',zoo:'zoo',aquarium:'zoo'};
+const NATURAL_KIND={waterfall:'waterfall',hot_spring:'hot_spring',beach:'beach',volcano:'volcano',cave_entrance:'other'};
+export const attractionKindFromName=name=>{const f=fold(name);
+ return /\b(catarata|cataratas|cascada|waterfall|falls|salto)\b/.test(f)?'waterfall':/\b(termal|termales|aguas termales|hot springs?)\b/.test(f)?'hot_spring'
+  :/\b(volcan|volcano)\b/.test(f)?'volcano':/\b(parque nacional|national park|reserva|refugio|biological reserve|reserva biologica)\b/.test(f)?'national_park'
+  :/\b(mirador|viewpoint|lookout)\b/.test(f)?'viewpoint':/^(playa|beach)\b/.test(f)?'beach':/\b(balneario|piscina|piscinas)\b/.test(f)?'pool':null;};
+const CLOSED_ACCESS=['private','no','customers','permissive_customers','employees','delivery','members'];
+function attractionOf(t){
+ const tourism=t.tourism,leisure=t.leisure,name=`${t['name:es']??''} ${t.name??''}`;
+ if(tourism==='attraction')return attractionKindFromName(name)??'other';
+ if(ATTRACTION_TOURISM[tourism])return ATTRACTION_TOURISM[tourism];
+ if(leisure==='water_park')return 'theme_park';
+ if(NATURAL_KIND[t.natural])return NATURAL_KIND[t.natural];
+ if(t.boundary==='national_park'||(t.boundary==='protected_area'&&['1','1a','1b','2'].includes(String(t.protect_class??'')))||leisure==='nature_reserve')return 'national_park';
+ if((leisure==='swimming_pool'||amenityIs(t,'swimming_pool')||leisure==='beach_resort')&&!CLOSED_ACCESS.includes(t.access)
+  &&(leisure==='beach_resort'||['yes','public','permissive'].includes(t.access)||/\bswimming\b/.test(String(t.sport??''))))return 'pool';
+ // Parks: only notable ones (a tourism tag or a Wikidata item), never every neighbourhood park.
+ if(leisure==='park'&&(t.tourism||t.wikidata))return 'park';
+ return null;
+}
+const amenityIs=(t,v)=>t.amenity===v;
+/** 2026-11-26 tiendas: OSM shop → kind. shop=yes (no recognisable type) and services (laundry, repair…) are never retail. */
+const RETAIL={clothes:'clothes',boutique:'clothes',fashion:'clothes',fashion_accessories:'clothes',shoes:'shoes',electronics:'electronics',hifi:'electronics',
+ radiotechnics:'electronics',mobile_phone:'mobile_phone',mobile_phone_accessories:'mobile_phone',telecommunication:'mobile_phone',furniture:'furniture',bed:'furniture',
+ interior_decoration:'furniture',kitchen:'furniture',lighting:'furniture',houseware:'furniture',curtain:'furniture',household_linen:'furniture',books:'books',
+ florist:'florist',toys:'toys',baby_goods:'toys',appliance:'appliance',computer:'computer',printer_ink:'computer',video_games:'computer',jewelry:'jewelry',
+ watches:'jewelry',sports:'sports',outdoor:'sports',fishing:'sports',scuba_diving:'sports',gift:'gift',party:'gift',craft:'gift',art:'gift',
+ variety_store:'variety_store',department_store:'department_store',stationery:'stationery',copyshop:'stationery',bicycle:'bicycle',
+ hairdresser_supply:'other',cosmetics:'other',perfumery:'other',musical_instrument:'other',music:'other',fabric:'other',sewing:'other',bag:'other',
+ leather:'other',photo:'other',second_hand:'other',antiques:'other',frame:'other',agrarian:'other',garden_centre:'other',medical_supply:'other',
+ tiles:'other',flooring:'other',collector:'other',religion:'other',swimming_pool:'other'};
+/** 2026-11-26 mercados y carnicerías (food shops other than supermarkets, bakeries and greengrocers, which keep their sections). */
+const FOOD_SHOP={butcher:'butcher',seafood:'seafood',cheese:'dairy',dairy:'dairy',deli:'deli',health_food:'natural',nutrition_supplements:'natural',farm:'market'};
+const mallKind=t=>/\b(mall|multiplaza|city mall|terramall)\b/.test(fold(t.name))||Number(t['building:levels'])>=2?'mall':'plaza';
+/** 2026-11-26 trámites: public offices. office=government is refined by its name (registry / migration offices). */
+const governmentKind=t=>{const a=t.amenity;if(a==='townhall')return 'municipality';if(a==='post_office')return 'post_office';if(a==='courthouse')return 'court';if(a==='police')return 'police';
+ return /\b(registro|migracion|dgme|tribunal supremo de elecciones|tse|pasaportes|licencias|cosevi)\b/.test(fold(t.name))?'registry':'office';};
+const EDUCATION={university:'university',college:'college',school:'school',kindergarten:'kindergarten',childcare:'kindergarten',language_school:'language_school',
+ driving_school:'driving_school',music_school:'music_school'};
 const CAFE={cafe:'cafe',bar:'bar',pub:'pub',biergarten:'bar',ice_cream:'ice_cream'};
 const CAFE_SHOP={bakery:'bakery',pastry:'bakery',confectionery:'bakery',coffee:'coffee_shop',ice_cream:'ice_cream'};
 const fitKind=t=>{const sp=String(t.sport??'');
@@ -85,7 +126,10 @@ const fitKind=t=>{const sp=String(t.sport??'');
  * fast food, also with bar or bakery tags) → cafe_bar (café, bar, pub, ice cream, bakery/pastry/coffee shop) → grocery
  * (supermarket, greengrocer, wholesale) → convenience (convenience/general/kiosk, or a pulpería/abastecedor/minisúper
  * name on a generic shop) → vehicle_dealer → auto_services → health → vet_pets → beauty → fitness → hardware → tours →
- * banking → real_estate. Exclusions: locksmiths, fitness stations, cosmetics/supply shops, viewpoints, blood donation,
+ * attraction (2026-11-26: tourism=attraction/viewpoint/theme_park/zoo/aquarium, water parks, named natural sights, national
+ * parks and reserves, public pools/balnearios, notable parks) → tours (museums, galleries, agencies, operators) → banking →
+ * real_estate → mall → food_shop → retail → government → education → transport → parking. Exclusions: locksmiths, fitness
+ * stations, cosmetics/supply shops as beauty, shop=yes/vacant, blood donation,
  * alternative-therapy / retreat «health» entries (isExcludedHealth, 2026-11-17).
  */
 export function classifyTags(tags={}){
@@ -127,14 +171,27 @@ export function classifyTags(tags={}){
  if(shop==='electrical')return {vertical:'hardware',attributes:{kind:'electrical'}};
  if(shop==='bathroom_furnishing')return {vertical:'hardware',attributes:{kind:'bathroom'}};
  if(shop==='trade')return {vertical:'hardware',attributes:{kind:'trade'}};
+ {const kind=attractionOf(t);if(kind)return {vertical:'attraction',attributes:{kind}};}
  if(TOURS[tourism])return {vertical:'tours',attributes:{kind:TOURS[tourism]}};
- if(leisure==='water_park')return {vertical:'tours',attributes:{kind:'water_park'}};
  if(shop==='travel_agency'||t.office==='travel_agent')return {vertical:'tours',attributes:{kind:'travel_agency'}};
  if(t.office==='tour_operator'||t.office==='guide')return {vertical:'tours',attributes:{kind:'tour_operator'}};
  if(amenity==='bank')return {vertical:'banking',attributes:{kind:'bank',...(t.atm==='yes'?{atm:true}:{}),...(cut(t.operator,80)?{operator:cut(t.operator,80)}:{})}};
  if(amenity==='atm')return {vertical:'banking',attributes:{kind:'atm',...(cut(t.operator,80)?{operator:cut(t.operator,80)}:{})}};
  if(amenity==='bureau_de_change')return {vertical:'banking',attributes:{kind:'exchange'}};
  if(t.office==='estate_agent')return {vertical:'real_estate'};
+ // 2026-11-26 (owner «todo lo de OSM»): stores, malls, food shops, public offices, education and transport. After every
+ // older rule, so a shop that already has a section keeps it (optician → salud, pet → veterinarias, bakery → cafés,
+ // greengrocer → supermercados, variety store named «pulpería» → pulperías).
+ if(shop==='mall')return {vertical:'mall',attributes:{kind:mallKind(t)}};
+ if(FOOD_SHOP[shop])return {vertical:'food_shop',attributes:{kind:FOOD_SHOP[shop]}};
+ if(amenity==='marketplace')return {vertical:'food_shop',attributes:{kind:'market'}};
+ if(RETAIL[shop])return {vertical:'retail',attributes:{kind:RETAIL[shop]}};
+ if(['townhall','post_office','courthouse','police'].includes(amenity)||t.office==='government')return {vertical:'government',attributes:{kind:governmentKind(t)}};
+ if(EDUCATION[amenity])return {vertical:'education',attributes:{kind:EDUCATION[amenity]}};
+ if(amenity==='bus_station')return {vertical:'transport',attributes:{kind:'bus_station'}};
+ if(amenity==='ferry_terminal')return {vertical:'transport',attributes:{kind:'ferry'}};
+ if(t.aeroway==='aerodrome'&&!CLOSED_ACCESS.includes(t.access))return {vertical:'transport',attributes:{kind:'airport'}};
+ if(amenity==='car_rental')return {vertical:'transport',attributes:{kind:'car_rental'}};
  // 2026-11-26 parqueos: only public-facing lots (private/customers-only lots are skipped); names are checked in row().
  if(amenity==='parking'||amenity==='motorcycle_parking'){if(['private','no','customers','permissive_customers','employees','delivery'].includes(t.access))return null;
   return {vertical:'parking',attributes:{kind:parkingKind(t)}};}
@@ -161,7 +218,16 @@ export const GENERIC_NAMES=new Set(['restaurante','restaurant','soda','cafe','ca
  'gimnasio','gym','fitness','yoga','crossfit','dojo','cancha','polideportivo',
  'panaderia','bakery','reposteria','pasteleria','heladeria','ice cream','cantina','pub','licorera','kiosko','kiosco','kiosk','pulperia y bazar',
  'museo','museum','atraccion','attraction','mirador','tour','tours','agencia de viajes','travel agency',
- 'banco','bank','cajero','cajero automatico','cajeros','atm','casa de cambio']);
+ 'banco','bank','cajero','cajero automatico','cajeros','atm','casa de cambio',
+ // 2026-11-26 sections
+ 'parque','park','playa','beach','catarata','cascada','waterfall','piscina','piscinas','balneario','pool','swimming pool','mirador','viewpoint','parque nacional','reserva','volcan',
+ 'aguas termales','termales','zoologico','zoo','parque de diversiones',
+ 'tienda de ropa','ropa','zapateria','zapatos','boutique','libreria','papeleria','floristeria','jugueteria','muebleria','muebles','optica','joyeria','electronica',
+ 'celulares','computadoras','bazar','variedades','regalos','bicicletas','tienda deportiva','fotocopias','copias',
+ 'plaza','centro comercial','mall','plaza comercial','carniceria','butcher','pescaderia','marisqueria','mercado','feria','feria del agricultor','market','tienda naturista',
+ 'municipalidad','correos','correo','post office','policia','police','delegacion','delegacion policial','fuerza publica','tribunales','juzgado','oficina','gobierno',
+ 'escuela','school','colegio','liceo','kinder','kinder garden','guarderia','universidad','university','instituto','academia',
+ 'terminal','terminal de buses','parada','bus station','aeropuerto','aerodromo','airport','alquiler de carros','rent a car','car rental']);
 export const isGenericName=name=>!/[\p{L}]/u.test(name??'')||GENERIC_NAMES.has(fold(name));
 const phoneOf=tags=>{const raw=cut(tags.phone??tags['contact:phone'],40);if(!raw)return undefined;const first=raw.split(/[;,]/)[0].trim();return /^\+?[0-9][0-9 ()-]{6,22}$/.test(first)?first:undefined;};
 function centroid(geometry){
