@@ -3,6 +3,7 @@ import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directo
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
 import {MapPin} from 'lucide-react';
+import {PlaceSaveBookmark} from './place-save-bookmark';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {RatingLine} from './biz-ui';
 import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
@@ -115,6 +116,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
       {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
      </H>
      {priceLevel&&<span className="shrink-0 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
+     <PlaceSaveBookmark slug={item.slug} name={item.name} locale={locale} className="-mr-2 -mt-1.5"/>
     </div>
     <p className="truncate text-[12px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
     {rated&&<div className="mt-0.5" data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
