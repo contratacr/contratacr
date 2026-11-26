@@ -6,7 +6,7 @@ import { MapPin, X, Plus, Check, Search, Pencil, Trash2 } from "lucide-react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { loadGoogleMaps } from "@/lib/maps/loader";
 import { createMap, loadMapLibre, supportsWebGL, type MapLibreModule } from "@/lib/maps/maplibre";
-import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById, matchProvinceCanton } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { withHomeServiceScope, type HomeServiceScope } from "@/lib/location";
@@ -49,7 +49,15 @@ interface WorkplacesPickerProps {
     removeLabel?: string;
   }[];
   extraActions?: ReactNode;
+  /**
+   * Tells the parent whether a NEW place (pin already placed) is still waiting
+   * for "Guardar lugar". The parent form uses it to say what is missing instead
+   * of the generic "choose a province and canton" error.
+   */
+  onDraftPendingChange?: (pending: boolean) => void;
 }
+
+type AddressPart = { types?: string[]; longText?: string; long_name?: string };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GMaps = any;
@@ -69,7 +77,7 @@ function genId() {
  * re-asks or overrides the provincia/cantón the pro already chose. Multiple zones
  * are supported; each is listed and removable.
  */
-export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions, mode }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, extraPlaces = [], extraActions, mode, onDraftPendingChange }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const locale = useLocale();
   const mapRef = useRef<HTMLDivElement>(null);
@@ -77,6 +85,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const libRef = useRef<MapLibreModule | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const [mapFailed, setMapFailed] = useState(false);
+  const [mapAttempt, setMapAttempt] = useState(0);
+  // Hint under the selects when the address could not fill provincia/cantón.
+  const [areaHint, setAreaHint] = useState<string | null>(null);
   const valueRef = useRef<Workplace[]>(value);
 
   // Address search - OUR OWN standard input + dropdown (NOT the Google
@@ -114,6 +125,11 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const visiblePlaces = value.filter(wp => wp.level !== "country" && (mode === 'local' ? isFixedWorkplace(wp) && wp.receivesClients !== false : mode === 'coverage' ? !!wp.cantonId && wp.homeService !== false : true));
   const addedCount = visiblePlaces.length + extraPlaces.length;
   const showAddForm = adding || addedCount === 0;
+  const isLocal = mode === "local";
+  // A local place IS its pin (without coordinates it is not a place clients can
+  // visit), so for "local" the address search + map are open as soon as the form
+  // is. Other modes keep the pin behind its link.
+  const mapOpen = isLocal ? showAddForm : showMap;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getMaps(): any {
@@ -133,16 +149,29 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     return googleRequestRef.current;
   }
 
-  async function reverseGeocode(lat: number, lng: number): Promise<string> {
-    if (!(await ensureGoogle())) return "";
+  async function reverseGeocode(lat: number, lng: number): Promise<{ address: string; parts?: AddressPart[] }> {
+    if (!(await ensureGoogle())) return { address: "" };
     const maps = getMaps();
-    if (!maps?.Geocoder) return "";
+    if (!maps?.Geocoder) return { address: "" };
     return new Promise((resolve) => {
       try {
         new maps.Geocoder().geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
-          resolve(status === "OK" && results?.[0] ? (results[0].formatted_address as string) : "");
+          const ok = status === "OK" && results?.[0];
+          resolve(ok ? { address: results[0].formatted_address as string, parts: results[0].address_components } : { address: "" });
         });
-      } catch { resolve(""); }
+      } catch { resolve({ address: "" }); }
+    });
+  }
+
+  // Pin first (instant feedback), then the address and, for a local place, the
+  // provincia/cantón it is in once the geocoder answers.
+  function pinAndName(lat: number, lng: number) {
+    onPinPlaced(lat, lng, "");
+    void reverseGeocode(lat, lng).then(({ address, parts }) => {
+      const current = draftPinRef.current;
+      if (!current || current.lat !== lat || current.lng !== lng) return;
+      if (address) onPinPlaced(lat, lng, address);
+      fillAreaFrom(parts);
     });
   }
 
@@ -153,6 +182,28 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   useEffect(() => {
     draftPinRef.current = draftPin;
   }, [draftPin]);
+
+  const draftPending = isLocal && showAddForm && !editingId && !!draftPin;
+  useEffect(() => {
+    onDraftPendingChange?.(draftPending);
+  }, [draftPending, onDraftPendingChange]);
+  useEffect(() => () => onDraftPendingChange?.(false), [onDraftPendingChange]);
+
+  // The address (search, map tap or "use my location") says which provincia and
+  // cantón it is in: fill both selects so nobody has to pick them again. If the
+  // address cannot be matched the selects stay as they are and a hint says so.
+  function fillAreaFrom(parts: AddressPart[] | undefined) {
+    if (!isLocal) return;
+    const pick = (type: string) => {
+      const part = (parts ?? []).find((c) => c.types?.includes(type));
+      return (part?.longText ?? part?.long_name) as string | undefined;
+    };
+    const { provinceId, cantonId } = matchProvinceCanton(pick("administrative_area_level_1"), pick("administrative_area_level_2"));
+    if (!provinceId) { setAreaHint(t("areaNotDetected")); return; }
+    setProvince(provinceId);
+    setCanton(cantonId ?? "");
+    setAreaHint(cantonId ? null : t("cantonNotDetected"));
+  }
 
   function commitWorkplace() {
     // Sin provincia no hay nada que agregar. «Todo Costa Rica» es el
@@ -208,6 +259,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     setAddrQuery("");
     setAddrSug([]);
     setAddrOpen(false);
+    setAreaHint(null);
   }
   // A pin placed via search / map click / current location -> just stores lat/lng.
   // It does NOT touch provincia/cantón (the selects are the source of truth).
@@ -274,13 +326,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     try {
       const maps = getMaps();
       const place = new maps.places.Place({ id: placeId });
-      await place.fetchFields({ fields: ["location", "formattedAddress"] });
+      await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
       const loc = place.location;
       if (!loc) return;
       const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
       const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
       mapInstanceRef.current?.jumpTo({ center: [lng, lat], zoom: 14 });
       onPinPlaced(lat, lng, place.formattedAddress || label);
+      fillAreaFrom(place.addressComponents);
       sessionTokenRef.current = null; // end the Places session after a selection
     } catch { /* keep the typed label; the map click still works */ }
   }
@@ -303,12 +356,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
     map.on("click", (e) => {
       const { lat, lng } = e.lngLat;
-      // Pin first (instant feedback), address when the geocoder answers.
-      onPinPlaced(lat, lng, "");
-      void reverseGeocode(lat, lng).then((address) => {
-        const current = draftPinRef.current;
-        if (address && current && current.lat === lat && current.lng === lng) onPinPlaced(lat, lng, address);
-      });
+      pinAndName(lat, lng);
     });
 
     renderMarkers();
@@ -323,12 +371,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         mapInstanceRef.current?.jumpTo({ center: [lng, lat], zoom: 14 });
-        onPinPlaced(lat, lng, "");
         setLocating(false);
-        void reverseGeocode(lat, lng).then((address) => {
-          const current = draftPinRef.current;
-          if (address && current && current.lat === lat && current.lng === lng) onPinPlaced(lat, lng, address);
-        });
+        pinAndName(lat, lng);
       },
       () => { setGeoError(t("geoFailed")); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -338,7 +382,11 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   // Initialize the map only once the optional refinement is opened (the container
   // doesn't exist until then). On CLOSE, drop the map instance + clear the search.
   useEffect(() => {
-    if (!showMap) return;
+    if (!mapOpen) {
+      mapInstanceRef.current?.remove();
+      mapInstanceRef.current = null;
+      return;
+    }
     let cancelled = false;
     loadMapLibre()
       .then((lib) => {
@@ -349,7 +397,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       .catch(() => { if (!cancelled) setMapFailed(true); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showMap]);
+  }, [mapOpen, mapAttempt]);
 
   useEffect(() => () => { mapInstanceRef.current?.remove(); mapInstanceRef.current = null; }, []);
 
@@ -382,6 +430,67 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addrQuery]);
+
+  // Address search + "use my location" + map + the placed-pin chip.
+  const mapPanel = (
+            <div className="flex flex-col gap-2">
+              {/* Address search -> drops the pin. OUR standard input (single border
+                  matching the section's other fields) + the app's shared dropdown. */}
+              {effectiveKey && <div ref={addrFieldRef} className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
+                <input
+                  type="text"
+                  value={addrQuery}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setAddrQuery(next);
+                    setAddrOpen(true);
+                    if (next.trim().length < 3) setAddrSug([]);
+                  }}
+                  onFocus={() => { void ensureGoogle(); if (addrSug.length > 0) setAddrOpen(true); }}
+                  onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
+                  placeholder={t("searchPlaceholder")}
+                  aria-label={t("searchPlaceholder")}
+                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                />
+                <AnchoredDropdown anchorRef={addrFieldRef} open={addrOpen && addrSug.length > 0} maxHeight={240}>
+                  <ul className="py-1">
+                    {addrSug.map((a) => (
+                      <li key={a.placeId}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => selectAddress(a.placeId, a.label)}
+                          className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB]"
+                        >
+                          <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                          <span className="truncate">{a.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </AnchoredDropdown>
+              </div>}
+              <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
+                <MapPin className="h-4 w-4" />
+                {locating ? t("locating") : t("useMyLocation")}
+              </button>
+              {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
+              <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }} data-workplaces-map="maplibre">
+                <div ref={mapRef} className="w-full h-full" role="region" aria-label={t("mapPointTitle")} />
+              </div>
+              {draftPin && (
+                <div className="flex items-center gap-2 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-xs text-[#166534]">
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  <span className="flex-1 min-w-0 truncate">{draftPin.address || t("pinPlaced")}</span>
+                  <button type="button" onClick={() => setDraftPin(null)} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 font-semibold text-[#b91c1c] shadow-sm ring-1 ring-[#fecaca] transition-colors hover:bg-red-50 hover:ring-red-200">
+                    <X className="h-3.5 w-3.5" />
+                    {t("clearPin")}
+                  </button>
+                </div>
+              )}
+            </div>
+  );
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -451,16 +560,29 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {showAddForm && (
       <div className={mode === "local" ? "flex flex-col gap-3 rounded-xl border border-[#dbe7ef] bg-[#f8fcff] p-4" : "flex flex-col gap-3"}>
       {mode === "local" && <div className="flex items-center justify-between gap-2"><p className="text-sm font-bold text-[#162543]">{editingId ? t("editPlace") : addedCount > 0 ? t("addAnotherPlace") : t("addFirstPlace")}</p>{addedCount > 0 && !editingId && <button type="button" onClick={() => { setAdding(false); setProvince(""); setCanton(""); setDraftPin(null); setShowMap(false); }} className="min-h-11 px-2 text-sm font-semibold text-[#64748b]">{t("cancelAdd")}</button>}</div>}
-      {/* 1 - Structured field FIRST: provincia -> cantón (authoritative for search).
-          Polished popover dropdowns (shared SelectMenu) - same look/behavior as the
-          Disponibilidad time selector. SIDE-BY-SIDE (provincia | cantón), matching the
-          publicar-solicitud layout exactly (`grid grid-cols-2 gap-3`). The SelectMenu's
-          OPTIONS popup grows to its content + scrolls past `max-h-72` (sprint 301/321), so
-          a long cantón name is never cut off in the open list even in a half-width cell. */}
+      {/* 2 - Exact pin. LOCAL: open from the start, above the selects (the
+             address fills them). Other modes: optional, behind a link. */}
+      {isLocal ? (
+        !mapFailed ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-[13px] leading-5 text-[#52627a]">{t("localMapLead")}</p>
+            {mapPanel}
+          </div>
+        ) : (
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-[#52627a]">{t("mapFailed")}</p>
+            <button type="button" onClick={() => { setMapFailed(false); setMapAttempt((n) => n + 1); }} className="inline-flex min-h-11 items-center rounded-full bg-[#e8f7fd] px-4 text-sm font-bold text-[#0089bb]">{t("retryMap")}</button>
+          </div>
+        )
+      ) : null}
+
+      {/* 1 - Structured field: provincia -> cantón (authoritative for search).
+          Polished popover dropdowns (shared SelectMenu). SIDE-BY-SIDE
+          (provincia | cantón). For LOCAL they are filled from the address. */}
       <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
         <SelectMenu
           value={province}
-          onChange={(v) => { setProvince(v); setCanton(""); }}
+          onChange={(v) => { setProvince(v); setCanton(""); setAreaHint(null); }}
           label={<>{t("provincePlaceholder")} <span className="text-red-500">*</span></>}
           placeholder={t("provincePlaceholder")}
           className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
@@ -473,7 +595,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         />
         <SelectMenu
           value={canton}
-          onChange={setCanton}
+          onChange={(v) => { setCanton(v); setAreaHint(null); }}
           disabled={!province}
           label={<>{t("cantonLabel")} <span className="text-red-500">*</span></>}
           placeholder={t("cantonLabel")}
@@ -483,10 +605,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           ]}
         />
       </div>
+      {areaHint && <p role="status" className="text-xs font-medium text-[#b45309]">{areaHint}</p>}
 
-      {/* 2 - OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
-             link reveals the address search + map only when the pro chooses to pin. */}
-      {(mode === "local" || !mode) && canton && !mapFailed ? (
+      {!isLocal && !mode && canton && !mapFailed ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -498,80 +619,35 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
             <span>{draftPin ? t("changeMapPoint") : t("mapPointTitle")}</span>
             {draftPin && !showMap && <Check className="h-3.5 w-3.5 text-[#16a34a]" />}
           </button>
-          {showMap && (
-            <div className="flex flex-col gap-2">
-              {/* Address search -> drops the pin. OUR standard input (single border
-                  matching the section's other fields) + the app's shared dropdown. */}
-              {effectiveKey && <div ref={addrFieldRef} className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
-                <input
-                  type="text"
-                  value={addrQuery}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setAddrQuery(next);
-                    setAddrOpen(true);
-                    if (next.trim().length < 3) setAddrSug([]);
-                  }}
-                  onFocus={() => { void ensureGoogle(); if (addrSug.length > 0) setAddrOpen(true); }}
-                  onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
-                  placeholder={t("searchPlaceholder")}
-                  aria-label={t("searchPlaceholder")}
-                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                />
-                <AnchoredDropdown anchorRef={addrFieldRef} open={addrOpen && addrSug.length > 0} maxHeight={240}>
-                  <ul className="py-1">
-                    {addrSug.map((a) => (
-                      <li key={a.placeId}>
-                        <button
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => selectAddress(a.placeId, a.label)}
-                          className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB]"
-                        >
-                          <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span className="truncate">{a.label}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </AnchoredDropdown>
-              </div>}
-              <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
-                <MapPin className="h-4 w-4" />
-                {locating ? t("locating") : t("useMyLocation")}
-              </button>
-              {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
-              <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }} data-workplaces-map="maplibre">
-                <div ref={mapRef} className="w-full h-full" role="region" aria-label={t("mapPointTitle")} />
-              </div>
-              {draftPin && (
-                <div className="flex items-center gap-2 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-xs text-[#166534]">
-                  <Check className="h-3.5 w-3.5 shrink-0" />
-                  <span className="flex-1 min-w-0 truncate">{draftPin.address || t("pinPlaced")}</span>
-                  <button type="button" onClick={() => setDraftPin(null)} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 font-semibold text-[#b91c1c] shadow-sm ring-1 ring-[#fecaca] transition-colors hover:bg-red-50 hover:ring-red-200">
-                    <X className="h-3.5 w-3.5" />
-                    {t("clearPin")}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {showMap && mapPanel}
         </div>
       ) : (
-        (mode === "local" || !mode) && canton && <p className="text-xs text-[#68778d]">{t("mapUnavailableShort")}</p>
+        !isLocal && !mode && canton && <p className="text-xs text-[#68778d]">{t("mapUnavailableShort")}</p>
       )}
 
-      {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin
-             ella, «Agregar toda la provincia» invitaba a tocar algo que no
-             tenía qué agregar. */}
-      {province && canton && <button
-        type="button"
-        onClick={commitWorkplace}
-        className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
-      >
-        <Plus className="h-4 w-4" /> {editingId ? t("savePlace") : canton ? t("addThisPlace") : t("addWholeProvince")}
-      </button>}
+      {/* 3 - Guardar ESTE lugar. LOCAL: el botón principal, a todo el ancho, en
+             cuanto hay punto + provincia + cantón (sin guardar, «Continuar» no
+             lo ve). Otros modos: el botón pequeño de siempre. */}
+      {isLocal && draftPin && province && canton ? (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs text-[#52627a]">{t("localSaveHint")}</p>
+          <button
+            type="button"
+            onClick={commitWorkplace}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-[#0089bb]"
+          >
+            <Check className="h-4 w-4" /> {editingId ? t("savePlace") : t("addThisPlace")}
+          </button>
+        </div>
+      ) : !isLocal && province && canton ? (
+        <button
+          type="button"
+          onClick={commitWorkplace}
+          className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
+        >
+          <Plus className="h-4 w-4" /> {editingId ? t("savePlace") : canton ? t("addThisPlace") : t("addWholeProvince")}
+        </button>
+      ) : null}
       {editingId && <button type="button" className="min-h-11 self-start text-sm font-semibold text-[#68778d]" onClick={() => { setEditingId(null); setAdding(false); setProvince(''); setCanton(''); setDraftPin(null); setShowMap(false); }}>{t("cancelEdit")}</button>}
       {avisoRepetido && (
         <p role="status" className="text-xs font-semibold text-[#0089bb]">{avisoRepetido === t("localPinRequired") ? avisoRepetido : t("yaAgregado")}</p>

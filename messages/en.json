@@ -380,7 +380,14 @@
   },
   "workplacesPicker": {
     "mapUnavailableShort": "Your browser could not show the map. You can still add the place with province and canton.",
-    "localPinRequired": "Mark where clients visit you.",
+    "localPinRequired": "Mark on the map where clients visit you.",
+    "localMapLead": "Search for your address or tap the map to mark your location.",
+    "localSaveHint": "Last step: save the place to add it to your profile.",
+    "areaNotDetected": "We could not detect the province and canton of that address. Choose them from the list.",
+    "cantonNotDetected": "We could not detect the canton of that address. Choose it from the list.",
+    "mapFailed": "We could not load the map. Check your connection and try again.",
+    "retryMap": "Try again",
+    "mapUnavailableLocal": "The map is not available right now. Please try again in a few minutes.",
     "editPlace": "Edit location",
     "savePlace": "Update location",
     "cancelEdit": "Cancel editing",
@@ -844,6 +851,7 @@
       "rateHelp": "Leave it blank and your profile will say \"Ask for price\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Choose at least one province and base canton.",
+      "errWorkplaceGuardar": "Your location is not saved yet: tap \"Save location\" before continuing.",
       "errWorkplacePais": "Besides nationwide coverage, choose your base province and canton.",
       "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you.",
       "termsRequired": "Please accept the terms and privacy policy."

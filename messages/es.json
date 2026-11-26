@@ -380,7 +380,14 @@
   },
   "workplacesPicker": {
     "mapUnavailableShort": "Su navegador no pudo mostrar el mapa. Puede agregar el lugar igual con provincia y cantón.",
-    "localPinRequired": "Marque el lugar donde recibe clientes.",
+    "localPinRequired": "Marque en el mapa el lugar donde recibe clientes.",
+    "localMapLead": "Busque la dirección de su local o toque el mapa para marcarlo.",
+    "localSaveHint": "Último paso: guarde el lugar para agregarlo a su perfil.",
+    "areaNotDetected": "No pudimos detectar la provincia y el cantón de esa dirección. Elíjalos de la lista.",
+    "cantonNotDetected": "No pudimos detectar el cantón de esa dirección. Elíjalo de la lista.",
+    "mapFailed": "No pudimos cargar el mapa. Revise su conexión e intente de nuevo.",
+    "retryMap": "Reintentar",
+    "mapUnavailableLocal": "El mapa no está disponible por ahora. Intente de nuevo en unos minutos.",
     "editPlace": "Editar ubicación",
     "savePlace": "Actualizar ubicación",
     "cancelEdit": "Cancelar edición",
@@ -844,6 +851,7 @@
       "rateHelp": "Si lo deja en blanco, su perfil dirá \"Consultar precio\".",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Elija al menos una provincia y un cantón de base.",
+      "errWorkplaceGuardar": "Falta guardar su local: toque \"Guardar lugar\" antes de continuar.",
       "errWorkplacePais": "Además de la cobertura nacional, elija su provincia y cantón de base.",
       "errPhoneFijo": "Ese número parece de teléfono fijo. Escriba un celular con WhatsApp para que los clientes le puedan escribir.",
       "termsRequired": "Acepte los términos y la política de privacidad."

@@ -8,10 +8,10 @@ import { SelectMenu } from '@/components/ui/select-menu';
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from '@/lib/data/cr-geography';
 import { isFixedWorkplace, coversArea, coverageKey } from '@/lib/public-workplaces';
 
-type Props = { value: Workplace[]; onChange: (value: Workplace[]) => void; english: boolean; video: boolean; onVideoChange: (value: boolean) => void; canVideo: boolean };
+type Props = { value: Workplace[]; onChange: (value: Workplace[]) => void; english: boolean; video: boolean; onVideoChange: (value: boolean) => void; canVideo: boolean; onLocalDraftPendingChange?: (pending: boolean) => void };
 const coverage = (place: Workplace) => coversArea(place);
 
-export function AttentionModalities({ value, onChange, english, video, onVideoChange, canVideo }: Props) {
+export function AttentionModalities({ value, onChange, english, video, onVideoChange, canVideo, onLocalDraftPendingChange }: Props) {
   const [local, setLocal] = useState(value.some(place => isFixedWorkplace(place) && place.receivesClients !== false));
   const [home, setHome] = useState(value.some(coverage));
   const [province, setProvince] = useState('');
@@ -56,7 +56,7 @@ export function AttentionModalities({ value, onChange, english, video, onVideoCh
   return <div className="divide-y divide-[#e5e7eb]">
     <div className="space-y-3 pb-5">
       <FilaInterruptor titulo={english ? 'I work at my place' : 'Atiendo en mi local'} columna ayuda={english ? 'Add the location where clients can visit you.' : 'Agregue el lugar donde pueden visitarlo.'} checked={local} onChange={enabled => { setLocal(enabled); onChange(value.map(place => isFixedWorkplace(place) ? { ...place, receivesClients: enabled } : place)); }}/>
-      {local && <WorkplacesPicker mode="local" value={value} onChange={onChange} mapHeight={168}/>}
+      {local && <WorkplacesPicker mode="local" value={value} onChange={onChange} mapHeight={168} onDraftPendingChange={onLocalDraftPendingChange}/>}
     </div>
     <div className="space-y-3 py-5">
       <FilaInterruptor titulo={english ? 'I work at the client\'s home' : 'Atiendo a domicilio'} ayuda={english ? 'Choose the areas you travel to.' : 'Elija las zonas a las que va.'} columna checked={home} onChange={enabled => { setHome(enabled); onChange(value.map(place => enabled ? (place.homeServicePaused ? { ...place, homeService: true, homeServicePaused: false } : place) : (coverage(place) ? { ...place, homeService: false, homeServicePaused: true } : place))); }}/>

@@ -511,6 +511,8 @@ export default function RegisterProfessionalPage() {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [videoCoverageCountry, setVideoCoverageCountry] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  // A local place with its pin placed but not yet saved with «Guardar lugar».
+  const [localDraftPending, setLocalDraftPending] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   useEffect(() => () => {
@@ -860,6 +862,8 @@ export default function RegisterProfessionalPage() {
     // Solo cuentan los lugares activos: apagar «Atiendo a domicilio» o «Atiendo
     // en mi local» deja las filas guardadas pero pausadas, igual que en el panel.
     if (!hasBaseCanton(activeWorkplacesOf(workplaces))) {
+      // El local ya tiene su punto pero falta tocar «Guardar lugar»: decirlo así.
+      if (localDraftPending) { setLocationError(t("errWorkplaceGuardar")); return; }
       // Con «todo el país» encendido, lo que falta es la base: se dice así.
       setLocationError(t(hasCountryCoverageOf(workplaces) || (canOfferVideoConsult && videoCoverageCountry) ? "errWorkplacePais" : "errWorkplaceSiempre"));
       return;
@@ -1456,6 +1460,7 @@ export default function RegisterProfessionalPage() {
                     canVideo={canOfferVideoConsult}
                     video={videoCoverageCountry}
                     onVideoChange={(next) => { setVideoCoverageCountry(next); setLocationError(null); }}
+                    onLocalDraftPendingChange={setLocalDraftPending}
                   />
                   {locationError && <p role="alert" className="text-xs text-red-500">{locationError}</p>}
                 </div>
