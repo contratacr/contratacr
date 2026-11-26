@@ -9,7 +9,6 @@ import Image from "next/image";
 import { ContrataCRLogo } from "@/components/brand/brand-logo";
 import { X } from "lucide-react";
 import { APP_STORES } from "@/lib/app-stores";
-import { useSiteFeatures } from "@/components/site-features";
 export { APP_STORES } from "@/lib/app-stores";
 import { useLocale } from "next-intl";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -38,7 +37,6 @@ export function AppStoreLinks() {
 
 export function AppDownloadSection() {
   const native = useNativeApp();
-  const light = useSiteFeatures().directorySections.length > 0;
   const en = useLocale() === "en";
   const section = useRef<HTMLElement | null>(null);
   const [near, setNear] = useState(false);
@@ -51,25 +49,6 @@ export function AppDownloadSection() {
     return () => observer.disconnect();
   }, [native, near]);
   if (native) return null;
-  // Directory on (owner 2026-11-26): a light version in the app's colours instead of the dark workshop photo.
-  if (light) return <section ref={section} id="descargar-app" data-testid="app-download-section" data-app-download-light className="ccr-solo-web ccr-download-section relative w-full overflow-hidden bg-[linear-gradient(160deg,#f2fafe_0%,#dff2fb_55%,#cdeaf8_100%)]">
-    <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-5 py-10 sm:flex-row sm:justify-between sm:px-8 lg:px-14 lg:py-14">
-      <div className="max-w-md text-center sm:text-left">
-        <p className="mb-3 text-[11px] font-bold tracking-[0.14em] text-[#0083b0] lg:text-sm">{en ? "AVAILABLE FOR iOS AND ANDROID" : "DISPONIBLE PARA iOS Y ANDROID"}</p>
-        <h2 className="text-[26px] font-extrabold leading-[1.08] tracking-tight text-[#162543] md:text-4xl">{en ? "Download the ContrataCR app" : "Descargue la app de ContrataCR"}</h2>
-        <p className="mx-auto mb-5 mt-3 max-w-md text-[15px] leading-relaxed text-[#526277] sm:mx-0 sm:text-base">{en ? "Professionals, companies and reviews in Costa Rica, in your pocket." : "Profesionales, empresas y reseñas de Costa Rica, en su bolsillo."}</p>
-        <AppStoreLinks />
-        <div className="mt-5 hidden items-center gap-4 lg:flex">
-          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={96} height={96} alt={en ? "Scan to download ContrataCR" : "Escanee para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white p-1 shadow-sm" />
-          <p className="max-w-[220px] text-sm font-semibold text-[#162543]">{en ? "Scan with your phone and sign in with your existing account." : "Escanee con su celular e ingrese con su cuenta de siempre."}</p>
-        </div>
-      </div>
-      <div className="relative w-[220px] shrink-0 rounded-[2.2rem] border-[7px] border-[#162543] bg-white shadow-[0_30px_60px_-25px_rgba(22,37,67,0.55)] sm:w-[240px]">
-        {near && <Image src="/guia/profesionales.jpg?v=20261117-solicitudes" width={480} height={960} unoptimized alt={en ? "ContrataCR app on a phone" : "La app de ContrataCR en un teléfono"} className="aspect-[9/19] w-full rounded-[1.6rem] object-cover object-top" />}
-        {!near && <div className="aspect-[9/19] w-full rounded-[1.6rem] bg-[#eaf7fd]" />}
-      </div>
-    </div>
-  </section>;
   return <section ref={section} id="descargar-app" data-testid="app-download-section" className="ccr-solo-web ccr-download-section relative isolate flex w-full min-w-0 min-h-[max(520px,140vw)] items-end overflow-hidden bg-[#38261c] sm:aspect-[3/1] sm:min-h-[360px] sm:items-center lg:min-h-[460px]">
     {near && <picture className="absolute inset-0 -z-10">
       <source media="(max-width: 639px)" srcSet="/stores/app-workshop-mobile-welcome-20261013.webp" width={1122} height={1402} />
