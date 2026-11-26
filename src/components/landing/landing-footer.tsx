@@ -63,6 +63,31 @@ const COLUMNS = [
   },
 ];
 
+// Directory on (owner 2026-11-26): the footer speaks of professionals AND companies — one «Buscar» column for both, and one
+// column for those who offer (professionals and companies), with the claim/add-company page, Pro and the tools.
+const DIRECTORY_COLUMNS = [
+  {
+    headingKey: "dir.searchTitle",
+    links: [
+      { key: "clients.search", href: "/profesionales" },
+      { key: "dir.companies", href: "/categorias" },
+      { key: "clients.offers", href: "/promociones" },
+      { key: "clients.publish", href: "/publicar-solicitud" },
+    ],
+  },
+  {
+    headingKey: "dir.offerTitle",
+    links: [
+      { key: "pros.register", href: "/registro/profesional" },
+      { key: "dir.company", href: "/negocios-y-profesionales" },
+      { key: "pros.projects", href: "/solicitudes" },
+      ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),
+      ...(PRO_UI_ENABLED ? [{ key: "pros.pro", href: "/contratacr-pro" }, { key: "dir.tools", href: "/herramientas" }] : []),
+    ],
+  },
+  COLUMNS[2]!,
+];
+
 const subscribeToHydration = () => () => {};
 const clientReady = () => true;
 const serverReady = () => false;
@@ -84,7 +109,7 @@ export function LandingFooter() {
         <div aria-hidden="true" className="border-t border-[#162543]/10 pt-3 md:pt-10 lg:pt-12" />
 
         {/* Main grid */}
-        <div className={`grid grid-cols-1 gap-0 pb-0 md:grid-cols-3 md:gap-x-8 md:gap-y-8 md:pb-7 ${placesOn ? "lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]" : "lg:grid-cols-[1.4fr_1fr_1fr_1fr]"} lg:gap-10 lg:pb-8`}>
+        <div className={`grid grid-cols-1 gap-0 pb-0 md:grid-cols-3 md:gap-x-8 md:gap-y-8 md:pb-7 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-8`}>
 
           {/* Brand introduction */}
           <div className="order-last pt-8 md:order-first md:col-span-3 md:pt-0 lg:col-span-1">
@@ -92,15 +117,15 @@ export function LandingFooter() {
               <ContrataCRLogo />
             </Link>
             <p className="text-sm text-[#64748b] leading-6 max-w-sm lg:max-w-[280px]">
-              {t("tagline")}
+              {placesOn ? t("dir.tagline") : t("tagline")}
             </p>
 
           </div>
 
           {/* Link columns */}
-          {COLUMNS.map((col, index) => (
+          {(placesOn ? DIRECTORY_COLUMNS : COLUMNS).map((col, index) => (
             <Fragment key={col.headingKey}>
-            {index === 1 && <FooterPlacesColumn locale={locale} heading={t("places.title")} open={openGroup === "places"} onToggle={() => setOpenGroup(openGroup === "places" ? null : "places")} interactive={interactive} />}
+            {index === 1 && !placesOn && <FooterPlacesColumn locale={locale} heading={t("places.title")} open={openGroup === "places"} onToggle={() => setOpenGroup(openGroup === "places" ? null : "places")} interactive={interactive} />}
             <nav aria-label={t(col.headingKey)} className="border-b border-[#162543]/10 md:border-0">
               <h3 className="text-[15px] font-semibold text-[#162543] md:mb-3 md:text-sm md:font-bold">
                 <span className="hidden md:inline">{t(col.headingKey)}</span>

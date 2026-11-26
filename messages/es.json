@@ -920,6 +920,14 @@
     "howWeRank": "Cómo ordenamos",
     "places": {
       "title": "Categorías"
+    },
+    "dir": {
+      "tagline": "Profesionales, empresas y reseñas de Costa Rica. Busque, compare y contacte con confianza.",
+      "searchTitle": "Buscar",
+      "companies": "Buscar empresas",
+      "offerTitle": "Para profesionales y empresas",
+      "company": "Agregar o reclamar mi empresa",
+      "tools": "Herramientas"
     }
   },
   "notFound": {
@@ -3047,7 +3055,7 @@
       "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita."
     },
     "topRated": {
-      "title": "Mejor calificados"
+      "title": "Las mejores reseñas"
     },
     "heroSlides": {
       "restaurants": "Dónde comer cerca de usted",
@@ -3073,7 +3081,7 @@
       },
       "default": "Elegidos por sus reseñas",
       "search": "Busque profesionales o empresas",
-      "default2": "Calificados por clientes reales",
+      "default2": "Reseñas de clientes reales",
       "default3": "Recomendados en su zona"
     },
     "homeCategories": {
