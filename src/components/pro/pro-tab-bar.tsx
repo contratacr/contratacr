@@ -23,10 +23,10 @@ function tabLabels(en:boolean):Record<string,string>{
 export function ProTabBar({tab,navigating}:{tab:string;navigating:boolean}){
  const en=useLocale()==='en',labels=tabLabels(en),[more,setMore]=useState(false);
  const inBar=PRO_TAB_BAR_TABS.includes(tab);
- const cell=(active:boolean)=>cn('flex min-h-11 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[11px] leading-none disabled:opacity-60',active?'font-extrabold text-[#008bb5]':'font-semibold text-[#52627a]');
+ const cell=(active:boolean)=>cn('flex min-h-11 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 rounded-xl px-0 text-[11px] leading-none tracking-tight disabled:opacity-60',active?'font-extrabold text-[#008bb5]':'font-semibold text-[#52627a]');
  return <>
   <nav data-pro-tab-bar aria-label={en?'Pro sections':'Secciones de Pro'} style={{paddingBottom:'env(safe-area-inset-bottom, 0px)'}} className={cn('fixed inset-x-0 bottom-0 border-t border-[#e5e7eb] bg-white shadow-[0_-6px_20px_-16px_rgba(22,37,67,0.45)] lg:hidden',CAPA_BARRA_ABAJO)}>
-   <div className="mx-auto flex h-16 max-w-xl items-stretch gap-1 px-2 py-1">
+   <div className="mx-auto flex h-16 max-w-xl items-stretch gap-0.5 px-1 py-1">
     {TABS.map(([key,Icon])=>{const active=tab===key;return <button key={key} type="button" data-pro-tab={key} aria-current={active?'page':undefined} disabled={navigating} onClick={()=>navigatePro(key)} className={cell(active)}><Icon aria-hidden className="h-[22px] w-[22px]" strokeWidth={active?2.4:1.9}/><span className="max-w-full truncate">{labels[key]}</span></button>;})}
     <button type="button" data-pro-tab="more" aria-haspopup="dialog" aria-expanded={more} aria-current={!inBar?'page':undefined} disabled={navigating} onClick={()=>setMore(true)} className={cell(!inBar)}><Menu aria-hidden className="h-[22px] w-[22px]" strokeWidth={!inBar?2.4:1.9}/><span className="max-w-full truncate">{labels.more}</span></button>
    </div>
