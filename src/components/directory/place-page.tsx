@@ -16,7 +16,6 @@ import {PlaceTabs,type PlaceTab} from './place-tabs';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {ShareButton} from './share-button';
 import {PlaceMoreMenu} from './place-more-menu';
-import {PlaceRecommend} from './place-recommend';
 import {mapLinks,placeSideActions,resolvePlaceAction,type PlaceAction,type PlaceActionInput} from '@/lib/directory/place-actions';
 import {ActionButton,actionIcon} from './place-action-buttons';
 import {CHIP,PlaceStatusLine} from './place-card';
@@ -133,7 +132,6 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    </div>
    {address&&<p className="mt-1 text-center text-[13px] text-[#68778d]">{address}</p>}
   </div>
-  {published&&<div className="p-3 lg:border-t lg:border-[#eef2f6]"><PlaceRecommend locale={locale}/></div>}
   {slots.claim&&<div className="border-t border-[#eef2f6]">{slots.claim}</div>}
   <div className="border-t border-[#eef2f6] py-2 text-center"><a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-sm ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></div>
  </div>;
@@ -185,7 +183,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   ...(photos.length>0?[{id:'photos',label:t('Fotos','Photos'),anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-24 space-y-4">
    <h2 id="place-photos" className={BIZ.h2}>{t('Fotos','Photos')} ({photos.length})</h2>
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
-  ...(slots.questions?[{id:'questions',label:t('Preguntar','Ask'),anchors:['preguntas'],content:slots.questions}]:[]),
+  // «Preguntar» left the page (owner 2026-11-26): reviews already answer what people ask.
  {id:'more',label:t('Más','More'),anchors:['mas'],content:moreTab},
  ];
  // Gas stations lead with their prices; every other section opens on «Información».

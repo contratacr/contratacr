@@ -91,12 +91,21 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
     {photoResult?.errors.map(e=><span key={e} className="mt-1 block text-sm text-red-800">{e}</span>)}</p>
    // Launch polish: the form opens from one «Escribir reseña» button instead of filling the page from the start.
    :!writing
-    ?<button type="button" data-place-review-open data-ready={ready||undefined} onClick={()=>setWriting(true)} className={BIZ.primary}>{t('Dejar una reseña','Leave a review')}</button>
+    // Like the professional profile (owner 2026-11-26): «¿Ya visitó este lugar?» with five stars; a tap opens the form with that rating.
+    ?<div data-place-review-open data-ready={ready||undefined} className="rounded-2xl border border-[#e5e9ee] bg-white p-4 shadow-sm">
+     <p className="text-[15px] font-extrabold text-[#162543]">{t('¿Ya visitó este lugar?','Have you been here?')}</p>
+     <div className="mt-2 flex gap-1" role="group" aria-label={t('Calificar','Rate')}>
+      {[1,2,3,4,5].map(n=><button key={n} type="button" data-place-review-star={n} aria-label={t(`${n} de 5`,`${n} out of 5`)} onClick={()=>{setSuggested(String(n));setWriting(true);}}
+       className="grid h-10 w-10 place-items-center rounded-lg text-[#cfd8e3] transition-colors hover:text-[#f59e0b]"><svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>)}
+     </div>
+    </div>
    :<form ref={form} onSubmit={e=>{e.preventDefault();void submit();}} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4" data-place-review-form data-ready={ready||undefined}>
-    <h3 className="font-semibold">{t('Dejar una reseña','Leave a review')}</h3>
+    <h3 className="font-semibold">{t('Su reseña','Your review')}</h3>
     {!signedIn&&<label className="flex flex-col gap-1 text-sm font-medium">{t('Su nombre','Your name')}<input name="authorName" maxLength={80} autoComplete="name" className={input}/></label>}
-    <label className="flex flex-col gap-1 text-sm font-medium">{t('Calificación','Rating')}
-     <select name="rating" key={suggested} defaultValue={suggested} className={input}>{[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(v=><option key={v} value={v}>{t(`${String(v).replace('.',',')} de 5`,`${v} out of 5`)}</option>)}</select></label>
+    <fieldset className="text-sm"><legend className="mb-1 font-medium">{t('Calificación','Rating')}</legend>
+     <input type="hidden" name="rating" value={suggested}/>
+     <div className="flex gap-1">{[1,2,3,4,5].map(n=><button key={n} type="button" aria-pressed={Number(suggested)>=n} aria-label={t(`${n} de 5`,`${n} out of 5`)} onClick={()=>setSuggested(String(n))}
+      className={`grid h-10 w-10 place-items-center rounded-lg ${Number(suggested)>=n?'text-[#f59e0b]':'text-[#cfd8e3]'}`}><svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>)}</div></fieldset>
     <label className="flex flex-col gap-1 text-sm font-medium">{t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')}<textarea name="comment" maxLength={300} rows={3} required className={`${input} py-2`}/></label>
     {signedIn&&<fieldset className="space-y-1 text-sm"><legend className="font-medium">{t('Fotos (opcional, hasta 5)','Photos (optional, up to 5)')}</legend>
      <PhotoPicker files={photos} onChange={setPhotos} en={en} label={t('Agregar fotos a la reseña','Add photos to the review')} disabled={state==='sending'}/>
