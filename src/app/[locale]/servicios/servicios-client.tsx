@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
-import { SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
+import { DIRECTORY_SECTION_ICONS, SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
+import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { DirectoryQuickNav } from "@/components/landing/directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
@@ -176,6 +177,9 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
     });
   }, []);
 
+  // Owner, 2026-11-26: Categorías splits into two tabs on phones, Empresas and Profesionales, instead of one long list.
+  const [vistaMovil, setVistaMovil] = useState<"empresas" | "profesionales">("empresas");
+  const conPestanas = placeSectionsShown.length > 0;
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <div className="hidden lg:block">
@@ -250,6 +254,16 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                 )}
               </div>
             </form>
+            {conPestanas && !mobileGroup && !query.trim() && (
+              <div role="tablist" aria-label={locale === "en" ? "Categories" : "Categorías"} className="grid grid-cols-2 px-4">
+                {(["empresas", "profesionales"] as const).map((v) => (
+                  <button key={v} type="button" role="tab" aria-selected={vistaMovil === v} data-services-tab={v} onClick={() => setVistaMovil(v)}
+                    className={cn("h-11 border-b-2 text-[15px] font-bold transition-colors", vistaMovil === v ? "border-[#009FD9] text-[#162543]" : "border-transparent text-[#7b8794]")}>
+                    {v === "empresas" ? placesTitle : prosTitle}
+                  </button>
+                ))}
+              </div>
+            )}
           </header>
 
           {hasQuery && matchedPlaceSections.length > 0 && !mobileGroup ? (
@@ -332,14 +346,29 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
             </section>
           ) : (
             <>
-              {placeSectionsShown.length > 0 && (
-                <section data-testid="services-places" className="mx-4 mt-4">
-                  <h2 className="mb-2 text-[15px] font-bold text-[#526277]">{placesTitle}</h2>
-                  <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} />
+              {conPestanas && vistaMovil === "empresas" && (
+                <section data-testid="services-places" className="mx-4 mt-4 overflow-hidden rounded border border-[#d7e1ea] bg-white">
+                  {/* Same rows as the Profesionales tab, so both tabs read as one page. */}
+                  {placeSectionsShown.map((id) => {
+                    const IconoSeccion = DIRECTORY_SECTION_ICONS[id] ?? Search;
+                    const total = placeTotals[id];
+                    return (
+                      <Link key={id} href={`/${id}`} data-place-tile={id} className="flex min-h-[62px] w-full items-center justify-between gap-3 border-b border-[#d7e1ea] bg-white px-4 py-3 text-left last:border-b-0">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
+                          <IconoSeccion className="h-[18px] w-[18px]" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{locale === "en" ? DIRECTORY_SECTION_LABELS[id]?.en : DIRECTORY_SECTION_LABELS[id]?.es}</span>
+                          {typeof total === "number" && total > 0 && <span className="mt-0.5 block text-xs font-semibold text-[#7b8794]">{locale === "en" ? `${total} businesses` : `${total} empresas`}</span>}
+                        </span>
+                        <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
+                      </Link>
+                    );
+                  })}
                 </section>
               )}
-              <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>
-              <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d7e1ea] bg-white">
+              {!conPestanas && <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>}
+              <section className={cn("mx-4 mt-4 overflow-hidden rounded border border-[#d7e1ea] bg-white", conPestanas && vistaMovil !== "profesionales" && "hidden")}>
                 {mobileGroups.map((group) => {
                   const IconoGrupo = group.Icon;
                   return (
