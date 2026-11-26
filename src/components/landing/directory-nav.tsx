@@ -235,11 +235,11 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
               aria-current={active ? "page" : undefined}
               data-quick-nav-link={key}
               className={cn(
-                "flex flex-col items-center justify-start gap-1 rounded-xl px-0.5 py-1 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
-                active ? "font-bold text-[#0083b0] sm:bg-[#eaf7fd]" : "font-semibold text-[#162543] sm:hover:bg-[#f3f6f9] hover:text-[#0083b0]",
+                "flex flex-col items-center justify-start gap-1 rounded-xl px-0 py-1 text-center text-[10.5px] tracking-[-0.01em] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                active ? "font-semibold text-[#162543] sm:font-bold sm:text-[#0083b0] sm:bg-[#eaf7fd]" : "font-semibold text-[#162543] sm:hover:bg-[#f3f6f9] sm:hover:text-[#0083b0]",
               )}
             >
-              <span className={cn("inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eef3f7] text-[#162543] sm:text-current")}><Icon className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={1.85} aria-hidden /></span><span className="max-w-full truncate">{label}</span>
+              <span className={cn("inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", "bg-[#eef3f7] text-[#162543] sm:bg-transparent sm:text-current")}><Icon className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={1.85} aria-hidden /></span><span className="max-w-full whitespace-nowrap">{label}</span>
             </Link>
           </li>
         ))}
@@ -252,7 +252,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
           <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
         </button>
         <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] hover:bg-gray-50 active:scale-95"><Menu className="h-5 w-5 stroke-[2.5]" aria-hidden /></button>
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]"><Menu className="h-5 w-5 stroke-[2.5]" aria-hidden /></button>
       </div>
     </nav>
     </>
@@ -263,10 +263,19 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
  * header. Checked on mount and on resize: pages that keep this row desktop-only (Categorías) keep their navbar. */
 function PhoneHeaderFlag({ navRef }: { navRef: React.RefObject<HTMLElement | null> }) {
   useEffect(() => {
-    const sync = () => document.body.classList.toggle("ccr-dir-header", window.innerWidth < 1024 && !!navRef.current?.getClientRects().length);
+    const root = document.documentElement;
+    const sync = () => {
+      const on = window.innerWidth < 1024 && !!navRef.current?.getClientRects().length;
+      document.body.classList.toggle("ccr-dir-header", on);
+      // Layouts that fill the screen under the header (search map and sheet) read this height; it is this row's now.
+      if (on && navRef.current) root.style.setProperty("--ccr-native-header-height", `${Math.round(navRef.current.getBoundingClientRect().height)}px`);
+      else root.style.removeProperty("--ccr-native-header-height");
+    };
     sync();
+    const ro = new ResizeObserver(sync);
+    if (navRef.current) ro.observe(navRef.current);
     window.addEventListener("resize", sync);
-    return () => { window.removeEventListener("resize", sync); document.body.classList.remove("ccr-dir-header"); };
+    return () => { ro.disconnect(); window.removeEventListener("resize", sync); document.body.classList.remove("ccr-dir-header"); root.style.removeProperty("--ccr-native-header-height"); };
   }, [navRef]);
   return null;
 }

@@ -2558,4 +2558,6 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
    navbar's own phone row (logo, ☰) steps aside while it is mounted. The drawer is outside the header and still opens. */
 @media (max-width: 1023px) {
   body.ccr-dir-header [data-testid="landing-navbar"] { display: none; }
+  /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
+  html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }

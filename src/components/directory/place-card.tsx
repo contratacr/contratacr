@@ -142,7 +142,6 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
      {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
     </ul>
     {item.price&&<PlacePriceLine price={item.price} en={en}/>}
-    {extra?.snippet&&<p className="line-clamp-1 text-[12.5px] italic text-[#334155]" data-place-snippet>{'"'}{extra.snippet}{'"'}</p>}
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
