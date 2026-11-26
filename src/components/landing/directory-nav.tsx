@@ -212,6 +212,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const t = useTranslations("quickNav");
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
   const navRef = useRef<HTMLElement>(null);
+  const collapsed = useCollapseOnScroll();
   if (!sections.length) return null;
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
@@ -226,7 +227,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
     <PhoneHeaderFlag navRef={navRef} />
     {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
     <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
-      <ul className="mx-auto grid w-full max-w-[1920px] grid-cols-5 px-1 pb-1.5 sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8">
+      <ul data-quick-nav-collapsed={collapsed ? "" : undefined} className={cn("mx-auto grid w-full max-w-[1920px] grid-cols-5 overflow-hidden px-1 pb-1.5 transition-[max-height,opacity,padding] duration-200 max-lg:max-h-24", collapsed && "max-lg:max-h-0 max-lg:pb-0 max-lg:opacity-0", "sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8")}>
         {items.map(({ key, href, label, icon: Icon, active }) => (
           <li key={key} className="min-w-0 sm:shrink-0">
             <Link
@@ -247,9 +248,12 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
       <div className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
         <Link href="/" aria-label="ContrataCR" prefetch={false} className="shrink-0"><ContrataCRMark /></Link>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
-          className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-1 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
+          className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-1 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[17px] w-[17px]" aria-hidden /></span>
-          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
+          <span className="flex min-w-0 flex-1 flex-col leading-tight">
+            <span className="truncate text-[14px] font-bold text-[#162543]">{locale === "en" ? "What are you looking for?" : "¿Qué busca?"}</span>
+            <span className="truncate text-[12px] font-medium text-[#6b7a8f]">{locale === "en" ? "Near you · " : "Cerca de usted · "}{unifiedSearchPlaceholder(locale, true)}</span>
+          </span>
         </button>
         <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]"><Menu className="h-5 w-5 stroke-[2.5]" aria-hidden /></button>
@@ -278,4 +282,22 @@ function PhoneHeaderFlag({ navRef }: { navRef: React.RefObject<HTMLElement | nul
     return () => { ro.disconnect(); window.removeEventListener("resize", sync); document.body.classList.remove("ccr-dir-header"); root.style.removeProperty("--ccr-native-header-height"); };
   }, [navRef]);
   return null;
+}
+
+/** Phones: the sections row folds away while the page scrolls down and comes back on the way up (Airbnb style). */
+function useCollapseOnScroll() {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 40) setCollapsed(false);
+      else if (y > last + 6) setCollapsed(true);
+      else if (y < last - 6) setCollapsed(false);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return collapsed;
 }
