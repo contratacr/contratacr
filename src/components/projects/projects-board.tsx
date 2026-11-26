@@ -569,7 +569,7 @@ export function ProjectsBoard({
           </div>
         ) : (
         <div className={CABECERA_FILA}>
-          <button
+          <button data-ccr-menu-burger=""
             type="button"
             onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
             aria-label={copy.abrirMenu}

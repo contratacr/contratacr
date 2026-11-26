@@ -373,7 +373,7 @@ export function OffersBoard({
       <section ref={cabeceraRef} className={cn("ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
           <div className={CABECERA_FILA}>
-            <button
+            <button data-ccr-menu-burger=""
               type="button"
               onClick={() =>
                 window.dispatchEvent(new Event("ccr:open-mobile-menu"))

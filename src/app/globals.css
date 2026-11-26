@@ -2560,6 +2560,9 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   body.ccr-dir-header [data-testid="landing-navbar"] { display: none; }
   /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
   /* Its menu button is the symbol on the LEFT, so the menu slides in from the left. */
-  body.ccr-dir-header .ccr-menu-completo:not(.ccr-menu-abierto) { transform: translate3d(-100%, 0, 0); }
+  body.ccr-dir-header .ccr-menu-completo:not(.ccr-menu-abierto),
+  html.ccr-brand-menu .ccr-menu-completo:not(.ccr-menu-abierto) { transform: translate3d(-100%, 0, 0); }
+  /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */
+  html.ccr-brand-menu [data-ccr-menu-burger] { display: none !important; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }

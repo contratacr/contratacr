@@ -1790,6 +1790,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     derecha. Solo donde antes había menú (no en pantallas con flecha). */}
                 {(!sectionActive || sectionRoot) && (
                   <button
+                    data-ccr-menu-burger=""
                     type="button"
                     onClick={openMobileMenu}
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"

@@ -209,7 +209,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               </div>
             ) : (
               <div className={CABECERA_FILA}>
-                <button
+                <button data-ccr-menu-burger=""
                   type="button"
                   onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
                   className={cn(CABECERA_BOTON, "order-last")}
