@@ -33,7 +33,7 @@ export function ResultThumb({src,alt='',fallback,rank,priority=false,kind}:{src?
     ?<img src={src} alt={alt} width={64} height={64} loading={priority?'eager':'lazy'} decoding="async" {...(priority?{fetchPriority:'high' as const}:{})} className="absolute inset-0 h-full w-full bg-white object-cover"/>
     :fallback}
   </span>
-  {rank!=null&&<span aria-hidden="true" className="absolute -left-1.5 -top-1.5 z-10 hidden h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
+  {rank!=null&&<span aria-hidden="true" className="absolute -left-1.5 -top-1.5 z-10 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white">{rank}</span>}
  </span>;
 }
 

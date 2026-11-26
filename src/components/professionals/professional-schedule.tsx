@@ -1,5 +1,7 @@
 "use client";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
+import { useSiteFeatures } from "@/components/site-features";
+import { Link } from "@/i18n/navigation";
 
 import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -89,6 +91,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
   const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
   // Qué ubicación se está buscando, para poner delante los lugares que sirven.
   const searchParams = useSearchParams();
   const searchProvince = searchParams.get("provincia");
@@ -457,7 +460,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const whatsappDeLaTarjeta = (
     <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
   );
-  const contactButtons = showCall ? (
+  const contactButtonsClassic = showCall ? (
     // Uno arriba del otro, en todos los tamaños, con el rótulo que dice qué
     // pasa: «Contactar por WhatsApp» / «Contactar por llamada». Lado a lado
     // cabían solo «WhatsApp» y «Llamar», y en /buscar es la primera vez que la
@@ -468,6 +471,14 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     </div>
   ) : (
     whatsappDeLaTarjeta
+  );
+  // Directory on (test, owner 2026-11-26): the same layout as the place cards — WhatsApp and Llamar side by side (or the
+  // one there is, full width), then «Escribir reseña».
+  const contactButtons = !directoryOn ? contactButtonsClassic : (
+    <div className="flex flex-col gap-2" data-pro-card-actions>
+      {showCall ? <div className="grid grid-cols-2 gap-2">{whatsappDeLaTarjeta}{renderCall()}</div> : whatsappDeLaTarjeta}
+      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={secondaryContactClass}>{t("writeReview")}</Link>
+    </div>
   );
 
   // Perfil: agendar manda y ocupa su propia línea; debajo, escribir y llamar
