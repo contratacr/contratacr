@@ -3031,6 +3031,9 @@
       "badge": "Coming soon",
       "heading": "The app you need for everything.",
       "subtitle": "From personalized guides to effortless planning — all in one free app."
+    },
+    "topRated": {
+      "title": "Top rated"
     }
   },
   "saveStatus": {

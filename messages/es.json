@@ -3031,6 +3031,9 @@
       "badge": "Muy pronto",
       "heading": "La app que necesita para todo.",
       "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita."
+    },
+    "topRated": {
+      "title": "Mejor calificados"
     }
   },
   "saveStatus": {

@@ -7,6 +7,7 @@ import { LandingHero } from "@/components/landing/landing-hero";
 import { HomeFeed } from "@/components/landing/home-feed";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
+import { HomeTopRated } from "@/components/landing/home-top-rated";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
@@ -140,7 +141,8 @@ export default async function HomePage({
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
-        <FeaturedBrands />
+        {/* Directory on: the best-rated professionals and companies instead of the brands strip (owner 2026-11-26). */}
+        {directoryOn ? <Suspense fallback={null}><HomeTopRated /></Suspense> : <FeaturedBrands />}
 
         {/* Services carousel. */}
         <FadeInUp>
