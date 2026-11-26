@@ -9,7 +9,6 @@ import { CR_PROVINCE_PATHS, CR_MAP_VIEWBOX } from "@/lib/data/cr-map-paths";
 import type { ZoneCoverage } from "@/lib/queries/professionals";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { useSiteFeatures } from "@/components/site-features";
-import { Link } from "@/i18n/navigation";
 
 const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
 
@@ -132,12 +131,11 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
                 <div>
                   {/* Province name has priority — never truncate it. */}
                   <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
-                  {directoryOn && companies && (companies[province.id] ?? 0) > 0 && (
-                    <span className="block text-[12px] font-semibold text-[#0089bb]" data-zone-companies-count>{t("companiesCount", { count: companies[province.id] })}</span>
-                  )}
                   {count > 0 ? (
                     <span className="block text-[12px] font-semibold text-[#0089bb]">
                       {t("coverageCount", { count })}
+                      {/* Directory on (owner 2026-11-26): the same line also says how many companies the province has. */}
+                      {directoryOn && companies && (companies[province.id] ?? 0) > 0 && <span data-zone-companies-count> · {t("companiesCount", { count: companies[province.id] })}</span>}
                     </span>
                   ) : (
                     <span className="block text-[12px] font-medium text-[#68778d]">{t("noPros")}</span>
@@ -151,12 +149,6 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
               >
                 {t("viewPros")} <ArrowRight className="h-4 w-4" />
               </button>
-              {/* Directory on: the companies of the area are one tap away too. */}
-              {directoryOn && (
-                <Link href="/categorias" prefetch={false} data-zone-companies className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-white px-4 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]">
-                  {t("viewCompanies")} <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
             </div>
 
             {count > 0 ? (
