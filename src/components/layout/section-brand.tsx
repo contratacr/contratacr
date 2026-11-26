@@ -4,7 +4,7 @@ import type { MouseEventHandler } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRMark } from "@/components/brand/brand-logo";
-import { BrandMenuMark } from "@/components/layout/brand-menu-mark";
+import { BrandMenuMark, toggleBrandMenu } from "@/components/layout/brand-menu-mark";
 import { useSiteFeatures } from "@/components/site-features";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className
         <ContrataCRMark />
       </Link>
       {menuMode && (
-        <button type="button" data-ccr-brand-menu="" aria-label={t("menu")} onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} className="group mr-1.5 flex shrink-0 items-center lg:hidden">
+        <button type="button" data-ccr-brand-menu="" aria-label={t("menu")} onClick={(e) => toggleBrandMenu(e.currentTarget)} className="group mr-1.5 flex shrink-0 items-center lg:hidden">
           <BrandMenuMark />
         </button>
       )}
