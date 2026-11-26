@@ -4047,17 +4047,6 @@
     "openFamily": "Open"
   },
   "homeFeed": {
-    "orderLabel": "Sort recommendations",
-    "orderReviews": "Most reviews",
-    "orderNear": "Near me",
-    "locating": "Locating…",
-    "locationDenied": "We could not get your location. Check the browser permission.",
-    "prosReviews": "Professionals with the most reviews",
-    "prosNear": "Professionals near you",
-    "placesReviews": "Businesses with the most reviews",
-    "placesNear": "Businesses near you",
-    "seeAllPros": "See all professionals",
-    "seeAllPlaces": "See all categories",
     "emptyTitle": "No recommendations yet",
     "emptyBody": "Search above or pick a section to explore."
   }

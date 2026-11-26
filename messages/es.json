@@ -4047,17 +4047,6 @@
     "openFamily": "Abrir"
   },
   "homeFeed": {
-    "orderLabel": "Ordenar recomendaciones",
-    "orderReviews": "Más reseñas",
-    "orderNear": "Cerca de mí",
-    "locating": "Ubicando…",
-    "locationDenied": "No pudimos obtener su ubicación. Revise el permiso del navegador.",
-    "prosReviews": "Profesionales con más reseñas",
-    "prosNear": "Profesionales cerca de usted",
-    "placesReviews": "Negocios con más reseñas",
-    "placesNear": "Negocios cerca de usted",
-    "seeAllPros": "Ver todos los profesionales",
-    "seeAllPlaces": "Ver todas las categorías",
     "emptyTitle": "Todavía no hay recomendaciones",
     "emptyBody": "Busque arriba o elija una sección para explorar."
   }
