@@ -742,7 +742,8 @@ export function LandingHero() {
           {/* Dos líneas («|» marca el corte) y la palabra entre *asteriscos* en
               celeste: «verificados» es lo que distingue a ContrataCR. */}
           {/* En computadora cabe más: «verificados» sube a la primera línea. */}
-          {[["titular", "lg:hidden"], ["titularPc", "hidden lg:block"]].map(([clave, vista]) => t(clave).split("|").map((tramo, i) => (
+          {/* Directory on (owner 2026-11-26): one headline for professionals AND companies. */}
+          {(heroButtons ? [["titularDirectorio", "lg:hidden"], ["titularDirectorioPc", "hidden lg:block"]] : [["titular", "lg:hidden"], ["titularPc", "hidden lg:block"]]).map(([clave, vista]) => t(clave).split("|").map((tramo, i) => (
             <span key={`${clave}-${i}`} className={cn("block whitespace-nowrap", vista)}>
               {tramo.split("*").map((parte, j) => (j % 2 ? <span key={j} className="text-[#7fd3f7]">{parte}</span> : parte))}{" "}
             </span>

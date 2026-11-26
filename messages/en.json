@@ -2926,7 +2926,9 @@
       "intentServicio": "Hire a service",
       "intentLugar": "See businesses",
       "botonBuscar": "Search",
-      "botonPublicar": "Post a request"
+      "botonPublicar": "Post a request",
+      "titularDirectorio": "Professionals and companies|*you can trust* in Costa Rica.",
+      "titularDirectorioPc": "Professionals and companies *you can trust*|in Costa Rica."
     },
     "inicio": {
       "lugaresTitulo": "Popular categories",

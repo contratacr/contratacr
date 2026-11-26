@@ -2926,7 +2926,9 @@
       "intentServicio": "Contratar un servicio",
       "intentLugar": "Ver empresas",
       "botonBuscar": "Buscar",
-      "botonPublicar": "Publicar solicitud"
+      "botonPublicar": "Publicar solicitud",
+      "titularDirectorio": "Profesionales y empresas|*de confianza* en Costa Rica.",
+      "titularDirectorioPc": "Profesionales y empresas *de confianza*|en Costa Rica."
     },
     "inicio": {
       "lugaresTitulo": "Categorías populares",
