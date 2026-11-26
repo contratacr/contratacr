@@ -100,7 +100,7 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
   const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: getCategoryLabel(id, locale), href: `/buscar?categoria=${id}` }));
   const list = services.length ? services : fallback;
   const restaurants: HeroSlide = { key: "restaurantes", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=70", title: t("restaurants"), button: t("restaurantsButton"), href: "/restaurantes" };
-  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} searchLabel={t("search")} />;
+  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} />;
 }
 
 async function HomeZoneCoverage() {
@@ -147,7 +147,8 @@ export default async function HomePage({
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
-      <LandingNavbar />
+      {/* Directory on (owner 2026-11-26): the navbar always carries the search on phones (not only after scrolling). */}
+      <LandingNavbar forceCompactSearch={directoryOn} mobileSearch={directoryOn} />
       <DirectoryQuickNav spacer />
 
       <main className="ccr-portada flex-1">
@@ -167,18 +168,18 @@ export default async function HomePage({
         {directoryOn && <div className="hidden [.ccr-native-app_&]:block lg:[.ccr-native-app_&]:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
                 <div className={directoryOn ? "[.ccr-native-app_&]:max-lg:hidden" : undefined}>
         {/* Directory on, phones: the Yelp-like slides; computers keep the production hero. */}
-        {directoryOn && <div className="lg:hidden"><Suspense fallback={<div className="h-[480px] bg-[#162543]" />}><HomeHeroSlidesServer locale={locale} /></Suspense></div>}
+        {directoryOn && <div className="lg:hidden"><Suspense fallback={<div className="h-[500px] bg-[#162543]" />}><HomeHeroSlidesServer locale={locale} /></Suspense></div>}
         <div className={directoryOn ? "hidden lg:block" : undefined}><LandingHero /></div>
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         {/* Directory on: the best-rated professionals and companies instead of the brands strip (owner 2026-11-26). */}
-        {/* Directory on (owner 2026-11-26): Lo más buscado (every category) right under the photos, then the best-rated
-            professionals and companies instead of the brands strip. Directory off: production order. */}
+        {/* Directory on (owner 2026-11-26): the best-rated professionals and companies right under the photos (instead of the
+            brands strip), then Lo más buscado (every category). Directory off: production order. */}
         {directoryOn ? (
           <>
-            <Suspense fallback={null}><ProsSection /></Suspense>
             <Suspense fallback={null}><HomeTopRated /></Suspense>
+            <Suspense fallback={null}><ProsSection /></Suspense>
           </>
         ) : (
           <>
