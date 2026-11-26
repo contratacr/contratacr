@@ -7,7 +7,10 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordCloudinaryAsset, recordMediaAsset } from "@/lib/cloudinary-ownership";
-import { isR2Configured, uploadR2Object } from "@/lib/r2-storage";
+import { isR2Configured, r2BaseKey, uploadR2Object } from "@/lib/r2-storage";
+import { isLoopbackSupabase, uploadLocalObject } from "@/lib/media/local-upload-store";
+import { THUMB_MAX_BYTES, checkThumbForMain } from "@/lib/media/photo-thumb-check";
+import { pairedKeys, type PairMainExt } from "@/lib/r2-image-url";
 import { stripFailureText, stripImageMetadata, verifyStripped } from "@/lib/media/strip-image-metadata";
 import { scanMetadata } from "@/lib/directory/photo-pipeline";
 
@@ -34,6 +37,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const thumbFile = formData.get("thumb");
 
     if (!file) {
       return NextResponse.json({ error: mensajeDeError(req, { es: "No se recibió ningún archivo", en: "No file was received." }) }, { status: 400 });
@@ -82,22 +86,44 @@ export async function POST(req: Request) {
     const kind = (formData.get("type") as string | null) ?? "portfolio";
     const isAvatar = kind === "avatar";
 
-    if (isR2Configured()) {
-      const result = await uploadR2Object({
-        buffer: clean,
-        contentType: MIME_FOR[check.kind],
-        folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
-        extension: EXTENSION_FOR[check.kind],
-        userId: user.id,
-      });
-      await recordMediaAsset({
-        userId: user.id,
-        provider: "r2",
-        publicId: result.key,
-        resourceType: "image",
-        secureUrl: result.url,
-      });
-      return NextResponse.json({ url: result.url, publicId: result.key, provider: "r2" });
+    // Optional browser-made 400 px thumbnail (storage plan 2026-11-26, docs/storage-plan.md). It goes through the
+    // same gates as the photo (magic bytes, size, malware scan, metadata stripping) plus a size/proportion check, and
+    // is stored next to the photo as <base>.sm.<ext> so cards never download the large file (r2Thumb).
+    let thumb: { bytes: Buffer; ext: "webp" | "jpg"; contentType: string } | null = null;
+    const pairable = check.kind === "jpeg" || check.kind === "png" || check.kind === "webp";
+    if (thumbFile instanceof Blob && thumbFile.size > 0 && pairable) {
+      const thumbFail = () => NextResponse.json(
+        { error: mensajeDeError(req, { es: "No se pudo preparar la miniatura de la foto. Intente de nuevo.", en: "The photo thumbnail could not be prepared. Try again." }), code: "miniatura" },
+        { status: 400 },
+      );
+      const raw = Buffer.from(await thumbFile.arrayBuffer());
+      const thumbCheck = validateUpload(raw, { allow: ["webp", "jpeg"], maxBytes: THUMB_MAX_BYTES, allowLabel: "WEBP o JPG" });
+      if (!thumbCheck.ok) return thumbFail();
+      try { await scanUpload(raw); } catch(e) { return NextResponse.json({error:e instanceof Error?e.message:"Análisis no disponible."},{status:422}); }
+      const thumbStripped = stripImageMetadata(raw);
+      if (!thumbStripped.ok || !verifyStripped(thumbStripped, scanMetadata)) return thumbFail();
+      const pair = checkThumbForMain(clean, thumbStripped.bytes);
+      if (pair.ok) thumb = { bytes: Buffer.from(thumbStripped.bytes.buffer, thumbStripped.bytes.byteOffset, thumbStripped.bytes.byteLength), ext: pair.ext, contentType: pair.contentType };
+      else if (pair.reason !== "main_unreadable") return thumbFail();
+    }
+
+    const folder = isAvatar ? "contratacr/profiles" : "contratacr/portfolio";
+    const local = !isR2Configured() && isLoopbackSupabase();
+    if (isR2Configured() || local) {
+      const keys = thumb ? pairedKeys(r2BaseKey(folder, user.id), EXTENSION_FOR[check.kind] as PairMainExt, thumb.ext) : null;
+      const put = async (key: string | undefined, bytes: Buffer, contentType: string, extension: string) => {
+        if (!local) return uploadR2Object({ buffer: bytes, contentType, folder, extension, userId: user.id, key });
+        return uploadLocalObject(key ?? `${r2BaseKey(folder, user.id)}.${extension}`, bytes, contentType);
+      };
+      // Thumbnail first: once the large URL exists, its .sm sibling must already be there.
+      const small = keys && thumb ? await put(keys.thumb, thumb.bytes, thumb.contentType, thumb.ext) : null;
+      const result = await put(keys?.main, clean, MIME_FOR[check.kind], EXTENSION_FOR[check.kind]);
+      const provider = local ? "local" : "r2";
+      if (!local) {
+        await recordMediaAsset({ userId: user.id, provider: "r2", publicId: result.key, resourceType: "image", secureUrl: result.url });
+        if (small) await recordMediaAsset({ userId: user.id, provider: "r2", publicId: small.key, resourceType: "image", secureUrl: small.url });
+      }
+      return NextResponse.json({ url: result.url, publicId: result.key, provider, ...(small ? { thumbUrl: small.url } : {}) });
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;

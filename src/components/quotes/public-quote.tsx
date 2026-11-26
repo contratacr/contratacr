@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatColones } from "@/lib/pricing";
 import { getInitials } from "@/lib/utils";
 import { formatFullPersonName } from "@/lib/display-name";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { Totales } from "@/components/quotes/quote-detail-modal";
 
@@ -61,7 +61,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
         {/* Quién cotiza. */}
         <div className="flex items-center gap-4 border-b border-[#eef2f6] px-6 py-5">
           <Avatar className="h-16 w-16 shrink-0">
-            <AvatarImage src={pro.avatarUrl ? cldThumb(pro.avatarUrl, 160) : undefined} alt={pro.name} className="object-cover" />
+            <AvatarImage src={pro.avatarUrl ? r2Thumb(pro.avatarUrl, 160) : undefined} alt={pro.name} className="object-cover" />
             <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">{getInitials(pro.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">

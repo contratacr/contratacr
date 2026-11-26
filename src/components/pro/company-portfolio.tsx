@@ -4,7 +4,7 @@ import {useLocale} from 'next-intl';
 import {Button} from '@/components/ui/button';
 import {proMoney} from '@/lib/pro/money';
 import {rateBps,type PortfolioRead,type ProfileMetrics} from '@/lib/pro/portfolio';
-import {PUBLIC_IMAGE_OPTIONS,prepareImageForUpload,uploadPhotoFormDataWithRetry} from '@/lib/client-image-upload';
+import {preparePublicPhotoForUpload,uploadPhotoFormDataWithRetry} from '@/lib/client-image-upload';
 import {getCategoryLabel} from '@/lib/data/categories';
 
 /**
@@ -36,7 +36,7 @@ export function CompanyPortfolio(){
    for(const fileId of picked){
     const download=await fetch('/api/pro/work-files?fileId='+encodeURIComponent(fileId),{cache:'no-store'});if(!download.ok)throw Error('download');
     const blob=await download.blob(),file=new File([blob],'foto.'+(blob.type==='image/png'?'png':'jpg'),{type:blob.type});
-    const prepared=await prepareImageForUpload(file,PUBLIC_IMAGE_OPTIONS),fd=new FormData();fd.append('file',prepared);fd.append('type','portfolio');
+    const prepared=await preparePublicPhotoForUpload(file),fd=new FormData();fd.append('file',prepared);fd.append('type','portfolio');
     const up=await uploadPhotoFormDataWithRetry(fd);if(!up.ok||!up.data.url)throw Error('upload');urls.push(up.data.url);
    }
    const r=await fetch(api,{method:'POST',headers:{'Content-Type':'application/json','Origin':location.origin},body:JSON.stringify({action:'publish',id:crypto.randomUUID(),workId,profession:form.profession,title:form.title,description:form.description,recipient:form.recipient,photos:urls,consentKind:form.consentKind,consentNote:form.consentNote,consentOn:form.consentOn})});

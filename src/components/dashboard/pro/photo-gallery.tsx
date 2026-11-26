@@ -12,9 +12,9 @@ import { Modal } from "@/components/ui/modal";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
-import { PUBLIC_IMAGE_OPTIONS, getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
+import { getImageUploadPreparationErrorCode, preparePublicPhotoForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/services";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -181,7 +181,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       const urls: string[] = [];
       for (const file of toUpload) {
         try {
-          const preparedFile = await prepareImageForUpload(file, PUBLIC_IMAGE_OPTIONS);
+          const preparedFile = await preparePublicPhotoForUpload(file);
           const fd = new FormData(); fd.append("file", preparedFile); fd.append("type", "portfolio");
           const upload = await uploadPhotoFormDataWithRetry(fd);
           if (upload.ok && upload.data.url) urls.push(upload.data.url);
@@ -336,7 +336,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                         className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-white shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
+                        <img src={r2Thumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
                       </div>
                       ))}
                     </div>
@@ -437,7 +437,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 {draft.photos.map((url) => (
                   <div key={url} className="relative aspect-square overflow-hidden rounded-xl border border-[#e5e7eb]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cldThumb(url, 400)} alt="" className="h-full w-full object-cover" />
+                    <img src={r2Thumb(url, 400)} alt="" className="h-full w-full object-cover" />
                     <button type="button" onClick={() => setDraft((d) => (d ? { ...d, photos: d.photos.filter((u) => u !== url) } : d))} className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white hover:bg-red-600" aria-label={t("remove")}>
                       <X className="h-3 w-3" />
                     </button>

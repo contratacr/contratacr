@@ -1,3 +1,4 @@
+import { r2ThumbUrl } from "@/lib/r2-image-url";
 import { v2 as cloudinary } from "cloudinary";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteR2Object } from "@/lib/r2-storage";
@@ -76,5 +77,8 @@ export async function deleteOwnedMediaAsset(userId: string, secureUrl: string) {
     .eq("id", asset.id)
     .eq("user_id", userId);
   if (deleteError) throw new Error(deleteError.message);
+  // A paired photo (storage plan 2026-11-26) also owns its browser-made thumbnail.
+  const thumbUrl = asset.provider === "r2" ? r2ThumbUrl(secureUrl) : null;
+  if (thumbUrl) await deleteOwnedMediaAsset(userId, thumbUrl).catch(() => {});
   return { deleted: true as const };
 }

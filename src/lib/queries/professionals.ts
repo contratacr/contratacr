@@ -4,6 +4,9 @@ import { professionalRevision } from "@/lib/cache/professional-revision";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { cldThumb } from "@/lib/cloudinary";
+// Avatars stay on cldThumb here (not r2Thumb): the share card (opengraph-image.tsx, Satori) reads this URL and
+// cannot decode the WebP thumbnail; components apply r2Thumb themselves.
+import { r2Thumb } from "@/lib/r2-image-url";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deriveDisplayPricing, type PricingType } from "@/lib/pricing";
@@ -619,7 +622,7 @@ async function searchProfessionalsUncached(
         videoconsulta: !!row.videoconsulta,
         portfolioCount: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u) => typeof u === "string" && !!u && u !== row.profiles?.avatar_url).length : 0,
         // Case photos only: the profile photo is never repeated in the strip (owner 2026-11-22).
-        casePhotos: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u): u is string => typeof u === "string" && !!u && u !== row.profiles?.avatar_url).slice(0, 3).map((u) => cldThumb(u, 360)) : undefined,
+        casePhotos: Array.isArray(row.portfolio_urls) ? (row.portfolio_urls as unknown[]).filter((u): u is string => typeof u === "string" && !!u && u !== row.profiles?.avatar_url).slice(0, 3).map((u) => r2Thumb(u, 360)) : undefined,
         certificationCount: Array.isArray(row.certifications) ? row.certifications.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
         coverage: buildCoverage(row),

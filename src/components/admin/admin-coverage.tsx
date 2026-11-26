@@ -2,7 +2,7 @@
 
 import { InlineIdentityName } from "@/components/ui/inline-identity-name";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { ChevronDown, ExternalLink, Loader2, MapPinned, Search, SlidersHorizontal, Tag, X } from "lucide-react";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 import { PROVINCES } from "@/lib/data/cr-geography";
@@ -255,7 +255,7 @@ export function AdminCoverage() {
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ccr-caja-icono-plana">
                           {pro.avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={cldThumb(pro.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                            <img src={r2Thumb(pro.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                           ) : getInitials(pro.name)}
                         </div>
                         <div className="min-w-0 flex-1">

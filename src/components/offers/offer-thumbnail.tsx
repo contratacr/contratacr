@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProfessionalOffer } from "@/lib/offers";
-import { cldLarge } from "@/lib/cloudinary";
+import { r2Large } from "@/lib/r2-image-url";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { ProfilePhotoPreview } from "@/components/ui/profile-photo-preview";
 
@@ -23,7 +23,7 @@ export function OfferThumbnail({
     >
       {offer.image_urls[0] ? (
         <ProgressiveImage
-          src={cldLarge(offer.image_urls[0], 640)}
+          src={r2Large(offer.image_urls[0], 640)}
           alt={offer.title}
           fit="cover"
           priority={priority}

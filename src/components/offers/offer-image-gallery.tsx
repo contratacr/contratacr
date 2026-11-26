@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { cldLarge, cldThumb } from "@/lib/cloudinary";
+import { r2Large, r2Thumb } from "@/lib/r2-image-url";
 import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -56,7 +56,7 @@ export function OfferImageGallery({ images, title, className, priority = true }:
         >
           <ProgressiveImage
             key={activeImage}
-            src={cldLarge(activeImage, 1280)}
+            src={r2Large(activeImage, 1280)}
             alt={title}
             fit="contain"
             priority={priority}
@@ -107,7 +107,7 @@ export function OfferImageGallery({ images, title, className, priority = true }:
                 index === activeIndex ? "border-[#009fd9] ring-2 ring-[#009fd9]/20" : "border-[#d8e4ee] hover:border-[#9bdcf2]"
               )}
             >
-              <ProgressiveImage src={cldThumb(url, 160)} alt="" fit="contain" wrapperClassName="h-full w-full" className="p-1" />
+              <ProgressiveImage src={r2Thumb(url, 160)} alt="" fit="contain" wrapperClassName="h-full w-full" className="p-1" />
             </button>
           ))}
           </div>
@@ -116,7 +116,7 @@ export function OfferImageGallery({ images, title, className, priority = true }:
       <ImagePreviewDialog
         open={enGrande}
         onOpenChange={setEnGrande}
-        src={cldLarge(activeImage, 1600)}
+        src={r2Large(activeImage, 1600)}
         alt={title}
         imageClassName="sm:max-h-[88vh] sm:max-w-[92vw]"
         {...(safeImages.length > 1

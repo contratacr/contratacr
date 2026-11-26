@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { BadgePercent, Briefcase, ChevronLeft, ChevronRight, ExternalLink, Loader2, Search, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
@@ -135,7 +135,7 @@ function CreatorCard({ creator }: { creator: Creator | null }) {
       <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ccr-caja-icono-plana">
         {creator.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cldThumb(creator.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img src={r2Thumb(creator.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           getInitials(creator.name)
         )}
@@ -317,7 +317,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                 <div className="flex min-w-0 gap-3">
                   {item.kind === "offer" && item.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cldThumb(item.image, 112)} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                    <img src={r2Thumb(item.image, 112)} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                   ) : (
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-[#64748b]"><Icon className="h-5 w-5" /></div>
                   )}

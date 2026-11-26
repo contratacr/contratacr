@@ -13,7 +13,7 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatServicePrice } from "@/lib/pricing";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -148,7 +148,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
           las cuatro pestañas se ven seguidas y esta traía su propio azul, así
           que la misma lista cambiaba de aspecto al cambiar de pestaña. */}
       <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl", image ? "ccr-caja-imagen" : "ccr-caja-icono-plana")}>
-        {image ? <ProgressiveImage src={cldThumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
+        {image ? <ProgressiveImage src={r2Thumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
       {/* Sin etiqueta EMPLEO / OFERTA: lo dice el botón («Ver empleo» / «Ver
           oferta»), que se lee igual con pestañas y sin ellas. */}

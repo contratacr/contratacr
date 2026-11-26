@@ -7,6 +7,8 @@ type UploadR2ObjectInput = {
   folder: string;
   extension: string;
   userId: string;
+  /** Explicit object key (see r2BaseKey); when absent a random key is made from folder/user/extension. */
+  key?: string;
 };
 
 const R2_REGION = "auto";
@@ -43,7 +45,14 @@ function r2Client() {
   });
 }
 
-export async function uploadR2Object({ buffer, contentType, folder, extension, userId }: UploadR2ObjectInput) {
+/** Random base key (no extension) for an object pair: <folder>/<user>/<time>-<uuid>. */
+export function r2BaseKey(folder: string, userId: string) {
+  const normalizedFolder = cleanPart(folder).replace(/^\/+|\/+$/g, "");
+  const normalizedUser = cleanPart(userId) || "user";
+  return `${normalizedFolder}/${normalizedUser}/${Date.now()}-${crypto.randomUUID()}`;
+}
+
+export async function uploadR2Object({ buffer, contentType, folder, extension, userId, key: explicitKey }: UploadR2ObjectInput) {
   const bucket = process.env.R2_BUCKET?.trim();
   const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL?.trim()?.replace(/\/+$/g, "");
   if (!bucket || !publicBaseUrl) throw new Error("R2 no está configurado.");
@@ -51,7 +60,7 @@ export async function uploadR2Object({ buffer, contentType, folder, extension, u
   const normalizedFolder = cleanPart(folder).replace(/^\/+|\/+$/g, "");
   const normalizedUser = cleanPart(userId) || "user";
   const normalizedExtension = cleanPart(extension).replace(/^\.*/, "") || "bin";
-  const key = `${normalizedFolder}/${normalizedUser}/${Date.now()}-${crypto.randomUUID()}.${normalizedExtension}`;
+  const key = explicitKey ?? `${normalizedFolder}/${normalizedUser}/${Date.now()}-${crypto.randomUUID()}.${normalizedExtension}`;
 
   await r2Client().send(new PutObjectCommand({
     Bucket: bucket,

@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { useDeslizar } from "@/hooks/use-deslizar";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { cldThumb, cldLarge } from "@/lib/cloudinary";
+import { r2Thumb, r2Large } from "@/lib/r2-image-url";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { cn } from "@/lib/utils";
 import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
@@ -174,7 +174,7 @@ export function CaseShowcase({
               {c.photos.length > 0 && (
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#eef3f8]">
                   <ProgressiveImage
-                    src={cldThumb(c.photos[0], 900)}
+                    src={r2Thumb(c.photos[0], 900)}
                     alt={c.title ?? ""}
                     fit="cover"
                     wrapperClassName="h-full w-full"
@@ -199,7 +199,7 @@ export function CaseShowcase({
                             key={`${c.id}-mini-${url}`}
                             className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/70 bg-white/20 shadow-sm backdrop-blur-sm"
                           >
-                            <ProgressiveImage src={cldThumb(url, 120)} alt="" fit="cover" wrapperClassName="h-full w-full" />
+                            <ProgressiveImage src={r2Thumb(url, 120)} alt="" fit="cover" wrapperClassName="h-full w-full" />
                             {esUltima && (
                               <span className="absolute inset-0 grid place-items-center bg-[#08111f]/60 text-[12px] font-extrabold text-white">
                                 +{restantes}
@@ -257,9 +257,9 @@ export function CaseShowcase({
               {cur && (
                 <div {...(photos.length > 1 ? deslizar : {})} className="relative flex min-h-[300px] flex-1 touch-pan-y select-none items-center justify-center overflow-hidden bg-[#0f172a] pt-[env(safe-area-inset-top)] sm:h-auto sm:min-h-[620px] sm:w-[62%] sm:flex-none sm:pt-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
+                  <img src={r2Large(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-[#0f172a]/80" />
-                  <ProgressiveImage key={cur} src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} fit="contain" priority wrapperClassName="relative z-10 h-full w-full bg-transparent" />
+                  <ProgressiveImage key={cur} src={r2Large(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} fit="contain" priority wrapperClassName="relative z-10 h-full w-full bg-transparent" />
                   {photos.length > 1 && (
                     <>
                       <button onClick={prev} aria-label={tg("prev")} className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/80 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:left-4 sm:grid sm:h-11 sm:w-11">
@@ -307,7 +307,7 @@ export function CaseShowcase({
                           )}
                         >
                           <ProgressiveImage
-                            src={cldThumb(p, 220)}
+                            src={r2Thumb(p, 220)}
                             alt=""
                             fit="cover"
                             wrapperClassName={cn(

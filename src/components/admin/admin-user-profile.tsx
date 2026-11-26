@@ -4,7 +4,7 @@ import { formatFullPersonName } from "@/lib/display-name";
 
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { useEffect, useState } from "react";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, History,
@@ -286,7 +286,7 @@ export function AdminUserProfile({
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-bold ccr-caja-icono">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={cldThumb(profile.avatar_url, 128)} alt="" decoding="async" className="h-full w-full object-cover" />
+              <img src={r2Thumb(profile.avatar_url, 128)} alt="" decoding="async" className="h-full w-full object-cover" />
             ) : getInitials(profile.full_name ?? "?")}
           </div>
           <div className="min-w-0 flex-1">

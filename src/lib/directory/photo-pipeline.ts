@@ -43,7 +43,7 @@ export const PHOTO_ALLOWED_LABEL={es:'JPG, PNG o WebP',en:'JPG, PNG or WebP'} as
 export type PhotoSourceType='image/jpeg'|'image/png'|'image/webp';
 export type PhotoOutputType='image/webp'|'image/jpeg';
 export type PhotoRejectReason='empty'|'too_large'|'format'|'heic_unsupported'|'animated'|'unreadable'|'too_many_pixels'|
- 'too_small'|'aspect'|'metadata'|'codec';
+ 'too_small'|'aspect'|'metadata'|'codec'|'browser_prep';
 
 /**
  * Re-encodes `input` so it fits inside box×box (never enlarged), applying the EXIF orientation first and
@@ -52,6 +52,23 @@ export type PhotoRejectReason='empty'|'too_large'|'format'|'heic_unsupported'|'a
 export interface PhotoCodec{
  readonly name:string;
  resize(input:Uint8Array,box:PhotoVariantSize):Promise<Uint8Array>;
+}
+
+/**
+ * Storage plan 2026-11-26: the browser already made the three variants (src/lib/client-image-variants.ts), so the
+ * "codec" just hands back the client file for each box. processListingPhoto still checks every one of them exactly
+ * like a server-made variant (type by magic bytes, fit-inside size of the 1600 file ±1 px, one orientation, no
+ * metadata), so nothing the client sends is trusted; no server-side image transformation runs.
+ * Known limit: the content is not compared, so the 800/320 files could show another picture than the 1600 one.
+ */
+export function createClientVariantsCodec(variants:Record<PhotoVariantSize,Uint8Array>):PhotoCodec{
+ return{name:'client',async resize(_input,box){const v=variants[box];if(!v)throw Error('missing variant');return v;}};
+}
+/** The client variants of an upload form (fields file / v800 / v320), or null when the browser sent the file alone. */
+export async function clientVariantsOf(form:FormData,main:Uint8Array):Promise<Record<PhotoVariantSize,Uint8Array>|null>{
+ const v800=form.get('v800'),v320=form.get('v320');
+ if(!(v800 instanceof Blob)||!(v320 instanceof Blob))return null;
+ return{1600:main,800:new Uint8Array(await v800.arrayBuffer()),320:new Uint8Array(await v320.arrayBuffer())};
 }
 
 export type PhotoVariant={size:PhotoVariantSize;path:string;bytes:Uint8Array;contentType:PhotoOutputType;width:number;height:number;sizeBytes:number};
@@ -272,6 +289,7 @@ export function photoRejectText(reason:PhotoRejectReason,locale:string):string{
   case 'too_small':return t(`La foto es muy pequeña: el lado mayor debe medir al menos ${PHOTO_MIN_LONG_SIDE} px.`,`The photo is too small: its long side must be at least ${PHOTO_MIN_LONG_SIDE} px.`);
   case 'aspect':return t('La foto es demasiado alargada. Recórtela a una proporción más común.','The photo is too elongated. Crop it to a more common ratio.');
   case 'metadata':return t('No se pudo limpiar la información interna de la foto. Intente con otra imagen.','The photo metadata could not be removed. Try another image.');
+  case 'browser_prep':return t('Su navegador no pudo preparar esta foto. Actualice el navegador o intente con otra foto (JPG, PNG o WebP).','Your browser could not prepare this photo. Update the browser or try another photo (JPG, PNG or WebP).');
   case 'unreadable':case 'codec':return t('No se pudo leer la foto. Intente con otra imagen.','The photo could not be read. Try another image.');
  }
 }

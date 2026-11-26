@@ -8,8 +8,8 @@ import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import {dirEnabledOnly,dirFail,dirOk} from '@/lib/directory/public-route';
 import {photoDbError} from '@/lib/directory/place-photos-server';
-import {PHOTO_MAX_BYTES,PHOTO_VARIANTS,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant} from '@/lib/directory/photo-pipeline';
-import {pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
+import {PHOTO_MAX_BYTES,PHOTO_VARIANTS,clientVariantsOf,createClientVariantsCodec,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant} from '@/lib/directory/photo-pipeline';
+import {NoServerCodecError,pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
 import {placePhotoStoreOf,uploadPlacePhotoStore} from '@/lib/directory/place-photo-store';
 import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCaption,placePhotoFieldsSchema,placePhotoRemoveSchema,placePhotoUrl} from '@/lib/directory/place-photos';
 
@@ -23,7 +23,8 @@ import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCapti
 //  POST JSON {action:'remove', actionId, mediaId} → dir_place_photo_remove (uploader, or manager for owner photos), then the
 //       three objects are deleted from the store the photo lives in (removal is final; a staff «hide» keeps them).
 // Local runs use the loopback Supabase Storage only (sandbox); nothing is sent to production.
-const FIELDS=['file','uploadId','caption','review'] as const;
+// v800/v320: the browser-made smaller variants (storage plan 2026-11-26); `file` is then the 1600 variant.
+const FIELDS=['file','v800','v320','uploadId','caption','review'] as const;
 type Db=ReturnType<typeof createAdminClient>;
 /** p_actor/p_member: the person, or (owner, member) when a Pro team member with listing.publish works in the owner's company. */
 async function effectiveActor(db:Db,userId:string,placeId:string){
@@ -65,9 +66,9 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  }
 
  let form:FormData;
- try{form=await proBoundedForm(req,{maxBytes:PHOTO_MAX_BYTES+65_536,maxFiles:1,fields:FIELDS,maxFileBytes:PHOTO_MAX_BYTES});}
+ try{form=await proBoundedForm(req,{maxBytes:PHOTO_MAX_BYTES+4*1024*1024+65_536,maxFiles:3,fields:FIELDS,maxFileBytes:PHOTO_MAX_BYTES});}
  catch(e){const status=e instanceof ProBodyError?e.status:400;return dirFail(status,status===413?'too_large':'invalid',status===413?photoRejectText('too_large',locale):'Revise la foto.');}
- const file=form.get('file'),fields=placePhotoFieldsSchema.safeParse(Object.fromEntries([...form.entries()].filter(([k])=>k!=='file')));
+ const file=form.get('file'),fields=placePhotoFieldsSchema.safeParse(Object.fromEntries([...form.entries()].filter(([k])=>k!=='file'&&k!=='v800'&&k!=='v320')));
  if(!(file instanceof Blob)||!fields.success)return dirFail(400,'invalid','Revise la foto.');
  const mediaId=await derivedUuid('dir-place-photo',user.id,place.data.id as string,fields.data.uploadId);
  const actionId=await derivedUuid('dir-place-photo-add',user.id,place.data.id as string,fields.data.uploadId);
@@ -78,8 +79,13 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  // Per person and day (Postgres-backed buckets of src/lib/rate-limit.ts); the SQL enforces the same cap under its lock.
  const limited=await enforceRateLimitKey(`dir-place-photo:${user.id}`,PLACE_PHOTO_DAILY_LIMIT,86_400_000);if(limited)return limited;
 
- let codec;try{codec=await pickPhotoCodec();}catch{return dirFail(503,'unavailable','El procesamiento de fotos no está disponible.');}
- const processed=await processListingPhoto(new Uint8Array(await file.arrayBuffer()),{photoId:mediaId,codec});
+ // Client variants → validated as-is (no server transformation); otherwise a server codec (sharp locally; in the
+ // Worker none is bound since 2026-11-26 → clear 'browser_prep' refusal).
+ const upload=new Uint8Array(await file.arrayBuffer()),clientVariants=await clientVariantsOf(form,upload);
+ let codec;
+ if(clientVariants)codec=createClientVariantsCodec(clientVariants);
+ else{try{codec=await pickPhotoCodec();}catch(e){return e instanceof NoServerCodecError?dirFail(422,'photo_browser_prep',photoRejectText('browser_prep',locale)):dirFail(503,'unavailable','El procesamiento de fotos no está disponible.');}}
+ const processed=await processListingPhoto(upload,{photoId:mediaId,codec});
  if(!processed.ok)return dirFail(processed.reason==='too_large'?413:processed.reason==='codec'||processed.reason==='metadata'?422:400,'photo_'+processed.reason,photoRejectText(processed.reason,locale));
  const photo=processed.photo;
  // Dedupe before storing anything (the SQL unique index is the real guard).

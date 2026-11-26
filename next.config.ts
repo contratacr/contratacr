@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Storage plan 2026-11-26 (docs/storage-plan.md): no image optimizer. Photos are resized in the browser
+    // before upload and next/image is only used for a few static landing pictures, so the Worker never calls
+    // Cloudflare Images (OpenNext serves the original when the IMAGES binding is absent).
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "randomuser.me" },
       { protocol: "https", hostname: "res.cloudinary.com" },

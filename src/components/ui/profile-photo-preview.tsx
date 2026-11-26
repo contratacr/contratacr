@@ -3,7 +3,7 @@
 import { useLocale } from "next-intl";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
-import { cldThumb } from "@/lib/cloudinary";
+import { r2Thumb } from "@/lib/r2-image-url";
 import { cn } from "@/lib/utils";
 
 /** Isolate photo clicks from the list card's navigation and selection. */
@@ -25,7 +25,7 @@ export function ProfilePhotoPreview({ src, name, className, square = false, prio
         closeLabel={en ? "Close" : "Cerrar"}
         className={cn("h-full w-full", square && "rounded-lg overflow-hidden")}
       >
-        <ProgressiveImage priority={priority} loading={priority || eager ? "eager" : "lazy"} src={cldThumb(src, 160)} alt={name} fit="cover" wrapperClassName={cn("h-full w-full", square ? "rounded-lg" : "rounded-full")} className={square ? "rounded-lg" : "rounded-full"} />
+        <ProgressiveImage priority={priority} loading={priority || eager ? "eager" : "lazy"} src={r2Thumb(src, 160)} alt={name} fit="cover" wrapperClassName={cn("h-full w-full", square ? "rounded-lg" : "rounded-full")} className={square ? "rounded-lg" : "rounded-full"} />
       </ImagePreviewDialog>
     </span>
   );

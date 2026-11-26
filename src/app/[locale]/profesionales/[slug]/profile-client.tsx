@@ -54,7 +54,7 @@ import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
-import { cldLarge, cldThumb } from "@/lib/cloudinary";
+import { r2Large, r2Thumb } from "@/lib/r2-image-url";
 import { formatOfferBeforePrice, formatOfferPrice, offerDiscountPercent, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -955,7 +955,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       {professional.avatarUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={cldThumb(professional.avatarUrl, 320)}
+                          src={r2Thumb(professional.avatarUrl, 320)}
                           alt={displayName.primaryMobile}
                           loading="eager"
                           fetchPriority="high"
@@ -1144,7 +1144,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                                       imageClassName="sm:max-w-[900px]"
                                     >
                                       <span className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden border-b border-[#e5e7eb] bg-[#eef2f6]">
-                                        <ProgressiveImage src={cldLarge(serviceImageUrl, 900)} alt={title} fit="cover" wrapperClassName="h-full w-full" />
+                                        <ProgressiveImage src={r2Large(serviceImageUrl, 900)} alt={title} fit="cover" wrapperClassName="h-full w-full" />
                                       </span>
                                     </ImagePreviewDialog>
                                   )}
@@ -1246,7 +1246,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                             >
                               <span className="relative block aspect-[16/10] w-full overflow-hidden bg-[#eef2f6]">
                                 {cover
-                                  ? <ProgressiveImage src={cldLarge(cover, 640)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
+                                  ? <ProgressiveImage src={r2Large(cover, 640)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
                                   : <span className="grid h-full w-full place-items-center"><BadgePercent className="h-8 w-8 text-[#9fc9dd]" /></span>}
                                 {descuento && (
                                   <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-2.5 py-1 text-[12px] font-extrabold leading-4 text-white shadow-sm">-{descuento}%</span>

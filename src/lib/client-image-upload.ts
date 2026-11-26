@@ -1,6 +1,7 @@
 "use client";
 
 import { IMAGE_KINDS, sniffFileType } from "@/lib/upload-validation";
+import { makeThumbnail, preparePublicWebp } from "@/lib/client-image-variants";
 
 const SAFE_UPLOAD_BYTES = 3.8 * 1024 * 1024;
 const UPLOAD_TIMEOUT_MS = 30_000;
@@ -201,7 +202,28 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   throw new ImageUploadPreparationError("too_large");
 }
 
+/**
+ * Public photo (portfolio / success stories): WebP fitting 1600 px made in the browser (storage plan 2026-11-26);
+ * browsers without a WebP encoder keep the previous JPEG path.
+ */
+export async function preparePublicPhotoForUpload(file: File) {
+  const header = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+  const kind = sniffFileType(header);
+  if (kind && kind !== "gif" && IMAGE_KINDS.includes(kind)) {
+    const webp = await preparePublicWebp(file).catch(() => null);
+    if (webp && webp.size <= SAFE_UPLOAD_BYTES) return webp;
+  }
+  return prepareImageForUpload(file, PUBLIC_IMAGE_OPTIONS);
+}
+
 export async function uploadPhotoFormDataWithRetry(formData: FormData, attempts = 2): Promise<UploadPhotoResult> {
+  // Every photo sent here also gets a 400 px thumbnail made in the browser, stored next to it so cards and avatars
+  // never download the large file (r2Thumb). Best effort: without one the photo is stored alone, as before.
+  const main = formData.get("file");
+  if (main instanceof Blob && !formData.has("thumb")) {
+    const thumb = await makeThumbnail(main, main instanceof File ? main.name : "foto").catch(() => null);
+    if (thumb) formData.set("thumb", thumb);
+  }
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const controller = new AbortController();

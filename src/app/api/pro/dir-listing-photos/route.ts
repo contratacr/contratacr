@@ -4,8 +4,8 @@ import {enforceRateLimitKey} from '@/lib/rate-limit';
 import {ProBodyError,proActor,proBoundedForm,proBoundedJson,proRouteHeaders,proSameOrigin} from '@/lib/pro/route-common';
 import {LISTING_ERROR_HINTS} from '@/lib/directory/listing-schemas';
 import {listingMediaMutationSchema,listingMediaSchema} from '@/lib/directory/listing-inventory';
-import {PHOTO_BUCKET,PHOTO_MAX_BYTES,PHOTO_VARIANTS,photoIdentity,photoRejectText,processListingPhoto,sha256Hex,toListingMediaInput,type PhotoVariant} from '@/lib/directory/photo-pipeline';
-import {pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
+import {PHOTO_BUCKET,PHOTO_MAX_BYTES,PHOTO_VARIANTS,clientVariantsOf,createClientVariantsCodec,photoIdentity,photoRejectText,processListingPhoto,sha256Hex,toListingMediaInput,type PhotoVariant} from '@/lib/directory/photo-pipeline';
+import {NoServerCodecError,pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
 
 // LOCAL PRO ONLY (V3, development only): photos of directory listings (bucket dir-listing-photos-bucket-local.sql).
 //  POST multipart {file, listingId, uploadId, altEs?, altEn?} → validate (magic bytes, 20 MiB, 24 MP), re-encode without
@@ -16,7 +16,7 @@ import {pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
 //       is asserted by this server after its own scan, never by the client.
 // Errors answer {error, reason}; the UI translates `reason` with inventoryErrorText() / the `error` text.
 const fail=(status:number,reason:string,error:string)=>Response.json({error,reason},{status,headers:proRouteHeaders});
-const FORM_FIELDS=['file','listingId','uploadId','altEs','altEn'] as const;
+const FORM_FIELDS=['file','v800','v320','listingId','uploadId','altEs','altEn'] as const;
 const formSchema=z.object({listingId:z.string().uuid(),uploadId:z.string().uuid(),altEs:z.string().max(200).optional(),altEn:z.string().max(200).optional()}).strict();
 const jsonActionSchema=listingMediaMutationSchema.refine(input=>input.action!=='add',{message:'Use the upload'});
 
@@ -68,9 +68,9 @@ export async function POST(req:Request){
 
   // ── add (multipart upload) ──
   let form:FormData;
-  try{form=await proBoundedForm(req,{maxBytes:PHOTO_MAX_BYTES+65_536,maxFiles:1,fields:FORM_FIELDS,maxFileBytes:PHOTO_MAX_BYTES});}
+  try{form=await proBoundedForm(req,{maxBytes:PHOTO_MAX_BYTES+4*1024*1024+65_536,maxFiles:3,fields:FORM_FIELDS,maxFileBytes:PHOTO_MAX_BYTES});}
   catch(e){const status=e instanceof ProBodyError?e.status:400;return fail(status,status===413?'too_large':'invalid',status===413?photoRejectText('too_large',locale):'Revise la foto.');}
-  const file=form.get('file'),fields=formSchema.safeParse(Object.fromEntries([...form.entries()].filter(([k])=>k!=='file')));
+  const file=form.get('file'),fields=formSchema.safeParse(Object.fromEntries([...form.entries()].filter(([k])=>k!=='file'&&k!=='v800'&&k!=='v320')));
   if(!(file instanceof Blob)||!fields.success)return fail(400,'invalid','Revise la foto.');
   const {listingId,uploadId,altEs,altEn}=fields.data;
   const own=await ownListing(a.db,a.user.id,listingId);if(own.error)return own.error;
@@ -88,8 +88,12 @@ export async function POST(req:Request){
   const count=await a.db.from('dir_listing_media').select('id',{count:'exact',head:true}).eq('listing_id',listingId).eq('status','active');
   if(count.error)return dbError(count.error);if((count.count??0)>=30)return fail(409,'listing_media_cap','Alcanzó el máximo de fotos.');
 
-  let codec;try{codec=await pickPhotoCodec();}catch{return fail(503,'unavailable','El procesamiento de fotos no está disponible.');}
-  const processed=await processListingPhoto(new Uint8Array(await file.arrayBuffer()),{photoId,codec});
+  // Browser-made variants (storage plan 2026-11-26) are validated as-is; otherwise a server codec, none in the Worker.
+  const input=new Uint8Array(await file.arrayBuffer()),clientVariants=await clientVariantsOf(form,input);
+  let codec;
+  if(clientVariants)codec=createClientVariantsCodec(clientVariants);
+  else{try{codec=await pickPhotoCodec();}catch(e){return e instanceof NoServerCodecError?fail(422,'photo_browser_prep',photoRejectText('browser_prep',locale)):fail(503,'unavailable','El procesamiento de fotos no está disponible.');}}
+  const processed=await processListingPhoto(input,{photoId,codec});
   if(!processed.ok)return fail(processed.reason==='too_large'?413:processed.reason==='codec'||processed.reason==='metadata'?422:400,
    processed.reason==='metadata'?'listing_media_exif':'photo_'+processed.reason,photoRejectText(processed.reason,locale));
   const media=listingMediaSchema.parse(toListingMediaInput(processed.photo,{altEs,altEn}));

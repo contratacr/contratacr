@@ -14,9 +14,8 @@
   "ai": {
     "binding": "AI"
   },
-  // Cloudflare Images binding for directory photo resizing (owner OK 2026-11-18).
-  // Free plan: 5,000 unique transformations/month; over the limit new uploads
-  // are rejected, never billed (src/lib/directory/photo-codec-cf-images.ts).
+  // Sin binding de Cloudflare Images desde el 2026-11-26 (docs/storage-plan.md): las fotos
+  // llegan ya redimensionadas desde el navegador y next/image va con images.unoptimized.
   // Directory launch flags (owner OK 2026-11-19). Not secrets: same value in test and
   // production. The CI build step sets the same DIR_ENABLED/PRO_ENABLED so pages
   // prerendered at build time agree with the runtime. EMAIL_MODE and the peppers
@@ -25,9 +24,6 @@
     "DIR_ENABLED": "true",
     "PRO_ENABLED": "false",
     "EMAIL_PROVIDER": "brevo"
-  },
-  "images": {
-    "binding": "IMAGES"
   },
   // Caché de datos de Next (unstable_cache) en R2. Sin esto OpenNext usa una
   // caché vacía y cada consulta «en caché» iba a la base en cada visita (el
