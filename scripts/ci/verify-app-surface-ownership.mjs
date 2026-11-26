@@ -53,7 +53,7 @@ const pageRules = [
   [/^\/\[locale\]\/(?:restaurantes|farmacias|supermercados|gasolineras|como-ordenamos)$/, "pro-dir-search.spec.ts"],
   // Sections approved on 2026-11-17 (cafés split out of restaurants, corner stores, hardware, lodging, health, vets,
   // car services, beauty, gyms, tours, banks): listing, kind filter, policy notes and price limits per section.
-  [/^\/\[locale\]\/(?:cafes|pulperias|ferreterias|hospedaje|salud|veterinarias|talleres|belleza|gimnasios|tours|bancos)$/, "pro-dir-verticals.spec.ts"],
+  [/^\/\[locale\]\/(?:cafes|pulperias|ferreterias|hospedaje|salud|veterinarias|talleres|belleza|gimnasios|tours|bancos|parqueos|lavacar)$/, "pro-dir-verticals.spec.ts"],
   // P3: price comparison (supermarkets and OTC pharmacy products), /precios and /en/precios.
   [/^\/\[locale\]\/precios$/, "pro-dir-prices-compare.spec.ts"],
   // IA 2026-11-21: the "Lugares" hub and the "Para negocios y profesionales" entry page.

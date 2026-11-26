@@ -72,7 +72,7 @@ export const PLACE_SECTIONS=[
   kinds:[k('public','Parqueo público','Public parking'),k('covered','Parqueo techado o edificio','Covered or multi-storey parking'),
    k('motorcycle','Parqueo para motos','Motorcycle parking'),k('truck','Parqueo para camiones','Truck parking')]},
  {section:'lavacar',id:'car_wash',nameEs:'Lavacar',nameEn:'Car washes',pathEn:'car-wash',priceMode:null,added:true,policy:{},
-  kinds:[k('car_wash','Lavacar','Car wash'),k('detailing','Detallado y estética automotriz','Car detailing'),k('self_service','Autolavado','Self-service car wash'),
+  kinds:[k('car_wash','Lavado completo','Full-service car wash'),k('detailing','Detallado y estética automotriz','Car detailing'),k('self_service','Autolavado','Self-service car wash'),
    k('motorcycle_wash','Lavado de motos','Motorcycle wash')]},
 ] as const satisfies readonly PlaceSectionDef[];
 
