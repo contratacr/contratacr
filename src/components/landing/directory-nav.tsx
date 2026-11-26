@@ -172,7 +172,7 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
     <section data-home-directory aria-labelledby="ccr-home-directorio" className="bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 text-center sm:mb-8">
-          <h2 id="ccr-home-directorio" className="text-2xl font-extrabold text-[#1a2744] sm:text-3xl">{en ? "Places and businesses" : "Lugares y negocios"}</h2>
+          <h2 id="ccr-home-directorio" className="text-2xl font-extrabold text-[#1a2744] sm:text-3xl">{en ? "Companies" : "Empresas"}</h2>
           <p className="mx-auto mt-2 max-w-2xl text-[15px] text-[#5b6b82] sm:text-base">
             {en ? "Find restaurants, shops and services across Costa Rica: hours, photos, reviews and contact details." : "Encuentre restaurantes, comercios y servicios en todo Costa Rica: horarios, fotos, reseñas y datos de contacto."}
           </p>
@@ -247,7 +247,7 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
           </li>
         ))}
       </ul>
-      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-2xl bg-white py-2 pl-3 pr-1.5 shadow-[0_8px_24px_-10px_rgba(22,37,67,0.45)]")}>
+      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white py-1.5 pl-2 pr-2")}>
         <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
           className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}

@@ -182,7 +182,8 @@
     "publishRequest": "Post a request",
     "findProfessionals": "Find professionals",
     "freeBadge": "Free",
-    "searchBusinesses": "Businesses"
+    "searchBusinesses": "Companies",
+    "searchTopServices": "Most searched professionals"
   },
   "home": {
     "accountDeletion": {

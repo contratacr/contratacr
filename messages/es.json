@@ -172,7 +172,7 @@
     "goToPanel": "Ir a mi panel",
     "places": "Lugares",
     "more": "Más",
-    "forBusiness": "Para negocios y profesionales",
+    "forBusiness": "Para empresas y profesionales",
     "promotions": "Promociones",
     "clientRequests": "Solicitudes de clientes",
     "requests": "Solicitudes",
@@ -182,7 +182,8 @@
     "publishRequest": "Publicar solicitud",
     "findProfessionals": "Buscar profesionales",
     "freeBadge": "Gratis",
-    "searchBusinesses": "Negocios"
+    "searchBusinesses": "Empresas",
+    "searchTopServices": "Profesionales más buscados"
   },
   "home": {
     "accountDeletion": {
@@ -257,7 +258,7 @@
     "resultsIn": "{count, plural, one {# profesional} other {# profesionales}} en {location}",
     "thisArea": "esta área",
     "resultsInCR": "{count, plural, one {# profesional} other {# profesionales}} en Costa Rica",
-    "resultsBusinessesOnly": "Empresas y negocios en Costa Rica",
+    "resultsBusinessesOnly": "Empresas en Costa Rica",
     "list": "Lista",
     "map": "Mapa",
     "close": "Cerrar",
@@ -3964,11 +3965,11 @@
     "workPhotos": "Casos de éxito"
   },
   "businessHub": {
-    "metaTitle": "Para negocios y profesionales",
+    "metaTitle": "Para empresas y profesionales",
     "metaDescription": "Ofrezca sus servicios como profesional o reclame gratis la ficha de su negocio en ContrataCR.",
     "breadcrumbLabel": "Ruta de navegación",
     "home": "Inicio",
-    "title": "Para negocios y profesionales",
+    "title": "Para empresas y profesionales",
     "intro": "Elija cómo quiere que lo encuentren sus clientes.",
     "proTitle": "Soy profesional: ofrecer mis servicios",
     "proB1": "Perfil propio con sus servicios y su zona",

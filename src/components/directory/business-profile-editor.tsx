@@ -51,7 +51,7 @@ export function BusinessProfileEditor({locale,expectedActor,places,placeId}:{loc
  const setDay=(d:number,next:Day)=>setDays(s=>({...s,[d]:next}));
  const note=(where:'contact'|'hours'|'load')=>msg&&msg.where===where?<p role={msg.ok?'status':'alert'} data-business-profile-msg={msg.ok?'ok':'error'} className={`text-sm font-semibold ${msg.ok?'text-emerald-800':'text-red-800'}`}>{msg.text}</p>:null;
  return <div className="space-y-6" data-business-profile={placeId}>
-  {places.length>1&&<nav aria-label={t('Negocios','Businesses')}><ul className="flex flex-wrap gap-2">{places.map(p=><li key={p.id}><a aria-current={p.id===placeId?'page':undefined} className={p.id===placeId?primary:secondary} href={`${prefix}/dashboard/negocio/perfil?lugar=${p.slug}`}>{p.name}</a></li>)}</ul></nav>}
+  {places.length>1&&<nav aria-label={t('Empresas','Companies')}><ul className="flex flex-wrap gap-2">{places.map(p=><li key={p.id}><a aria-current={p.id===placeId?'page':undefined} className={p.id===placeId?primary:secondary} href={`${prefix}/dashboard/negocio/perfil?lugar=${p.slug}`}>{p.name}</a></li>)}</ul></nav>}
   {note('load')}
   {!data?<p role="status">{t('Cargando…','Loading…')}</p>:<>
    <p className="text-sm text-[#52627a]"><a className="font-semibold text-[#162543] underline" href={`${prefix}/lugar/${data.slug}`}>{t('Ver ficha pública de ','Open the public page of ')}{data.name}</a></p>
