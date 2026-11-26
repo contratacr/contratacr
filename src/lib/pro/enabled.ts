@@ -13,7 +13,7 @@ export const PRO_ENABLED=process.env.PRO_ENABLED==='true'||(process.env.PRO_ENAB
 
 /** Path prefixes (without the /en locale prefix) that belong only to Pro. */
 export const PRO_ROUTE_PREFIXES=[
- '/dashboard/pro','/admin/pro','/pro-preview','/contratacr-pro','/pagar','/sitio','/baja-pro','/confirmar-pro','/licitacion-proveedor','/orden-proveedor',
+ '/dashboard/pro','/admin/pro','/herramientas','/pro-preview','/contratacr-pro','/pagar','/sitio','/baja-pro','/confirmar-pro','/licitacion-proveedor','/orden-proveedor',
  '/formulario-contacto','/dashboard/cotizaciones','/dashboard/subcontratista','/dashboard/unirse-proyecto','/dashboard/mi-proyecto',
 ] as const;
 export const PRO_API_PREFIXES=['/api/pro'] as const;

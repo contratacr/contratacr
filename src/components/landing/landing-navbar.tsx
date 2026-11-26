@@ -2802,9 +2802,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                {/* Pro on (test): Herramientas opens one page with every ContrataCR Pro tool plus the free CV and letter. */}
+                {/* Pro on (test): Herramientas opens the plain list of every tool (/herramientas), like the Pro panel. */}
                 {PRO_UI_ENABLED ? (
-                  <Link href="/contratacr-pro" prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
+                  <Link href="/herramientas" prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
                     <DrawerIcon><Wrench /></DrawerIcon>
                     <span className="min-w-0 flex-1 whitespace-nowrap">{t("tools")}</span>
                   </Link>

@@ -4049,5 +4049,11 @@
   "homeFeed": {
     "emptyTitle": "Todavía no hay recomendaciones",
     "emptyBody": "Busque arriba o elija una sección para explorar."
+  },
+  "toolsPage": {
+    "title": "Herramientas",
+    "freeGroup": "Gratis para todos",
+    "cv": "Currículum",
+    "letter": "Carta de presentación"
   }
 }

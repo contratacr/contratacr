@@ -4049,5 +4049,11 @@
   "homeFeed": {
     "emptyTitle": "No recommendations yet",
     "emptyBody": "Search above or pick a section to explore."
+  },
+  "toolsPage": {
+    "title": "Tools",
+    "freeGroup": "Free for everyone",
+    "cv": "Resume",
+    "letter": "Cover letter"
   }
 }

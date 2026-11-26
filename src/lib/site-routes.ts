@@ -38,6 +38,8 @@ export const RUTAS_DEL_SITIO = new Set([
   "lugares", "negocios-y-profesionales",
   // App del directorio (WS5): pestañas Asistente y Yo.
   "asistente", "yo",
+  // Herramientas (2026-11-26): lista simple de todas las herramientas de Pro y las gratis (solo con Pro encendido).
+  "herramientas",
   // Ronda de funciones del directorio (2026-11-17, solo desarrollo): agenda de eventos, páginas de marca, mis listas y
   // listas compartidas (/lista/<token>).
   "eventos", "marca", "listas", "lista",
