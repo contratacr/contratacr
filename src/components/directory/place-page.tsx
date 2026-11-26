@@ -260,12 +260,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   </div>
 
   <footer className="mt-12 space-y-4 border-t border-[#e8edf2] pt-6 text-sm text-slate-600">
-   <section aria-labelledby="place-sources" className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-    <h2 id="place-sources" className="font-semibold text-[#334155]">{t('Fuentes:','Sources:')}</h2>
-    {place.sources.length?<ul className="inline-flex flex-wrap gap-x-3">{place.sources.map(s=><li key={s.name} data-place-source={s.name}>
-     {s.url?<a className={`underline underline-offset-2 ${ring}`} href={s.url} rel="noopener noreferrer" target="_blank">{bilingual(s.attribution,en)}</a>:bilingual(s.attribution,en)} · {bilingual(s.license,en)}</li>)}</ul>
-     :<p>{t('Información aportada a ContrataCR.','Information provided to ContrataCR.')}</p>}
-   </section>
+   {/* Data credit (owner 2026-11-26): one small line. The OSM licence (ODbL) asks for a visible credit where its data is
+       shown; the full detail lives in the Terms. Places without an external source show nothing. */}
+   {place.sources.length>0&&<p data-place-sources className="text-[11.5px] text-slate-400">{t('Datos','Data')}: {place.sources.map((s,i)=><span key={s.name} data-place-source={s.name}>{i?', ':''}{s.url?<a className={`hover:underline ${ring}`} href={s.url} rel="noopener noreferrer" target="_blank">{bilingual(s.attribution,en)}</a>:bilingual(s.attribution,en)}</span>)}</p>}
    <PlaceReportForm slug={place.slug} locale={locale}/>
   </footer>
  </main>;
