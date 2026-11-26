@@ -574,7 +574,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           subía 124px de golpe (salto medido de 0,19 en cada apertura). */}
       <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden />
       {/* Phones (owner 2026-11-26): like the map sections — no bar, one floating search card over the map. */}
-      <DirectoryQuickNav floating={{ title: areaName ? `${placeResults?.label ?? pageTitle} · ${areaName}` : (placeResults?.label ?? pageTitle), listToggle: { list: appEnglish ? "Show list" : "Ver lista", map: appEnglish ? "Show map" : "Ver mapa" } }}/>
+      <DirectoryQuickNav floating={{ title: placeResults?.label ?? pageTitle, subtitle: areaName ?? "Costa Rica", back: appEnglish ? "Back to home" : "Volver al inicio", listToggle: { list: appEnglish ? "Show list" : "Ver lista", map: appEnglish ? "Show map" : "Ver mapa" } }}/>
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as

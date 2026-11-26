@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, ArrowLeft, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -207,7 +207,7 @@ export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasoliner
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
 /** `floating` (map screens, phones): no bar — one white card floats over the map with the brand ▾, the search showing the
  *  section and the businesses are pins only (owner, 2026-11-26). */
-export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string; listToggle?: { list: string; map: string } } }) {
+export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string; subtitle?: string; back?: string; listToggle?: { list: string; map: string } } }) {
   const { directorySections } = useSiteFeatures();
   const pathname = usePathname() ?? "/";
   const locale = useLocale();
@@ -248,12 +248,19 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
         ))}
       </ul>
       <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white py-1.5 pl-2 pr-2")}>
-        <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
-          className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
+        {/* Search and map screens (owner 2026-11-26, like Yelp): ← back to the home instead of the brand menu. */}
+        {floating ? (
+          <Link href="/" prefetch={false} data-quick-nav-back aria-label={floating.back ?? "Inicio"} className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[#162543]">
+            <ArrowLeft className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden />
+          </Link>
+        ) : (
+          <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
+            className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
+        )}
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
           className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left", floating && "border-transparent pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
-          <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />
-          <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? floating.title : unifiedSearchPlaceholder(locale, true)}</span>
+          {!floating && <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />}
+          <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? <><span className="font-extrabold">{floating.title}</span>{floating.subtitle && <span className="ml-1.5 font-medium text-[#6b7a8f]">{floating.subtitle}</span>}</> : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
         {floating?.listToggle && <FloatingListToggle labels={floating.listToggle} />}
       </div>
@@ -305,6 +312,11 @@ function useCollapseOnScroll() {
 /** Professionals search (production has it in its bar): one button that moves the results sheet between map and list. */
 function FloatingListToggle({ labels }: { labels: { list: string; map: string } }) {
   const [list, setList] = useState(false);
+  useEffect(() => {
+    const onSheet = (e: Event) => setList(!!(e as CustomEvent<{ list?: boolean }>).detail?.list);
+    window.addEventListener("ccr:sheet-change", onSheet);
+    return () => window.removeEventListener("ccr:sheet-change", onSheet);
+  }, []);
   return (
     <button type="button" data-quick-nav-list aria-label={list ? labels.map : labels.list}
       onClick={() => { const next = !list; setList(next); window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: next ? "list" : "map" } })); }}

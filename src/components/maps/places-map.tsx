@@ -351,6 +351,18 @@ export function PlacesMap({
     return () => { document.removeEventListener("mouseover", onOver); document.removeEventListener("mouseout", onOut); };
   }, []);
 
+  // The results sheet moved: keep the pins framed in the part of the map that is still visible.
+  useEffect(() => {
+    const onSheet = () => {
+      const ctx = ctxRef.current;
+      if (!ctx || !bare || !boxRef.current) return;
+      const padding = sheetAwarePadding(boxRef.current, 48);
+      ctx.map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, duration: 250 });
+    };
+    window.addEventListener("ccr:sheet-change", onSheet);
+    return () => window.removeEventListener("ccr:sheet-change", onSheet);
+  }, [bare]);
+
   // «Ver en el mapa» on a result card (ccr:places-map-focus {id}): fly to that place and open its pin card.
   useEffect(() => {
     const onFocus = (event: Event) => {

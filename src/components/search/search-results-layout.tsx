@@ -304,6 +304,17 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     return () => window.removeEventListener(APP_RESUME_EVENT, recoverInteractionState);
   }, []);
 
+  // The sheet tells the maps and the floating search card where its top edge is (owner 2026-11-26: like Yelp, the map
+  // re-frames its pins in the part that stays visible, and the card's icon says «map» or «list»).
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const top = Math.round(window.innerHeight * (1 - heightFr));
+      (window as unknown as { __ccrSheetTop?: number }).__ccrSheetTop = top;
+      window.dispatchEvent(new CustomEvent("ccr:sheet-change", { detail: { top, list: heightFr > 0.6 } }));
+    }, 200);
+    return () => window.clearTimeout(id);
+  }, [heightFr]);
+
   useEffect(() => {
     const setSearchView = (event: Event) => {
       const points = mobileSheetSnapPoints();

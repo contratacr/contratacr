@@ -108,6 +108,17 @@ export function SearchMapPanel({ professionals, locale = "es", numbering, focusT
   const mapRef = useRef<HTMLDivElement>(null);
   const libRef = useRef<MapLibreModule | null>(null);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
+  // The results sheet moved: keep the pins framed in the part of the map that is still visible (owner 2026-11-26).
+  useEffect(() => {
+    const onSheet = () => {
+      const map = mapInstanceRef.current;
+      if (!map) return;
+      const padding = sheetAwarePadding(map.getContainer(), 48);
+      map.easeTo({ padding: typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding, duration: 250 });
+    };
+    window.addEventListener("ccr:sheet-change", onSheet);
+    return () => window.removeEventListener("ccr:sheet-change", onSheet);
+  }, []);
   const boundsRef = useRef<LngLatBounds | null>(null);
   const markerCountRef = useRef(0);
   const markersRef = useRef<Marker[]>([]);

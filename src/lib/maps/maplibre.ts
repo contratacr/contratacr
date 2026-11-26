@@ -199,11 +199,14 @@ export function createMap(
 export function sheetAwarePadding(container: HTMLElement, base: number) {
   if (typeof window === "undefined" || !window.matchMedia("(max-width: 1023px)").matches) return base;
   const rect = container.getBoundingClientRect();
-  const sheetTop = window.innerHeight * 0.5;
+  // The results sheet publishes where its top edge is (search-results-layout); 50% of the screen is the old default.
+  const sheetTop = (window as unknown as { __ccrSheetTop?: number }).__ccrSheetTop ?? window.innerHeight * 0.5;
+  // A floating search card over the map (phones, owner 2026-11-26) also covers the top of the map.
+  const top = document.querySelector("[data-quick-nav-floating]") ? Math.max(base, 84) : base;
   const hidden = rect.bottom - sheetTop;
-  if (hidden <= 0 || rect.height <= 0) return base;
-  const bottom = Math.min(Math.round(hidden + base / 2), Math.round(rect.height * 0.7));
-  return { top: base, left: base, right: base, bottom: Math.max(base, bottom) };
+  if (hidden <= 0 || rect.height <= 0) return top === base ? base : { top, left: base, right: base, bottom: base };
+  const bottom = Math.min(Math.round(hidden + base / 2), Math.round(rect.height * 0.8));
+  return { top, left: base, right: base, bottom: Math.max(base, bottom) };
 }
 
 /** Plain-URL directions (no API, no key): Google Maps and Waze open their own app or site. */
