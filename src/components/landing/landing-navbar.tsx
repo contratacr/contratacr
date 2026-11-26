@@ -2820,6 +2820,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Search /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
                 </button>
+                {/* Directory on (owner 2026-11-26): Categorías is the second row, right after Buscar. */}
+                {directoryOn && (
+                  <Link href="/categorias" prefetch={true} onClick={cerrarCajon} className={claseCajon("/categorias")}>
+                    <DrawerIcon><Compass /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{t("categoriesMenu")}</span>
+                  </Link>
+                )}
                 {/* Desde el menú flotante (30-sep-2026) Proyectos, Promociones y
                     Empleos viven aquí también en la app: abajo quedan buscar,
                     el asistente, crear, notificaciones y el panel. */}
@@ -2876,10 +2883,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )}
                 </div>
                 )}
+                {!directoryOn && (
                   <Link href={directoryOn ? "/categorias" : "/servicios"} prefetch={true} onClick={cerrarCajon} className={claseCajon(directoryOn ? "/categorias" : "/servicios")}>
                     <DrawerIcon><Compass /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{directoryOn ? t("categoriesMenu") : t("categories")}</span>
                   </Link>
+                )}
                 {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
                     app: en la web el asistente no responde. */}
                 {nativeHeaderShell && (
