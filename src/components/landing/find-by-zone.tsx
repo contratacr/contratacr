@@ -8,6 +8,8 @@ import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { CR_PROVINCE_PATHS, CR_MAP_VIEWBOX } from "@/lib/data/cr-map-paths";
 import type { ZoneCoverage } from "@/lib/queries/professionals";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { useSiteFeatures } from "@/components/site-features";
+import { Link } from "@/i18n/navigation";
 
 const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
 
@@ -16,6 +18,7 @@ const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border
 // + REAL coverage (computed server-side; never a fabricated count).
 export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
   const t = useTranslations("landing.zones");
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
   const router = useRouter();
   const [activeId, setActiveId] = useState(PROVINCES[0].id);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -145,6 +148,12 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
               >
                 {t("viewPros")} <ArrowRight className="h-4 w-4" />
               </button>
+              {/* Directory on: the companies of the area are one tap away too. */}
+              {directoryOn && (
+                <Link href="/categorias" prefetch={false} data-zone-companies className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-white px-4 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]">
+                  {t("viewCompanies")} <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
 
             {count > 0 ? (

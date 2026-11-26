@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { GuiaDeLaApp, type PasoDeLaGuia } from "@/components/landing/guia-de-la-app";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 /* «Todo ContrataCR en tu teléfono»: la guía de la app con un teléfono que
    muestra la pantalla REAL de cada cosa que se puede hacer (buscar
@@ -8,15 +9,19 @@ import { GuiaDeLaApp, type PasoDeLaGuia } from "@/components/landing/guia-de-la-
    sin enviar demostraciones. */
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
-  const pasos: PasoDeLaGuia[] = (["profesionales", "proyectos", "promociones", "empleos"] as const).map((clave) => ({
+  // Directory on (test, owner 2026-11-26): ContrataCR is professionals AND companies, so the guide gets an Empresas step.
+  // Its own video is recorded once the directory is finished; until then it shows the search video and poster.
+  const directoryOn = sitemapSections().length > 0;
+  const claves = directoryOn ? (["profesionales", "empresas", "proyectos", "promociones", "empleos"] as const) : (["profesionales", "proyectos", "promociones", "empleos"] as const);
+  const pasos: PasoDeLaGuia[] = claves.map((clave) => ({
     clave,
     titulo: t(`guia.${clave}.titulo`),
     pestana: t(`guia.${clave}.pestana`),
     texto: t(`guia.${clave}.texto`),
     cta: t(`guia.${clave}.cta`),
-    href: { profesionales: "/profesionales", proyectos: "/publicar-solicitud", empleos: "/empleos", promociones: "/promociones" }[clave],
-    video: `/guia/${clave}.mp4?v=20261117-solicitudes`,
-    poster: `/guia/${clave}.jpg?v=20261117-solicitudes`,
+    href: { profesionales: "/profesionales", empresas: "/categorias", proyectos: "/publicar-solicitud", empleos: "/empleos", promociones: "/promociones" }[clave],
+    video: `/guia/${clave === "empresas" ? "profesionales" : clave}.mp4?v=20261117-solicitudes`,
+    poster: `/guia/${clave === "empresas" ? "profesionales" : clave}.jpg?v=20261117-solicitudes`,
     alt: t(`guia.${clave}.alt`),
   }));
 

@@ -2964,7 +2964,8 @@
       "useLocation": "Usar mi ubicación",
       "geoUnsupported": "Su navegador no permite ubicación. Elija su provincia en el mapa.",
       "geoFailed": "No pudimos obtener su ubicación. Elija su provincia en el mapa.",
-      "disclaimer": "No prometemos cobertura en todo el país: le mostramos solo a los profesionales que realmente trabajan en su zona."
+      "disclaimer": "No prometemos cobertura en todo el país: le mostramos solo a los profesionales que realmente trabajan en su zona.",
+      "viewCompanies": "Ver empresas cerca"
     },
     "howItWorks": {
       "eyebrow": "Cómo funciona",
@@ -2999,6 +3000,13 @@
           "cta": "Ver promociones",
           "alt": "Promociones de profesionales en la app de ContrataCR",
           "pestana": "Promociones"
+        },
+        "empresas": {
+          "titulo": "Encuentre empresas",
+          "texto": "Restaurantes, farmacias, gasolineras y más en el mapa, con horario, reseñas y cómo llegar.",
+          "cta": "Ver empresas",
+          "alt": "Empresas en el mapa de la app de ContrataCR",
+          "pestana": "Empresas"
         }
       }
     },

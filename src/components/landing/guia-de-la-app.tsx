@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BriefcaseBusiness, ClipboardList, Search, Tag, ArrowRight } from "lucide-react";
+import { BriefcaseBusiness, ClipboardList, Search, Store, Tag, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 export type PasoDeLaGuia = {
-  clave: "profesionales" | "proyectos" | "empleos" | "promociones";
+  clave: "profesionales" | "empresas" | "proyectos" | "empleos" | "promociones";
   titulo: string;
   pestana: string;
   texto: string;
@@ -19,7 +19,7 @@ export type PasoDeLaGuia = {
 
 // El azul del paso elegido va EN LÍNEA: no depende de que la hoja de estilos esté al día.
 const CAJA_ACTIVA = { background: "linear-gradient(135deg, #33b8ea 0%, #0089c2 100%)", boxShadow: "0 10px 22px -10px rgba(0, 137, 194, 0.8)" } as const;
-const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: BriefcaseBusiness, promociones: Tag } as const;
+const ICONOS = { profesionales: Search, empresas: Store, proyectos: ClipboardList, empleos: BriefcaseBusiness, promociones: Tag } as const;
 
 // LA GUÍA DE LA APP: cuatro cosas que se hacen en ContrataCR y, al lado, el
 // teléfono con la pantalla REAL de cada una. Avanza sola; en cuanto la persona
@@ -184,7 +184,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
 
       {/* En el teléfono y la tableta: pestañas con ícono ENCIMA del aparato, como
           las de «Los servicios más buscados». La raya de abajo se llena con el video. */}
-      <div ref={pestanasRef} role="tablist" className="-mx-4 grid grid-cols-4 border-b border-[#e3e9ef] px-2 lg:hidden">
+      <div ref={pestanasRef} role="tablist" className={cn("-mx-4 grid border-b border-[#e3e9ef] px-2 lg:hidden", pasos.length > 4 ? "grid-cols-5 px-1" : "grid-cols-4")}>
         {pasos.map((p, i) => {
           const Icono = ICONOS[p.clave];
           const elegido = i === activo;
@@ -195,7 +195,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               role="tab"
               aria-selected={elegido}
               onClick={() => elegir(i)}
-              className={cn("relative flex min-w-0 flex-col items-center gap-1.5 pb-3 pt-1 text-[13px] font-semibold transition-colors", elegido ? "text-[#009FD9]" : "text-[#6b7686]")}
+              className={cn("relative flex min-w-0 flex-col items-center gap-1.5 pb-3 pt-1 font-semibold transition-colors", pasos.length > 4 ? "text-[11.5px] tracking-[-0.01em]" : "text-[13px]", elegido ? "text-[#009FD9]" : "text-[#6b7686]")}
             >
               <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
                 <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
