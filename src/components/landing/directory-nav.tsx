@@ -10,7 +10,7 @@ import { DIRECTORY_SECTION_ICONS, groupPlaces, curatedGroupItems, pick } from "@
 import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
-import { ContrataCRMark } from "@/components/brand/brand-logo";
+import { BrandMenuMark } from "@/components/layout/brand-menu-mark";
 
 // Public navigation to the place directory (2026-11-18): the «Categorías» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
@@ -247,7 +247,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
       </ul>
       <div className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
         <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
-          className="group -ml-1 inline-flex h-10 shrink-0 items-center gap-0.5 rounded-xl pl-1 pr-0.5"><ContrataCRMark /><ChevronDown className="h-4 w-4 text-[#162543] transition-transform duration-200 group-active:-rotate-90" strokeWidth={2.5} aria-hidden /></button>
+          className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
           className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
           <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />

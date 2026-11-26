@@ -177,6 +177,29 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
     });
   }, []);
 
+  const renderServiciosSearch = (inline: boolean) => (
+            <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className={inline ? "" : "px-4 pb-4"}>
+              <div className="ccr-section-search flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
+                <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setMobileGroupKey(null);
+                  }}
+                  placeholder={serviceSearchPlaceholder}
+                  aria-label={serviceSearchPlaceholder}
+                  className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                />
+                {query && (
+                  <button type="button" onClick={clearMobileSearch} className="grid h-8 w-8 place-items-center rounded-full text-[#8b96a5]" aria-label={tp("clearSearch")}>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </form>
+  );
   // Owner, 2026-11-26: on phones Categorías shows the business tiles plus a Profesionales tile that opens the service groups.
   const [vistaMovil, setVistaMovil] = useState<"empresas" | "profesionales">("empresas");
   const conPestanas = placeSectionsShown.length > 0;
@@ -217,7 +240,8 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-                <SectionBrand title={servicesTitle} as="p" />
+                <SectionBrand title={servicesTitle} as="p" compact={directorySections.length > 0} />
+                {directorySections.length > 0 && <div data-section-header-search className="min-w-0 flex-1">{renderServiciosSearch(true)}</div>}
                 {/* El icono de Mensajes es de la barra de la APP: en la web se
                     llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -233,27 +257,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               </div>
             )}
 
-            <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
-              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <Search className="h-5 w-5 shrink-0 text-[#162543]" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value);
-                    setMobileGroupKey(null);
-                  }}
-                  placeholder={serviceSearchPlaceholder}
-                  aria-label={serviceSearchPlaceholder}
-                  className="h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
-                />
-                {query && (
-                  <button type="button" onClick={clearMobileSearch} className="grid h-8 w-8 place-items-center rounded-full text-[#8b96a5]" aria-label={tp("clearSearch")}>
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </form>
+            {!(directorySections.length > 0) && renderServiciosSearch(false)}
           </header>
 
           {hasQuery && matchedPlaceSections.length > 0 && !mobileGroup ? (

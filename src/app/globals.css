@@ -2561,8 +2561,10 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
   /* Its menu button is the symbol on the LEFT, so the menu slides in from the left. */
   body.ccr-dir-header .ccr-menu-completo:not(.ccr-menu-abierto),
-  html.ccr-brand-menu .ccr-menu-completo:not(.ccr-menu-abierto) { transform: translate3d(-100%, 0, 0); }
+  html:has([data-ccr-brand-menu]) .ccr-menu-completo:not(.ccr-menu-abierto) { transform: translate3d(-100%, 0, 0); }
   /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */
-  html.ccr-brand-menu [data-ccr-menu-burger] { display: none !important; }
+  html:has([data-ccr-brand-menu]) [data-ccr-menu-burger] { display: none !important; }
+  /* The search beside the brand looks like the home header's pill. */
+  [data-section-header-search] .ccr-section-search { border-radius: 9999px; border-color: #d7e1ea; box-shadow: 0 6px 18px -10px rgba(22,37,67,0.45); padding-left: 0.875rem; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }

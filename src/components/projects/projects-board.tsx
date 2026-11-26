@@ -2,6 +2,7 @@
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { ProjectQuoteAction } from "./project-quote-action";
 import { PromotionHistory } from "@/components/pro/promotion-history";
+import { useSiteFeatures } from "@/components/site-features";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback } from "@/components/marketplace/feed-loading";
@@ -367,6 +368,8 @@ export function ProjectsBoard({
   /** Los que publicó quien mira: su ficha no ofrece escribirse ni guardarse. */
   misProyectos?: string[];
 }) {
+  // Directory on (test), phones: brand ▾ and this screen's search share the first row, like the home header.
+  const dirHeader = useSiteFeatures().directorySections.length > 0;
   const locale = marketplaceLocale(useLocale());
   const en = locale === "en";
   const copy = COPY[locale];
@@ -577,7 +580,8 @@ export function ProjectsBoard({
           >
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
-          <SectionBrand title={copy.titulo} />
+          <SectionBrand title={copy.titulo} compact={dirHeader} />
+          {dirHeader && <div data-section-header-search className="min-w-0 flex-1">{buscador}</div>}
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {/* Sin sesión va la cuenta; la campana queda para quien ya entró. */}
             {/* En la app Notificaciones vive en el menú de abajo. */}
@@ -587,7 +591,7 @@ export function ProjectsBoard({
         )}
         {!detalle && (
           <>
-            <div className="px-4 pb-3">{buscador}</div>
+            {!dirHeader && <div className="px-4 pb-3">{buscador}</div>}
             {filtros && <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{filtros}</ScrollRail>}
             <div className="px-4 pb-3">{acciones}</div>
           </>

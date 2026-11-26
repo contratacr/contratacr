@@ -1,5 +1,6 @@
 "use client";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
+import { useSiteFeatures } from "@/components/site-features";
 import { SectionBrand } from "@/components/layout/section-brand";
 import { useMarketplaceFeed } from "@/hooks/use-marketplace-feed";
 import { MarketplaceFeedFeedback, MarketplaceContactBoundary } from "@/components/marketplace/feed-loading";
@@ -158,6 +159,8 @@ export function OffersBoard({
   currentUserId = null,
   serviceOptions: publishServiceOptions,
 }: Props) {
+  // Directory on (test), phones: brand ▾ and this screen's search share the first row, like the home header.
+  const dirHeader = useSiteFeatures().directorySections.length > 0;
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
@@ -383,7 +386,8 @@ export function OffersBoard({
             >
               <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
             </button>
-            <SectionBrand title={copy.offers} />
+            <SectionBrand title={copy.offers} compact={dirHeader} />
+          {dirHeader && <div data-section-header-search className="min-w-0 flex-1">{renderSearch()}</div>}
             {/* El icono de Mensajes es de la barra de la APP: en la web se llega
                 desde el menú y desde el panel. */}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -400,7 +404,7 @@ export function OffersBoard({
               )}
             </div>
           </div>
-          <div className="px-4 pb-3">{renderSearch()}</div>
+          {!dirHeader && <div className="px-4 pb-3">{renderSearch()}</div>}
           {hayFiltros && <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{renderFilters()}</ScrollRail>}
           <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">
             {renderActions()}
