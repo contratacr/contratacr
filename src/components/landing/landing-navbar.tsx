@@ -2424,7 +2424,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {compactSuggestions.length > 0 && (
                     <div className="space-y-1">
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                      {placeSuggestions.length > 0 ? (locale === "en" ? "Services" : "Servicios") : (locale === "en" ? "Suggested services" : "Servicios sugeridos")}
+                      {directoryOn ? t("searchPros") : placeSuggestions.length > 0 ? (locale === "en" ? "Services" : "Servicios") : (locale === "en" ? "Suggested services" : "Servicios sugeridos")}
                     </p>
                     {compactSuggestions.map((suggestion, index) => (
                       <button
@@ -2589,6 +2589,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       casa (hay abogados, contadores, desarrollo web). Van
                       DESPUÉS de los recientes: quien ya buscó algo ve primero
                       lo suyo, y de todos modos tiene ideas debajo. */}
+                  {directoryOn && searchFocused && !searchQuery.trim() && (
+                    <div data-search-pro-chips className="pb-3">
+                      <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">{t("searchPros")}</p>
+                      <div className="-mx-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {serviciosMasBuscados.map((id) => (
+                          <button key={id} type="button" data-search-pro-chip={id} onClick={() => selectNativeCompactSuggestion(id)}
+                            className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dbe5ee] bg-white px-3 text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]">
+                            <UserRound className="h-4 w-4 text-[#009FD9]" aria-hidden />{getCategoryLabel(id, locale)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {/* Directory on (test): quick access to every business section, above the most searched services. */}
                   {directoryOn && searchFocused && !searchQuery.trim() && (
                     <div data-search-place-chips className="pb-3">
@@ -2614,10 +2627,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </div>
                     </div>
                   )}
-                  {searchFocused && !searchQuery.trim() && (
+                  {!directoryOn && searchFocused && !searchQuery.trim() && (
                     <div className="space-y-1">
                       <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                        {directoryOn ? t("searchTopServices") : t("masBuscados")}
+                        {t("masBuscados")}
                       </p>
                       {serviciosMasBuscados.map((id) => (
                         <button
