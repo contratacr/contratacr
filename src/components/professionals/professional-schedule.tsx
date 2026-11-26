@@ -475,7 +475,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   );
   // Directory on (test, owner 2026-11-26, like Google Maps): small chips with icon and word — WhatsApp (green, the main
   // contact), Llamar and Reseña — in one row that slides if it does not fit.
-  const chip = "!h-8 !w-auto shrink-0 whitespace-nowrap !rounded-full !px-3 !text-[12.5px] !font-semibold";
+  const chip = "!h-8 !w-auto shrink-0 whitespace-nowrap !rounded-full !border-0 !bg-[#eaf7fd] !px-3 !text-[12.5px] !font-bold !text-[#0083b0] hover:!bg-[#d9f0fb]";
   const contactButtons = !directoryOn ? contactButtonsClassic : (
     <div className="scrollbar-none -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-pro-card-actions>
       <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="search" className={chip} buttonLabel="WhatsApp" />
