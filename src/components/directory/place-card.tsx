@@ -3,7 +3,8 @@ import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directo
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
 import {checkPlacePhone} from '@/lib/directory/phone';
-import {placeCardActions} from '@/lib/directory/place-actions';
+import {placeCardActions,resolvePlaceAction} from '@/lib/directory/place-actions';
+import {PlaceMapFocusButton} from './place-map-focus-button';
 import {MapPin,Navigation} from 'lucide-react';
 import {PlaceDirectionsMenu} from './place-directions-menu';
 import {actionIcon} from './place-action-buttons';
@@ -103,7 +104,10 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
  const phone=checkPlacePhone(item.phone);
- const cardActions=placeCardActions({slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location});
+ const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
+ const cardActions=placeCardActions(actionInput);
+ const contactPair=(['whatsapp','call'] as const).flatMap(id=>resolvePlaceAction(id,actionInput)??[]);
+ const contact=contactPair.length?contactPair:cardActions.filter(a=>a.id==='directions').slice(0,1);
  const verified=VERIFIED.has(level);
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
@@ -117,9 +121,10 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
      <ResultThumb src={placePhotoSrc(extra.photo,320)} priority={rank!=null&&rank<=2} rank={rank} fallback={null}/>
     </span>
     // Without an approved photo the card is text-first: a compact category badge (no photo-sized empty box).
+    // Without an approved photo (owner 2026-11-26): its position in the results, large, the same number as its map pin.
+    :rank!=null?<span aria-hidden="true" className="mt-0.5 grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#eef3f7] text-[20px] font-extrabold text-[#162543]" data-place-thumb="rank">{rank}</span>
     :<span aria-hidden="true" className="relative mt-0.5 shrink-0" data-place-thumb="badge">
      <HeroTile verticalId={item.vertical.id} className="h-10 w-10 rounded-xl lg:h-11 lg:w-11" iconClass="h-5 w-5"/>
-     {rank!=null&&<span className="absolute -left-1.5 -top-1.5 z-10 hidden h-[20px] w-[20px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white lg:flex">{rank}</span>}
     </span>}
    <div className="flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex min-w-0 items-start gap-3 lg:items-center">
@@ -145,13 +150,20 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
-  {cardActions.length>0&&<div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions data-place-card-actions={cardActions.map(a=>a.id).join(' ')}>
-   {cardActions.map((a,i)=>{
-    const cls=i===0?actionPrimary:actionSecondary;
-    if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${cls} relative z-10`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
-    return <a key={a.id} className={cls} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
-   })}
-  </div>}
+  {/* Owner 2026-11-26: one big contact button (WhatsApp and Llamar side by side when it has both; «Cómo llegar» when it has
+      neither), then «Escribir reseña» and «Ver en el mapa». */}
+  <div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions data-place-card-actions={contact.map(a=>a.id).join(' ')}>
+   <div className={contact.length>1?'grid grid-cols-2 gap-2':'flex'}>
+    {contact.map(a=>{
+     if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${actionPrimary} relative z-10 w-full`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
+     return <a key={a.id} className={`${actionPrimary} w-full ${a.id==='whatsapp'?'!bg-[#25D366] hover:!bg-[#1ebe5b]':''}`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
+    })}
+   </div>
+   <div className="flex gap-2">
+    <a className={`${actionSecondary} flex-1`} href={`${href}#escribir-resena`} data-place-action="review">{t('Escribir reseña','Write a review')}</a>
+    {item.location&&<PlaceMapFocusButton id={item.slug} label={t('Ver en el mapa','Show on the map')} className={`${actionSecondary} relative z-10 !w-12 shrink-0 !px-0 lg:hidden`}/>}
+   </div>
+  </div>
   {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;

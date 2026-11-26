@@ -351,6 +351,20 @@ export function PlacesMap({
     return () => { document.removeEventListener("mouseover", onOver); document.removeEventListener("mouseout", onOut); };
   }, []);
 
+  // «Ver en el mapa» on a result card (ccr:places-map-focus {id}): fly to that place and open its pin card.
+  useEffect(() => {
+    const onFocus = (event: Event) => {
+      const id = (event as CustomEvent<{ id?: string }>).detail?.id;
+      const ctx = ctxRef.current;
+      const p = id ? points.find((x) => x.id === id) : null;
+      if (!ctx || !p) return;
+      ctx.map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(ctx.map.getZoom(), 16), duration: 600 });
+      window.setTimeout(() => { if (ctxRef.current) openPopup(ctxRef.current, p); }, 650);
+    };
+    window.addEventListener("ccr:places-map-focus", onFocus);
+    return () => window.removeEventListener("ccr:places-map-focus", onFocus);
+  }, [points]);
+
   if (points.length === 0) return null;
   return (
     <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length} data-map-state={state} onMouseMove={(e) => ctxRef.current && hoverProximity(ctxRef.current, e)} onMouseLeave={() => ctxRef.current && hidePopup(ctxRef.current)}>
