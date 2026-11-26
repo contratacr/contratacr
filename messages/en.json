@@ -4043,5 +4043,19 @@
     "freeToolsSub": "You do not need to be a professional to use them.",
     "freeTool_cv": "Create a resume",
     "freeTool_letter": "Create a cover letter"
+  },
+  "homeFeed": {
+    "exploring": "Exploring:",
+    "country": "Costa Rica",
+    "emptyTitle": "No recommendations yet",
+    "emptyBody": "Search above or pick a section to explore.",
+    "topPros": "Top-rated professionals",
+    "seeAll": "See all",
+    "top_restaurantes": "Top-rated restaurants",
+    "top_cafes": "Top-rated cafés",
+    "top_farmacias": "Top-rated pharmacies",
+    "top_supermercados": "Top-rated supermarkets",
+    "top_talleres": "Top-rated auto repair",
+    "top_belleza": "Top-rated beauty"
   }
 }

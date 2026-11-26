@@ -4043,5 +4043,19 @@
     "freeToolsSub": "No necesita ser profesional para usarlas.",
     "freeTool_cv": "Crear currículum",
     "freeTool_letter": "Crear carta de presentación"
+  },
+  "homeFeed": {
+    "exploring": "Explorando:",
+    "country": "Costa Rica",
+    "emptyTitle": "Todavía no hay recomendaciones",
+    "emptyBody": "Busque arriba o elija una sección para explorar.",
+    "topPros": "Profesionales mejor calificados",
+    "seeAll": "Ver todos",
+    "top_restaurantes": "Restaurantes mejor calificados",
+    "top_cafes": "Cafés mejor calificados",
+    "top_farmacias": "Farmacias mejor calificadas",
+    "top_supermercados": "Supermercados mejor calificados",
+    "top_talleres": "Talleres mejor calificados",
+    "top_belleza": "Belleza mejor calificada"
   }
 }

@@ -1,5 +1,6 @@
 import { Star, ChevronRight, MapPin } from "lucide-react";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { HomeFeedLocation } from "@/components/landing/home-feed-location";
 import { Link } from "@/i18n/navigation";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -16,25 +17,32 @@ import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 export async function HomeFeed() {
   const locale = await getLocale();
   const en = locale === "en";
-  const [pros, restaurantes, cafes] = await Promise.all([
-    topProfessionals(),
-    loadTopPlaces("restaurantes"),
-    loadTopPlaces("cafes"),
-  ]);
+  const t = await getTranslations("homeFeed");
+  const [pros, ...places] = await Promise.all([topProfessionals(), ...FEED_SECTIONS.map((s) => loadTopPlaces(s))]);
+  const empty = pros.length === 0 && places.every((p) => p.length === 0);
   return (
-    <div data-home-feed className="space-y-6 pb-4 pt-4">
-      <Band title={en ? "Top-rated professionals" : "Profesionales mejor calificados"} href="/profesionales" all={en ? "See all" : "Ver todos"} show={pros.length > 0}>
+    <div data-home-feed className="space-y-6 pb-8 pt-4">
+      <HomeFeedLocation />
+      {empty && (
+        <div className="px-4 pt-6">
+          <h2 className="text-[22px] font-extrabold leading-tight text-[#162543]">{t("emptyTitle")}</h2>
+          <p className="mt-2 text-[15px] text-[#526277]">{t("emptyBody")}</p>
+        </div>
+      )}
+      <Band title={t("topPros")} href="/profesionales" all={t("seeAll")} show={pros.length > 0}>
         {pros.map((p) => <ProCard key={p.id} p={p} locale={locale} />)}
       </Band>
-      <Band title={en ? "Top-rated restaurants" : "Restaurantes mejor calificados"} href="/restaurantes" all={en ? "See all" : "Ver todos"} show={restaurantes.length > 0}>
-        {restaurantes.map((p) => <PlaceCardMini key={p.slug} p={p} en={en} />)}
-      </Band>
-      <Band title={en ? "Top-rated cafés" : "Cafés mejor calificados"} href="/cafes" all={en ? "See all" : "Ver todos"} show={cafes.length > 0}>
-        {cafes.map((p) => <PlaceCardMini key={p.slug} p={p} en={en} />)}
-      </Band>
+      {FEED_SECTIONS.map((s, n) => (
+        <Band key={s} title={t(`top_${s}`)} href={`/${s}`} all={t("seeAll")} show={places[n].length > 0}>
+          {places[n].map((p) => <PlaceCardMini key={p.slug} p={p} en={en} />)}
+        </Band>
+      ))}
     </div>
   );
 }
+
+/** Business bands of the feed, in order; one with no reviewed place is not drawn. */
+const FEED_SECTIONS = ["restaurantes", "cafes", "farmacias", "supermercados", "talleres", "belleza"] as const;
 
 async function topProfessionals(): Promise<ProfessionalCardData[]> {
   try {
@@ -56,7 +64,7 @@ function Band({ title, href, all, show, children }: { title: string; href: strin
         <h2 className="text-[18px] font-extrabold leading-tight text-[#162543]">{title}</h2>
         <Link href={href} prefetch={false} className="inline-flex items-center gap-0.5 text-[14px] font-bold text-[#0083b0]">{all}<ChevronRight className="h-4 w-4" aria-hidden /></Link>
       </div>
-      <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{children}</ul>
+      <ul className="flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{children}</ul>
     </section>
   );
 }

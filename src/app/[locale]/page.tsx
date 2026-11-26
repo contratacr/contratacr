@@ -115,7 +115,9 @@ export default async function HomePage({
         {/* Hero: rotating headline + primary search. */}
         {/* Directory on, phones: the header already has the search, so the page opens on recommendations (Yelp style). */}
         {directoryOn && <div className="lg:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
-        <div className={directoryOn ? "hidden lg:block" : undefined}><LandingHero /></div>
+        {/* Directory on, phones: the page is ONLY the header and the feed, like Yelp; the production landing stays on desktop. */}
+        <div className={directoryOn ? "hidden lg:block" : undefined}>
+        <LandingHero />
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
@@ -143,11 +145,14 @@ export default async function HomePage({
             __html: `try{document.querySelectorAll(".fade-in-up").forEach(function(e){if(e.getBoundingClientRect().top<innerHeight)e.classList.add("visible")})}catch(e){}`,
           }}
         />
+        </div>
 
       </main>
 
-      <AppDownloadSection />
-      <LandingFooter />
+      <div className={directoryOn ? "hidden lg:block" : undefined}>
+        <AppDownloadSection />
+        <LandingFooter />
+      </div>
     </div>
   );
 }
