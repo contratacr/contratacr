@@ -8,7 +8,7 @@ import { opcionesDeFiltro } from "@/lib/search/opciones-de-filtro";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const limitado = enforceRateLimit(request, "buscar-opciones", 60, 60_000);
+  const limitado = await enforceRateLimit(request, "buscar-opciones", 60, 60_000);
   if (limitado) return limitado;
   try {
     const opciones = await opcionesDeFiltro();
