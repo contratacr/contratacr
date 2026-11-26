@@ -19,7 +19,7 @@ const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border
 // + REAL coverage (computed server-side; never a fabricated count).
 const ZONE_SECTIONS = ["restaurantes", "farmacias", "supermercados", "gasolineras", "cafes", "talleres", "ferreterias", "belleza", "veterinarias"];
 
-export function FindByZone({ coverage, companies = null }: { coverage: ZoneCoverage; companies?: Record<string, number> | null }) {
+export function FindByZone({ coverage, companies = null, pros = null }: { coverage: ZoneCoverage; companies?: Record<string, number> | null; pros?: Record<string, number> | null }) {
   const t = useTranslations("landing.zones");
   const { directorySections } = useSiteFeatures();
   const directoryOn = directorySections.length > 0;
@@ -153,7 +153,10 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
                   {directoryOn && kind === "companies" ? (
                     <span className="block text-[12px] font-semibold text-[#0089bb]" data-zone-companies-count>{t("companiesCount", { count: companies?.[province.id] ?? 0 })}</span>
                   ) : count > 0 ? (
-                    <span className="block text-[12px] font-semibold text-[#0089bb]">{t("coverageCount", { count })}</span>
+                    <span className="block text-[12px] font-semibold text-[#0089bb]">
+                      {directoryOn && pros && (pros[province.id] ?? 0) > 0 && <>{t("prosCount", { count: pros[province.id] })} · </>}
+                      {t("coverageCount", { count })}
+                    </span>
                   ) : (
                     <span className="block text-[12px] font-medium text-[#68778d]">{t("noPros")}</span>
                   )}

@@ -119,8 +119,8 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
 async function HomeZoneCoverage() {
   // Directory on (owner 2026-11-26): the zones block also says how many companies each province has.
   const directoryOn = sitemapSections().length > 0;
-  const [coverage, companies] = await Promise.all([getZoneCoverage(), directoryOn ? companiesByProvince() : Promise.resolve(null)]);
-  return <FindByZone coverage={coverage} companies={companies} />;
+  const [coverage, companies, pros] = await Promise.all([getZoneCoverage(), directoryOn ? companiesByProvince() : Promise.resolve(null), directoryOn ? prosByProvince() : Promise.resolve(null)]);
+  return <FindByZone coverage={coverage} companies={companies} pros={pros} />;
 }
 
 const companiesByProvince = unstable_cache(async (): Promise<Record<string, number> | null> => {
@@ -135,6 +135,21 @@ const companiesByProvince = unstable_cache(async (): Promise<Record<string, numb
     return null;
   }
 }, ["home-companies-by-province-v1"], { revalidate: 600 });
+
+/** Published professionals whose base province is each province (same visibility rule as the public listings). */
+const prosByProvince = unstable_cache(async (): Promise<Record<string, number> | null> => {
+  try {
+    const db = createAdminClient();
+    const entries = await Promise.all(PROVINCES.map(async (p) => {
+      const { count, error } = await db.from("professionals").select("id", { count: "exact", head: true })
+        .eq("is_banned", false).eq("oculto_del_buscador", false).neq("verification_status", "rejected").eq("provincia_id", p.id);
+      return [p.id, error ? 0 : count ?? 0] as const;
+    }));
+    return Object.fromEntries(entries);
+  } catch {
+    return null;
+  }
+}, ["home-pros-by-province-v1"], { revalidate: 600 });
 
 export default async function HomePage({
   searchParams,

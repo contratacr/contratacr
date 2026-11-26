@@ -3002,7 +3002,8 @@
       "kindPros": "Professionals",
       "kindCompanies": "Companies",
       "companiesIn": "Companies in {province}",
-      "viewCompaniesAll": "See all categories"
+      "viewCompaniesAll": "See all categories",
+      "prosCount": "{count, plural, one {# professional} other {# professionals}}"
     },
     "howItWorks": {
       "eyebrow": "How it works",
