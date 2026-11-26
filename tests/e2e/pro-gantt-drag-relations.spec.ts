@@ -29,12 +29,15 @@ test('Gantt: drag a relation between bars and drag a key date',async({page},info
   await gotoOK(page,`/es/dashboard/pro?`+new URLSearchParams({tab:'pro_agenda',cita:workId,vistaTrabajo:'schedule'}));
   const section=page.locator('[data-project-schedule]');await expect(section).toBeVisible({timeout:120000});
   const chart=section.locator('[data-schedule-gantt]');await expect(chart.locator('[data-schedule-bar]')).toHaveCount(2);
+  // While a save or its follow-up refresh is in flight the chart is busy and its handles are disabled, so a drag started then
+  // is ignored on purpose. Each drag waits for the chart to be idle again.
+  const idle=()=>expect(section).toHaveAttribute('data-gantt-busy','false',{timeout:60000});await idle();
   const handle=chart.locator(`[data-gantt-link-handle="${A.id}"]`),target=chart.locator(`[data-schedule-bar="${C.id}"]`);
   await handle.scrollIntoViewIfNeeded();await target.scrollIntoViewIfNeeded();
   const from=(await handle.boundingBox())!,to=(await target.boundingBox())!;
   await page.mouse.move(from.x+from.width/2,from.y+from.height/2);await page.mouse.down();await page.mouse.move(to.x+to.width/2,to.y+to.height/2,{steps:8});await page.mouse.up();
   await expect.poll(async()=>(await gantt()).tasks.find(t=>t.id===C.id)!.dependsOn,{timeout:60000}).toEqual([A.id]);
-  const diamond=chart.locator(`[data-schedule-milestone="${milestoneId}"]`);await diamond.scrollIntoViewIfNeeded();
+  await idle();const diamond=chart.locator(`[data-schedule-milestone="${milestoneId}"]`);await expect(diamond).toBeEnabled();await diamond.scrollIntoViewIfNeeded();
   const box=(await diamond.boundingBox())!;
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+120,box.y+box.height/2,{steps:8});await page.mouse.up();
   await expect.poll(async()=>(await gantt()).milestones.find(m=>m.id===milestoneId)!.date,{timeout:60000}).not.toBe(original);
