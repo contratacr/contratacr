@@ -2924,7 +2924,9 @@
       "puertaServicio": "Contratar un servicio",
       "puertaLugar": "Explorar categorías",
       "intentServicio": "Contratar un servicio",
-      "intentLugar": "Ver empresas"
+      "intentLugar": "Ver empresas",
+      "botonBuscar": "Buscar profesional",
+      "botonPublicar": "Publicar solicitud"
     },
     "inicio": {
       "lugaresTitulo": "Categorías populares",

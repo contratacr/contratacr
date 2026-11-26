@@ -3,6 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
 import { createPortal, preload } from "react-dom";
 import { Loader2, Search, MapPin } from "lucide-react";
+import { useSiteFeatures } from "@/components/site-features";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -378,6 +379,8 @@ function useLetraQueCabe(ref: RefObject<HTMLInputElement | null>, texto: string,
 }
 
 export function LandingHero() {
+  // Directory on (test), phones: the header already has the search, so the hero offers two buttons instead (owner 2026-11-26).
+  const heroButtons = useSiteFeatures().directorySections.length > 0;
   const [service, setService] = useState("");
   // Qué campo se está usando: ese crece (con transición) y el otro se achica.
   const [foco, setFoco] = useState<"svc" | "loc" | null>(null);
@@ -749,9 +752,17 @@ export function LandingHero() {
 
       {/* ── Buscador ── */}
       <div className="mx-auto max-w-3xl lg:mx-0 lg:max-w-none">
+        {heroButtons && (
+          <div className="grid grid-cols-1 gap-2.5 lg:hidden" data-hero-buttons>
+            <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#009FD9] text-[16px] font-bold text-white">
+              <Search className="h-5 w-5" strokeWidth={2.4} aria-hidden />{t("botonBuscar")}
+            </button>
+            <Link href="/publicar-solicitud" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[16px] font-bold text-[#162543]">{t("botonPublicar")}</Link>
+          </div>
+        )}
         <form
           onSubmit={handleSearch}
-          className="w-full"
+          className={cn("w-full", heroButtons && "max-lg:hidden")}
         >
           {/* UNA píldora con los dos campos, como Angi, en todos los tamaños.
               Elegir una sugerencia completa el campo; Buscar o Enter confirma. */}
@@ -834,7 +845,7 @@ export function LandingHero() {
 
         </form>
         {/* La otra forma de conseguir quien te ayude, en una línea: pedirlo y que te escriban. */}
-        <p className="mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left">
+        <p className={cn("mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left", heroButtons && "max-lg:hidden")}>
           {t("pidePrefijo")}{" "}
           <Link href="/publicar-solicitud" className="font-extrabold text-white underline decoration-[#7fd3f7] decoration-2 underline-offset-4">{t("pideEnlace")}</Link>
         </p>

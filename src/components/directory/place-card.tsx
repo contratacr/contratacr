@@ -5,7 +5,7 @@ import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {placeCardActions,resolvePlaceAction} from '@/lib/directory/place-actions';
 import {PlaceMapFocusButton} from './place-map-focus-button';
-import {MapPin,Navigation} from 'lucide-react';
+import {MapPin,Navigation,Star} from 'lucide-react';
 import {PlaceDirectionsMenu} from './place-directions-menu';
 import {actionIcon} from './place-action-buttons';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
@@ -156,11 +156,13 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
    <div className={contact.length>1?'grid grid-cols-2 gap-2':'flex'}>
     {contact.map(a=>{
      if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${actionPrimary} relative z-10 w-full`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
-     return <a key={a.id} className={`${actionPrimary} w-full ${a.id==='whatsapp'?'!bg-[#25D366] hover:!bg-[#1ebe5b]':''}`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
+     // Both channels: WhatsApp green and Llamar white side by side; only one: the brand primary at full width.
+     const cls=contact.length>1?(a.id==='whatsapp'?`${actionPrimary} !bg-[#25D366] hover:!bg-[#1ebe5b]`:actionSecondary):actionPrimary;
+     return <a key={a.id} className={`${cls} w-full`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
     })}
    </div>
    <div className="flex gap-2">
-    <a className={`${actionSecondary} flex-1`} href={`${href}#escribir-resena`} data-place-action="review">{t('Escribir reseña','Write a review')}</a>
+    <a className={`${actionSecondary} flex-1`} href={`${href}#escribir-resena`} data-place-action="review"><Star className="h-4 w-4 shrink-0" aria-hidden="true"/>{t('Escribir reseña','Write a review')}</a>
     {item.location&&<PlaceMapFocusButton id={item.slug} label={t('Ver en el mapa','Show on the map')} className={`${actionSecondary} relative z-10 !w-12 shrink-0 !px-0 lg:hidden`}/>}
    </div>
   </div>

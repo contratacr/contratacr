@@ -2924,7 +2924,9 @@
       "puertaServicio": "Hire a service",
       "puertaLugar": "Explore categories",
       "intentServicio": "Hire a service",
-      "intentLugar": "See businesses"
+      "intentLugar": "See businesses",
+      "botonBuscar": "Find a professional",
+      "botonPublicar": "Post a request"
     },
     "inicio": {
       "lugaresTitulo": "Popular categories",

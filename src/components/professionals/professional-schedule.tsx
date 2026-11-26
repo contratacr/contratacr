@@ -2,6 +2,7 @@
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { useSiteFeatures } from "@/components/site-features";
 import { Link } from "@/i18n/navigation";
+import { Star } from "lucide-react";
 
 import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -477,7 +478,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const contactButtons = !directoryOn ? contactButtonsClassic : (
     <div className="flex flex-col gap-2" data-pro-card-actions>
       {showCall ? <div className="grid grid-cols-2 gap-2">{whatsappDeLaTarjeta}{renderCall()}</div> : whatsappDeLaTarjeta}
-      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={secondaryContactClass}>{t("writeReview")}</Link>
+      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={secondaryContactClass}><Star className="h-4 w-4 shrink-0" aria-hidden />{t("writeReview")}</Link>
     </div>
   );
 

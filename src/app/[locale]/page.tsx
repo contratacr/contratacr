@@ -114,9 +114,10 @@ export default async function HomePage({
         )}
         {/* Hero: rotating headline + primary search. */}
         {/* Directory on, phones: the header already has the search, so the page opens on recommendations (Yelp style). */}
-        {directoryOn && <div className="lg:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
-        {/* Directory on, phones: the page is ONLY the header and the feed, like Yelp; the production landing stays on desktop. */}
-        <div className={directoryOn ? "hidden lg:block" : undefined}>
+        {/* Owner 2026-11-26: the web (computer and phone browser) keeps the production landing, which explains and sells; the
+            installed app opens on the professional and company cards (people who installed it want results). */}
+        {directoryOn && <div className="hidden [.ccr-native-app_&]:block lg:[.ccr-native-app_&]:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
+                <div className={directoryOn ? "[.ccr-native-app_&]:max-lg:hidden" : undefined}>
         <LandingHero />
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
@@ -149,7 +150,7 @@ export default async function HomePage({
 
       </main>
 
-      <div className={directoryOn ? "hidden lg:block" : undefined}>
+      <div className={directoryOn ? "[.ccr-native-app_&]:max-lg:hidden" : undefined}>
         <AppDownloadSection />
         <LandingFooter />
       </div>

@@ -1,17 +1,14 @@
-import { Menu, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { ContrataCRMark } from "@/components/brand/brand-logo";
 
-/** The menu button (owner, 2026-11-26): a light pill with the ContrataCR symbol untouched and a small ≡ that becomes ✕
- * while the menu is open. The account stays inside the menu. */
+/** The menu button (owner, 2026-11-26, workspace-switcher style like Notion/Linear): the ContrataCR symbol untouched and a
+ * soft grey chevron centred beside it, no background. The account stays inside the menu. */
 export function BrandMenuMark() {
   return (
-    <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-[#eef3f7] pl-1.5 pr-3">
+    <span className="inline-flex shrink-0 items-center gap-1">
       <ContrataCRMark />
-      {/* ≡ turns into ✕ while the menu is open (globals.css: data-brand-menu-icon). */}
-      <span aria-hidden data-brand-menu-icon className="relative h-4 w-4 text-[#162543]">
-        <Menu className="ccr-bm-open absolute inset-0 h-4 w-4" strokeWidth={2.6} />
-        <X className="ccr-bm-close absolute inset-0 h-4 w-4" strokeWidth={2.6} />
-      </span>
+      {/* Soft grey chevron centred on the symbol; it turns over while the menu is open (globals.css). */}
+      <ChevronDown aria-hidden data-brand-chevron className="h-4 w-4 text-[#7a8797] transition-transform duration-300" strokeWidth={2.4} />
     </span>
   );
 }
