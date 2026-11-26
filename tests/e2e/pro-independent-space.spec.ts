@@ -3,7 +3,7 @@ import {createServerClient} from '@supabase/ssr';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
 import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
-import {gotoOK,expectNoHorizontalOverflow,onAppPageError,proSpaceBack,PRO_SPACE_HOME_URL} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,onAppPageError,proSpaceBack,PRO_SPACE_HOME_URL,proGoToSection} from './helpers';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
 
 for(const language of ['es','en'] as const)test(`Independent Pro entry, draft guard, exit and access [${language}]`,async({page,browser,baseURL},info)=>{
@@ -36,8 +36,8 @@ for(const language of ['es','en'] as const)test(`Independent Pro entry, draft gu
   const form=page.getByRole('dialog',{name:en?'New customer':'Nuevo cliente',exact:true});
   await form.getByLabel(en?'Name':'Nombre',{exact:true}).fill('LOCAL UNSAVED PRO DRAFT');
   const path=page.url();
-  // One way back (2026-11-26): the button next to the title; a section goes back to Inicio, Inicio to Mi panel.
-  await space.locator('[data-pro-space-back]').dispatchEvent('click');
+  // Leaving the section with a draft is guarded: Inicio in the Pro tab bar (phones) or the side menu (desktop).
+  await proGoToSection(page,'pro_tools',en?'Tools overview':'Herramientas',{en,dispatch:true});
   await expect(page).toHaveURL(path);await expect(form).toBeVisible();await expect(form.getByRole('alert')).toContainText(en?'Save or cancel':'Guarde o cancele');
   await form.getByRole('button',{name:en?'Cancel':'Cancelar',exact:true}).click();
   const discard=page.getByRole('dialog').last().getByRole('button',{name:en?'Discard changes':'Descartar cambios',exact:true});await expect(discard).toBeVisible();await discard.click();await expect(form).toHaveCount(0);
