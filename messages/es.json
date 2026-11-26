@@ -184,7 +184,9 @@
     "freeBadge": "Gratis",
     "searchBusinesses": "Empresas",
     "searchTopServices": "Profesionales más buscados",
-    "searchPros": "Profesionales"
+    "searchPros": "Profesionales",
+    "rotatingPrefix": "Busque",
+    "rotatingWords": "profesionales|restaurantes|farmacias|talleres|gasolineras|hoteles|parqueos|lavacar|veterinarias|supermercados"
   },
   "home": {
     "accountDeletion": {
@@ -2499,8 +2501,8 @@
     "placesTitle": "Empresas",
     "prosTitle": "Profesionales y servicios",
     "placesMatchTitle": "Empresas encontradas",
-    "businessOne": "empresa",
-    "businessMany": "empresas",
+    "businessOne": "opción",
+    "businessMany": "opciones",
     "eyebrow": "Servicios",
     "title": "Encuentre el servicio que necesita",
     "subtitle": "",
@@ -4169,5 +4171,56 @@
     "g_money": "Finanzas",
     "g_company": "Mi empresa",
     "g_free": "Búsqueda de empleo"
+  },
+  "adminPlaceCreate": {
+    "title": "Agregar un lugar",
+    "lead": "El equipo de ContrataCR agrega el lugar a mano. Se publica de inmediato y queda en el historial del directorio.",
+    "section": "Sección",
+    "kind": "Tipo",
+    "kindNone": "Sin tipo",
+    "name": "Nombre del lugar",
+    "province": "Provincia",
+    "canton": "Cantón",
+    "district": "Distrito",
+    "choose": "Elija una opción",
+    "address": "Dirección",
+    "addressHint": "Por ejemplo: 100 m norte de la iglesia, portón negro",
+    "pin": "Ubicación en el mapa",
+    "pinHint": "Toque el mapa para marcar el lugar, o escriba la latitud y la longitud.",
+    "pinFailed": "No se pudo cargar el mapa. Escriba la latitud y la longitud.",
+    "lat": "Latitud",
+    "lng": "Longitud",
+    "phone": "Teléfono",
+    "whatsapp": "WhatsApp",
+    "website": "Sitio web",
+    "hours": "Horario",
+    "opens": "abre",
+    "closes": "cierra",
+    "closed": "Cerrado",
+    "copyMonday": "Copiar el horario del lunes a todos los días",
+    "photosNote": "Las fotos se agregan después desde la ficha del lugar con \"Agregar fotos\" y se aprueban en la pestaña Fotos de esta página.",
+    "submit": "Publicar lugar",
+    "saving": "Publicando…",
+    "saved": "Lugar publicado:",
+    "days": {
+      "d0": "Domingo",
+      "d1": "Lunes",
+      "d2": "Martes",
+      "d3": "Miércoles",
+      "d4": "Jueves",
+      "d5": "Viernes",
+      "d6": "Sábado"
+    },
+    "errors": {
+      "name": "Escriba el nombre del lugar (mínimo 2 caracteres).",
+      "lat": "Revise la ubicación: indique latitud y longitud dentro de Costa Rica.",
+      "phone": "Revise el teléfono.",
+      "whatsapp": "Revise el número de WhatsApp.",
+      "website": "Use una dirección web que empiece con https://.",
+      "hours": "Revise el horario: la hora de apertura y de cierre no pueden ser iguales.",
+      "kind": "Elija un tipo válido para esta sección.",
+      "vertical": "Elija una sección.",
+      "generic": "No se pudo publicar el lugar. Intente de nuevo."
+    }
   }
 }

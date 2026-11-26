@@ -184,7 +184,9 @@
     "freeBadge": "Free",
     "searchBusinesses": "Companies",
     "searchTopServices": "Most searched professionals",
-    "searchPros": "Professionals"
+    "searchPros": "Professionals",
+    "rotatingPrefix": "Search",
+    "rotatingWords": "professionals|restaurants|pharmacies|auto repair|gas stations|hotels|parking|car wash|vets|supermarkets"
   },
   "home": {
     "accountDeletion": {
@@ -2499,8 +2501,8 @@
     "placesTitle": "Businesses",
     "prosTitle": "Professionals and services",
     "placesMatchTitle": "Matching businesses",
-    "businessOne": "business",
-    "businessMany": "businesses",
+    "businessOne": "option",
+    "businessMany": "options",
     "eyebrow": "Services",
     "title": "Find the service you need",
     "subtitle": "",
@@ -4169,5 +4171,56 @@
     "g_money": "Finances",
     "g_company": "My company",
     "g_free": "Job search"
+  },
+  "adminPlaceCreate": {
+    "title": "Add a place",
+    "lead": "The ContrataCR team adds the place by hand. It is published at once and recorded in the directory history.",
+    "section": "Section",
+    "kind": "Type",
+    "kindNone": "No type",
+    "name": "Place name",
+    "province": "Province",
+    "canton": "Canton",
+    "district": "District",
+    "choose": "Choose an option",
+    "address": "Address",
+    "addressHint": "For example: 100 m north of the church, black gate",
+    "pin": "Location on the map",
+    "pinHint": "Tap the map to mark the place, or type the latitude and longitude.",
+    "pinFailed": "The map could not load. Type the latitude and longitude.",
+    "lat": "Latitude",
+    "lng": "Longitude",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "website": "Website",
+    "hours": "Opening hours",
+    "opens": "opens",
+    "closes": "closes",
+    "closed": "Closed",
+    "copyMonday": "Copy Monday's hours to every day",
+    "photosNote": "Photos are added afterwards from the place page with \"Add photos\" and approved in the Photos tab of this page.",
+    "submit": "Publish place",
+    "saving": "Publishing…",
+    "saved": "Place published:",
+    "days": {
+      "d0": "Sunday",
+      "d1": "Monday",
+      "d2": "Tuesday",
+      "d3": "Wednesday",
+      "d4": "Thursday",
+      "d5": "Friday",
+      "d6": "Saturday"
+    },
+    "errors": {
+      "name": "Type the place name (at least 2 characters).",
+      "lat": "Check the location: give a latitude and longitude inside Costa Rica.",
+      "phone": "Check the phone number.",
+      "whatsapp": "Check the WhatsApp number.",
+      "website": "Use a web address that starts with https://.",
+      "hours": "Check the hours: opening and closing times cannot be the same.",
+      "kind": "Choose a valid type for this section.",
+      "vertical": "Choose a section.",
+      "generic": "The place could not be published. Please try again."
+    }
   }
 }

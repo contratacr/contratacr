@@ -1864,9 +1864,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           place={headerLocationLabel}
                         />
                       ) : (
-                        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
-                          {unifiedSearchPlaceholder(locale, directoryOn)}
-                        </span>
+                        directoryOn
+                          ? <RotatingSearchHint />
+                          : <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">{unifiedSearchPlaceholder(locale, directoryOn)}</span>
                       )}
                     </button>
                     {showSearchViewToggle && (
@@ -3019,5 +3019,23 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           </div>
       </>
     </div>
+  );
+}
+
+/** Directory on (owner 2026-11-26): «Busque profesionales», «Busque restaurantes»… the word changes every few seconds. */
+function RotatingSearchHint() {
+  const t = useTranslations("header");
+  const words = t("rotatingWords").split("|");
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => setI((x) => (x + 1) % words.length), 2600);
+    return () => window.clearInterval(id);
+  }, [words.length]);
+  return (
+    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]" data-rotating-search-hint>
+      {t("rotatingPrefix")}{" "}
+      <span key={i} className="inline-block animate-[ccr-hero-text_450ms_ease-out] text-[#5b6b82]">{words[i]}</span>
+    </span>
   );
 }
