@@ -99,7 +99,10 @@ export function NativeBottomNav() {
   // maquetación en CADA arranque, además de la barra apareciendo de la nada.
   // Directory tabs also stay away from place pages (/lugar/*): they carry their own contact bar at the bottom.
   // With the directory ON the 5-tab bar also shows on mobile web (<lg), not only in the app; it stays away from sign-in screens there.
-  const visible = (nativeApp || (directoryOn && !/^\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/.test(pathname ?? ""))) && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""));
+  const visible = (nativeApp || (directoryOn && !/^\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/.test(pathname ?? ""))) && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""))
+    // The Pro work app (/dashboard/pro…) has its own bottom tab bar (ProTabBar); the directory bar would cover its
+    // content. In the app the native rule `:has([data-independent-pro])` already hides it, keeping the native classes.
+    && !(!nativeApp && /^\/dashboard\/pro(?:\/|$)/.test(pathname ?? ""));
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(

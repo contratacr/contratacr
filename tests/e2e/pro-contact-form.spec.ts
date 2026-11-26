@@ -5,7 +5,7 @@ import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
-import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,onAppPageError,openLeadOption} from './helpers';
 const origin='http://127.0.0.1:3185',leadApi='/api/pro/lead-center',formApi='/api/pro/contact-form',publicApi='/api/pro/contact-form-public';
 
 function local(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
@@ -97,7 +97,7 @@ for(const language of ['es','en'] as const){
   test.setTimeout(300000);local(baseURL);const en=language==='en',f=await fixture(page.context()),errors:string[]=[],visitor=await browser.newContext();onAppPageError(page,message=>errors.push(message));
   try{
    await openLeads(page,language);
-   await page.getByRole('button',{name:en?'Contact form':'Formulario de contacto',exact:true}).click();
+   await openLeadOption(page,en,en?'Contact form':'Formulario de contacto');
    await page.locator('[data-contact-builder-open]').click();
    const builder=page.locator('[data-contact-builder]');await expect(builder).toBeVisible({timeout:45000});
    await expect(builder.locator('[data-contact-builder-field]')).toHaveCount(6);

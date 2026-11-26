@@ -97,7 +97,8 @@ test('Equipo is a section of the Pro space (same document and chrome)',async({pa
    expect(await page.evaluate(()=>(window as unknown as {gapsMarker?:number}).gapsMarker)).toBe(1);// never left the Pro document
    await expect(page.getByRole('heading',{level:1,name:en?'Team':'Equipo',exact:true})).toBeVisible();
    await expect(page.getByRole('button',{name:en?'Back to Pro':'Volver a Pro',exact:true})).toHaveCount(0);
-   await expect(page.getByRole('button',{name:en?'Back to My panel':'Volver a Mi panel',exact:true})).toBeVisible();
+   // One way back (2026-11-26): a section shows «Volver» next to its title; «Volver a Mi panel» belongs to Inicio.
+   await expect(page.locator('[data-pro-space-back]')).toHaveText(en?'Back':'Volver');await expect(page.getByRole('button',{name:en?'Back to My panel':'Volver a Mi panel',exact:true})).toHaveCount(0);
    if((page.viewportSize()?.width??0)>=1024)await expect(page.locator('[data-pro-hub-entry="team"]')).toHaveAttribute('aria-current','page');
    await shots(page,`team-${language}`);
    // The team page keeps working (invitation links) with the same chrome.

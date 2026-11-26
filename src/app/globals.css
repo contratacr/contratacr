@@ -2506,6 +2506,23 @@ body.ccr-native-app main.ccr-authentication-screen[data-authentication-screen]:h
  }
 }
 
+/* The Pro work app's own bottom tab bar (ProTabBar, [data-pro-tab-bar], below lg; layer CAPA_BARRA_ABAJO).
+   The directory's 5-tab bar is not shown inside Pro on the web, so the reserve that floating notices read
+   (--ccr-aviso-barra-app) and the scroll padding come from this bar instead. In the app the <main> padding
+   rule above is !important: it reserves the bar too. */
+@media (max-width: 1023px) {
+ html:has([data-pro-tab-bar]) { scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
+ html body:has([data-pro-tab-bar]) { --ccr-aviso-barra-app: calc(4.25rem + env(safe-area-inset-bottom, 0px)); }
+ body.ccr-native-app:has([data-pro-tab-bar]) [data-independent-pro] > main {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+ }
+ html[data-keyboard-visible] [data-pro-tab-bar] { display: none !important; }
+}
+/* A form's fixed action footer owns the bottom edge, as with the directory bar. */
+@media (max-width: 639px) {
+ body.ccr-con-barra-accion [data-pro-tab-bar] { display: none !important; }
+}
+
 /* Round 7C: company team roles. While a member works in another company the Pro space marks the
    document with its role; write controls tagged with data-pro-write="<capability>" are hidden for
    roles that cannot use them (the server refuses those writes anyway: 403). */

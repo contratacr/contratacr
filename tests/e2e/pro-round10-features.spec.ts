@@ -2,7 +2,7 @@ import {test,expect,type Page,type BrowserContext} from 'playwright/test';
 import {randomBytes} from 'node:crypto';
 import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
-import {gotoOK,expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError,openLeadOption} from './helpers';
 import {ownerFixture,local,origin,login} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
 
@@ -103,7 +103,7 @@ for(const language of ['es','en'] as const)test(`Round 10: customers import, boa
   // Stale revision → 409 (no overwrite).
   expect((await page.request.post('/api/pro/lead-board',{headers:{Origin:origin},data:{action:'move',actionId:crypto.randomUUID(),kind:'manual',id:leadA,revision:1,catalogRevision:0,stageId:'won'}})).status()).toBe(409);
   // (5) Conversion by channel and CSV.
-  await page.locator('[data-lead-conversion-open]').click();const conv=page.locator('[data-lead-conversion]');
+  await openLeadOption(page,en,en?'Conversion by channel':'Conversión por canal');const conv=page.locator('[data-lead-conversion]');
   await expect(conv.locator('[data-lead-conversion-row="referral"] [data-col="estimate"]')).toHaveText('1',{timeout:60000});
   await expect(conv.locator('[data-lead-conversion-row="unspecified"] [data-col="lost"]')).toHaveText('1');
   await shot(page,`r10-conversion-${language}`,project);

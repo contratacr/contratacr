@@ -5,7 +5,7 @@ import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
-import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,onAppPageError,openLeadOption} from './helpers';
 const origin='http://127.0.0.1:3185',leadApi='/api/pro/lead-center';
 
 function local(baseURL:string|undefined){expect(baseURL).toBe(origin);expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321');}
@@ -41,7 +41,7 @@ for(const language of ['es','en'] as const){
   test.setTimeout(240000);local(baseURL);const en=language==='en',f=await fixture(page.context()),errors:string[]=[];onAppPageError(page,message=>errors.push(message));
   try{
    await openLeads(page,language);
-   await page.getByRole('button',{name:en?'Import from file':'Importar archivo',exact:true}).click();
+   await openLeadOption(page,en,en?'Import from file':'Importar archivo');
    const dialog=page.locator('[data-lead-import-dialog]');await expect(dialog).toBeVisible();
    const csv='Cliente;Mail;Teléfono;Trabajo;Notas;Zona\r\nLuisa Mapeo;luisa.map@example.test;8666-1000;Pintura de fachada;Llamar mañana;Heredia\r\nMarco Mapeo;;8666-2000;Cambio de techo;;Alajuela';
    await dialog.locator('input[type="file"]').setInputFiles({name:'clientes.csv',mimeType:'text/csv',buffer:Buffer.from(csv,'utf8')});

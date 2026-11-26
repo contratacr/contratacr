@@ -5,7 +5,7 @@ import {regressionAdminClient} from './seed';
 import {emptyBusiness} from '../../src/lib/pro/business';
 import {crTodayISO} from '../../src/lib/time-cr';
 import {stabilizeLocalProRuntime} from './pro-local-stable-runtime';
-import {gotoOK,expectNoHorizontalOverflow,onAppPageError} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,onAppPageError,openLeadOption} from './helpers';
 
 const origin='http://127.0.0.1:3185',api='/api/pro/lead-inboxes',leadApi='/api/pro/lead-center';
 const plusDays=(iso:string,days:number)=>new Date(Date.parse(iso+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
@@ -197,7 +197,7 @@ for(const language of ['es','en'] as const){
    await openLeads(page,language);const leads=page.locator('[data-pro-leads]');await expectCount(page,'active',3);
    // Empty import history state.
    await chooseInbox(page,'imports');await expect(leads.locator('[data-lead-import-history]')).toContainText(en?'No imports yet':'Todavía no hay importaciones');await chooseInbox(page,'active');
-   await leads.getByRole('button',{name:en?'Import from file':'Importar archivo',exact:true}).click();
+   await openLeadOption(page,en,en?'Import from file':'Importar archivo');
    const dialog=page.locator('[data-lead-import-dialog]'),file=dialog.getByLabel(en?'CSV file':'Archivo CSV',{exact:true}),commit=page.getByRole('button',{name:en?/^Import \d+ leads?$/:/^Importar \d+ solicitud(es)?$/});
    await file.setInputFiles({name:'errores.csv',mimeType:'text/csv',buffer:Buffer.from(csv(badRows))});
    await expect(dialog.locator('[data-lead-import-summary]')).toHaveText(en?'7 rows · 1 new customer · 1 existing customer · 1 duplicate · 4 with errors':'7 filas · 1 cliente nuevo · 1 cliente existente · 1 duplicada · 4 con errores');
@@ -220,12 +220,12 @@ for(const language of ['es','en'] as const){
    await expectCount(page,'archived',2);await expectCount(page,'active',3);
    await page.reload();await chooseInbox(page,'imports');await expect(history).toContainText(en?'Undone':'Deshecha');await expect(history).toContainText(en?'2 archived when undone':'2 archivadas al deshacer');
    // Insights, numbers checked by hand: 3 seeded + 2 imported received today; only the request has a live job.
-   await chooseInbox(page,'active');await leads.getByRole('button',{name:en?'Insights':'Métricas',exact:true}).click();const insights=page.locator('[data-lead-insights]');
+   await chooseInbox(page,'active');await openLeadOption(page,en,en?'Insights':'Métricas');const insights=page.locator('[data-lead-insights]');
    await expect(insights.locator('[data-lead-funnel-tile="received"] strong')).toHaveText('5');await expect(insights.locator('[data-lead-funnel-tile="open"] strong')).toHaveText('3');
    await expect(insights.locator('[data-lead-funnel-tile="converted"] strong')).toHaveText('1');await expect(insights.locator('[data-lead-funnel-tile="rate"] strong')).toHaveText(en?'20%':'20 %');
    await expect(insights.locator('[data-lead-funnel-stage="new"] [data-lead-funnel-count]')).toHaveText('2');await expect(insights.locator('[data-lead-origin-metrics]')).toBeVisible();
    await shot(page,info,'insights');await page.getByRole('button',{name:en?'Close':'Cerrar',exact:true}).last().click();await expect(insights).toHaveCount(0);
-   await leads.getByRole('button',{name:en?'Contact form':'Formulario de contacto',exact:true}).click();const contact=page.locator('[data-lead-contact-form]');
+   await openLeadOption(page,en,en?'Contact form':'Formulario de contacto');const contact=page.locator('[data-lead-contact-form]');
    await expect(contact.getByRole('link',{name:en?'Open my public profile':'Abrir mi perfil público',exact:true})).toHaveAttribute('href',(en?'/en':'')+'/profesionales/'+(await f.db.from('professionals').select('slug').eq('id',f.professional.id).single().throwOnError()).data!.slug);
    await shot(page,info,'contact-form');await expectNoHorizontalOverflow(page);
    expect(errors).toEqual([]);

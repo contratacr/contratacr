@@ -2,7 +2,7 @@ import {test,expect,type Page,type BrowserContext} from 'playwright/test';
 import {randomBytes} from 'node:crypto';
 import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
-import {gotoOK,expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError} from './helpers';
+import {gotoOK,expectNoHorizontalOverflow,warmLocalRoutes,onAppPageError,openLeadOption} from './helpers';
 import {ownerFixture,local,origin,login} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
 import {newCompanyInviteCode} from '../../src/lib/pro/team-roles';
@@ -87,7 +87,7 @@ for(const language of ['es','en'] as const)test(`Sales pipeline: stage colour/pr
   expect(fc.totals).toEqual([{currency:'CRC',openCents:250000000,weightedCents:200000000,wonCents:0}]);
 
   // ---- Funnel by stage reached ----
-  await page.locator('[data-stage-funnel-open]').click();const funnel=page.locator('[data-stage-funnel]');
+  await openLeadOption(page,en,en?'Funnel by stage':'Embudo por etapa');const funnel=page.locator('[data-stage-funnel]');
   await expect(funnel.locator('[data-stage-funnel-total="received"]')).toContainText('3',{timeout:60000});
   await expect(funnel.locator('[data-stage-funnel-row="estimate_sent"] [data-stage-funnel-reached]')).toHaveText('1');
   await expect(funnel.locator('[data-stage-funnel-row="new"] [data-stage-funnel-reached]')).toHaveText('3');

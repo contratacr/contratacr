@@ -532,7 +532,7 @@ export async function firstProfessionalHref(page: Page) {
 
 // ---------------------------------------------------------------------------
 // Independent Pro space (`/dashboard/pro`). «ContrataCR Pro» in Mi panel opens
-// its own header (h1 = section label, «Volver»/«Back» inside sections and
+// its own header (h1 = section label, ONE back button next to it: «Volver»/«Back» inside sections and
 // «Volver a Mi panel»/«Back to My panel» on Inicio) instead of the global
 // navbar's `[data-ccr-section-title]` / `[data-ccr-section-back]`.
 // Shared so specs follow the same contract as `headerBack` in pro-navigation.
@@ -562,6 +562,36 @@ export async function proSpaceBack(page: Page, en = false) {
   const tab = new URL(page.url()).searchParams.get("tab") ?? "pro_tools";
   const name = tab === "pro_tools" ? (en ? "Back to My panel" : "Volver a Mi panel") : en ? "Back" : "Volver";
   await proSpace(page).getByRole("button", { name, exact: true }).click();
+}
+
+/** Sections in the Pro tab bar (below lg); the rest are under «Más» (the same list as the desktop side menu). */
+const PRO_TAB_BAR_TABS = ["pro_tools", "pro_agenda", "pro_clients", "quotes"];
+
+/** The mobile Pro tab bar (`[data-pro-tab-bar]`, below 1024 px). */
+export function proTabBar(page: Page) {
+  return page.locator("[data-pro-tab-bar]");
+}
+
+/**
+ * Opens a Pro section the way a person does at this width: the tab bar (or «Más» → the full list) below
+ * 1024 px, the desktop side menu («Navegación del negocio») otherwise. `label` is the side-menu entry.
+ * `dispatch` fires the click without pointer checks (to exercise navigation guards under a dialog).
+ */
+export async function proGoToSection(page: Page, tab: string, label: string, options: { en?: boolean; dispatch?: boolean } = {}) {
+  const en = !!options.en;
+  const press = async (target: Locator) => (options.dispatch ? target.dispatchEvent("click") : target.click());
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    if (PRO_TAB_BAR_TABS.includes(tab)) return press(proTabBar(page).locator(`[data-pro-tab="${tab}"]`));
+    await press(proTabBar(page).locator('[data-pro-tab="more"]'));
+    return press(page.locator("[data-pro-more-sections]").getByRole("button", { name: label, exact: true }));
+  }
+  return press(page.getByRole("navigation", { name: en ? "Business navigation" : "Navegación del negocio", exact: true }).getByRole("button", { name: label, exact: true }));
+}
+
+/** Leads (Solicitudes): secondary actions live in the «…» menu next to the title, as in Houzz Pro. */
+export async function openLeadOption(page: Page, en: boolean, label: string) {
+  await page.getByRole("button", { name: en ? "Lead options" : "Opciones de solicitudes", exact: true }).click();
+  await page.getByRole("menuitem", { name: label, exact: true }).click();
 }
 
 /** Opens the independent Pro space from Mi panel through «ContrataCR Pro». */

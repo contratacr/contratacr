@@ -33,13 +33,17 @@ test('Pro web app: manifest, service worker, offline fallback and responsive she
   for(const endpoint of ['/api/auth/session-mfa','/api/auth/registration-state','/api/pro/access'])expect((await page.request.get(endpoint,{timeout:45000})).status()).toBe(200);
   const runtime:string[]=[];onAppPageError(page,message=>runtime.push(message));
   for(const language of ['es','en']){
-   // Responsive: phone, small phone, tablet, desktop. No horizontal scroll, header and section picker usable.
+   // Responsive: phone, small phone, tablet, desktop. No horizontal scroll, header and Pro tab bar usable.
    for(const size of [{width:320,height:640},{width:390,height:844},{width:768,height:1024},{width:1366,height:900}]){
     await page.setViewportSize(size);
     await gotoOK(page,(language==='en'?'/en':'')+'/dashboard/pro?tab=pro_tasks');
     await expect(page.locator('[data-independent-pro]')).toBeVisible({timeout:60000});
     await expectNoHorizontalOverflow(page);
-    if(size.width<1024)await expect(page.getByLabel(language==='en'?'Pro section':'Sección de Pro')).toBeVisible();
+    // Below lg the Pro work app has its own tab bar (Inicio, Citas, Clientes, Cotizaciones, Más), not the directory's.
+    if(size.width<1024){const bar=page.locator('[data-pro-tab-bar]');await expect(bar).toBeVisible();await expect(bar.locator('[data-pro-tab]')).toHaveCount(5);await expect(page.locator('[data-directory-tabs]')).toHaveCount(0);await expect(bar.locator('[data-pro-tab="more"]')).toHaveAttribute('aria-current','page');}
+    else await expect(page.locator('[data-pro-tab-bar]')).toBeHidden();
+    // From 390 px the header is one row: brand, search, messages, help, settings and the bell.
+    if(size.width>=390){const brand=await page.locator('[data-independent-pro] header img').filter({visible:true}).first().boundingBox(),bell=await page.locator('[data-pro-notification-bell]').boundingBox();expect(Math.abs((bell!.y+bell!.height/2)-(brand!.y+brand!.height/2))).toBeLessThan(12);}
     const box=await page.locator('[data-independent-pro] header').boundingBox();expect(box!.width).toBeLessThanOrEqual(size.width+1);
    }
   }

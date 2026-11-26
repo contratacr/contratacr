@@ -1,15 +1,15 @@
 'use client';
 
-import {useEffect,useRef,type ReactNode} from 'react';
+import {useEffect,useRef,type CSSProperties,type ReactNode} from 'react';
 import {ProAppSupport} from './pro-app-support';
 import dynamic from 'next/dynamic';
 import {reconnectingImport} from '@/lib/reconnecting-import';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
-import {ContrataCRLogo} from '@/components/landing/landing-navbar';
+import {ContrataCRLogo,ContrataCRMark} from '@/components/landing/landing-navbar';
 import {Button} from '@/components/ui/button';
 import {usePathname} from 'next/navigation';
-import {backPro,navigatePro,proJobRoute,pushProPath,setProNavigationAccount} from '@/lib/pro/navigation';
+import {backPro,proJobRoute,pushProPath,setProNavigationAccount} from '@/lib/pro/navigation';
 import {documentoRecienAbierto,iniciarSeccionArriba} from '@/lib/ir-al-inicio';
 import {useProSearchParams} from './use-pro-search-params';
 import {useProSectionNavigation} from './use-pro-section-navigation';
@@ -45,6 +45,7 @@ import {RunningTimerIndicator} from './work-timer';
 import {NotificationBell} from './notification-center';
 import {ProQuickMenus} from './pro-quick-menus';
 import {ProBlockedNavigationNotice} from './pro-blocked-navigation-notice';
+import {ProTabBar} from './pro-tab-bar';
 /** Titles of the Pro space sections (also the mobile section picker). */
 export function proSectionLabels(en:boolean):Record<string,string>{return en?{pro_tools:'Overview',pro_company:'Company',pro_projects:'Projects',pro_files:'Company files',pro_tasks:'Tasks',pro_hours:'Timesheets',pro_notifications:'Notifications',pro_leads:'Leads',pro_agenda:'Appointments',pro_clients:'Customers',quotes:'Quotes',pro_inventory:'Products and services',pro_expenses:'Expenses',pro_payments:'Payments',statistics:'Statistics',pro_billing:'Invoice drafts',pro_team:'Team',pro_editions:'Pro edition'}:{pro_tools:'Inicio',pro_company:'Empresa',pro_projects:'Proyectos',pro_files:'Archivos de la empresa',pro_tasks:'Tareas',pro_hours:'Horas',pro_notifications:'Avisos',pro_leads:'Solicitudes',pro_agenda:'Citas',pro_clients:'Clientes',quotes:'Cotizaciones',pro_inventory:'Productos y servicios',pro_expenses:'Gastos',pro_payments:'Pagos',statistics:'Estadísticas',pro_billing:'Borradores de facturación',pro_team:'Equipo',pro_editions:'Edición de Pro'};}
 export type ProSpaceProfile={actorId:string;name:string;slug:string|null;professional:boolean;callsEnabled:boolean;memberId?:string|null};
@@ -76,26 +77,28 @@ export function ProSpace({profile}:{profile:ProSpaceProfile}){
  </ProFrame>;
 }
 
-/** The Pro space chrome (header, section title, mobile section picker and side menu). Shared by the Pro
+/** The Pro space chrome (header, section title, mobile Pro tab bar and side menu). Shared by the Pro
  * document and the team page (/dashboard/pro/equipo) so «Equipo» never looks like another site. */
 export function ProFrame({tab,labels,subtitle,navigating,jobRoute=false,children}:{tab:string;labels:Record<string,string>;subtitle?:string;navigating:boolean;jobRoute?:boolean;children:ReactNode}){
  const en=useLocale()==='en',base=(en?'/en':'')+'/dashboard/pro';
  const exit=()=>pushProPath((en?'/en':'')+'/dashboard/profesional?tab=home');
- // Section picker: invoice drafts and editions are reached from their own entry points; they only show while open.
- const pickable=Object.entries(labels).filter(([key])=>!['pro_billing','pro_editions'].includes(key)||tab===key);
  return <div data-independent-pro className="flex min-h-screen flex-col bg-[#f7f9fc] text-[#162543]">
-  <header style={{paddingTop:"var(--ccr-safe-top, env(safe-area-inset-top))"}} className="border-b border-[#e5e7eb] bg-white"><div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-   <div className="flex items-center gap-3"><ContrataCRLogo/><span className="rounded-lg bg-[#eaf7fb] px-2 py-1 text-sm font-bold text-[#008bb5]">Pro</span></div>
-   <div className="flex flex-wrap items-center gap-2"><ProQuickMenus/><RunningTimerIndicator/><NotificationBell/><ProBlockedNavigationNotice/><Button variant="secondary" disabled={navigating} onClick={exit}>{en?'Back to My panel':'Volver a Mi panel'}</Button></div>
+  {/* Mobile (2026-11-26): one header row at 390 px (symbol + «Pro» + the five icons); a running timer takes its own row.
+      The only way back is the button next to the section title. */}
+  <header style={{paddingTop:"var(--ccr-safe-top, env(safe-area-inset-top))"}} className="border-b border-[#e5e7eb] bg-white"><div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6 sm:py-4">
+   <div className="flex shrink-0 items-center gap-2 sm:gap-3"><ContrataCRMark className="sm:hidden"/><span className="hidden sm:inline-flex"><ContrataCRLogo/></span><span className="rounded-lg bg-[#eaf7fb] px-2 py-1 text-sm font-bold text-[#008bb5]">Pro</span></div>
+   <div className="order-last w-full empty:hidden lg:order-none lg:ml-auto lg:w-auto"><RunningTimerIndicator/></div>
+   <div className="flex items-center gap-1 sm:gap-2"><ProQuickMenus/><NotificationBell/><ProBlockedNavigationNotice/></div>
   </div></header>
   {/* Gaps round: one content width at 1440 px for the hub, its sections and the job page (was 80rem vs 90rem). */}
-  <main className="mx-auto w-full max-w-[90rem] flex-1 space-y-5 px-4 py-5 sm:px-6">
+  {/* Below lg the Pro tab bar is fixed at the bottom: the page reserves its height (and the safe area). */}
+  <main style={jobRoute?undefined:{'--ccr-pro-tab-bar':'calc(4.5rem + env(safe-area-inset-bottom, 0px))'} as CSSProperties} className={'mx-auto w-full max-w-[90rem] flex-1 space-y-5 px-4 py-5 sm:px-6'+(jobRoute?'':' max-lg:pb-[calc(var(--ccr-pro-tab-bar)+1.25rem)]')}>
    <ProWorkspaceBanner/>
    <ProAppSupport/>
    {!jobRoute&&<><div className="flex flex-wrap items-center justify-between gap-3"><div>{subtitle&&<p className="text-sm text-[#52627a]">{subtitle}</p>}<div className="flex items-center gap-3"><h1 className="text-2xl font-bold">{labels[tab]}</h1>{tab==='pro_files'&&<div id="pro-company-file-actions" className="h-11 w-11 shrink-0"/>}{tab==='pro_leads'&&<div id="pro-lead-actions" className="h-11 w-11 shrink-0"/>}{tab==='quotes'&&<div id="pro-estimate-actions" className="h-11 w-11 shrink-0"/>}</div></div>
-    {tab!=='pro_tools'&&<Button variant="secondary" disabled={navigating} onClick={()=>backPro(base)}>{en?'Back':'Volver'}</Button>}
-   </div>
-   <label className="block text-sm font-semibold lg:hidden">{en?'Pro section':'Sección de Pro'}<select disabled={navigating} aria-label={en?'Pro section':'Sección de Pro'} value={tab} onChange={event=>navigatePro(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-base">{pickable.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label></>}
+    {/* One way back, like Houzz Pro: a section goes back to Inicio, Inicio goes back to Mi panel. */}
+    {tab==='pro_tools'?<Button data-pro-space-back variant="secondary" disabled={navigating} onClick={exit}>{en?'Back to My panel':'Volver a Mi panel'}</Button>:<Button data-pro-space-back variant="secondary" disabled={navigating} onClick={()=>backPro(base)}>{en?'Back':'Volver'}</Button>}
+   </div></>}
    {navigating&&<p data-pro-transition role="status" aria-live="polite" style={{top:'calc(var(--ccr-safe-top, 0px) + 1rem)'}} className="fixed left-1/2 z-[110] -translate-x-1/2 rounded-xl border border-[#d7e1ea] bg-white px-4 py-3 text-sm font-semibold shadow-sm">{en?'Opening section…':'Abriendo sección…'}</p>}
    <div data-pro-section-content inert={navigating} aria-busy={navigating}>
    <ProManagementShell enabled={!jobRoute} taskCenter activeTab={tab}>
@@ -103,5 +106,6 @@ export function ProFrame({tab,labels,subtitle,navigating,jobRoute=false,children
    </ProManagementShell>
    </div>
   </main>
+  {!jobRoute&&<ProTabBar tab={tab} navigating={navigating}/>}
  </div>;
 }
