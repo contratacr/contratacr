@@ -11,6 +11,7 @@ import {SearchResultsLayout} from '@/components/search/search-results-layout';
 import {PlacesMap} from '@/components/maps/places-map';
 import {hrefWith} from './listing-home-parts';
 import {PlaceCard} from './place-card';
+import {placeCardActions} from '@/lib/directory/place-actions';
 import {kindLabel} from '@/lib/directory/place-verticals';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
@@ -83,7 +84,10 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
  // Yelp result-card model (2026-11-19): cover photo + newest review snippet for the places of this page.
  const extras=await placeCardExtras(places.map(p=>p.slug));
- const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1,name:p.name,sub:[en?p.vertical.nameEn:p.vertical.nameEs,kindLabel(p.vertical.id,p.attributes.kind,en)].filter(Boolean).join(' · '),rating:p.rating.average!=null?Number(p.rating.average):null,ratingCount:p.rating.count}]:[]);
+ const points=places.flatMap((p,n)=>p.location?[{id:p.slug,lat:p.location.lat,lng:p.location.lng,label:`${n+1}. ${p.name}`,href:`${en?'/en':''}/lugar/${p.slug}`,rank:n+1,name:p.name,sub:[en?p.vertical.nameEn:p.vertical.nameEs,kindLabel(p.vertical.id,p.attributes.kind,en)].filter(Boolean).join(' · '),rating:p.rating.average!=null?Number(p.rating.average):null,ratingCount:p.rating.count,
+  // Map-first sections (owner 2026-11-26): the pin card carries open-now and the two card actions (Llamar, Cómo llegar).
+  open:p.openNow===true?t('Abierto ahora','Open now'):p.openNow===false?t('Cerrado ahora','Closed now'):undefined,openNow:p.openNow,
+  actions:placeCardActions({slug:p.slug,name:p.name,verticalId:p.vertical.id,locale,phone:p.phone,location:p.location}).map(a=>({id:a.id,label:a.short||a.label,href:a.type==='directions'&&p.location?`https://www.google.com/maps/dir/?api=1&destination=${p.location.lat},${p.location.lng}`:a.href,external:a.type==='directions'||!!a.external}))}]:[]);
  const next=page.ok&&page.result.nextCursor?link({cursor:encodeCursor(page.result.nextCursor)}):null;
  const filtersLabel=t('Filtros','Filters');
  const chips=(variant:'bar'|'sheet')=><PlacesFilterChips variant={variant} menus={menus} toggles={toggles} filtersLabel={filtersLabel} activeFilters={activeFilters} clear={clear} en={en}/>;
@@ -112,7 +116,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>

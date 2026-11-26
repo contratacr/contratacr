@@ -37,6 +37,8 @@ interface SearchResultsLayoutProps {
   /** En la app, la pestaña «Profesionales» tiene que abrir la BÚSQUEDA —la
    *  barra y la lista—, no el mapa: el mapa queda un gesto más abajo. */
   hojaAbiertaAlInicio?: boolean;
+  /** Phones: open on the map (Waze style) with the sheet folded to its lowest stop (owner, 2026-11-26: businesses). */
+  mapaPrimero?: boolean;
   /** Mobile title row of the sheet header (Yelp app model): bold category, grey place and a Map/List toggle that
    *  moves the sheet between its lowest and highest stops. */
   titleRow?: { title: string; subtitle?: string; mapLabel: string; listLabel: string };
@@ -118,7 +120,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, titleRow }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, mapaPrimero = false, titleRow }: SearchResultsLayoutProps) {
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -168,7 +170,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   // a la vista). Sin resultados no hay nada que ver en el mapa y sí un aviso con
   // su botón: abre extendido, o el botón quedaba bajo el borde de la pantalla.
   // El valor sale de las props, así que servidor y cliente pintan lo mismo.
-  const [heightFr, setHeightFr] = useState<number>(sinResultados || hojaAbiertaAlInicio ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : CARD_PEEK);
+  const [heightFr, setHeightFr] = useState<number>(sinResultados || hojaAbiertaAlInicio ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : mapaPrimero ? MAP_PEEK : CARD_PEEK);
   // Cada cambio de posición del panel re-mide la cola (también al terminar la
   // transición con la que llega a su sitio).
   useEffect(() => {
@@ -191,7 +193,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: CARD_PEEK });
   const dragStartedAtRef = useRef(0);
-  const curRef = useRef<number>(sinResultados ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : CARD_PEEK);
+  const curRef = useRef<number>(sinResultados ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : mapaPrimero ? MAP_PEEK : CARD_PEEK);
   const expandedStart = currentSnapPoints[1] ?? CARD_PEEK;
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
 

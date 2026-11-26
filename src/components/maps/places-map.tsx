@@ -30,6 +30,11 @@ export type PlacesMapPoint = {
   sub?: string;
   rating?: number | null;
   ratingCount?: number;
+  /** «Abierto ahora» / «Cerrado ahora» label, and whether it is open (colour). */
+  open?: string;
+  openNow?: boolean | null;
+  /** Up to two quick actions on the pin card (Llamar, Cómo llegar). */
+  actions?: { id: string; label: string; href: string; external?: boolean }[];
 };
 
 const SOURCE = "ccr-places";
@@ -90,11 +95,18 @@ function openPopup(ctx: Ctx, p: PlacesMapPoint) {
           `<div class="ccr-pop-name"><a href="${esc(p.href ?? "#")}" class="ccr-pop-name-text" style="color:inherit;text-decoration:none">${esc(name)}</a></div>` +
           (p.sub ? `<div class="ccr-pop-prof"><span>${esc(p.sub)}</span></div>` : "") +
           rate +
+          (p.open ? `<div class="ccr-pop-open" style="font-size:12px;font-weight:700;margin-top:2px;color:${p.openNow ? "#047857" : "#b91c1c"}">${esc(p.open)}</div>` : "") +
         `</div>` +
       `</div>` +
+      (p.actions?.length ? `<div class="ccr-pop-acts" style="display:flex;gap:6px;margin-top:10px">` + p.actions.map((a, i) =>
+        `<a class="ccr-pop-act" href="${esc(a.href)}"${a.external ? ' target="_blank" rel="noopener noreferrer"' : ""} style="flex:1;display:inline-flex;align-items:center;justify-content:center;height:36px;border-radius:9999px;font-size:13px;font-weight:800;text-decoration:none;${i === 0 ? "background:#009FD9;color:#fff" : "border:1px solid #d7e1ea;color:#162543;background:#fff"}">${esc(a.label)}</a>`).join("") + `</div>` : "") +
     `</div>`;
   wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(ctx); });
-  wrap.querySelector(".ccr-pop")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); if (p.href) window.location.assign(p.href); });
+  wrap.querySelector(".ccr-pop")?.addEventListener("click", (e) => {
+    // The action buttons (Llamar, Cómo llegar) follow their own link; the rest of the card opens the place.
+    if ((e.target as Element | null)?.closest?.(".ccr-pop-act")) { e.stopPropagation(); return; }
+    e.preventDefault(); e.stopPropagation(); if (p.href) window.location.assign(p.href);
+  });
   ctx.popup = new ctx.lib.Marker({ element: wrap, anchor: "bottom", offset: [0, -46] }).setLngLat([p.lng, p.lat]).addTo(ctx.map);
   ctx.popup.getElement().style.zIndex = "100000";
 }
