@@ -72,6 +72,9 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await page.getByRole("button", { name: /^(Opciones|Options|Más opciones|More options)$/ }).filter({ visible: true }).first().click();
     await page.getByRole("menuitem", { name: /Reportar/ }).first().click();
     await page.getByText("Contenido inapropiado", { exact: true }).click();
+    // El detalle es obligatorio: sin él, "Enviar reporte" no se habilita.
+    await expect(page.getByRole("button", { name: /Enviar reporte/ })).toBeDisabled();
+    await page.getByLabel("Detalle").fill("Publicó fotos que no son de su trabajo.");
     await page.getByRole("checkbox", { name: /También bloquear/ }).check();
     await page.getByRole("button", { name: /Enviar reporte/ }).click();
     await expect(page.getByText("Reporte enviado")).toBeVisible({ timeout: 20_000 });

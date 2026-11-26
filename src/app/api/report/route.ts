@@ -4,10 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { resolveReportTarget,type ReportKind } from "@/lib/moderation/report-target";
-const schema=z.object({professionalSlug:z.string().min(1).max(200),professionalName:z.string().max(200).optional(),reason:z.string().trim().min(5).max(2000),reporterEmail:z.unknown().optional(),targetType:z.enum(["professional","project","job","offer","review"]).optional(),targetId:z.string().uuid().optional()});
+import { REPORT_DETAIL_MAX_LENGTH, REPORT_DETAIL_MIN_LENGTH } from "@/lib/text-limits";
+// El detalle es obligatorio: un "Estafa" sin contexto no le deja nada que revisar
+// al equipo, y si hay sanción el motivo tiene que poder explicarse.
+const schema=z.object({professionalSlug:z.string().min(1).max(200),professionalName:z.string().max(200).optional(),reason:z.string().trim().min(5).max(2000),detail:z.string().trim().min(REPORT_DETAIL_MIN_LENGTH).max(REPORT_DETAIL_MAX_LENGTH),reporterEmail:z.unknown().optional(),targetType:z.enum(["professional","project","job","offer","review"]).optional(),targetId:z.string().uuid().optional()});
 export async function POST(req: Request) {
  const limited=await enforceRateLimit(req,"report-public",10,600000);if(limited)return limited;
- const parsed=schema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Indique el contenido y un motivo de 5–2000 caracteres."},{status:400});
+ const parsed=schema.safeParse(await req.json().catch(()=>null));
+ if(!parsed.success){
+  const sinDetalle=parsed.error.issues.some(i=>i.path[0]==="detail");
+  return NextResponse.json({error:sinDetalle?`Cuéntenos qué pasó en al menos ${REPORT_DETAIL_MIN_LENGTH} caracteres.`:"Indique el contenido y un motivo de 5–2000 caracteres."},{status:400});
+ }
  const p=parsed.data,db=createAdminClient();
  const {data:{user}}=await (await createClient()).auth.getUser();
  let kind:ReportKind=p.targetType??"professional",id=p.targetId;
