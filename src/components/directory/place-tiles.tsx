@@ -19,12 +19,13 @@ export function useVisiblePlaceSections(totals: Record<string, number | null | u
 }
 
 /** "Empresas" grid of the Categorías page (Yelp style): one big brand tile per directory section with its name and total. */
-export function PlaceTiles({ sections, totals, locale, className }: { sections: string[]; totals: Record<string, number | null | undefined>; locale: string; className?: string }) {
+export function PlaceTiles({ sections, totals, locale, className, leading }: { sections: string[]; totals: Record<string, number | null | undefined>; locale: string; className?: string; leading?: React.ReactNode }) {
   const en = locale === "en";
   const tp = useTranslations("categoriesPage");
   if (!sections.length) return null;
   return (
     <ul data-place-tiles className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5", className)}>
+      {leading}
       {sections.map((s) => {
         const def = placeSection(s);
         if (!def) return null;
