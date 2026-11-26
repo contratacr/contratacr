@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // LOCAL PRO ONLY (multivertical F2). Offline: reads ONE local file and prints dir_import_stage payloads.
 // Usage: node scripts/directory/stage-import.mjs <local-file> <source-id> [--no-phone] [--out <dir>] [--admin-areas <boundaries.json>]
-//        [--only <vertical,...>] [--fuel-points <fuel.json>] [--review-out <file.json>]
+//        [--only <vertical,...>] [--fuel-points <fuel.json>] [--review-out <file.json>] [--inside-only]
 // 2026-11-17 (owner approval, eleven new place sections): classifyTags() maps OSM tags to ONE vertical + its `kind`
 // subtype (first rule wins, see PRIORITY below), with exclusions (pharmacies never in health, locksmiths, outdoor
 // fitness stations, strip clubs/nightclubs and other adult venues, supermarkets never as corner stores, corner stores
@@ -14,7 +14,8 @@
 // checks them again (dir_attributes_ok).
 // --admin-areas: LOCAL Overpass JSON of OSM administrative relations (`out geom`, admin_level 4 = provincia,
 // 6 = cantón in CR). When a feature has no addr:province/addr:county, they are derived by point-in-polygon from those
-// same OSM boundaries (still OSM data, same ODbL source and reference). Generic names that only repeat the category
+// same OSM boundaries (still OSM data, same ODbL source and reference). --inside-only (with --admin-areas; used with a
+// country extract such as Geofabrik's, which spills over the border) drops rows whose point is in no level-4 boundary. Generic names that only repeat the category
 // («Restaurante», «Farmacia», «Gasolinera»…) are skipped like unnamed features.
 // Accepts OSM-style GeoJSON (FeatureCollection of Point/Polygon features with OSM tags in `properties`) or
 // Overpass JSON ({elements:[{type,id,lat,lon|center,tags}]}). Keeps ONLY: name, vertical, address, coordinates and
@@ -50,7 +51,20 @@ export const HEALTH_EXCLUDED_REFS=Object.freeze({'node/7285706099':'person'});
 const FUEL_SHOP_NAMES=new Set(['delta','tienda delta','delta tienda','uno','total','red total','totalenergies','mobil','mobil mart','texaco','puma','gulf','shell','enersol','castrol']);
 export const isFuelShopName=(name,brand)=>[name,brand].some(v=>{const f=fold(v);return !!f&&(FUEL_SHOP_NAMES.has(f)||/^(servicentro|gasolinera|estacion de servicio)\b/.test(f));});
 const CORNER_NAME=/\b(pulper|abastecedor|mini ?-?s[uú]per)/i;
-const LODGING={hotel:'hotel',hostel:'hostel',guest_house:'guest_house',chalet:'cabins',apartment:'apartment',motel:'motel',camp_site:'camping',caravan_site:'camping'};
+const LODGING={hotel:'hotel',hostel:'hostel',guest_house:'guest_house',chalet:'vacation_rental',apartment:'vacation_rental',motel:'motel',camp_site:'camping',caravan_site:'camping'};
+// 2026-11-26: OSM holiday rentals (tourism=chalet/apartment) → «Casa o apartamento por días»; a chalet named «Cabina(s)…»
+// stays a CR cabinas place.
+const CABINAS_NAME=/\bcabinas?\b/i;
+const lodgingKind=t=>t.tourism==='chalet'&&CABINAS_NAME.test(`${t['name:es']??''} ${t.name??''}`)?'cabins':LODGING[t.tourism];
+/** 2026-11-26 parqueos: kind from OSM parking tags. */
+const parkingKind=t=>t.amenity==='motorcycle_parking'||['designated','yes'].includes(t.motorcycle)&&t.motorcar==='no'?'motorcycle'
+ :['designated','yes'].includes(t.hgv)?'truck':['multi-storey','underground','rooftop'].includes(t.parking)||t.covered==='yes'?'covered':'public';
+/** 2026-11-26 lavacar: kind from OSM car-wash tags. */
+const carWashKind=t=>t.self_service==='yes'||t.automated==='yes'?'self_service':/\b(detail|detallado|estetica automotriz)/.test(fold(`${t.name??''} ${t.service??''}`))?'detailing'
+ :/\bmotos?\b/.test(fold(t.name))&&!/\b(carros?|autos?)\b/.test(fold(t.name))?'motorcycle_wash':'car_wash';
+/** Parking names that only describe the lot («Parqueo 2», «Parqueo de clientes», «Estacionamiento privado»). */
+const PARKING_GENERIC=/^(parqueo|parqueos|parking|parking lot|estacionamiento|car park|aparcamiento|parqueadero|parqueo publico|parqueo privado|public parking|private parking)( (de |para |del |los |las |el |la )?(clientes|visitas|visitantes|empleados|funcionarios|personal|staff|privado|publico|motos|motocicletas|carros|autos|bicicletas|buses|camiones|discapacitados|proveedores|residentes|condominos|oficiales|estudiantes|profesores|docentes|vip|norte|sur|este|oeste|principal|interno|externo|[a-z]|[0-9]+|n [0-9]+|no [0-9]+))*$/;
+export const isGenericParkingName=name=>PARKING_GENERIC.test(fold(name));
 const HEALTH_AMENITY={clinic:'clinic',doctors:'doctors',dentist:'dentist',hospital:'hospital'};
 const HEALTHCARE={laboratory:'laboratory',physiotherapist:'physiotherapy',psychotherapist:'psychology',counselling:'psychology',optometrist:'optician',
  rehabilitation:'physiotherapy',podiatrist:'other',alternative:'other',doctor:'doctors',dentist:'dentist',clinic:'clinic',hospital:'hospital',audiologist:'other',speech_therapist:'other',nutrition_counselling:'other'};
@@ -79,7 +93,7 @@ export function classifyTags(tags={}){
  if(isAdultVenue(t))return null;
  if(amenity==='pharmacy'||hc==='pharmacy')return {vertical:'pharmacy'};
  if(amenity==='fuel')return {vertical:'fuel'};
- if(LODGING[tourism])return {vertical:'lodging',attributes:{kind:LODGING[tourism],...(t.swimming_pool==='yes'?{pool:true}:{}),...(['wlan','yes','free'].includes(t.internet_access)?{wifi:true}:{})}};
+ if(LODGING[tourism])return {vertical:'lodging',attributes:{kind:lodgingKind(t),...(t.swimming_pool==='yes'?{pool:true}:{}),...(['wlan','yes','free'].includes(t.internet_access)?{wifi:true}:{})}};
  if(['restaurant','fast_food','food_court'].includes(amenity))return {vertical:'restaurant'};
  if(CAFE[amenity])return {vertical:'cafe_bar',attributes:{kind:CAFE[amenity]}};
  if(CAFE_SHOP[shop])return {vertical:'cafe_bar',attributes:{kind:CAFE_SHOP[shop]}};
@@ -90,7 +104,7 @@ export function classifyTags(tags={}){
  }
  if(['car','motorcycle'].includes(shop))return {vertical:'vehicle_dealer'};
  if(AUTO[shop])return {vertical:'auto_services',attributes:{kind:AUTO[shop]}};
- if(amenity==='car_wash')return {vertical:'auto_services',attributes:{kind:'car_wash'}};
+ if(amenity==='car_wash')return {vertical:'car_wash',attributes:{kind:carWashKind(t)}};
  if(amenity==='vehicle_inspection')return {vertical:'auto_services',attributes:{kind:'inspection'}};
  if(HEALTH_AMENITY[amenity]||HEALTHCARE[hc]||shop==='optician'){
   if(isExcludedHealth(t))return null;
@@ -121,6 +135,9 @@ export function classifyTags(tags={}){
  if(amenity==='atm')return {vertical:'banking',attributes:{kind:'atm',...(cut(t.operator,80)?{operator:cut(t.operator,80)}:{})}};
  if(amenity==='bureau_de_change')return {vertical:'banking',attributes:{kind:'exchange'}};
  if(t.office==='estate_agent')return {vertical:'real_estate'};
+ // 2026-11-26 parqueos: only public-facing lots (private/customers-only lots are skipped); names are checked in row().
+ if(amenity==='parking'||amenity==='motorcycle_parking'){if(['private','no','customers','permissive_customers','employees','delivery'].includes(t.access))return null;
+  return {vertical:'parking',attributes:{kind:parkingKind(t)}};}
  return null;
 }
 /** OSM tags → vertical id (dir_verticals). Unknown or excluded tags return null and the feature is skipped. */
@@ -163,6 +180,7 @@ function row(ref,tags,point,allowPhone,opts={}){
  // An ATM without its own name is named after its operator («Cajero automático BCR»): still OSM data (operator tag).
  if((!name||isGenericName(name))&&vertical==='banking'&&cls.attributes?.kind==='atm'&&cut(tags.operator,80))name=`Cajero automático ${cut(tags.operator,80)}`.slice(0,160);
  if(!name||isGenericName(name))return null;
+ if(vertical==='parking'&&isGenericParkingName(name))return null;
  if(vertical==='convenience'&&(tags.shop==='supermarket'||isFuelShopName(name,tags.brand)))return null;
  if(vertical==='health'&&HEALTH_EXCLUDED_REFS[ref]){opts.review?.push({ref,vertical,name,decision:'skipped_'+HEALTH_EXCLUDED_REFS[ref]});return null;}
  if(vertical==='health'&&HEALTH_RECLASS[ref])cls.attributes={...cls.attributes,...HEALTH_RECLASS[ref]};
@@ -240,6 +258,11 @@ export function fillAdminAreas(rows,areas){
  }
  return n;
 }
+/** Drops rows whose point lies in no level-4 boundary of `areas` (or has no point). Returns how many were dropped. */
+export function dropOutsideAreas(rows,areas){
+ const provinces=areas.filter(x=>x.level===4),keep=rows.filter(r=>Number.isFinite(r.lat)&&Number.isFinite(r.lng)&&provinces.some(x=>inside(x,r.lng,r.lat)));
+ const n=rows.length-keep.length;rows.splice(0,rows.length,...keep);return n;
+}
 /** Parses the file text into stage rows (pure; used by the PGlite verification too). */
 export function parseImport(text,{allowPhone=true,only=null,review=null}={}){
  const data=JSON.parse(text),rows=[],opts={only:only?new Set(only):null,review};let skipped=0;
@@ -256,10 +279,11 @@ export function parseImport(text,{allowPhone=true,only=null,review=null}={}){
 /** Splits rows into dir_import_stage payloads of at most PART_SIZE rows (one batch per part). */
 export function buildPayloads(text,sourceId,fileName,opts={}){
  if(!/^[a-z][a-z0-9_-]{1,40}$/.test(sourceId))throw new Error('source-id inválido / invalid source-id');
- const {rows,skipped}=parseImport(text,opts);if(opts.adminAreas)opts.derivedAdmin=fillAdminAreas(rows,opts.adminAreas);
+ const {rows,skipped}=parseImport(text,opts);if(opts.adminAreas&&opts.insideOnly)opts.outside=dropOutsideAreas(rows,opts.adminAreas);
+ if(opts.adminAreas)opts.derivedAdmin=fillAdminAreas(rows,opts.adminAreas);
  opts.nearFuel=dropNearFuel(rows,opts.fuelPoints);opts.deduped=dedupeNearby(rows,50);const sha=createHash('sha256').update(text).digest('hex'),payloads=[];
  for(let i=0;i<rows.length;i+=PART_SIZE)payloads.push({actionId:randomUUID(),batchId:randomUUID(),sourceId,fileName:fileName.slice(0,200),fileSha256:sha,part:payloads.length+1,rows:rows.slice(i,i+PART_SIZE)});
- return {payloads,skipped,total:rows.length,nearFuel:opts.nearFuel,deduped:opts.deduped};
+ return {payloads,skipped,total:rows.length,nearFuel:opts.nearFuel,deduped:opts.deduped,outside:opts.outside??0};
 }
 
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
@@ -274,12 +298,13 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
  if(/^[a-z]+:\/\//i.test(file)){console.error('Solo archivos locales / local files only');process.exit(2);}
  if(admFile&&/^[a-z]+:\/\//i.test(admFile)){console.error('Solo archivos locales / local files only');process.exit(2);}
  const review=[];
- const opts={allowPhone:!flags.has('--no-phone'),adminAreas:admFile?loadAdminAreas(await readFile(admFile,'utf8')):null,only,review,
+ if(flags.has('--inside-only')&&!admFile){console.error('--inside-only requiere --admin-areas / needs --admin-areas');process.exit(2);}
+ const opts={allowPhone:!flags.has('--no-phone'),insideOnly:flags.has('--inside-only'),adminAreas:admFile?loadAdminAreas(await readFile(admFile,'utf8')):null,only,review,
   fuelPoints:fuelFile?loadFuelPoints(await readFile(fuelFile,'utf8')):null};
- const text=await readFile(file,'utf8'),{payloads,skipped,total,nearFuel,deduped}=buildPayloads(text,sourceId,basename(file),opts);
+ const text=await readFile(file,'utf8'),{payloads,skipped,total,nearFuel,deduped,outside}=buildPayloads(text,sourceId,basename(file),opts);
  if(reviewOut)await writeFile(reviewOut,JSON.stringify(review,null,1));
  console.error(`Junto a gasolinera / at fuel station: ${nearFuel} · duplicados cercanos (50 m) / nearby duplicates: ${deduped} · nombres de persona omitidos / person names skipped: ${review.filter(x=>x.decision==='skipped_person').length} · a revisar / for review: ${review.filter(x=>x.decision==='imported_review').length}`);
- if(opts.adminAreas)console.error(`Provincia/cantón derivados de límites OSM / admin areas derived: ${opts.derivedAdmin} (${opts.adminAreas.length} límites)`);
+ if(opts.adminAreas)console.error(`Provincia/cantón derivados de límites OSM / admin areas derived: ${opts.derivedAdmin} (${opts.adminAreas.length} límites)${opts.insideOnly?` · fuera de los límites / outside: ${outside}`:''}`);
  if(out){await mkdir(out,{recursive:true});for(const p of payloads)await writeFile(join(out,`stage-${p.part}.json`),JSON.stringify(p));}
  else process.stdout.write(JSON.stringify(payloads)+'\n');
  console.error(`Filas preparadas / staged rows: ${total} · omitidas (sin categoría o referencia) / skipped: ${skipped} · lotes / batches: ${payloads.length}`);

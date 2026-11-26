@@ -3,7 +3,7 @@
 // exclusions, person names, fuel-station shops, nearby duplicates). Pure: no network, no database.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyTags, verticalFromTags, personNameCheck, isFuelShopName, dedupeNearby, dropNearFuel, parseImport, isGenericName } from "./stage-import.mjs";
+import { classifyTags, verticalFromTags, personNameCheck, isFuelShopName, dedupeNearby, dropNearFuel, parseImport, isGenericName, isGenericParkingName, dropOutsideAreas, loadAdminAreas } from "./stage-import.mjs";
 
 test("cafés, bakeries and bars leave restaurants; restaurants with a bar or bakery stay restaurants", () => {
   assert.deepEqual(classifyTags({ amenity: "cafe" }), { vertical: "cafe_bar", attributes: { kind: "cafe" } });
@@ -16,7 +16,9 @@ test("cafés, bakeries and bars leave restaurants; restaurants with a bar or bak
 
 test("priority: lodging over its restaurant, pharmacy never health, dealer over workshop", () => {
   assert.deepEqual(classifyTags({ tourism: "hotel", amenity: "restaurant" }), { vertical: "lodging", attributes: { kind: "hotel" } });
-  assert.equal(classifyTags({ tourism: "chalet" }).attributes.kind, "cabins");
+  assert.equal(classifyTags({ tourism: "chalet", name: "Villa Mar" }).attributes.kind, "vacation_rental");
+  assert.equal(classifyTags({ tourism: "apartment" }).attributes.kind, "vacation_rental");
+  assert.equal(classifyTags({ tourism: "chalet", name: "Cabinas El Sol" }).attributes.kind, "cabins");
   assert.equal(verticalFromTags({ amenity: "pharmacy", healthcare: "pharmacy" }), "pharmacy");
   assert.equal(verticalFromTags({ healthcare: "pharmacy" }), "pharmacy");
   assert.equal(verticalFromTags({ shop: "car", service: "repair" }), "vehicle_dealer");
@@ -99,4 +101,42 @@ test("nearby duplicates: same vertical + name within 50 m keep one row; a bank a
   assert.equal(dedupeNearby(rows, 50), 1);
   assert.deepEqual(rows.map((r) => r.ref), ["b", "c", "d"]);
   assert.equal(rows[0].attributes.atm, true);
+});
+
+test("parqueos: named public lots with kinds; private lots and generic names are skipped", () => {
+  assert.deepEqual(classifyTags({ amenity: "parking" }), { vertical: "parking", attributes: { kind: "public" } });
+  assert.equal(classifyTags({ amenity: "parking", parking: "multi-storey" }).attributes.kind, "covered");
+  assert.equal(classifyTags({ amenity: "parking", parking: "underground" }).attributes.kind, "covered");
+  assert.equal(classifyTags({ amenity: "motorcycle_parking" }).attributes.kind, "motorcycle");
+  assert.equal(classifyTags({ amenity: "parking", hgv: "designated" }).attributes.kind, "truck");
+  assert.equal(classifyTags({ amenity: "parking", access: "private" }), null);
+  assert.equal(classifyTags({ amenity: "parking", access: "customers" }), null);
+  for (const n of ["Parqueo", "Parqueo 2", "Parqueo de clientes", "Parqueo Privado", "Estacionamiento", "Parking", "Parqueo para visitas", "Parqueo B"]) assert.ok(isGenericParkingName(n), n);
+  for (const n of ["Parqueo Central", "Parqueo Multiplaza", "Parqueo La Sabana"]) assert.ok(!isGenericParkingName(n), n);
+  const data = JSON.stringify({ elements: [
+    { type: "node", id: 30, lat: 9.93, lon: -84.08, tags: { amenity: "parking", name: "Parqueo" } },
+    { type: "node", id: 31, lat: 9.93, lon: -84.08, tags: { amenity: "parking", name: "Parqueo de empleados" } },
+    { type: "way", id: 32, center: { lat: 9.93, lon: -84.08 }, tags: { amenity: "parking", parking: "multi-storey", name: "Parqueo Central" } },
+    { type: "node", id: 33, lat: 9.93, lon: -84.08, tags: { amenity: "car_wash", name: "Lavacar El Pulpo" } },
+  ] });
+  assert.deepEqual(parseImport(data).rows.map((r) => [r.ref, r.vertical, r.attributes.kind]), [["way/32", "parking", "covered"], ["node/33", "car_wash", "car_wash"]]);
+});
+
+test("lavacar: OSM car washes go to the car_wash section with a kind", () => {
+  assert.deepEqual(classifyTags({ amenity: "car_wash" }), { vertical: "car_wash", attributes: { kind: "car_wash" } });
+  assert.equal(classifyTags({ amenity: "car_wash", self_service: "yes" }).attributes.kind, "self_service");
+  assert.equal(classifyTags({ amenity: "car_wash", name: "Detailing Pro CR" }).attributes.kind, "detailing");
+  assert.equal(classifyTags({ amenity: "car_wash", name: "Lavado de Motos Juan" }).attributes.kind, "motorcycle_wash");
+  assert.equal(verticalFromTags({ shop: "car_repair", amenity: "car_wash" }), "auto_services");
+  assert.ok(isGenericName("Lavacar") && isGenericName("Car Wash"));
+});
+
+test("--inside-only: rows outside every level-4 boundary are dropped", () => {
+  const square = (lat0, lon0) => [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]].map(([a, b]) => ({ lat: lat0 + a, lon: lon0 + b }));
+  const areas = loadAdminAreas(JSON.stringify({ elements: [
+    { type: "relation", id: 1, tags: { admin_level: "4", name: "Provincia de San José" }, members: [{ type: "way", role: "outer", geometry: square(9.5, -84.5) }] },
+  ] }));
+  const rows = [{ ref: "in", lat: 9.9, lng: -84.1 }, { ref: "out", lat: 11.3, lng: -85.9 }, { ref: "nopoint" }];
+  assert.equal(dropOutsideAreas(rows, areas), 2);
+  assert.deepEqual(rows.map((r) => r.ref), ["in"]);
 });
