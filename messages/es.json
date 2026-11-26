@@ -3048,6 +3048,30 @@
     },
     "topRated": {
       "title": "Mejor calificados"
+    },
+    "heroSlides": {
+      "restaurants": "¿Dónde comemos hoy?",
+      "restaurantsButton": "Restaurantes",
+      "groups": {
+        "hogar": "Su casa, en buenas manos",
+        "construccion_ingenieria": "Construya con confianza",
+        "limpieza": "Todo limpio, sin estrés",
+        "salud": "Cuide su salud",
+        "bienestar": "Tiempo para usted",
+        "automotriz": "Su carro, al día",
+        "tecnologia": "Tecnología sin complicaciones",
+        "profesional": "Impulse su empresa",
+        "creatividad": "Ideas que destacan",
+        "eventos": "Eventos que se recuerdan",
+        "educacion": "Aprenda algo nuevo",
+        "transporte": "Llegue a tiempo",
+        "turismo": "Descubra Costa Rica",
+        "mascotas": "Lo mejor para su mascota",
+        "jardin": "Un jardín que da gusto",
+        "belleza": "Luzca increíble",
+        "seguridad": "Tranquilidad en casa"
+      },
+      "default": "Profesionales de confianza"
     }
   },
   "saveStatus": {

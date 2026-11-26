@@ -8,6 +8,10 @@ import { HomeFeed } from "@/components/landing/home-feed";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { HomeTopRated } from "@/components/landing/home-top-rated";
+import { HomeHeroSlides, type HeroSlide } from "@/components/landing/home-hero-slides";
+import { getSupplyCounts } from "@/lib/queries/supply";
+import { categoryGroupId, categoryImageUrl } from "@/lib/data/category-images";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
@@ -74,6 +78,31 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
   },
 ]);
 
+/** Phone hero slides (owner 2026-11-26): the services with the most professionals (with a photo), Restaurantes second. */
+async function HomeHeroSlidesServer({ locale }: { locale: string }) {
+  const t = await getTranslations("landing.heroSlides");
+  // One short line per category (never the button's own words), so no two slides repeat the same text.
+  const used = new Set<string>();
+  const heroLine = (id: string) => {
+    const group = categoryGroupId(id);
+    const key = t.has(`groups.${group}`) && !used.has(group) ? `groups.${group}` : "default";
+    used.add(group);
+    return t(key);
+  };
+  const supply = await getSupplyCounts().catch(() => ({ byCategory: {} as Record<string, number>, total: 0 }));
+  const services = Object.entries(supply.byCategory ?? {})
+    .filter(([id, n]) => n > 0 && categoryImageUrl(id))
+    .sort((a, b) => b[1] - a[1]).slice(0, 3)
+    .map(([id]): HeroSlide => {
+      const label = getCategoryLabel(id, locale);
+      return { key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: label, href: `/buscar?categoria=${id}` };
+    });
+  const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: getCategoryLabel(id, locale), href: `/buscar?categoria=${id}` }));
+  const list = services.length ? services : fallback;
+  const restaurants: HeroSlide = { key: "restaurantes", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=70", title: t("restaurants"), button: t("restaurantsButton"), href: "/restaurantes" };
+  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} />;
+}
+
 async function HomeZoneCoverage() {
   // Directory on (owner 2026-11-26): the zones block also says how many companies each province has.
   const directoryOn = sitemapSections().length > 0;
@@ -137,7 +166,9 @@ export default async function HomePage({
             installed app opens on the professional and company cards (people who installed it want results). */}
         {directoryOn && <div className="hidden [.ccr-native-app_&]:block lg:[.ccr-native-app_&]:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
                 <div className={directoryOn ? "[.ccr-native-app_&]:max-lg:hidden" : undefined}>
-        <LandingHero />
+        {/* Directory on, phones: the Yelp-like slides; computers keep the production hero. */}
+        {directoryOn && <div className="lg:hidden"><Suspense fallback={<div className="h-[440px] bg-[#162543]" />}><HomeHeroSlidesServer locale={locale} /></Suspense></div>}
+        <div className={directoryOn ? "hidden lg:block" : undefined}><LandingHero /></div>
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}

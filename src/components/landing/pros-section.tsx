@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiciosPorSeccion, type SeccionDeServicios } from "@/components/landing/servicios-por-seccion";
 import { DEMANDA_DE_SERVICIOS } from "@/lib/data/home-categories";
-import { CATEGORY_GROUPS, CATEGORY_GROUP_LABELS_EN, getCategoryLabel } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, CATEGORY_GROUP_LABELS_EN, getCategoryLabel } from "@/lib/data/categories";
+const ALL_CATEGORIES_IDS = ALL_CATEGORIES.map((c) => c.id);
 import { categoryGroupId, categoryImageUrl } from "@/lib/data/category-images";
 import { getSupplyCounts } from "@/lib/queries/supply";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
@@ -41,31 +42,40 @@ export async function ProsSection() {
     return [...fuertes, ...resto].slice(0, 4);
   };
 
+  // Directory on (owner 2026-11-26: «todo»): every professional section, its most wanted services first even without
+  // supply yet; with the directory off, production's rule (four services with professionals).
+  const directoryOnForSections = sitemapSections().length > 0;
+  const todosConFoto = (grupo: string) => [...todos, ...ALL_CATEGORIES_IDS].filter((id, i, a) => a.indexOf(id) === i && categoryImageUrl(id) && categoryGroupId(id) === grupo).sort((a, b) => orden(a) - orden(b));
   const secciones: SeccionDeServicios[] = CATEGORY_GROUPS
-    .map((g) => ({ g, ids: cuatro(porSeccion.get(g.id) ?? []) }))
-    .filter(({ ids }) => ids.length === 4)
+    .map((g) => ({ g, ids: directoryOnForSections ? todosConFoto(g.id).slice(0, 4) : cuatro(porSeccion.get(g.id) ?? []) }))
+    .filter(({ ids }) => directoryOnForSections ? ids.length > 0 : ids.length === 4)
     .sort((a, b) => orden(a.ids[0]) - orden(b.ids[0]))
-    .slice(0, 9)
+    .slice(0, directoryOnForSections ? 30 : 9)
     .map(({ g, ids }) => ({
       id: g.id,
       label: (locale === "en" && CATEGORY_GROUP_LABELS_EN[g.id]) || g.label,
       servicios: ids.map((id) => ({ id, label: getCategoryLabel(id, locale), href: rutaDeBusqueda({ categoria: id }) })),
     }));
 
-  // Directory on (test, owner 2026-11-26): «Lo más buscado» — the professional sections first, then one Empresas tab with
-  // the most used business sections. With the directory off this is exactly the production block.
+  // Directory on (owner 2026-11-26): «Lo más buscado» by category — each business section joins the category it belongs
+  // to (Farmacias in Salud, Gasolineras in Vehículos…), shown before that category's services. No separate tab.
   const enabled = sitemapSections().map((x) => x.section as string);
   const directoryOn = enabled.length > 0;
   if (directoryOn) {
-    // Every business section that is on (owner 2026-11-26: «todo», not just four), most used first.
-    const ORDER = ["restaurantes", "farmacias", "supermercados", "gasolineras", "cafes", "talleres", "ferreterias", "belleza", "veterinarias", "salud", "gimnasios", "pulperias", "bancos", "hospedaje", "tours"];
-    const empresas = [...ORDER, ...enabled.filter((id) => !ORDER.includes(id))].filter((id) => enabled.includes(id) && placeSection(id));
-    if (empresas.length >= 2) secciones.push({
-      id: "empresas-directorio",
-      label: t("companiesTab"),
-      icono: "store",
-      servicios: empresas.map((id) => ({ id, label: (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id, href: `/${id}`, place: placeSection(id)!.id })),
-    });
+    const GROUP_OF: Record<string, string> = {
+      restaurantes: "restaurantes", cafes: "restaurantes", supermercados: "comercios", pulperias: "comercios",
+      ferreterias: "construccion_ingenieria", farmacias: "salud", salud: "salud", veterinarias: "mascotas",
+      gimnasios: "bienestar", belleza: "belleza", talleres: "automotriz", gasolineras: "automotriz",
+      hospedaje: "turismo", tours: "turismo", bancos: "profesional",
+    };
+    const place = (id: string) => ({ id, label: (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id, href: `/${id}`, place: placeSection(id)!.id });
+    for (const [section, group] of Object.entries(GROUP_OF)) {
+      if (!enabled.includes(section) || !placeSection(section)) continue;
+      const tab = secciones.find((x) => x.id === group);
+      if (tab) { tab.servicios.unshift(place(section)); continue; }
+      const g = CATEGORY_GROUPS.find((x) => x.id === group);
+      if (g) secciones.push({ id: g.id, label: (locale === "en" && CATEGORY_GROUP_LABELS_EN[g.id]) || g.label, servicios: [place(section)] });
+    }
   }
 
   return (

@@ -2589,3 +2589,8 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   html:has([data-quick-nav-floating]) .ccr-search-area-pill { top: calc(env(safe-area-inset-top) + 84px) !important; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }
+
+/* Phone home hero slides (directory on): story-like progress, slow zoom, text rising in. */
+@keyframes ccr-hero-progress { from { width: 0%; } to { width: 100%; } }
+@keyframes ccr-hero-zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes ccr-hero-text { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }

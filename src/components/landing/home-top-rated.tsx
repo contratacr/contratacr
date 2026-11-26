@@ -39,7 +39,7 @@ export async function HomeTopRated() {
                   : i.name.slice(0, 1)}
               </span>
               <span className="line-clamp-2 text-[12px] font-bold leading-tight text-[#162543]">{i.name}</span>
-              <span className="flex items-center gap-0.5 text-[11.5px] font-semibold text-[#526277]"><Star className="h-3 w-3 fill-[#f59e0b] text-[#f59e0b]" aria-hidden />{i.avg.toFixed(1)}</span>
+              <span className="flex items-center gap-0.5 text-[11.5px] font-semibold text-[#526277]"><Star className="h-3 w-3 fill-[#f59e0b] text-[#f59e0b]" aria-hidden /><span className="text-[#162543]">{i.avg.toFixed(1)}</span><span>({i.count})</span></span>
             </Link>
           </li>
         ))}

@@ -3048,6 +3048,30 @@
     },
     "topRated": {
       "title": "Top rated"
+    },
+    "heroSlides": {
+      "restaurants": "Where to eat today?",
+      "restaurantsButton": "Restaurants",
+      "groups": {
+        "hogar": "Your home, in good hands",
+        "construccion_ingenieria": "Build with confidence",
+        "limpieza": "Clean, stress-free",
+        "salud": "Take care of your health",
+        "bienestar": "Time for yourself",
+        "automotriz": "Your car, up to date",
+        "tecnologia": "Tech made simple",
+        "profesional": "Grow your company",
+        "creatividad": "Ideas that stand out",
+        "eventos": "Events to remember",
+        "educacion": "Learn something new",
+        "transporte": "Get there on time",
+        "turismo": "Discover Costa Rica",
+        "mascotas": "The best for your pet",
+        "jardin": "A garden to enjoy",
+        "belleza": "Look amazing",
+        "seguridad": "Peace of mind at home"
+      },
+      "default": "Professionals you can trust"
     }
   },
   "saveStatus": {
