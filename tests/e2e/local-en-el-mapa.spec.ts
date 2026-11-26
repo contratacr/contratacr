@@ -27,7 +27,7 @@ test.beforeAll(async () => {
 import{AttentionModalities}from'./src/components/dashboard/pro/attention-modalities';import{hasBaseCanton}from'./src/lib/location';
 import es from './messages/es.json';import en from './messages/en.json';
 function App(){const english=document.documentElement.lang==='en';const[w,setW]=useState([]);const[pending,setPending]=useState(false);const[msg,setMsg]=useState('');
-return <NextIntlClientProvider locale={english?'en':'es'} messages={english?en:es}><main className="mx-auto max-w-xl p-4"><AttentionModalities value={w} onChange={n=>{setW(n);setMsg('');}} english={english} canVideo={false} video={false} onVideoChange={()=>{}} onLocalDraftPendingChange={setPending}/>
+return <NextIntlClientProvider locale={english?'en':'es'} messages={english ? en : es}><main className="mx-auto max-w-xl p-4"><AttentionModalities value={w} onChange={n=>{setW(n);setMsg('');}} english={english} canVideo={false} video={false} onVideoChange={()=>{}} onLocalDraftPendingChange={setPending}/>
 <button type="button" className="min-h-11" onClick={()=>setMsg(hasBaseCanton(w)?'CONTINUA':pending?'FALTA_GUARDAR':'FALTA_LUGAR')}>Continuar</button><output data-result>{msg}</output><output hidden data-saved>{JSON.stringify(w)}</output></main></NextIntlClientProvider>;}
 createRoot(document.getElementById('root')).render(<App/>);`,
     },
