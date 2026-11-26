@@ -44,9 +44,18 @@ export function PlacesFilterChips({variant,menus,toggles,filtersLabel,activeFilt
  const filters=<button type="button" data-dir-filters-button aria-haspopup="dialog" onClick={()=>window.dispatchEvent(new Event(OPEN_DIR_FILTERS))} className={activeFilters>0?on:idle}>
   <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/><span>{filtersLabel}{activeFilters>0?` (${activeFilters})`:''}</span></button>;
  const toggleChips=toggles.map(x=><a key={x.key} href={x.href} data-chip={x.key} aria-pressed={x.active} className={x.active?on:idle}>{x.label}</a>);
- // Phones: no dropdowns inside the draggable sheet (they would be clipped by the chip rail); «Filtros» holds them all.
- if(variant==='sheet')return <div ref={root} className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto pb-0.5" aria-label={en?'Filters':'Filtros'} role="group">
-  <div className="flex w-max min-w-full items-center gap-1">{filters}{toggleChips}</div></div>;
+ // Phones (owner 2026-11-26, like Yelp): «Ordenar ▾», the toggles, then the other menus; each menu opens a bottom sheet
+ // (a dropdown would be clipped by the chip rail).
+ if(variant==='sheet'){
+  // No filters button and no place menu (owner 2026-11-26): the location lives in the search; only loose chips here.
+  const [sortMenu,...otherMenus]=menus.filter(m=>m.key!=='province');
+  return <div ref={root} className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto pb-0.5" aria-label={en?'Filters':'Filtros'} role="group">
+   <div className="flex w-max min-w-full items-center gap-1">
+    {sortMenu&&<SheetMenu menu={sortMenu} openKey={openKey} setOpenKey={setOpenKey} en={en}/>}
+    {toggleChips}
+    {otherMenus.map(m=><SheetMenu key={m.key} menu={m} openKey={openKey} setOpenKey={setOpenKey} en={en}/>)}
+   </div></div>;
+ }
  return <div ref={root} className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label={en?'Filters':'Filtros'} role="group">
   {menus.map(m=><Menu key={m.key} menu={m} openKey={openKey} setOpenKey={setOpenKey}/>)}
   {toggleChips}
@@ -82,4 +91,20 @@ export function PlacesFiltersDrawer({title,closeLabel,children}:{title:string;cl
    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4">{children}</div>
   </div>
  </div>;
+}
+
+/** A chip menu on phones: the options open in a bottom sheet over the page (not a dropdown clipped by the chip rail). */
+function SheetMenu({menu,openKey,setOpenKey,en}:{menu:ChipMenu;openKey:string|null;setOpenKey:(k:string|null)=>void;en:boolean}){
+ const open=openKey===menu.key;
+ return <>
+  <button type="button" data-chip-menu={menu.key} aria-haspopup="dialog" aria-expanded={open} onClick={()=>setOpenKey(open?null:menu.key)} className={menu.active?on:idle}>
+   <span className="whitespace-nowrap">{menu.label}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/></button>
+  {open&&<div className={`fixed inset-0 ${CAPA_HOJA}`} role="dialog" aria-modal="true" aria-label={menu.label}>
+   <button type="button" aria-label={en?'Close':'Cerrar'} className="absolute inset-0 bg-black/30" onClick={()=>setOpenKey(null)}/>
+   <div className="absolute inset-x-0 bottom-0 max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2 shadow-2xl">
+    <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-[#d1d5db]" aria-hidden="true"/>
+    <ul>{menu.options.map(o=><li key={o.value}><a href={o.href} aria-current={o.current?'true':undefined} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-[15px] ${o.current?'font-bold text-[#007fae]':'font-semibold text-[#162543]'}`}>{o.label}{o.current&&<span aria-hidden="true">✓</span>}</a></li>)}</ul>
+   </div>
+  </div>}
+ </>;
 }

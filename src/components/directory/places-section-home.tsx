@@ -68,7 +68,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const sorts=(['relevance','best_rated',...(values.lat?['distance'] as const:[]),...(priceSorts?['price_asc','price_desc'] as const:[]),'newest'] as SearchSort[]);
  const sort=(values.sort as SearchSort|undefined)??'relevance';
  const menus:ChipMenu[]=[
-  {key:'sort',label:sortLabel(sorts.includes(sort)?sort:'relevance',en),active:sort!=='relevance',options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s==='relevance'?undefined:s}),current:s===sort}))},
+  {key:'sort',label:sort==='relevance'?t('Ordenar','Sort'):sortLabel(sorts.includes(sort)?sort:'relevance',en),active:sort!=='relevance',options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s==='relevance'?undefined:s}),current:s===sort}))},
   {key:'province',label:values.province??t('Provincia','Province'),active:!!values.province,options:[{value:'province-all',label:t('Todo el país','Whole country'),href:link({province:undefined,canton:undefined}),current:!values.province},
    ...CR_PROVINCES.map(p=>({value:p,label:p,href:link({province:p,canton:undefined}),current:values.province===p}))]},
   ...(kinds.length?[{key:'kind',label:kinds.find(k=>k.value===values.kind)?.[en?'en':'es']??t('Tipo','Type'),active:!!values.kind,
