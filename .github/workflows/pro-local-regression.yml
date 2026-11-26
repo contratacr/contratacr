@@ -282,7 +282,9 @@ jobs:
           # locale rewrite (/dashboard → /es/dashboard) went through an HTTP self-proxy that occasionally failed with
           # «Failed to proxy … ECONNRESET» (blank 500 page). Without -H both sides say localhost and rewrites stay
           # internal; the server listens on all interfaces, so http://127.0.0.1:3185 keeps working.
-          setsid nohup npx next start -p 3185 >> server.log 2>&1 &
+          # keepAliveTimeout: Node closes idle sockets after 5 s; Playwright request contexts reusing one got
+          # «read ECONNRESET» (no trace in server.log). 75 s outlives any idle gap between a spec's API calls.
+          setsid nohup npx next start -p 3185 --keepAliveTimeout 75000 >> server.log 2>&1 &
           for i in $(seq 1 60); do
             if curl -fsS --max-time 10 http://127.0.0.1:3185/api/health > /dev/null 2>&1; then echo "Production server ready"; exit 0; fi
             sleep 2
