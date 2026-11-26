@@ -3071,7 +3071,8 @@
         "belleza": "Look amazing",
         "seguridad": "Peace of mind at home"
       },
-      "default": "Professionals you can trust"
+      "default": "Professionals you can trust",
+      "search": "Search professionals or companies"
     }
   },
   "saveStatus": {

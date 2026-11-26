@@ -100,7 +100,7 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
   const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: getCategoryLabel(id, locale), href: `/buscar?categoria=${id}` }));
   const list = services.length ? services : fallback;
   const restaurants: HeroSlide = { key: "restaurantes", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=70", title: t("restaurants"), button: t("restaurantsButton"), href: "/restaurantes" };
-  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} />;
+  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} searchLabel={t("search")} />;
 }
 
 async function HomeZoneCoverage() {
@@ -167,7 +167,7 @@ export default async function HomePage({
         {directoryOn && <div className="hidden [.ccr-native-app_&]:block lg:[.ccr-native-app_&]:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
                 <div className={directoryOn ? "[.ccr-native-app_&]:max-lg:hidden" : undefined}>
         {/* Directory on, phones: the Yelp-like slides; computers keep the production hero. */}
-        {directoryOn && <div className="lg:hidden"><Suspense fallback={<div className="h-[440px] bg-[#162543]" />}><HomeHeroSlidesServer locale={locale} /></Suspense></div>}
+        {directoryOn && <div className="lg:hidden"><Suspense fallback={<div className="h-[480px] bg-[#162543]" />}><HomeHeroSlidesServer locale={locale} /></Suspense></div>}
         <div className={directoryOn ? "hidden lg:block" : undefined}><LandingHero /></div>
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la

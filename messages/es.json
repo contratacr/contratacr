@@ -3071,7 +3071,8 @@
         "belleza": "Luzca increíble",
         "seguridad": "Tranquilidad en casa"
       },
-      "default": "Profesionales de confianza"
+      "default": "Profesionales de confianza",
+      "search": "Busque profesionales o empresas"
     }
   },
   "saveStatus": {
