@@ -13,7 +13,8 @@ import {placePhotoStoreOf} from '@/lib/directory/place-photo-store';
 // LOCAL (launch round 2026-11-18): one uploaded place photo.
 //  GET ?s=320|800|1600 → the stored variant from its store (R2 or the private Supabase bucket, place-photo-store.ts),
 //      only while approved on a public place (an administrator with MFA also sees pending/hidden ones for the queue
-//      preview, never cached). Short public cache on purpose: a photo hidden by moderation or removed must stop being served soon, so the URL is never «immutable».
+//      preview, never cached). Short public cache on purpose: a photo hidden by moderation or removed must stop being
+//      served soon, so the URL is never «immutable».
 //  POST {flagId, reason, message?} → «Reportar foto» (dir_place_photo_flag_create; device HMAC without an account).
 const idSchema=z.string().uuid();
 export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
