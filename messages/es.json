@@ -2993,7 +2993,12 @@
       "disclaimer": "No prometemos cobertura en todo el país: le mostramos solo a los profesionales que realmente trabajan en su zona.",
       "viewCompanies": "Ver empresas cerca",
       "headingDirectory": "Profesionales y empresas cerca de usted",
-      "companiesCount": "{count, plural, one {# empresa} other {# empresas}}"
+      "companiesCount": "{count, plural, one {# empresa} other {# empresas}}",
+      "kindLabel": "Qué busca",
+      "kindPros": "Profesionales",
+      "kindCompanies": "Empresas",
+      "companiesIn": "Empresas en {province}",
+      "viewCompaniesAll": "Ver todas las categorías"
     },
     "howItWorks": {
       "eyebrow": "Cómo funciona",

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { DIRECTORY_SECTION_ICONS } from "@/lib/directory/directory-groups";
+import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { useRouter } from "@/i18n/navigation";
 import { MapPin, ArrowRight, Loader2, Navigation } from "lucide-react";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
@@ -15,14 +17,20 @@ const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border
 // "Encuentra profesionales en tu zona" — an interactive map of Costa Rica.
 // Click a province on the map → it highlights and the panel shows its cantones
 // + REAL coverage (computed server-side; never a fabricated count).
+const ZONE_SECTIONS = ["restaurantes", "farmacias", "supermercados", "gasolineras", "cafes", "talleres", "ferreterias", "belleza", "veterinarias"];
+
 export function FindByZone({ coverage, companies = null }: { coverage: ZoneCoverage; companies?: Record<string, number> | null }) {
   const t = useTranslations("landing.zones");
-  const directoryOn = useSiteFeatures().directorySections.length > 0;
+  const { directorySections } = useSiteFeatures();
+  const directoryOn = directorySections.length > 0;
+  const locale = useLocale();
   const router = useRouter();
   const [activeId, setActiveId] = useState(PROVINCES[0].id);
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  // Directory on (owner 2026-11-26): the panel shows professionals or companies of the province.
+  const [kind, setKind] = useState<"pros" | "companies">("pros");
 
   const province = getProvinceById(activeId)!;
   const hasCoverage = (id: string) => coverage.countryWide || (coverage.byProvince[id]?.length ?? 0) > 0;
@@ -54,7 +62,7 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setGeoLoading(false);
-        router.push(`/profesionales?lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
+        router.push(directoryOn && kind === "companies" ? `/restaurantes?lat=${latitude.toFixed(2)}&lng=${longitude.toFixed(2)}&sort=distance` : `/profesionales?lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
       },
       () => {
         setGeoLoading(false);
@@ -123,6 +131,16 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
 
           {/* ── Active-province panel ── */}
           <div className="rounded-3xl bg-white border border-[#eef2f6] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
+            {directoryOn && (
+              <div role="tablist" aria-label={t("kindLabel")} className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-[#eef3f7] p-1" data-zone-kind>
+                {(["pros", "companies"] as const).map((k) => (
+                  <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} data-zone-kind-option={k}
+                    className={`h-9 rounded-lg text-sm font-bold transition-colors ${kind === k ? "bg-white text-[#162543] shadow-sm" : "text-[#526277]"}`}>
+                    {k === "pros" ? t("kindPros") : t("kindCompanies")}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
               <div className="flex items-center gap-2.5">
                 <span className={`${leadIconClass} h-11 w-11`}>
@@ -144,14 +162,31 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
               </div>
               <button
                 type="button"
-                onClick={goToProvince}
+                onClick={directoryOn && kind === "companies" ? () => router.push(`/categorias`) : goToProvince}
                 className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_8px_22px_rgba(0,159,217,0.3)]"
               >
-                {t("viewPros")} <ArrowRight className="h-4 w-4" />
+                {directoryOn && kind === "companies" ? t("viewCompaniesAll") : t("viewPros")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
 
-            {count > 0 ? (
+
+            {directoryOn && kind === "companies" ? (
+              <>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("companiesIn", { province: province.name })}</p>
+                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3" data-zone-company-sections>
+                  {ZONE_SECTIONS.filter((id) => directorySections.includes(id)).map((id) => {
+                    const Icon = DIRECTORY_SECTION_ICONS[id] ?? MapPin;
+                    return (
+                      <button key={id} type="button" onClick={() => router.push(`/${id}?province=${encodeURIComponent(province.name)}`)}
+                        className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5 text-left text-sm font-semibold leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors">
+                        <Icon className="h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
+                        <span className="truncate text-[13px]">{(DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : count > 0 ? (
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("cantonsWithPros")}</p>
                 {/* Todos los cantones, en cuadrícula pareja y por orden alfabético. */}

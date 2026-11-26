@@ -2993,7 +2993,12 @@
       "disclaimer": "We don't promise nationwide coverage: we only show the professionals who actually work in your area.",
       "viewCompanies": "See companies nearby",
       "headingDirectory": "Professionals and companies near you",
-      "companiesCount": "{count, plural, one {# company} other {# companies}}"
+      "companiesCount": "{count, plural, one {# company} other {# companies}}",
+      "kindLabel": "What you are looking for",
+      "kindPros": "Professionals",
+      "kindCompanies": "Companies",
+      "companiesIn": "Companies in {province}",
+      "viewCompaniesAll": "See all categories"
     },
     "howItWorks": {
       "eyebrow": "How it works",
