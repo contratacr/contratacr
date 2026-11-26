@@ -8,6 +8,7 @@ import { HomeFeed } from "@/components/landing/home-feed";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { HomeTopRated } from "@/components/landing/home-top-rated";
+import { sectionPhoto } from "@/lib/directory/section-photos";
 import { HomeCategories } from "@/components/landing/home-categories";
 import { HomeHeroSlides, type HeroSlide } from "@/components/landing/home-hero-slides";
 import { getSupplyCounts } from "@/lib/queries/supply";
@@ -101,8 +102,18 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
     });
   const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: getCategoryLabel(id, locale), href: `/buscar?categoria=${id}` }));
   const list = services.length ? services : fallback;
-  const restaurants: HeroSlide = { key: "restaurantes", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=70", title: t("restaurants"), button: t("restaurantsButton"), href: "/restaurantes" };
-  return <HomeHeroSlides slides={[list[0]!, restaurants, ...list.slice(1)]} />;
+  // Alternate (owner 2026-11-26): a professional service, then a company section, and so on — the most important ones.
+  const enabled = sitemapSections().map((x) => x.section as string);
+  const companies: HeroSlide[] = ["restaurantes", "parqueos", "farmacias", "hospedaje", "lavacar", "gasolineras"]
+    .filter((id) => enabled.includes(id) && sectionPhoto(id, 900) && t.has(`places.${id}.title`))
+    .slice(0, 4)
+    .map((id) => ({ key: id, image: sectionPhoto(id, 900)!, title: t(`places.${id}.title`), button: t(`places.${id}.button`), href: `/${id}` }));
+  const slides: HeroSlide[] = [];
+  for (let i = 0; i < Math.max(list.length, companies.length); i++) {
+    if (list[i]) slides.push(list[i]!);
+    if (companies[i]) slides.push(companies[i]!);
+  }
+  return <HomeHeroSlides slides={slides.slice(0, 6)} />;
 }
 
 async function HomeZoneCoverage() {

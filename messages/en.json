@@ -3087,7 +3087,33 @@
       "default": "Chosen by their reviews",
       "search": "Search professionals or companies",
       "default2": "Reviews from real customers",
-      "default3": "Recommended near you"
+      "default3": "Recommended near you",
+      "places": {
+        "restaurantes": {
+          "title": "Where to eat near you",
+          "button": "Restaurants"
+        },
+        "parqueos": {
+          "title": "Parking made easy",
+          "button": "Parking"
+        },
+        "farmacias": {
+          "title": "Pharmacies open now",
+          "button": "Pharmacies"
+        },
+        "hospedaje": {
+          "title": "Where to stay this time",
+          "button": "Lodging"
+        },
+        "lavacar": {
+          "title": "Your car like new",
+          "button": "Car wash"
+        },
+        "gasolineras": {
+          "title": "Fuel at the best price",
+          "button": "Gas stations"
+        }
+      }
     },
     "homeCategories": {
       "title": "Categories",

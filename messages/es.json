@@ -3087,7 +3087,33 @@
       "default": "Elegidos por sus reseñas",
       "search": "Busque profesionales o empresas",
       "default2": "Reseñas de clientes reales",
-      "default3": "Recomendados en su zona"
+      "default3": "Recomendados en su zona",
+      "places": {
+        "restaurantes": {
+          "title": "Dónde comer cerca de usted",
+          "button": "Restaurantes"
+        },
+        "parqueos": {
+          "title": "Parqueo sin vueltas",
+          "button": "Parqueos"
+        },
+        "farmacias": {
+          "title": "Farmacias abiertas ahora",
+          "button": "Farmacias"
+        },
+        "hospedaje": {
+          "title": "Dónde quedarse esta vez",
+          "button": "Hospedaje"
+        },
+        "lavacar": {
+          "title": "Su carro como nuevo",
+          "button": "Lavacar"
+        },
+        "gasolineras": {
+          "title": "Combustible al mejor precio",
+          "button": "Gasolineras"
+        }
+      }
     },
     "homeCategories": {
       "title": "Categorías",
