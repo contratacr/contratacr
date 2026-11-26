@@ -14,9 +14,9 @@ const ORDER = ["restaurantes", "cafes", "farmacias", "supermercados"];
  * The best-rated places of the first enabled section, for the "Top 10" band of the app home. Real data only: a place
  * needs at least one published review; returns [] (the band then shows no cards) on any problem or after 1.8 s.
  */
-export async function loadTopPlaces(): Promise<TopPlace[]> {
+export async function loadTopPlaces(only?: string): Promise<TopPlace[]> {
   const enabled = sitemapSections().map((s) => s.section as string);
-  const section = ORDER.find((s) => enabled.includes(s)) as SearchVertical | undefined;
+  const section = (only ? (enabled.includes(only) ? only : undefined) : ORDER.find((s) => enabled.includes(s))) as SearchVertical | undefined;
   if (!section) return [];
   const work = (async () => {
     const parsed = parseSearchParams(new URLSearchParams({ vertical: section, sort: "best_rated", limit: "10" }));

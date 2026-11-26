@@ -4,6 +4,8 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { DirectoryQuickNav } from "@/components/landing/directory-nav";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
+import { HomeFeed } from "@/components/landing/home-feed";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
@@ -81,6 +83,8 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  // Directory flag (DIR_ENABLED): with it off the home is exactly the production one.
+  const directoryOn = sitemapSections().length > 0;
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
   const [query, t] = await Promise.all([
     searchParams,
@@ -109,7 +113,9 @@ export default async function HomePage({
           </div>
         )}
         {/* Hero: rotating headline + primary search. */}
-        <LandingHero />
+        {/* Directory on, phones: the header already has the search, so the page opens on recommendations (Yelp style). */}
+        {directoryOn && <div className="lg:hidden"><Suspense fallback={null}><HomeFeed /></Suspense></div>}
+        <div className={directoryOn ? "hidden lg:block" : undefined}><LandingHero /></div>
 
         {/* Negocios reales justo bajo el hero, antes de los servicios: la
             prueba de que ContrataCR ya tiene negocios de verdad. */}
