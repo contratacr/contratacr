@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft, Briefcase, Building2, ChevronRight, FileText, HandCoins, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BarChart3, Boxes, Briefcase, Building2, CalendarDays, ChevronRight, ClipboardList, Clock, FileSignature, FileText, FolderOpen, HandCoins, Inbox, ListChecks, MapPinned, Receipt, ReceiptText, Repeat, Truck, UserRound, Users, Wallet, Layers, type LucideIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { DirectoryShell } from "@/components/directory/directory-shell";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
@@ -14,6 +14,15 @@ import { PRO_ENABLED } from "@/lib/pro/enabled";
 export const dynamic = "force-dynamic";
 
 type Tool = { key: string; label: string; href: string };
+// Same row as «Mi panel» in production: separate rounded rows, outline icon, name, chevron (owner, 2026-11-26).
+const ROW = "flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]";
+const ICON = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5";
+const TOOL_ICONS: Record<string, LucideIcon> = {
+  leads: Inbox, customers: UserRound, agenda: CalendarDays, quotes: FileSignature, projects: ClipboardList, tasks: ListChecks,
+  hours: Clock, preparation: MapPinned, payments: Wallet, expenses: Receipt, billing: ReceiptText, statistics: BarChart3,
+  company: Building2, team: Users, suppliers: Truck, files: FolderOpen, catalog: Boxes, services: Repeat, editions: Layers,
+  cv: FileText, letter: FileText,
+};
 const GROUPS: { id: string; icon: LucideIcon; keys: string[] }[] = [
   { id: "sales", icon: Users, keys: ["leads", "customers", "agenda", "quotes"] },
   { id: "work", icon: Briefcase, keys: ["projects", "tasks", "hours", "preparation"] },
@@ -51,28 +60,30 @@ export default async function ToolsPage({ params, searchParams }: { params: Prom
             <Link href="/herramientas" prefetch={false} data-tools-back className="mb-3 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#0083b0]">
               <ArrowLeft className="h-4 w-4" aria-hidden />{t("title")}
             </Link>
-            <h2 className="mb-3 text-[22px] font-extrabold text-[#162543]">{t(`g_${open.id}`)}</h2>
-            <ul className="overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
-              {open.tools.map((i) => (
-                <li key={i.key} className="border-b border-[#eef2f6] last:border-b-0">
-                  <Link href={i.href} prefetch={false} data-tools-entry={i.key} className="flex min-h-[56px] items-center justify-between gap-3 px-4 text-[16px] font-bold text-[#162543] hover:bg-[#f6f9fb]">
-                    {i.label}<ChevronRight className="h-5 w-5 shrink-0 text-[#c2c7cc]" aria-hidden />
-                  </Link>
-                </li>
-              ))}
+            <h2 className="mb-3 text-[20px] font-extrabold text-[#162543]">{t(`g_${open.id}`)}</h2>
+            <ul className="space-y-2">
+              {open.tools.map((i) => {
+                const Icon = TOOL_ICONS[i.key] ?? Briefcase;
+                return (
+                  <li key={i.key}>
+                    <Link href={i.href} prefetch={false} data-tools-entry={i.key} className={ROW}>
+                      <span className={ICON}><Icon aria-hidden /></span>
+                      <span className="min-w-0 flex-1 truncate">{i.label}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {groups.map(({ id, icon: Icon, tools }) => (
+          <ul className="space-y-2">
+            {groups.map(({ id, icon: Icon }) => (
               <li key={id}>
-                <Link href={`/herramientas?grupo=${id}`} prefetch={false} data-tools-group-tile={id} className="flex items-center gap-4 rounded-2xl border border-[#e5e9ee] bg-white p-4 hover:border-[#009FD9]">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#eaf7fd] text-[#0083b0]"><Icon className="h-6 w-6" aria-hidden /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[16px] font-extrabold text-[#162543]">{t(`g_${id}`)}</span>
-                    <span className="mt-0.5 block text-[13px] leading-snug text-[#64748b]">{tools.map((i) => i.label).join(", ")}</span>
-                  </span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-[#c2c7cc]" aria-hidden />
+                <Link href={`/herramientas?grupo=${id}`} prefetch={false} data-tools-group-tile={id} className={ROW}>
+                  <span className={ICON}><Icon aria-hidden /></span>
+                  <span className="min-w-0 flex-1 truncate">{t(`g_${id}`)}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
                 </Link>
               </li>
             ))}
