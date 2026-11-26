@@ -388,6 +388,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const hayCambiosReales = huellaActual !== huellaGuardada || !!pendingAvatarFile;
 
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
+  // Un local con su punto puesto pero sin «Guardar lugar»: se perdería al guardar.
+  const [localDraftPending, setLocalDraftPending] = useState(false);
   const hasWorkplace = workplaces.some(w => (w.homeService !== false && (w.level === "country" || !!w.provinciaId)) || (isFixedWorkplace(w) && w.receivesClients !== false)) || (canOfferVideoConsult && videoConsult);
   const socialIsValid =
     (!website.trim() || isValidWebsiteUrl(website)) &&
@@ -400,6 +402,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     if (sectionId === "basic") {
       if (!resolvedFullName.trim()) return locale === "en" ? "Full name is required." : "El nombre completo es obligatorio.";
       if (!bio.trim()) return locale === "en" ? "Description is required." : "La descripción es obligatoria.";
+    }
+    if (sectionId === "location" && localDraftPending) {
+      return locale === "en"
+        ? "Your location is not saved yet: tap \"Save location\" first."
+        : "Falta guardar su local: toque \"Guardar lugar\" primero.";
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
@@ -1029,10 +1036,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       <Section footer={makeSectionFooter("location")} id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div data-field="location">
-          <AttentionModalities value={workplaces} onChange={next => { setWorkplaces(next); touch("location"); }} english={locale === "en"} canVideo={canOfferVideoConsult} video={videoConsult && videoCoverageCountry} onVideoChange={next => { setVideoConsult(next); setVideoCoverageCountry(next); touch("location"); }}/>
+          <AttentionModalities value={workplaces} onChange={next => { setWorkplaces(next); touch("location"); }} english={locale === "en"} canVideo={canOfferVideoConsult} video={videoConsult && videoCoverageCountry} onVideoChange={next => { setVideoConsult(next); setVideoCoverageCountry(next); touch("location"); }} onLocalDraftPendingChange={setLocalDraftPending}/>
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
               {locale === "en" ? "Add a location or enable video calls." : "Agregue una zona, un lugar o active las videollamadas."}
+            </p>
+          ) : null}
+          {localDraftPending ? (
+            <p role="status" className="mt-2 text-xs font-medium text-[#b45309]">
+              {locale === "en" ? "Your location is not saved yet: tap \"Save location\" first." : "Falta guardar su local: toque \"Guardar lugar\" primero."}
             </p>
           ) : null}
         </div>
