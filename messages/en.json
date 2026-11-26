@@ -2930,7 +2930,21 @@
       "botonBuscar": "Search",
       "botonPublicar": "Post a request",
       "titularDirectorio": "Professionals, companies|and *reviews* in Costa Rica.",
-      "titularDirectorioPc": "Professionals, companies and *reviews*|in Costa Rica."
+      "titularDirectorioPc": "Professionals, companies and *reviews*|in Costa Rica.",
+      "slides": {
+        "electricidad": {
+          "titulo": "Electrical trouble?",
+          "boton": "Electricians"
+        },
+        "plomeria": {
+          "titulo": "A leak at home?",
+          "boton": "Plumbing"
+        },
+        "carpinteria": {
+          "titulo": "Your project, in good hands",
+          "boton": "Carpentry"
+        }
+      }
     },
     "inicio": {
       "lugaresTitulo": "Popular categories",

@@ -2930,7 +2930,21 @@
       "botonBuscar": "Buscar",
       "botonPublicar": "Publicar solicitud",
       "titularDirectorio": "Profesionales, empresas|y *reseñas* en Costa Rica.",
-      "titularDirectorioPc": "Profesionales, empresas y *reseñas*|en Costa Rica."
+      "titularDirectorioPc": "Profesionales, empresas y *reseñas*|en Costa Rica.",
+      "slides": {
+        "electricidad": {
+          "titulo": "¿Problemas con la electricidad?",
+          "boton": "Electricistas"
+        },
+        "plomeria": {
+          "titulo": "¿Una fuga en casa?",
+          "boton": "Plomería"
+        },
+        "carpinteria": {
+          "titulo": "Su proyecto, en buenas manos",
+          "boton": "Carpintería"
+        }
+      }
     },
     "inicio": {
       "lugaresTitulo": "Categorías populares",

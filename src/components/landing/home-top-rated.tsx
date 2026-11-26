@@ -7,7 +7,7 @@ import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 /**
  * Directory on (owner 2026-11-26): under the hero, instead of the brands strip, the best-rated accounts — professionals and
- * companies together, most reviews first — in one row that slides. Real data only; nothing is drawn without reviews.
+ * companies together, ranked by rating weighted by the number of reviews — in one row that slides. Real data only; nothing is drawn without reviews.
  */
 export async function HomeTopRated() {
   const locale = await getLocale();
@@ -19,7 +19,11 @@ export async function HomeTopRated() {
   const items = [
     ...pros.filter((p) => p.reviewCount > 0).map((p) => ({ key: `p:${p.id}`, href: `/profesionales/${p.slug}`, name: p.fullName, photo: p.avatarUrl ?? null, avg: p.ratingAvg, count: p.reviewCount })),
     ...places.flat().map((p) => ({ key: `l:${p.slug}`, href: `/lugar/${p.slug}`, name: p.name, photo: p.photo, avg: p.average ?? 0, count: p.count })),
-  ].sort((a, b) => b.count - a.count || b.avg - a.avg).slice(0, 12);
+  ]
+    // Rating weighted by how many reviews back it (a 5.0 with one review must not beat a 4.7 with eighty): the average
+    // pulled toward 4.0 as if it had five extra reviews; ties go to more reviews.
+    .map((i) => ({ ...i, score: (i.avg * i.count + 4 * 5) / (i.count + 5) }))
+    .sort((a, b) => b.score - a.score || b.count - a.count).slice(0, 12);
   if (!items.length) return null;
   return (
     <section data-home-top-rated className="bg-white pb-2 pt-5">
