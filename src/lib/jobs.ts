@@ -127,11 +127,10 @@ export function formatJobSalary(job: Pick<JobPost, "salary_min" | "salary_max" |
   if (!job.show_salary || (job.salary_min == null && job.salary_max == null)) return locale === "en" ? "Salary negotiable" : "Salario a convenir";
   const symbol = job.currency === "USD" ? "$" : "\u20a1";
   const format = (value: number) => `${symbol}${agruparMiles(value, locale === "en" ? "," : ".")}`;
-  const range = job.salary_min != null && job.salary_max != null
+  // Un solo monto (o dos iguales) es un salario fijo: se muestra sin "Desde" ni "Hasta".
+  const range = job.salary_min != null && job.salary_max != null && job.salary_min !== job.salary_max
     ? `${format(job.salary_min)} - ${format(job.salary_max)}`
-    : job.salary_min != null
-      ? `${locale === "en" ? "From" : "Desde"} ${format(job.salary_min)}`
-      : `${locale === "en" ? "Up to" : "Hasta"} ${format(job.salary_max!)}`;
+    : format((job.salary_min ?? job.salary_max)!);
   const period = locale === "en"
     ? { hourly: "per hour", biweekly: "every two weeks", monthly: "per month", annual: "per year", project: "per project" }[job.salary_period]
     : SALARY_PERIODS[job.salary_period];

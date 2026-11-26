@@ -101,6 +101,10 @@ const JOB_POST_COPY = {
     addBenefit: "Agregar beneficio",
     salaryAndValidity: "Salario y vigencia",
     optionalInformation: "Esta información es opcional.",
+    salaryType: "Tipo de salario",
+    salaryFixed: "Salario fijo",
+    salaryRangeOption: "Rango",
+    salaryAmount: "Salario",
     salaryFrom: "Salario desde",
     salaryTo: "Salario hasta",
     currency: "Moneda",
@@ -168,6 +172,10 @@ const JOB_POST_COPY = {
     addBenefit: "Add benefit",
     salaryAndValidity: "Salary and availability",
     optionalInformation: "This information is optional.",
+    salaryType: "Salary type",
+    salaryFixed: "Fixed salary",
+    salaryRangeOption: "Range",
+    salaryAmount: "Salary",
     salaryFrom: "Salary from",
     salaryTo: "Salary to",
     currency: "Currency",
@@ -373,6 +381,10 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   }, [initialJob?.contact_whatsapp, professionalId]);
   const [currency, setCurrency] = useState<string>(initialJob?.currency ?? "CRC");
   const [salaryPeriod, setSalaryPeriod] = useState<string>(initialJob?.salary_period ?? "monthly");
+  // Un solo monto (o dos iguales) es un salario fijo; solo dos montos distintos son un rango.
+  const [salaryMode, setSalaryMode] = useState<"fixed" | "range">(
+    initialJob?.salary_min != null && initialJob?.salary_max != null && initialJob.salary_min !== initialJob.salary_max ? "range" : initialJob?.salary_min != null || initialJob?.salary_max != null ? "fixed" : "range",
+  );
   const [deadline, setDeadline] = useState(initialJob?.application_deadline ?? "");
   const [responsibilities, setResponsibilities] = useState<string[]>(Array.isArray(initialJob?.responsibilities) && initialJob.responsibilities.length ? initialJob.responsibilities : [""]);
   const [requirements, setRequirements] = useState<string[]>(Array.isArray(initialJob?.requirements) && initialJob.requirements.length ? initialJob.requirements : [""]);
@@ -397,8 +409,11 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     const cleanResponsibilities = responsibilities.map((item) => item.trim()).filter(Boolean);
     const cleanRequirements = requirements.map((item) => item.trim()).filter(Boolean);
     const cleanBenefits = benefits.map((item) => item.trim()).filter(Boolean);
-    const salaryMin = parseOptionalWholeNumber(form.get("salary_min"));
-    const salaryMax = parseOptionalWholeNumber(form.get("salary_max"));
+    const salaryFrom = parseOptionalWholeNumber(form.get("salary_min"));
+    const salaryTo = salaryMode === "fixed" ? null : parseOptionalWholeNumber(form.get("salary_max"));
+    // Un solo monto escrito es un salario fijo: se guarda igual en ambos extremos.
+    const salaryMin = salaryFrom ?? salaryTo;
+    const salaryMax = salaryTo ?? salaryFrom;
     const openings = Number(form.get("openings") || 1);
     const nextErrors: FieldErrors = {};
     if (title.length < 3) nextErrors.title = copy.titleShort;
@@ -603,8 +618,18 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
           <div className="my-6 pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
-            <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
-            <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
+            <div className="sm:col-span-2">
+              <p className="text-sm font-medium text-[#374151]" id="salary-type-label">{copy.salaryType}</p>
+              <div role="group" aria-labelledby="salary-type-label" className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-[#f1f5f9] p-1">
+                {(["fixed", "range"] as const).map((mode) => (
+                  <button key={mode} type="button" data-salary-mode={mode} aria-pressed={salaryMode === mode} onClick={() => { setSalaryMode(mode); setConCambios(true); }} className={cn("min-h-10 rounded-lg px-3 text-sm font-semibold transition-colors", salaryMode === mode ? "bg-white text-[#162543] shadow-sm" : "text-[#68778d]")}>{mode === "fixed" ? copy.salaryFixed : copy.salaryRangeOption}</button>
+                ))}
+              </div>
+            </div>
+            <label className="text-sm font-medium text-[#374151]">{salaryMode === "fixed" ? copy.salaryAmount : copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? initialJob?.salary_max ?? ""} placeholder={salaryMode === "fixed" ? "500000" : "450000"} className={FIELD_CLASS} />{salaryMode === "fixed" ? <FieldError>{fieldErrors.salary}</FieldError> : null}</label>
+            {salaryMode === "range" ? (
+              <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min != null ? (initialJob?.salary_max ?? "") : ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
+            ) : null}
             <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
             <SelectMenu label={copy.salaryPeriod} value={salaryPeriod} onChange={setSalaryPeriod} options={(Object.keys(SALARY_PERIODS) as SalaryPeriod[]).map((value) => ({ value, label: salaryPeriodLabel(value, locale) }))} />
             <label className="text-sm font-medium text-[#374151]">{copy.openings} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="openings" type="number" min={1} max={100} defaultValue={initialJob?.openings ?? 1} className={FIELD_CLASS} /><FieldError>{fieldErrors.openings}</FieldError></label>
