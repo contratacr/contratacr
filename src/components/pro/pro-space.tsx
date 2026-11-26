@@ -3,6 +3,7 @@
 import {useEffect,type ReactNode} from 'react';
 import {ProAppSupport} from './pro-app-support';
 import dynamic from 'next/dynamic';
+import {reconnectingImport} from '@/lib/reconnecting-import';
 import {useLocale} from 'next-intl';
 import {useAuth} from '@/hooks/use-auth';
 import {ContrataCRLogo} from '@/components/landing/landing-navbar';
@@ -23,21 +24,21 @@ function SectionLoading(){
 }
 // Stable, module-level boundaries: visiting a section loads its code, without
 // changing the existing editor lifecycle or its navigation/draft guards.
-const ProWorkspace=dynamic(()=>import('./pro-workspace').then(module=>module.ProWorkspace),{loading:SectionLoading});
-const SalesWorkspace=dynamic(()=>import('./sales-workspace').then(module=>module.SalesWorkspace),{loading:SectionLoading});
-const CompanyFiles=dynamic(()=>import('./company-files').then(module=>module.CompanyFiles),{loading:SectionLoading});
-const TimeReportView=dynamic(()=>import('./time-report').then(module=>module.TimeReportView),{loading:SectionLoading});
-const NotificationCenter=dynamic(()=>import('./notification-center').then(module=>module.NotificationCenter),{loading:SectionLoading});
-const TaskCenter=dynamic(()=>import('./task-center').then(module=>module.TaskCenter),{loading:SectionLoading});
-const ProjectsWorkspace=dynamic(()=>import('./projects-workspace').then(module=>module.ProjectsWorkspace),{loading:SectionLoading});
-const LeadsWorkspace=dynamic(()=>import('./leads-workspace').then(module=>module.LeadsWorkspace),{loading:SectionLoading});
-const StatisticsPanel=dynamic(()=>import('@/components/dashboard/statistics/statistics-panel').then(module=>module.StatisticsPanel),{loading:SectionLoading});
-const CompanyHub=dynamic(()=>import('./company-hub').then(module=>module.CompanyHub),{loading:SectionLoading});
-const ProReports=dynamic(()=>import('./pro-reports').then(module=>module.ProReports),{loading:SectionLoading});
-const LeadOriginMetrics=dynamic(()=>import('./lead-origin-metrics').then(module=>module.LeadOriginMetrics),{loading:SectionLoading});
+const ProWorkspace=dynamic(()=>reconnectingImport(()=>import('./pro-workspace')).then(module=>module.ProWorkspace),{loading:SectionLoading});
+const SalesWorkspace=dynamic(()=>reconnectingImport(()=>import('./sales-workspace')).then(module=>module.SalesWorkspace),{loading:SectionLoading});
+const CompanyFiles=dynamic(()=>reconnectingImport(()=>import('./company-files')).then(module=>module.CompanyFiles),{loading:SectionLoading});
+const TimeReportView=dynamic(()=>reconnectingImport(()=>import('./time-report')).then(module=>module.TimeReportView),{loading:SectionLoading});
+const NotificationCenter=dynamic(()=>reconnectingImport(()=>import('./notification-center')).then(module=>module.NotificationCenter),{loading:SectionLoading});
+const TaskCenter=dynamic(()=>reconnectingImport(()=>import('./task-center')).then(module=>module.TaskCenter),{loading:SectionLoading});
+const ProjectsWorkspace=dynamic(()=>reconnectingImport(()=>import('./projects-workspace')).then(module=>module.ProjectsWorkspace),{loading:SectionLoading});
+const LeadsWorkspace=dynamic(()=>reconnectingImport(()=>import('./leads-workspace')).then(module=>module.LeadsWorkspace),{loading:SectionLoading});
+const StatisticsPanel=dynamic(()=>reconnectingImport(()=>import('@/components/dashboard/statistics/statistics-panel')).then(module=>module.StatisticsPanel),{loading:SectionLoading});
+const CompanyHub=dynamic(()=>reconnectingImport(()=>import('./company-hub')).then(module=>module.CompanyHub),{loading:SectionLoading});
+const ProReports=dynamic(()=>reconnectingImport(()=>import('./pro-reports')).then(module=>module.ProReports),{loading:SectionLoading});
+const LeadOriginMetrics=dynamic(()=>reconnectingImport(()=>import('./lead-origin-metrics')).then(module=>module.LeadOriginMetrics),{loading:SectionLoading});
 // Gaps round (2026-11-17): «Equipo» and «Ediciones» are sections of the Pro space (same header and side menu).
-const ProTeamSection=dynamic(()=>import('./pro-team-section').then(module=>module.ProTeamSection),{loading:SectionLoading});
-const EditionSettings=dynamic(()=>import('./edition-settings').then(module=>module.EditionSettings),{loading:SectionLoading});
+const ProTeamSection=dynamic(()=>reconnectingImport(()=>import('./pro-team-section')).then(module=>module.ProTeamSection),{loading:SectionLoading});
+const EditionSettings=dynamic(()=>reconnectingImport(()=>import('./edition-settings')).then(module=>module.EditionSettings),{loading:SectionLoading});
 
 import {ProWorkspaceBanner} from './company-team';
 import {RunningTimerIndicator} from './work-timer';
