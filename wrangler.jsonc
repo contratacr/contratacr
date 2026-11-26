@@ -37,16 +37,12 @@
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "contratacr-next-cache"
-    },
-    // Fotos subidas de lugares del directorio (decisión 2026-11-26: planes gratis; R2 da 10 GB y
-    // salida gratis). Test y producción comparten el bucket: las claves llevan el host del
-    // proyecto Supabase (src/lib/directory/place-photo-store.ts). Crear UNA vez antes de
-    // desplegar (wrangler no despliega un binding sin bucket):
-    //   npx wrangler r2 bucket create contratacr-place-photos
-    {
-      "binding": "PLACE_PHOTOS",
-      "bucket_name": "contratacr-place-photos"
     }
+    // Fotos subidas de lugares del directorio (decisión 2026-11-26: planes gratis; R2 da 10 GB y
+    // salida gratis). PENDIENTE: el binding se agrega cuando el bucket exista, porque wrangler no
+    // despliega un binding sin bucket. Pasos: `npx wrangler r2 bucket create contratacr-place-photos`
+    // y luego agregar aquí { "binding": "PLACE_PHOTOS", "bucket_name": "contratacr-place-photos" }.
+    // Sin el binding las fotos siguen en Supabase Storage (src/lib/directory/place-photo-store.ts).
   ],
   "d1_databases": [
     {
