@@ -8,7 +8,7 @@
     "handlers": 122,
     "components": 296,
     "hooks": 28,
-    "specs": 207
+    "specs": 208
   },
   "dashboardTabs": [
     "home",
@@ -7722,7 +7722,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 185,
+          "line": 194,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => usarPlantilla(p.id)}",
@@ -7730,7 +7730,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 189,
+          "line": 198,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setSubject(e.target.value)}",
@@ -7738,7 +7738,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 190,
+          "line": 199,
           "tag": "textarea",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setBody(e.target.value)}",
@@ -7746,7 +7746,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 192,
+          "line": 201,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{(e) => setCtaLabel(e.target.value)}",
@@ -7754,7 +7754,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 193,
+          "line": 202,
           "tag": "input",
           "label": "\"/servicios/electricidad\"",
           "handler": "{(e) => setCtaPath(e.target.value)}",
@@ -7762,7 +7762,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 196,
+          "line": 205,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void enviar(\"test\")}",
@@ -7770,7 +7770,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 199,
+          "line": 208,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void enviar(\"all\")}",
@@ -7778,7 +7778,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 236,
+          "line": 245,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{async () => {\n                    setRescatando(true);\n                    setRescate(null);\n                    try {\n                      const r = await (await fetch(\"/api/admin/campanas/recuperar\", { method: \"POST\" })).json();\n                      setRescate(r.error ? `No se pudo: ${r.error}` : `Se revisaron ${r.revisados} eventos y se anotaron ${r.anotados}.`);\n                      await cargarEstado();\n                    } catch { setRescate(\"No se pudo consultar a Brevo.\"); }\n                    setRescatando(false);\n                  }}",
@@ -7786,7 +7786,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 297,
+          "line": 306,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => void invitarResenas()}",
@@ -31089,6 +31089,51 @@
         {
           "line": 437,
           "title": "\"English job listings and details render localized copy without leaking translation keys\""
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/seguimiento-policy.spec.ts",
+      "cases": [
+        {
+          "line": 29,
+          "title": "\"solo salen los aprobados: diciembre y la reseña; el resto sigue apagado\""
+        },
+        {
+          "line": 40,
+          "title": "\"ventanas: días 1 a 10, del 1 al 12 de diciembre y del 20 al 30 de abril\""
+        },
+        {
+          "line": 48,
+          "title": "\"30 días desde cualquier correo de campaña, bienvenida incluida\""
+        },
+        {
+          "line": 53,
+          "title": "\"bienvenida pendiente, cuenta nueva, baja o envío dudoso: no hay seguimiento\""
+        },
+        {
+          "line": 61,
+          "title": "\"regla de salida: tres seguimientos seguidos sin clic pausan seis meses\""
+        },
+        {
+          "line": 68,
+          "title": "\"quien usó la app en los últimos 14 días no recibe empujones\""
+        },
+        {
+          "line": 73,
+          "title": "\"pedir la reseña va primero y aunque la persona esté activa\""
+        },
+        {
+          "line": 83,
+          "title": "\"clientes: diciembre y lluvias por temporada; nuevos profesionales solo con 3 o más\""
+        },
+        {
+          "line": 90,
+          "title": "\"profesionales: diciembre reemplaza al resumen; búsquedas solo si lleva 60 días sin entrar\""
+        },
+        {
+          "line": 99,
+          "title": "\"los textos usan los datos reales, usted y comillas rectas\""
         }
       ]
     },
