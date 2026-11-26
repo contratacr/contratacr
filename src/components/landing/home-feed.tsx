@@ -60,7 +60,10 @@ const STRIP_SECTIONS = ["restaurantes", "farmacias", "cafes", "supermercados", "
 async function feedProfessionals(): Promise<ProfessionalCardData[]> {
   try {
     const all = await Promise.race([searchProfessionals({ sortBy: "rating" } as Parameters<typeof searchProfessionals>[0]), new Promise<ProfessionalCardData[]>((r) => setTimeout(() => r([]), 2500))]);
-    return all.filter((p) => p.reviewCount > 0).sort((a, b) => b.reviewCount - a.reviewCount || b.ratingAvg - a.ratingAvg).slice(0, 30);
+    // Most reviews first; then everyone else (with a photo first), so the feed never stops at two cards.
+    const reviewed = all.filter((p) => p.reviewCount > 0).sort((a, b) => b.reviewCount - a.reviewCount || b.ratingAvg - a.ratingAvg);
+    const rest = all.filter((p) => !(p.reviewCount > 0)).sort((a, b) => Number(!!b.avatarUrl) - Number(!!a.avatarUrl));
+    return [...reviewed, ...rest].slice(0, 30);
   } catch {
     return [];
   }
