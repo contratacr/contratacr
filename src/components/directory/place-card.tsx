@@ -2,14 +2,17 @@ import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types'
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
-import {MapPin,Navigation,Star} from 'lucide-react';
+import {CalendarCheck,MapPin,Phone,Star} from 'lucide-react';
+import type {ReactNode} from 'react';
+import {openStatus,openStatusText} from '@/lib/directory/open-status';
+import {mapLinks} from '@/lib/directory/place-actions';
+import {WhatsAppLogo} from '@/components/ui/whatsapp-logo';
+import {GoogleMapsIcon,WazeIcon} from '@/components/ui/nav-app-icons';
 import {resolvePlaceAction} from '@/lib/directory/place-actions';
-import {PlaceDirectionsMenu} from './place-directions-menu';
-import {actionIcon} from './place-action-buttons';
 import {PlaceSaveBookmark} from './place-save-bookmark';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {RatingLine} from './biz-ui';
-import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
+import {RESULT_CARD,ResultPhotoStrip,resultChip} from '@/components/search/result-card-parts';
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import type {CardExtra} from '@/lib/directory/card-extras';
@@ -81,7 +84,8 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 
 const VERIFIED=new Set(['verified','license_verified']);
 // Quick action chip on result cards (Google Maps style): outline, icon + one word, 32px.
-const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-3 text-[12.5px] font-semibold text-[#162543] transition-colors hover:border-[#009FD9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
+const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf7fd] px-3 text-[12.5px] font-bold text-[#0083b0] transition-colors hover:bg-[#d9f0fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
+const DAYS_ES=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] as const,DAYS_EN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as const;
 
 /**
  * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round photo (first approved one) or
@@ -102,55 +106,54 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
  const verified=VERIFIED.has(level);
  const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
- const quick=(['call','whatsapp','directions'] as const).flatMap(id=>resolvePlaceAction(id,actionInput)??[]);
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
  const rated=item.rating.count>0&&item.rating.average!=null;
  const tags=[en?item.vertical.nameEn:item.vertical.nameEs,kind,brand].filter(Boolean) as string[];
+ // Maps-like status line (owner 2026-11-26): «Abierto · cierra a las 21:00», «Abierto 24 horas», «Cerrado · abre mañana…».
+ const status=extra?.hours?.length?openStatus(extra.hours):null;
+ const statusText=status?openStatusText(status,en,en?DAYS_EN:DAYS_ES):item.open24h?{label:t('Abierto 24 horas','Open 24 hours'),detail:null,open:true}
+  :item.openNow===true?{label:t('Abierto ahora','Open now'),detail:null,open:true}:item.openNow===false?{label:t('Cerrado','Closed'),detail:null,open:false}:null;
+ // Every action this place has, in this order, each with its own icon and in the ContrataCR colours.
+ const maps=item.location?mapLinks(item.location.lat,item.location.lng):null;
+ const wa=extra?.whatsapp?`https://wa.me/${extra.whatsapp.replace(/[^0-9]/g,'').replace(/^(\d{8})$/,'506$1')}`:null;
+ const call=resolvePlaceAction('call',actionInput);
+ const actions:{id:string;label:string;href:string;icon:ReactNode;external?:boolean}[]=[
+  ...(extra?.reservation?[{id:'reserve',label:t('Reservar','Reserve'),href:`${href}#place-reservations`,icon:<CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
+  ...(wa?[{id:'whatsapp',label:'WhatsApp',href:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,external:true}]:[]),
+  ...(call?[{id:'call',label:t('Llamar','Call'),href:call.href,icon:<Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
+  {id:'review',label:t('Reseña','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>},
+  ...(maps?[{id:'maps',label:'Maps',href:maps.google,icon:<GoogleMapsIcon className="h-4 w-4 shrink-0"/>,external:true},{id:'waze',label:'Waze',href:maps.waze,icon:<WazeIcon className="h-4 w-4 shrink-0"/>,external:true}]:[]),
+ ];
+ const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
-  className={`${RESULT_CARD} flex flex-col gap-3 text-[#162543] lg:flex-row lg:gap-0`}>
-  <div className="flex min-w-0 flex-1 items-start gap-2.5 lg:gap-3">
-   {extra?.photo
-    ?<span aria-hidden="true" className="shrink-0" data-place-thumb="photo">
-     <ResultThumb src={placePhotoSrc(extra.photo,320)} priority={rank!=null&&rank<=2} fallback={null}/>
-    </span>
-    // Without an approved photo (owner 2026-11-26): text only; the position goes before the name.
-    :null}
-   <div className="flex min-w-0 flex-1 flex-col gap-1">
-    <div className="flex min-w-0 items-start gap-3 lg:items-center">
-     <H className="min-w-0 flex-1 text-[15px] font-bold leading-[1.15] text-[#111827]">
-      <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{rank!=null?`${rank}. `:''}{item.name}</a>
-      {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
-     </H>
-     {priceLevel&&<span className="shrink-0 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
-     <PlaceSaveBookmark slug={item.slug} name={item.name} locale={locale} className="-mr-2 -mt-1.5"/>
-    </div>
-    <p className="truncate text-[12px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
-    {rated&&<div className="mt-0.5" data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
-    {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
-     <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
-    <ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
-     {item.open24h?<li className={`${resultChip('ok')}`} data-open="24h">{t('Abierto 24 horas','Open 24 hours')}</li>
-      :item.openNow===true?<li className={`${resultChip('ok')}`} data-open="now">{t('Abierto ahora','Open now')}</li>
-      :item.openNow===false?<li className={`${resultChip('bad')}`} data-open="closed">{t('Cerrado ahora','Closed now')}</li>:null}
-     {permit&&<li {...{[permit.attr]:permit.state}} className={`${resultChip(permit.state==='verified'?'ok':'neutral')}`}>{permit.text}</li>}
-     {item.attributes.publicService===true&&<li className={`${resultChip('neutral')}`} data-public-service>{t('Servicio público','Public service')}</li>}
-     {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
-    </ul>
-    {item.price&&<PlacePriceLine price={item.price} en={en}/>}
-    {/* Owner 2026-11-26 (like Google Maps): small outline chips with icon and word — Llamar, WhatsApp, Cómo llegar, Reseña. */}
-    {quick.length>0&&<div className="scrollbar-none -mx-1 mt-1.5 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-place-quick-actions>
-     {quick.map(a=>a.type==='directions'&&a.maps
-      ?<PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${CHIP} relative z-10`} variant="pill"><Navigation className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>{a.short}</PlaceDirectionsMenu>
-      :<a key={a.id} href={a.href} data-place-action={a.id} className={`${CHIP} relative z-10 ${a.id==='whatsapp'?'!border-[#25D366] !text-[#128C4B]':''}`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-3.5 w-3.5 shrink-0')}{a.short}</a>)}
-     <a href={`${href}#escribir-resena`} data-place-action="review" className={`${CHIP} relative z-10`}><Star className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>{t('Reseña','Review')}</a>
-    </div>}
-    <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
-   </div>
+  className={`${RESULT_CARD} relative flex flex-col gap-1 text-[#162543]`}>
+  {/* Save, top right (out of the name row so it adds no height). */}
+  <PlaceSaveBookmark slug={item.slug} name={item.name} locale={locale} className="!absolute right-2 top-2"/>
+  <H className="min-w-0 pr-9 text-[15px] font-bold leading-[1.2] text-[#111827]">
+   <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{rank!=null?`${rank}. `:''}{item.name}</a>
+   {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
+   {priceLevel&&<span className="ml-1.5 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
+  </H>
+  <p className="truncate text-[12.5px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
+  {/* Photos the owner or the reviewers added go right under the name (owner 2026-11-26). */}
+  {photos.length>0&&<ResultPhotoStrip className="mt-1" photos={photos}/>}
+  {rated&&<div data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
+  {statusText&&<p className="text-[12.5px] font-semibold leading-snug" data-open={statusText.open?'open':'closed'}>
+   <span className={statusText.open?'text-[#047857]':'text-[#b91c1c]'}>{statusText.label.replace(/ ahora$/,'').replace(/ now$/,'')}</span>
+   {statusText.detail&&<span className="text-[#526277]"> · {statusText.detail}</span>}</p>}
+  {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
+   <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
+  {(permit||item.attributes.publicService===true||level==='claimed')&&<ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
+   {permit&&<li {...{[permit.attr]:permit.state}} className={`${resultChip(permit.state==='verified'?'ok':'neutral')}`}>{permit.text}</li>}
+   {item.attributes.publicService===true&&<li className={`${resultChip('neutral')}`} data-public-service>{t('Servicio público','Public service')}</li>}
+   {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
+  </ul>}
+  {item.price&&<PlacePriceLine price={item.price} en={en}/>}
+  <div className="scrollbar-none -mx-1 mt-2 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-place-quick-actions={actions.map(a=>a.id).join(' ')}>
+   {actions.map(a=><a key={a.id} href={a.href} data-place-action={a.id} className={`${CHIP} relative z-10`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
   </div>
-  {/* Owner 2026-11-26 (like Yelp): no buttons on the card; the whole card opens the place, where Llamar, Cómo llegar and
-      Reseña live (and the map pin card has Llamar / Cómo llegar). */}
-  {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
+  {/* Whole card → the place page (stretched low-z overlay); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;
 }
