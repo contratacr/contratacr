@@ -16,6 +16,7 @@ export function AdminCampaigns() {
   const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0, abiertos: 0, clics: 0, rebotes: 0, midiendo: false, sinConfirmar: 0 });
   const [adminEmail, setAdminEmail] = useState("");
   const [automation, setAutomation] = useState<{key:string;subject:string;days:number;audience:string;enabled:boolean}[]>([]);
+  const [followups, setFollowups] = useState<{kind:string;nombre:string;audience:string;cuando:string;enabled:boolean}[]>([]);
   // Cuánto correo queda HOY. Los 300 diarios del plan gratuito los comparten
   // esta campaña con los correos que el app necesita mandar (crear cuenta,
   // recuperar contraseña, soporte). Este número es el que dice si vale la pena
@@ -73,6 +74,7 @@ export function AdminCampaigns() {
       setClientes(Number(d.clients ?? 0));
       setAdminEmail(String(d.adminEmail ?? ""));
       setAutomation(d.automation ?? []);
+      setFollowups(d.followups ?? []);
       setTanda({
         porTanda: Number(d.porTanda ?? 200),
         enviados: Number(d.enviados ?? 0),
@@ -160,6 +162,13 @@ export function AdminCampaigns() {
         <p className="mt-1 text-sm text-[#68778d]">Revisión diaria a las 9:00 a. m. Primero se atienden los datos básicos pendientes del perfil; reseñas y precio esperan a que estén completos. Cada campaña se envía una vez por cuenta, con al menos 14 días entre campañas y solicitudes de verificación, y 24 horas después de otros correos. La verificación permite un aviso inicial y un único recordatorio después de 30 días; el historial anterior sin confirmar queda retenido. Los envíos pendientes continúan cuando hay cupo.</p>
         <ul className="mt-3 space-y-2 text-sm">{automation.map((c) => <li key={c.key}>
           <strong>{c.subject}</strong> · {c.audience.startsWith("professional") ? "Profesionales" : "Clientes y profesionales"} · desde el día {c.days} · {c.enabled ? "Activo" : "Pendiente de aprobar el texto"}{c.key === "descargar-app-2026" ? " · Solo cuentas sin uso móvil registrado · una vez" : ""}
+        </li>)}</ul>
+      </section>}
+      {followups.length > 0 && <section className="rounded-2xl border border-[#d7e1ea] bg-white p-4">
+        <h2 className="font-bold text-[#162543]">Seguimientos (después de la bienvenida)</h2>
+        <p className="mt-1 text-sm text-[#68778d]">Como máximo uno cada 30 días por cuenta, solo con datos reales, nunca a quien usó la app en los últimos 14 días. Tres seguimientos seguidos sin un clic pausan la cuenta 6 meses.</p>
+        <ul className="mt-3 space-y-2 text-sm">{followups.map((f) => <li key={f.kind}>
+          <strong>{f.nombre}</strong> · {f.audience === "professional" ? "Profesionales" : "Clientes"} · {f.cuando} · {f.enabled ? "Activo" : "Apagado, pendiente de aprobar"}
         </li>)}</ul>
       </section>}
       {campaignError && <p role="alert" className="text-sm text-red-700">{campaignError}</p>}

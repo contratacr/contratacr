@@ -7,6 +7,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { LIFECYCLE_CAMPAIGNS } from "@/lib/email/lifecycle-policy";
+import { FOLLOWUP_CAMPAIGNS_ENABLED, FOLLOWUP_CATALOG } from "@/lib/email/seguimiento-policy";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 const MAX_BODY = 4000;
@@ -119,6 +120,7 @@ export async function GET(request: Request) {
       midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET), restantes: state.pendientes.length,
       horasParaLaProxima: 0,
       automation: LIFECYCLE_CAMPAIGNS.map(({key,subject,days,audience,enabled}) => ({key,subject,days,audience,enabled})),
+      followups: FOLLOWUP_CATALOG.map((f) => ({...f,enabled:FOLLOWUP_CAMPAIGNS_ENABLED})),
     });
   } catch {
     return NextResponse.json({ error: "No se pudo verificar el historial o las bajas. El envío permanece bloqueado." }, { status: 503 });
