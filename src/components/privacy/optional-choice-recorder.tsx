@@ -27,7 +27,9 @@ export function OptionalChoiceRecorder() {
       }).catch(() => { /* Retry only for this same account when online or on next load. */ });
     };
     const onChoice = (event: Event) => {
-      const detail = (event as CustomEvent<{purpose: OptionalPurpose; choice: string}>).detail;
+      const detail = (event as CustomEvent<{purpose: OptionalPurpose; choice: string; source?: string}>).detail;
+      // Implied acceptance (closing the notice or browsing on) is not an explicit act: keep it out of the account ledger.
+      if (detail?.source === "implicit" || detail?.source === "close") return;
       if (!detail || !["advertising","ai","analytics"].includes(detail.purpose) || !["accepted","declined"].includes(detail.choice)) return;
       enqueue(detail.purpose, JSON.stringify({ purpose: detail.purpose, accepted: detail.choice === "accepted", version: privacyChoiceVersion(detail.purpose), locale: legalLocale(locale), channel: isNativeAppRuntime() ? "native" : "web" }));
     };

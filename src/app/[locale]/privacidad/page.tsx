@@ -193,7 +193,7 @@ const ES_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. \"Solo necesarias\" mantiene los registros imprescindibles para prestar el servicio, proteger cuentas y atender obligaciones; no activa estadísticas opcionales ni publicidad. Las estadísticas de uso y la medición con Meta tienen opciones independientes, preseleccionadas en \"Configuración\". No se activan hasta que pulse \"De acuerdo\", \"Aceptar todo\" o \"Guardar\" con esas opciones seleccionadas."
+        "text": "Usamos cookies y almacenamiento necesarios para sesión, idioma, seguridad y guardar sus preferencias. Además, en la web usamos cookies y píxeles para estadísticas de uso y para la medición publicitaria con Meta. El aviso se lo informa: al navegar por el sitio, al pulsar \"Continuar\" o al cerrar el aviso, usted acepta ambos fines. Puede cambiar o retirar esa elección en cualquier momento desde \"Configurar cookies y privacidad\"."
       },
       {
         "k": "p",
@@ -201,7 +201,7 @@ const ES_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Estadísticas y medición publicitaria están desactivadas hasta que usted las autorice. El aviso ofrece \"Configuración\" y \"De acuerdo\", también en móvil. \"De acuerdo\" acepta ambos fines opcionales. En \"Configuración\" puede elegir cada fin, \"Aceptar todo\" o \"Guardar\" solo las necesarias. Puede cambiar su elección desde \"Configurar cookies y privacidad\" en el pie del sitio o esta política. La elección se guarda en este navegador o app durante un máximo de 180 días; no se interpreta el silencio como aceptación. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
+        "text": "En la web, el aviso tiene un botón \"Continuar\" y una X para cerrarlo. Pulsar \"Continuar\", cerrar el aviso o pasar a otra página del sitio equivale a aceptar las estadísticas de uso y la medición publicitaria. Una negativa que usted haya guardado antes no se cambia por navegar ni por cerrar el aviso. En la app móvil el aviso solo acepta si usted pulsa \"Continuar\". Puede cambiar o retirar su elección desde \"Configurar cookies y privacidad\" en el pie del sitio o en esta política, donde puede elegir cada fin por separado o dejar solo las necesarias. La elección se guarda en este navegador o app durante un máximo de 180 días. Retirar publicidad detiene nuevos envíos y solicita cancelar conversiones pendientes. Sin conexión se reintenta al reconectar. No se pueden recuperar envíos ya en curso ni borrar automáticamente datos recibidos por Meta. Estos permisos son independientes de términos, correos promocionales, IA y permisos del sistema operativo."
       },
       {
         "k": "p",
@@ -475,7 +475,7 @@ const EN_SECTIONS: LegalSection[] = [
     "body": [
       {
         "k": "p",
-        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. \"Only necessary\" retains records essential to provide the service, protect accounts and meet obligations; it does not enable optional statistics or advertising. Usage statistics and Meta measurement have separate choices, preselected in \"Settings\". They remain inactive until you press \"Agree\", \"Accept all\" or \"Save\" with those options selected."
+        "text": "Necessary cookies and storage support sessions, language, security and saving your choices. On the web we also use cookies and pixels for usage statistics and for advertising measurement with Meta. The notice tells you so: by browsing the site, pressing \"Continue\" or closing the notice, you accept both purposes. You can change or withdraw that choice at any time from \"Cookies and privacy settings\"."
       },
       {
         "k": "p",
@@ -483,7 +483,7 @@ const EN_SECTIONS: LegalSection[] = [
       },
       {
         "k": "p",
-        "text": "Statistics and advertising measurement remain off until you authorize them. The notice offers \"Settings\" and \"Agree\", including on mobile. \"Agree\" accepts both optional purposes. In \"Settings\" you can choose each purpose, \"Accept all\" or \"Save\" only necessary cookies. Change your choice through \"Cookie and privacy settings\" in the site footer or this policy. Choices last up to 180 days in this browser or app; silence is not acceptance. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
+        "text": "On the web, the notice has a \"Continue\" button and an X to close it. Pressing \"Continue\", closing the notice or moving to another page of the site counts as accepting usage statistics and advertising measurement. A refusal you saved earlier is not changed by browsing or closing the notice. In the mobile app the notice only accepts if you press \"Continue\". You can change or withdraw your choice from \"Cookies and privacy settings\" in the site footer or this policy, where you can choose each purpose separately or keep only the necessary ones. Choices last up to 180 days in this browser or app. Withdrawing advertising stops new deliveries and requests cancellation of pending conversions. Offline requests retry on reconnection. In-flight deliveries cannot be recalled and data received by Meta is not automatically erased. These permissions are separate from terms, marketing emails, AI and operating-system permissions."
       },
       {
         "k": "p",

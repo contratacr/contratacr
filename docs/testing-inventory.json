@@ -8,7 +8,7 @@
     "handlers": 122,
     "components": 296,
     "hooks": 28,
-    "specs": 206
+    "specs": 207
   },
   "dashboardTabs": [
     "home",
@@ -20140,23 +20140,15 @@
       "methods": [],
       "controls": [
         {
-          "line": 68,
+          "line": 99,
           "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{openSettings}",
+          "label": "{en ? \"Close\" : \"Cerrar\"}",
+          "handler": "{closeNotice}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 69,
-          "tag": "button",
-          "label": "Texto/etiqueta dinámica: revisar en UI",
-          "handler": "{() => save(true, true)}",
-          "destination": "",
-          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
-        },
-        {
-          "line": 71,
+          "line": 101,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -20164,7 +20156,15 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 84,
+          "line": 102,
+          "tag": "button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{continueToSite}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 115,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{event => item.change?.(event.target.checked)}",
@@ -20172,7 +20172,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 101,
+          "line": 132,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => save(true, true)}",
@@ -20180,7 +20180,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 102,
+          "line": 133,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => save(analytics, advertising)}",
@@ -20188,7 +20188,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 105,
+          "line": 136,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setSettings(false)}",
@@ -20196,7 +20196,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 106,
+          "line": 137,
           "tag": "Link",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{() => setSettings(false)}",
@@ -27578,6 +27578,23 @@
       ]
     },
     {
+      "file": "tests/e2e/aviso-cookies-navegacion.spec.ts",
+      "cases": [
+        {
+          "line": 19,
+          "title": "\"web: hard loads never accept; moving to another page of the app counts as accepting (implicit)\""
+        },
+        {
+          "line": 40,
+          "title": "\"web: a refusal saved earlier is not overridden by browsing\""
+        },
+        {
+          "line": 53,
+          "title": "\"native app: browsing and the X never accept, only Continuar does\""
+        }
+      ]
+    },
+    {
       "file": "tests/e2e/aviso-de-guardado.spec.ts",
       "cases": [
         {
@@ -28067,7 +28084,23 @@
       "cases": [
         {
           "line": 16,
-          "title": "`consent UI ${locale} ${width}: explicit choices, independent purposes and reopening`"
+          "title": "`consent UI ${locale} ${width}: one Continuar button, close, no refusal button, independent purposes and reopening`"
+        },
+        {
+          "line": 103,
+          "title": "'closing the notice with the X accepts, recorded as \"close\"'"
+        },
+        {
+          "line": 112,
+          "title": "'a refusal saved earlier survives the X and Continuar (even if expired)'"
+        },
+        {
+          "line": 120,
+          "title": "'Continuar keeps a refusal that is still valid'"
+        },
+        {
+          "line": 127,
+          "title": "'withdrawing from the footer settings stops measurement and the notice does not come back'"
         }
       ]
     },

@@ -2,12 +2,20 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { OPEN_PRIVACY_SETTINGS, readOptionalConsent, saveOptionalConsent, subscribeOptionalConsent, syncAdvertisingCookie, syncAnalyticsCookie } from "@/lib/privacy/optional-consent";
+import { OPEN_PRIVACY_SETTINGS, acceptUndecidedOptionalConsent, readOptionalConsent, saveOptionalConsent, subscribeOptionalConsent, syncAdvertisingCookie, syncAnalyticsCookie } from "@/lib/privacy/optional-consent";
+
+/** The Capacitor shell marks the document; same signals as use-native-app, without its heavy imports. */
+function isNativeAppRuntime() {
+  if (typeof window === "undefined") return false;
+  const capacitor = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  return Boolean(capacitor?.isNativePlatform?.()) || document.documentElement.classList.contains("ccr-native-app");
+}
 
 const snapshot = () => `${readOptionalConsent("analytics")}:${readOptionalConsent("advertising")}`;
 const serverSnapshot = () => "pending";
-const button = "min-h-11 rounded-2xl border border-[#162543] bg-[#f3fbfe] px-5 py-3 text-sm font-bold text-[#162543] transition-colors hover:border-[#0083b0] hover:bg-[#e5f6fc] active:bg-[#d8f0fa] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]";
 
 export function CookiePreferences() {
   const en = useLocale() === "en";
@@ -18,6 +26,21 @@ export function CookiePreferences() {
   const [error, setError] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const needsChoice = state !== "pending" && state.includes("unknown");
+  const pathname = usePathname();
+  const shownAt = useRef<string | null | undefined>(undefined);
+  const settingsOpen = useRef(false);
+  useEffect(() => { settingsOpen.current = settings; }, [settings]);
+  // IMPLIED ACCEPTANCE (web only). The notice says that browsing the site means acceptance.
+  // It counts once the notice has been on screen and the person moves to ANOTHER page of
+  // the app (client-side navigation). A hard reload, the first page view and an open
+  // settings panel never count. A refusal saved earlier is never overridden. The native
+  // app does not use implied acceptance: there only "Continuar" accepts.
+  useEffect(() => {
+    if (!needsChoice) { shownAt.current = undefined; return; }
+    if (shownAt.current === undefined) { shownAt.current = pathname; return; }
+    if (pathname === shownAt.current || settingsOpen.current || isNativeAppRuntime()) return;
+    try { acceptUndecidedOptionalConsent("implicit"); } catch { /* Storage blocked: stays undecided. */ }
+  }, [needsChoice, pathname]);
   useEffect(() => {
     try { syncAdvertisingCookie(); syncAnalyticsCookie(); } catch { /* Choice stays unknown when storage is unavailable. */ }
     const open = () => {
@@ -42,14 +65,25 @@ export function CookiePreferences() {
       setError(false); setSettings(false);
     } catch { setError(true); }
   }
-  function openSettings() {
-    setAnalytics(readOptionalConsent("analytics") !== "declined");
-    setAdvertising(readOptionalConsent("advertising") !== "declined");
-    setSettings(true);
+  // "Continuar" is an explicit acceptance of what is still undecided; a refusal that is
+  // still valid is kept (the person can change it from the settings).
+  function continueToSite() {
+    try {
+      for (const purpose of ["analytics", "advertising"] as const) {
+        if (readOptionalConsent(purpose) !== "declined") saveOptionalConsent(purpose, "accepted", "click");
+      }
+      setError(false);
+    } catch { setError(true); }
   }
-  const notice = en
-    ? 'We use necessary cookies to keep ContrataCR working securely. By choosing "Agree", you accept optional usage statistics and advertising measurement with Meta. In "Settings" you can accept or reject each purpose. You can change your choice at any time.'
-    : 'Usamos cookies necesarias para que ContrataCR funcione de forma segura. Al elegir "De acuerdo", acepta las estadísticas de uso y la medición publicitaria con Meta. En "Configuración" puede aceptar o rechazar cada fin opcional. Puede cambiar su decisión cuando quiera.';
+  // "Continuar" is an explicit acceptance. The X also counts as acceptance on the web,
+  // but never overrides an earlier refusal; in the native app the X only dismisses.
+  function closeNotice() {
+    if (isNativeAppRuntime()) return;
+    try { acceptUndecidedOptionalConsent("close"); setError(false); } catch { setError(true); }
+  }
+  const noticeIntro = en
+    ? "ContrataCR uses cookies and pixels to improve your experience and to analyze the performance and traffic of our site. We also use pixels to share information about how you use the site with third parties, including our social media, advertising and analytics partners. By browsing our site, you agree to our use of cookies and pixels and to our sharing of that information with our partners. For more information about how we use cookies and pixels, please visit our"
+    : "ContrataCR usa cookies y píxeles para mejorar su experiencia y analizar el rendimiento y el tráfico de nuestro sitio. También usamos píxeles para compartir información sobre el uso que usted hace del sitio con terceros, incluidos nuestros socios de redes sociales, publicidad y analítica. Al navegar por nuestro sitio, usted acepta el uso de cookies y píxeles y que compartamos esa información con nuestros socios. Para más información sobre cómo usamos cookies y píxeles, visite nuestra";
   const categorySummaries: Record<string, string> = {
     necessary: en ? "Sign-in, security and essential preferences." : "Inicio de sesión, seguridad y preferencias esenciales.",
     analytics: en ? "Visits and actions to improve ContrataCR." : "Visitas y acciones para mejorar ContrataCR.",
@@ -61,14 +95,11 @@ export function CookiePreferences() {
     { key: "advertising", title: en ? "Marketing" : "Marketing", value: advertising, change: setAdvertising, description: en ? "Campaign measurement with Meta using events and technical identifiers. No private messages, documents or contact details. Advertising identifiers are not anonymous; processing may take place abroad. This permission is separate from promotional emails and operating system permissions." : "Medición de campañas con Meta mediante eventos e identificadores técnicos. Sin mensajes privados, documentos ni datos de contacto. Los identificadores publicitarios no son anónimos y puede haber tratamiento internacional. Este permiso es independiente de los correos promocionales y los permisos del sistema operativo." },
   ];
   return <>
-    {needsChoice && !settings && <section role="region" aria-labelledby="cookie-title" data-cookie-banner className="fixed inset-x-0 bottom-0 z-[130] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-[#162543] shadow-[0_-8px_40px_rgba(22,37,67,0.12)] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[380px] sm:rounded-[24px] sm:border-b sm:p-6 sm:shadow-[0_16px_64px_rgba(22,37,67,0.18)]">
-      <h2 id="cookie-title" className="mb-3 text-lg font-extrabold leading-6">{en ? "Cookies and privacy" : "Cookies y privacidad"}</h2>
-      <p className="mb-3 text-sm leading-6 text-[#526176]">{notice}</p>
-      <div className="grid gap-2.5">
-        <button className={button} onClick={openSettings}>{en ? "Settings" : "Configuración"}</button>
-        <button className={button} onClick={() => save(true, true)}>{en ? "Agree" : "De acuerdo"}</button>
-      </div>
-      <Link href="/privacidad#cookies" className="mx-auto mt-2 flex min-h-11 w-fit items-center rounded-lg text-xs font-semibold text-[#007fae] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "Privacy policy" : "Política de privacidad"}</Link>
+    {needsChoice && !settings && <section role="region" aria-labelledby="cookie-title" data-cookie-banner className="fixed inset-x-0 bottom-0 z-[130] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-5 pb-[max(20px,env(safe-area-inset-bottom))] text-[#162543] shadow-[0_-8px_40px_rgba(22,37,67,0.12)] sm:bottom-6 sm:left-6 sm:right-auto sm:w-[400px] sm:rounded-[24px] sm:border-b sm:p-6 sm:shadow-[0_16px_64px_rgba(22,37,67,0.18)]">
+      <button type="button" data-cookie-close aria-label={en ? "Close" : "Cerrar"} onClick={closeNotice} className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#f3fbfe] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]"><X className="h-5 w-5" aria-hidden="true" /></button>
+      <h2 id="cookie-title" className="mb-2 pr-10 text-lg font-extrabold leading-6">{en ? "Cookies and tracking pixels" : "Cookies y píxeles de seguimiento"}</h2>
+      <p className="mb-4 text-sm leading-6 text-[#526176]">{noticeIntro}{" "}<Link href="/privacidad#cookies" className="font-semibold text-[#162543] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[#009fd9]">{en ? "Cookie Policy and Privacy Notice" : "Política de cookies y Aviso de privacidad"}</Link>.</p>
+      <button type="button" data-cookie-continue className="min-h-12 w-full rounded-2xl border border-[#162543] bg-[#162543] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0f1a31] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009fd9]" onClick={continueToSite}>{en ? "Continue to site" : "Continuar"}</button>
       {error && <p role="alert" className="mt-3 text-sm text-red-700">{en ? "Could not save your preferences. Please try again." : "No pudimos guardar sus preferencias. Inténtelo de nuevo."}</p>}
     </section>}
     <dialog ref={dialog} onCancel={() => setSettings(false)} onClose={() => setSettings(false)} aria-labelledby="privacy-settings-title" className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[95dvh] w-full max-w-none overflow-hidden rounded-t-[24px] border border-b-0 border-[#dce6ec] bg-white p-0 text-[#162543] shadow-2xl backdrop:bg-[#162543]/30 open:flex open:flex-col sm:inset-0 sm:m-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-[24px] sm:border-b">
