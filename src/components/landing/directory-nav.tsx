@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Menu, Search, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -222,8 +222,8 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   ];
   return (
     <>
-    {/* Phones (owner, 2026-11-26): this IS the header, compact like Airbnb/Booking — the ContrataCR symbol, one search bar and
-        ☰ on the first row, the sections below. The navbar's own phone row hides while this one shows (body.ccr-dir-header). */}
+    {/* Phones (owner, 2026-11-26): this IS the header, compact like Airbnb/Booking — the ContrataCR symbol with a chevron
+        (opens the menu) and one search bar on the first row, the sections below. The navbar's own phone row hides while this one shows (body.ccr-dir-header). */}
     <PhoneHeaderFlag navRef={navRef} />
     {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
     <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
@@ -246,14 +246,13 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
         ))}
       </ul>
       <div className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
-        <Link href="/" aria-label="ContrataCR" prefetch={false} className="shrink-0"><ContrataCRMark /></Link>
+        <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
+          className="-ml-1 inline-flex h-10 shrink-0 items-center gap-0.5 rounded-xl pl-1 pr-0.5"><ContrataCRMark /><ChevronDown className="h-4 w-4 text-[#162543]" strokeWidth={2.5} aria-hidden /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
           className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-1 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[17px] w-[17px]" aria-hidden /></span>
           <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
         </button>
-        <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]"><Menu className="h-5 w-5 stroke-[2.5]" aria-hidden /></button>
       </div>
     </nav>
     </>
