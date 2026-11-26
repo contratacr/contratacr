@@ -4,6 +4,9 @@ export const PROFILE_BIO_MAX_LENGTH = 800;
 export const LONG_TEXT_MAX_LENGTH = 500;
 /** Mensajes dentro de un caso de soporte (equipo y usuario). Se rechazan, nunca se recortan. */
 export const SUPPORT_MESSAGE_MAX_LENGTH = 4000;
+/** Detalle de un reporte: obligatorio, para que quien revisa tenga qué revisar. */
+export const REPORT_DETAIL_MIN_LENGTH = 15;
+export const REPORT_DETAIL_MAX_LENGTH = 500;
 
 /** true si el texto, ya sin espacios al inicio y final, supera el máximo. */
 export function exceedsTrimmedLength(value: unknown, max: number) {

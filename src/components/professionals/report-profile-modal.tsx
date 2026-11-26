@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { X, Flag, AlertCircle, ShieldAlert } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { createClient } from "@/lib/supabase/client";
+import { REPORT_DETAIL_MAX_LENGTH, REPORT_DETAIL_MIN_LENGTH } from "@/lib/text-limits";
 
 interface ReportProfileModalProps {
   professionalName: string;
@@ -47,6 +48,10 @@ export function ReportProfileModal({ professionalName, professionalSlug, targetT
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // El detalle es obligatorio (también lo exige el servidor): un mínimo corto
+  // para no frenar a quien vio una estafa, pero que deje algo que revisar.
+  const detalleLargo = detail.trim().length;
+  const detalleSuficiente = detalleLargo >= REPORT_DETAIL_MIN_LENGTH;
 
   // Al cerrar el «Reporte enviado», si además bloqueó, la pantalla reacciona
   // (la ficha pasa a «Bloqueaste a este usuario»; un tablero vuelve atrás).
@@ -59,6 +64,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, targetT
 
   async function handleSubmit() {
     if (!reason) { setError(t("errNoReason")); return; }
+    if (!detalleSuficiente) { setError(t("errDetail", { min: REPORT_DETAIL_MIN_LENGTH })); return; }
     setSubmitting(true);
     setError(null);
     try {
@@ -73,7 +79,8 @@ export function ReportProfileModal({ professionalName, professionalSlug, targetT
           professionalName,
           professionalSlug,
           targetType,targetId,
-          reason: `${contexto ? `${contexto} — ` : ""}${reasonEs}${detail.trim() ? ` — ${detail.trim()}` : ""}`,
+          reason: `${contexto ? `${contexto} — ` : ""}${reasonEs} — ${detail.trim()}`,
+          detail: detail.trim(),
           reporterEmail: user?.email ?? null,
         }),
       });
@@ -191,17 +198,24 @@ export function ReportProfileModal({ professionalName, professionalSlug, targetT
             )}
 
             <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                {t("detail")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
+              <label htmlFor="report-detail" className="text-sm font-medium text-[#374151] block mb-1.5">
+                {t("detail")}
               </label>
               <textarea
+                id="report-detail"
                 value={detail}
-                onChange={(e) => setDetail(e.target.value)}
+                onChange={(e) => { setDetail(e.target.value); setError(null); }}
                 rows={3}
-                maxLength={500}
+                required
+                minLength={REPORT_DETAIL_MIN_LENGTH}
+                maxLength={REPORT_DETAIL_MAX_LENGTH}
+                aria-describedby="report-detail-hint"
                 placeholder={t("detailPlaceholder")}
                 className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
+              <p id="report-detail-hint" className={`mt-1 text-xs ${detalleSuficiente ? "text-[#6b7280]" : "text-[#92400e]"}`}>
+                {detalleSuficiente ? t("detailOk") : t("detailHint", { min: REPORT_DETAIL_MIN_LENGTH, count: detalleLargo })}
+              </p>
             </div>
 
             {bloqueo && (
@@ -223,7 +237,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, targetT
 
             <button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || !reason || !detalleSuficiente}
               className="w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
             >
               {submitting ? t("sending") : t("submit")}
