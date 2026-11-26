@@ -61,7 +61,7 @@ export function AppDownloadSection() {
         <p className="mx-auto mb-4 mt-3 max-w-md text-sm leading-relaxed text-white/90 sm:mx-0 sm:mt-4 sm:text-base lg:mb-4 lg:mt-3 lg:text-base">{en ? "Find professionals and promote your services." : "Busque profesionales y dé a conocer sus servicios."}</p>
         <AppStoreLinks />
         <div className="mt-4 hidden items-center gap-4 lg:flex">
-          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanee para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
+          <Image src="/stores/download-app-qr.svg?v=20261013-store-redirect" width={104} height={104} alt={en ? "Scan to download ContrataCR" : "Escanea para descargar ContrataCR"} className="shrink-0 rounded-lg bg-white" />
           <div className="max-w-[240px]"><p className="text-sm font-semibold">{en ? "Scan with your phone" : "Escanee con su celular"}</p><p className="mt-2 text-sm leading-relaxed text-white/90">{en ? "Sign in with your existing account." : "Ingrese con su cuenta de siempre."}</p></div>
         </div>
       </div>

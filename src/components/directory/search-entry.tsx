@@ -4,7 +4,6 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, ChevronRight, Clock, MapPin, Search, Store, TrendingUp, Utensils, Wrench, X } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
-import { VoiceButton } from "./voice-button";
 import { guardarBusquedaReciente, leerBusquedasRecientesConFecha, olvidarBusquedaReciente, readRecentVisits, type RecentVisit } from "@/lib/recent-visits";
 import { getCategoryLabel, searchCategories } from "@/lib/data/categories";
 import { suggestDirectorySections } from "@/lib/search/directory-search";
@@ -90,9 +89,8 @@ export function SearchEntry({ onClose, initialText = "", autoVoice = false }: { 
           <button type="button" onClick={onClose} aria-label={t("Volver", "Back")} data-search-back className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]"><ArrowLeft className="h-5 w-5" aria-hidden /></button>
           <div className="flex min-w-0 flex-1 items-center rounded-full border border-[#d7e1ea] bg-[#f4f7fa] pl-4 pr-1">
             <input ref={input} value={text} onChange={(e) => setText(e.target.value)} type="text" enterKeyHint="search" autoComplete="off" maxLength={100} data-search-input
-              aria-label={t("Buscar", "Search")} placeholder={t("Escriba o busque con su voz", "Type or search by voice")} className="h-11 min-w-0 flex-1 bg-transparent text-[16px] font-medium outline-none placeholder:text-[#7a889c]" />
+              aria-label={t("Buscar", "Search")} placeholder={t("¿Qué busca?", "What are you looking for?")} className="h-11 min-w-0 flex-1 bg-transparent text-[16px] font-medium outline-none placeholder:text-[#7a889c]" />
             {text && <button type="button" onClick={() => { setText(""); input.current?.focus(); }} aria-label={t("Borrar", "Clear")} className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#5b6b82]"><X className="h-4 w-4" aria-hidden /></button>}
-            <VoiceButton lang={locale} label={t("Buscar con su voz", "Search by voice")} autoStart={autoVoice} onText={(v) => { setText(v); go(v); }} />
           </div>
         </div>
         <div className="mt-2 flex items-center gap-2 pl-11">

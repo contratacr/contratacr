@@ -18,9 +18,6 @@ import { HojaDeCrear } from "@/components/mobile/hoja-de-crear";
 import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
-import { CAPA_BARRA_ABAJO } from "@/lib/capas";
-import { useSiteFeatures } from "@/components/site-features";
-import { DirectoryTabs, directoryActiveTab } from "@/components/mobile/directory-tabs";
 
 // La barra vive en el armazón, montada una sola vez, y NO dentro de cada
 // página: cuando se montaba con la página se desmontaba y volvía a montarse en
@@ -28,10 +25,6 @@ import { DirectoryTabs, directoryActiveTab } from "@/components/mobile/directory
 // cambia debajo y la barra sigue ahí, quieta, como en Instagram o Facebook.
 export function NativeBottomNav() {
   const nativeApp = useNativeApp();
-  // Directory flag (owner, 2026-11-21): with the directory ON the app bar is Inicio, Servicios, Lugares,
-  // Solicitudes, Cuenta. With it OFF nothing below changes.
-  const sections = useSiteFeatures().directorySections;
-  const directoryOn = sections.length > 0;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -67,7 +60,7 @@ export function NativeBottomNav() {
     const id = window.setTimeout(() => setTocada(null), 4000);
     return () => window.clearTimeout(id);
   }, [tocada]);
-  const avisosPorVer = useAvisosPorVer(nativeApp || directoryOn);
+  const avisosPorVer = useAvisosPorVer(nativeApp);
 
   // El estado real de la ventana del asistente, anunciado por ella misma. El
   // marcado por "pendiente" se limpiaba con cualquier navegación de fondo y la
@@ -97,12 +90,7 @@ export function NativeBottomNav() {
   // arranque habían puesto. Esa clase gobierna el relleno inferior de `main` y
   // varias alturas: quitarla y reponerla un cuadro después es un salto de
   // maquetación en CADA arranque, además de la barra apareciendo de la nada.
-  // Directory tabs also stay away from place pages (/lugar/*): they carry their own contact bar at the bottom.
-  // With the directory ON the 5-tab bar also shows on mobile web (<lg), not only in the app; it stays away from sign-in screens there.
-  const visible = (nativeApp || (directoryOn && !/^\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/.test(pathname ?? ""))) && !sinBarraDeAbajo(pathname) && !(directoryOn && /^\/lugar(?:\/|$)/.test(pathname ?? ""))
-    // The Pro work app (/dashboard/pro…) has its own bottom tab bar (ProTabBar); the directory bar would cover its
-    // content. In the app the native rule `:has([data-independent-pro])` already hides it, keeping the native classes.
-    && !(!nativeApp && /^\/dashboard\/pro(?:\/|$)/.test(pathname ?? ""));
+  const visible = nativeApp && !sinBarraDeAbajo(pathname);
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(
@@ -221,11 +209,9 @@ export function NativeBottomNav() {
   // cuadro con lo de la anterior (barra de abajo, cabecera) y luego cambiaba.
   useLayoutEffect(() => {
     const roots = [document.documentElement, document.body];
-    // On mobile web (no native app) the native-only CSS must not apply: it gets its own class and padding below.
-    const clase = nativeApp ? "ccr-native-bottom-nav-visible" : "ccr-dir-tabs-visible";
-    roots.forEach((root) => root.classList.toggle(clase, visible));
-    return () => roots.forEach((root) => root.classList.remove(clase));
-  }, [visible, nativeApp]);
+    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", visible));
+    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
+  }, [visible]);
 
   // La barra real ya montó: se retira la franja provisional del arranque.
   useEffect(() => {
@@ -371,18 +357,6 @@ export function NativeBottomNav() {
 
   if (!visible) return null;
 
-  if (directoryOn) {
-    // Hidden under the full-screen search sheet.
-    if (buscadorAbierto) return null;
-    const activa = asistenteAbierto ? null : directoryActiveTab(pathname, sections, esRutaDeBusqueda(pathname, esServicioDelCatalogo));
-    return (
-      <>
-        {!nativeApp && <style>{"@media (max-width:1023px){body.ccr-dir-tabs-visible{padding-bottom:calc(var(--ccr-native-bottom-nav-height,76px) + 12px)}}"}</style>}
-        <DirectoryTabs navRef={navRef} ariaLabel={tNav("aria")} locale={locale} active={activa} loggedIn={!!user} badge={avisosPorVer + mensajesPorLeer} onTabClick={irA} />
-      </>
-    );
-  }
-
   // CUÁL ESTÁ ENCENDIDA, para que la pastilla de fondo viaje hasta ella. El «+»
   // no se enciende nunca: abre una hoja encima, no es un lugar.
   const enBusqueda = esRutaDeBusqueda(pathname, esServicioDelCatalogo);
@@ -412,8 +386,7 @@ export function NativeBottomNav() {
         // FLOTANTE, como la de Facebook: una pastilla despegada de los bordes,
         // translúcida y con desenfoque, así lo que se desplaza debajo se ve
         // pasar a través de ella.
-        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 px-4 lg:hidden",
-        CAPA_BARRA_ABAJO,
+        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 lg:hidden",
       )}
     >
       <div

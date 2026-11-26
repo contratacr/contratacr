@@ -5,17 +5,12 @@ import { DirectoryQuickNav } from "@/components/landing/directory-nav";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
-import { HomePlacesTiles } from "@/components/landing/home-places";
-import { HomeFeaturedPlaces, HomePromoBand } from "@/components/landing/home-directory-bands";
-import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
-import { AppHome } from "@/components/directory/app-home";
-import { loadTopPlaces } from "@/components/directory/app-home-data";
 import { CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -73,11 +68,6 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
   },
 ]);
 
-// Mobile app home (directory on): the Search tab of the Yelp-style app. Streams in so the desktop landing never waits for it.
-async function HomeAppMobile() {
-  return <AppHome topPlaces={await loadTopPlaces()} />;
-}
-
 async function HomeZoneCoverage() {
   const coverage = await getZoneCoverage();
   return <FindByZone coverage={coverage} />;
@@ -91,8 +81,6 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  // Directory flag (DIR_ENABLED): with it off the home is exactly the classic one.
-  const directoryOn = sitemapSections().length > 0;
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
   const [query, t] = await Promise.all([
     searchParams,
@@ -120,13 +108,6 @@ export default async function HomePage({
             </div>
           </div>
         )}
-        {/* Directory on: phones get the app home (search tab); lg and up keep the landing below, unchanged. */}
-        {directoryOn && (
-          <div className="lg:hidden" data-app-home-slot>
-            <Suspense fallback={null}><HomeAppMobile /></Suspense>
-          </div>
-        )}
-        <div className={directoryOn ? "hidden lg:block" : undefined}>
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
 
@@ -134,19 +115,11 @@ export default async function HomePage({
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         <FeaturedBrands />
 
-        {/* Servicios más buscados. */}
+        {/* Services carousel. */}
         <FadeInUp>
           <Suspense fallback={null}><ProsSection /></Suspense>
         </FadeInUp>
 
-        {/* Con el directorio activo: lugares populares, lugares para empezar y promociones. */}
-        {directoryOn && (
-          <>
-            <HomePlacesTiles />
-            <Suspense fallback={null}><HomeFeaturedPlaces /></Suspense>
-            <HomePromoBand />
-          </>
-        )}
 
         {/* How it works + trust, merged into one sticky-phone story. */}
         <FadeInUp>
@@ -164,12 +137,10 @@ export default async function HomePage({
             __html: `try{document.querySelectorAll(".fade-in-up").forEach(function(e){if(e.getBoundingClientRect().top<innerHeight)e.classList.add("visible")})}catch(e){}`,
           }}
         />
-        </div>
 
       </main>
 
-      {/* On phones with the directory on the home is the app itself: no "download the app" band. */}
-      <div className={directoryOn ? "hidden lg:block" : undefined}><AppDownloadSection /></div>
+      <AppDownloadSection />
       <LandingFooter />
     </div>
   );

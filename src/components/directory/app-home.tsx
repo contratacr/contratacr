@@ -1,14 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { Bookmark, ChevronRight, Droplets, Info, Mic, MoreHorizontal, Search, Sparkles, Star, Truck, Utensils, Wrench, X, type LucideIcon } from "lucide-react";
+import { Bookmark, ChevronRight, Droplets, Info, MoreHorizontal, Search, Sparkles, Star, Truck, Utensils, Wrench, X, type LucideIcon } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { MoreCategories } from "./more-categories";
 import { SearchEntry } from "./search-entry";
 import { SaveToList } from "./save-to-list";
-import { useVoiceSupport } from "./voice-button";
 import type { TopPlace } from "./app-home-data";
 
 /**
@@ -81,8 +80,7 @@ export function AppHome({ topPlaces }: { topPlaces: TopPlace[] }) {
   const en = locale === "en";
   const t = (es: string, e: string) => (en ? e : es);
   const { directorySections } = useSiteFeatures();
-  const voice = useVoiceSupport();
-  const [entry, setEntry] = useState<null | "text" | "voice">(null);
+  const [entry, setEntry] = useState<null | "text">(null);
   const [more, setMore] = useState(false);
   const [tip, setTip] = useState(false);
   const idx = useRotatingIndex(PLACEHOLDERS.length);
@@ -119,11 +117,6 @@ export function AppHome({ topPlaces }: { topPlaces: TopPlace[] }) {
             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-5 w-5" aria-hidden /></span>
             <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#5b6b82]" data-home-placeholder>{en ? PLACEHOLDERS[idx].en : PLACEHOLDERS[idx].es}</span>
           </button>
-          {voice && (
-            <button type="button" onClick={() => setEntry("voice")} aria-label={t("Buscar con su voz", "Search by voice")} data-home-mic className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#162543]">
-              <Mic className="h-5 w-5" aria-hidden />
-            </button>
-          )}
         </div>
 
         <section aria-labelledby="home-top10" data-home-top10 className="mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-[#fff1cf] via-[#fbe7d2] to-[#d6effa] p-4">
@@ -164,7 +157,7 @@ export function AppHome({ topPlaces }: { topPlaces: TopPlace[] }) {
         </section>
       </div>
 
-      {entry && <SearchEntry onClose={() => setEntry(null)} autoVoice={entry === "voice"} />}
+      {entry && <SearchEntry onClose={() => setEntry(null)} />}
       {more && <MoreCategories variant="sheet" onClose={() => setMore(false)} />}
     </div>
   );
