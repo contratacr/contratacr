@@ -22,7 +22,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { categorySlug, getAllCategories, getCategoryGroupId, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { categorySlug, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
@@ -42,8 +42,7 @@ import type { PlaceSearchItem } from "@/lib/directory/search-schemas";
 import type { CardExtra } from "@/lib/directory/card-extras";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { loadPlaceResults, PlaceResultsMobile, type PlaceFilters } from "@/components/directory/place-results";
-import { FiltersIconChip, ResultChips, ServiceChipExtras } from "@/components/directory/result-chips";
-import { ServiceAssistantCard } from "@/components/search/service-assistant-card";
+import { ResultChips } from "@/components/directory/result-chips";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -220,11 +219,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const [viewer, resolvedSearch] = await Promise.all([viewerPromise, resolveSearchResults(params)]);
   const allResults = resolvedSearch.ordered;
   const viewerProfileId = viewer?.id;
-  const assistantFirstName = (() => {
-    const meta = (viewer?.user_metadata ?? {}) as { full_name?: unknown; name?: unknown };
-    const full = typeof meta.full_name === "string" ? meta.full_name : typeof meta.name === "string" ? meta.name : "";
-    return full.trim().split(/\s+/)[0] || null;
-  })();
 
   // Lo de un usuario bloqueado no se muestra (6-oct-2026, regla 1.2 de Apple).
   const bloqueadosPorMi = await perfilesBloqueadosPor(viewerProfileId);
@@ -579,7 +573,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           de la pantalla tras hidratar, la columna lo aplastaba a 0 y el mapa
           subía 124px de golpe (salto medido de 0,19 en cada apertura). */}
       <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden />
-      <DirectoryQuickNav/>
+      {/* Phones (owner 2026-11-26): like the map sections — no bar, one floating search card over the map. */}
+      <DirectoryQuickNav floating={{ title: areaName ? `${placeResults?.label ?? pageTitle} · ${areaName}` : (placeResults?.label ?? pageTitle), listToggle: { list: appEnglish ? "Show list" : "Ver lista", map: appEnglish ? "Show map" : "Ver mapa" } }}/>
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as
@@ -633,12 +628,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             sinResultados={allResults.length === 0 && !businessMix}
             hojaAbiertaAlInicio={enLaApp}
             filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
+            // Professionals (owner 2026-11-26): exactly production's sheet (its chips, no title row, no assistant card);
+            // only the place search keeps the directory chips and title row.
             quickFilters={placeResults
               ? <Suspense fallback={null}><ResultChips /></Suspense>
-              : directoryOn
-                ? <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} leadingChips={<FiltersIconChip />} trailingChips={<ServiceChipExtras auto={!!activeCategoryId && getCategoryGroupId(activeCategoryId) === "automotriz"} videoOk={videoCompatibleSearch} />} /></Suspense>
-                : <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
-            titleRow={directoryOn ? { title: placeResults?.label ?? pageTitle, subtitle: areaName ?? "Costa Rica", mapLabel: appEnglish ? "Map" : "Mapa", listLabel: appEnglish ? "List" : "Lista" } : undefined}
+              : <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
+            titleRow={placeResults ? { title: placeResults.label ?? pageTitle, subtitle: areaName ?? "Costa Rica", mapLabel: appEnglish ? "Map" : "Mapa", listLabel: appEnglish ? "List" : "Lista" } : undefined}
             drawerFilters={<Suspense fallback={null}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
           >
 
@@ -647,10 +642,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <div className="lg:hidden" data-app-place-results>
                 <PlaceResultsMobile results={placeResults} locale={locale} query={queryText} nearText={typeof areaName === "string" ? areaName : null} />
               </div>
-            )}
-            {/* Phones, services: the assistant card above the professionals. */}
-            {directoryOn && !placeResults && (
-              <div className="px-0 lg:hidden"><ServiceAssistantCard firstName={assistantFirstName} category={activeCategoryId ? catLabel(activeCategoryId) : null} auto={!!activeCategoryId && getCategoryGroupId(activeCategoryId) === "automotriz"} /></div>
             )}
             {/* Results list */}
             <div className={placeResults ? "hidden min-w-0 lg:block" : "min-w-0"}>

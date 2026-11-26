@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -207,7 +207,7 @@ export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasoliner
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
 /** `floating` (map screens, phones): no bar — one white card floats over the map with the brand ▾, the search showing the
  *  section and the businesses are pins only (owner, 2026-11-26). */
-export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string } }) {
+export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string; listToggle?: { list: string; map: string } } }) {
   const { directorySections } = useSiteFeatures();
   const pathname = usePathname() ?? "/";
   const locale = useLocale();
@@ -255,6 +255,7 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
           <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />
           <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? floating.title : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
+        {floating?.listToggle && <FloatingListToggle labels={floating.listToggle} />}
       </div>
     </nav>
     </>
@@ -299,4 +300,16 @@ function useCollapseOnScroll() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   return collapsed;
+}
+
+/** Professionals search (production has it in its bar): one button that moves the results sheet between map and list. */
+function FloatingListToggle({ labels }: { labels: { list: string; map: string } }) {
+  const [list, setList] = useState(false);
+  return (
+    <button type="button" data-quick-nav-list aria-label={list ? labels.map : labels.list}
+      onClick={() => { const next = !list; setList(next); window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: next ? "list" : "map" } })); }}
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]">
+      {list ? <MapIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden /> : <List className="h-5 w-5" strokeWidth={2.4} aria-hidden />}
+    </button>
+  );
 }

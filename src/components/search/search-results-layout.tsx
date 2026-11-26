@@ -680,7 +680,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
         </div>
         {searchAreaVisible && (
-        <div className={`pointer-events-none fixed inset-x-0 ${soloMapa ? "top-[calc(env(safe-area-inset-top)+84px)]" : "top-[calc(var(--ccr-native-header-height,124px)+0.75rem)]"} z-40 flex justify-center px-4 lg:hidden`}>
+        <div className={`ccr-search-area-pill pointer-events-none fixed inset-x-0 ${soloMapa ? "top-[calc(env(safe-area-inset-top)+84px)]" : "top-[calc(var(--ccr-native-header-height,124px)+0.75rem)]"} z-40 flex justify-center px-4 lg:hidden`}>
           <button
             type="button"
             onClick={() => {

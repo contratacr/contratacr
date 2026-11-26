@@ -2581,5 +2581,7 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   html:has([data-ccr-brand-menu]) [data-ccr-menu-burger] { display: none !important; }
   /* The search beside the brand looks like the home header's pill. */
   [data-section-header-search] .ccr-section-search { border-radius: 9999px; border-color: #d7e1ea; padding-left: 0.875rem; }
+  /* «Buscar en esta zona» sits under the floating search card. */
+  html:has([data-quick-nav-floating]) .ccr-search-area-pill { top: calc(env(safe-area-inset-top) + 84px) !important; }
   html body.ccr-dir-header .ccr-search-results-layout { height: calc(100dvh - var(--ccr-native-header-height, 126px)) !important; padding-top: 0 !important; }
 }
