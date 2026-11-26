@@ -23,7 +23,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
-  X, Ban,
+  X, Ban, Images,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerificationInfo } from "@/components/ui/verification-info";
@@ -43,6 +43,8 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { CaseShowcase } from "@/components/professionals/case-showcase";
+import { ProfileHero } from "@/components/professionals/profile-hero";
+import { ProfileSimilar, type SimilarPro } from "@/components/professionals/profile-similar";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -183,7 +185,7 @@ type ProfilePageData = {
  * metadatos. El dato ya lo tenía el servidor —la cabecera lo consulta para los
  * metadatos, con la misma consulta cacheada—, así que traerlo no cuesta nada.
  */
-export default function ProfilePage({ fichaInicial, ofertasIniciales = [], empleosIniciales = [] }: { fichaInicial?: ProfessionalDetail | null; ofertasIniciales?: ProfessionalOffer[]; empleosIniciales?: JobPost[] }) {
+export default function ProfilePage({ fichaInicial, ofertasIniciales = [], empleosIniciales = [], similaresIniciales }: { fichaInicial?: ProfessionalDetail | null; ofertasIniciales?: ProfessionalOffer[]; empleosIniciales?: JobPost[]; similaresIniciales?: SimilarPro[] }) {
   const t = useTranslations("profile");
   const tMenu = useTranslations("menuFicha");
   const tVolver = useTranslations("marketplaceReturn");
@@ -921,6 +923,52 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
+            {/* Directorio encendido (rediseño 26-nov-2026): portada, foto que la monta, cifras en píldoras y el
+                contacto del teléfono en un panel suave. Con el directorio apagado sigue la tarjeta de siempre. */}
+            {directoryOn ? (
+              <ProfileHero
+                en={locale === "en"}
+                avatarUrl={professional.avatarUrl}
+                coverUrl={professional.portfolioUrls?.[0] ?? null}
+                initials={getInitials(displayName.primaryMobile)}
+                altName={displayName.primaryMobile}
+                name={<ProfileIdentityName testId="professional-profile-name" name={displayName.primaryDesktop}
+                  badge={professional.verificationStatus === "verified" ? <VerificationInfo /> : null} />}
+                subtitle={(() => {
+                  const oficios = ((professional.professions?.length ? professional.professions : [professional.categoryId]) as (string | null | undefined)[])
+                    .map((id) => catLabel(id)).filter(Boolean).slice(0, 2);
+                  return [...oficios, locationText].filter(Boolean).join(" · ") || null;
+                })()}
+                stats={(professional.reviewCount > 0 || expYears > 0 || hasCasos) ? (
+                  <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                    {professional.reviewCount > 0 && (
+                      <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#fff6e8] px-3 font-semibold text-[#7a4a06] transition-colors hover:bg-[#ffefd6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+                        <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                        <span className="text-[14px] font-extrabold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                        <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                      </button>
+                    )}
+                    {expYears > 0 && (
+                      <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#eaf7fd] px-3 font-semibold text-[#0b5f80]">
+                        <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        <span className="text-[14px] font-extrabold text-[#162543]">{expYears}</span>
+                        <span className="whitespace-nowrap">{t("statYears")}</span>
+                      </span>
+                    )}
+                    {hasCasos && (
+                      <button type="button" onClick={() => setActiveTab("casos")}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f1f4f8] px-3 font-semibold text-[#334155] transition-colors hover:bg-[#e7ecf2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+                        <Images className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        <span className="whitespace-nowrap">{t("tabs.casos")}</span>
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+                menu={<MenuFicha opciones={opcionesDeLaFicha} />}
+                contact={bloqueContacto(true)}
+              />
+            ) : (
             <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
                 {/* En el teléfono: foto a la izquierda, y a su lado el nombre y
                     las cifras. Centrado ocupaba tres renglones para decir lo
@@ -1045,11 +1093,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     del nombre (ver arriba), con el bloque centrado con la foto. */}
                 <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start lg:hidden" opciones={opcionesDeLaFicha} />
             </div>
+            )}
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
-              <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className={directoryOn ? "" : "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"}>
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div data-profile-tabs="" className="group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
+                <div data-profile-tabs="" className={directoryOn
+                  ? "group/carril relative sticky top-16 z-20 -mx-4 border-b border-[#e5e9ee] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 sm:mx-0 [.ccr-native-app_&]:top-0"
+                  : "group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl"}>
                   <FlechasDeCarril carril={carrilPestanasRef} />
                   <div
                     role="tablist"
@@ -1067,12 +1118,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
                           "relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors",
+                          directoryOn && "px-3 py-3.5 text-[14px] font-bold sm:px-4",
                         )}
-                        style={{ color: tabEfectiva === tab.id ? "#009FD9" : "#6b7280" }}
+                        style={{ color: tabEfectiva === tab.id ? (directoryOn ? "#162543" : "#009FD9") : "#6b7280" }}
                       >
                         {tab.label}
                         {tabEfectiva === tab.id && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full" />
+                          <span className={directoryOn ? "absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-[#009FD9] sm:inset-x-4" : "absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full"} />
                         )}
                       </button>
                     ))}
@@ -1080,7 +1132,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 </div>
 
                 {/* Tab content */}
-                <div className="p-6">
+                <div className={directoryOn ? "pb-2 pt-6 sm:pt-8" : "p-6"}>
 
                   {/* ── TAB: Servicios ── */}
                   {montada("servicios") && <div hidden={tabEfectiva !== "servicios"}>{(() => {
@@ -1100,7 +1152,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       .filter((c, i, a) => a.indexOf(c) === i);
                     return (
                       <div>
-                        <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("servicesOffered")}</h2>
+                        <h2 className={directoryOn ? "mb-1 text-xl font-extrabold tracking-tight text-[#162543]" : "text-lg font-semibold text-[#162543] mb-1"}>{t("servicesOffered")}</h2>
                         <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>
                         {cats.length === 0 ? (
                           <FichaVacio icono="servicios" titulo={t("noServices")} />
@@ -1133,7 +1185,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               return (
-                                <article key={cat} className="flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#e5e7eb] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]">
+                                <article key={cat} className={directoryOn
+                                  ? "flex flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(22,37,67,0.08)]"
+                                  : "flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#e5e7eb] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]"}>
                                   {serviceImageUrl && (
                                     <ImagePreviewDialog
                                       src={serviceImageUrl}
@@ -1381,6 +1435,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         reviews={professional.reviews}
                         isAuthenticated={isAuthenticated}
                         onReviewSubmitted={reloadProfessional}
+                        variant={directoryOn ? "directory" : "classic"}
                       />
                     </div>
                   )}</div>}
@@ -1447,11 +1502,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 </div>
               </div>
             </div>
+            {directoryOn && similaresIniciales && <ProfileSimilar pros={similaresIniciales} en={locale === "en"} />}
             </div>
 
             {/* ── COLUMNA DERECHA (solo computadora): contacto siempre a la vista ── */}
             <aside className="order-2 hidden w-[352px] shrink-0 lg:block">
-              <div className="sticky top-20 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <div className={directoryOn ? "sticky top-24 rounded-2xl border border-[#e5e9ee] bg-white p-5 shadow-[0_8px_30px_rgba(22,37,67,0.08)]" : "sticky top-20 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm"}>
+                {directoryOn && <p className="mb-3 text-[17px] font-extrabold leading-tight text-[#162543]">{t("contactThisProfessional")}</p>}
                 {bloqueContacto(false)}
               </div>
             </aside>

@@ -1,5 +1,7 @@
 import { ServerContactAvailability } from "@/components/professionals/server-contact-availability";
-import { getProfessionalBySlug, fichaEnCache } from "@/lib/queries/professionals";
+import { getProfessionalBySlug, fichaEnCache, searchProfessionals } from "@/lib/queries/professionals";
+import { sitemapSections } from "@/lib/directory/sitemap-sections";
+import type { SimilarPro } from "@/components/professionals/profile-similar";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
 import ProfileClient from "./profile-client";
@@ -31,12 +33,39 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     getProfessionalBySlug(slug),
     base ? publicacionesDelProfesional(base.id) : Promise.resolve({ ofertas: [], empleos: [] }),
   ]);
+  // «Profesionales similares» (rediseño 26-nov-2026) solo con el directorio encendido; en producción no se consulta.
+  const similares = ficha && sitemapSections().length > 0 ? await profesionalesSimilares(ficha, locale) : undefined;
   return (
     <>
       {ficha && <DatosEstructurados datos={fichaComoNegocioLocal(ficha, locale)} />}
-      {ficha ? <ServerContactAvailability professionalId={ficha.id}><ProfileClient fichaInicial={ficha} ofertasIniciales={publicaciones.ofertas} empleosIniciales={publicaciones.empleos} /></ServerContactAvailability> : <ProfileClient fichaInicial={ficha} />}
+      {ficha ? <ServerContactAvailability professionalId={ficha.id}><ProfileClient fichaInicial={ficha} ofertasIniciales={publicaciones.ofertas} empleosIniciales={publicaciones.empleos} {...(similares ? { similaresIniciales: similares } : {})} /></ServerContactAvailability> : <ProfileClient fichaInicial={ficha} />}
     </>
   );
+}
+
+// Mismo oficio, mejor calificados primero (la búsqueda pública), sin la ficha propia; seis como máximo.
+async function profesionalesSimilares(pro: NonNullable<Awaited<ReturnType<typeof getProfessionalBySlug>>>, locale: string): Promise<SimilarPro[]> {
+  const oficio = pro.categoryId || pro.professions?.[0];
+  if (!oficio) return [];
+  try {
+    // Primero el oficio principal; si no alcanza, cualquiera de sus oficios.
+    let lista = await searchProfessionals({ categoryId: oficio, sortBy: "rating" });
+    if (lista.filter((p) => p.slug !== pro.slug).length < 3 && (pro.professions?.length ?? 0) > 1) {
+      lista = await searchProfessionals({ categoryIds: pro.professions, sortBy: "rating" });
+    }
+    return lista.filter((p) => p.slug !== pro.slug).slice(0, 6).map((p) => ({
+      slug: p.slug,
+      name: p.businessName?.trim() || proDisplayName(p.fullName),
+      avatarUrl: p.avatarUrl ?? null,
+      trade: getCategoryLabel(p.categoryId, locale),
+      area: [p.cantonName, p.provinceName].filter(Boolean).join(", "),
+      ratingAvg: p.ratingAvg,
+      reviewCount: p.reviewCount,
+      verified: p.verificationStatus === "verified",
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // La ficha, descrita como un negocio local de servicios: nombre, oficio, zona,

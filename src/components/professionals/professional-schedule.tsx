@@ -531,16 +531,18 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
 
   // Directory on (owner 2026-11-26): the profile's sticky strip uses the same brand chips as the result card —
   // WhatsApp, Llamar, Reseñar — 40 px tall and sharing the row, instead of the two 48 px buttons.
-  const barChip = "!h-10 min-w-0 flex-1 !rounded-full !border-0 !bg-[#eaf7fd] !px-3 !text-[13px] !font-bold !text-[#0083b0] hover:!bg-[#d9f0fb]";
+  const barChip = "!h-11 min-w-0 flex-1 !rounded-full !border-0 !bg-[#eaf7fd] !px-3 !text-[13.5px] !font-bold !text-[#0083b0] hover:!bg-[#d9f0fb]";
+  // 2026-11-26 redesign: WhatsApp is the solid brand pill (the action that converts); Llamar and Reseñar stay soft.
+  const barChipPrimary = `${barChip} !bg-[#009FD9] !text-white hover:!bg-[#0089bb] [&_svg]:!text-white`;
   const profileChips = (
     <div className="flex w-full gap-2" data-pro-profile-actions>
-      <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="profile" className={barChip} buttonLabel="WhatsApp" />
+      <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="profile" className={barChipPrimary} buttonLabel="WhatsApp" />
       {showCall && renderCall(`${secondaryContactBase} ${barChip}`)}
       <button type="button" onClick={onResenar} data-pro-profile-review className={`${secondaryContactBase} ${barChip}`}><Star className="h-4 w-4 shrink-0" aria-hidden />{t("reviewShort")}</button>
     </div>
   );
   // Compact strip: less padding than the 48 px-button strip, same safe area.
-  const compactBar = "flex flex-col gap-2 max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]";
+  const compactBar = "flex flex-col gap-2 max-sm:border-[#e5e9ee] max-sm:bg-white/95 max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-sm:shadow-[0_-8px_24px_rgba(22,37,67,0.08)] max-sm:backdrop-blur";
   if (stacked && directoryOn) {
     return (
       <>
