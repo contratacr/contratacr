@@ -3067,7 +3067,9 @@
     "topRated": {
       "title": "Mejor calificados",
       "review": "reseña",
-      "reviews": "reseñas"
+      "reviews": "reseñas",
+      "prev": "Anteriores",
+      "next": "Siguientes"
     },
     "heroSlides": {
       "restaurants": "Dónde comer cerca de usted",

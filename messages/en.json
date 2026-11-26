@@ -3067,7 +3067,9 @@
     "topRated": {
       "title": "Top rated",
       "review": "review",
-      "reviews": "reviews"
+      "reviews": "reviews",
+      "prev": "Previous",
+      "next": "Next"
     },
     "heroSlides": {
       "restaurants": "Where to eat near you",

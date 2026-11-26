@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { ScrollRow } from "@/components/landing/scroll-row";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { loadTopPlaces } from "@/components/directory/app-home-data";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
@@ -31,25 +32,25 @@ export async function HomeTopRated() {
     <section data-home-top-rated className="bg-white pb-3 pt-6">
       <h2 className="mb-3 px-4 text-center text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold text-[#1a2744] sm:text-4xl">{t("title")}</h2>
       {/* Bigger horizontal cards (owner 2026-11-26): photo on top, name, stars with the review count, section and area. */}
-      <ul className="mx-auto flex max-w-6xl snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ScrollRow prevLabel={t("prev")} nextLabel={t("next")}>
         {items.map((i) => (
-          <li key={i.key} className="w-[220px] shrink-0 snap-start">
+          <li key={i.key} className="w-[168px] shrink-0 snap-start sm:w-[190px]">
             <Link href={i.href} prefetch={false} data-home-top-rated-item className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
-              <span className="grid aspect-[4/3] w-full place-items-center overflow-hidden bg-[#eef6fa] text-[34px] font-extrabold text-[#0083b0]">
+              <span className="grid aspect-square w-full place-items-center overflow-hidden bg-[#eef6fa] text-[30px] font-extrabold text-[#0083b0]">
                 {i.photo
                   // eslint-disable-next-line @next/next/no-img-element -- remote photo
                   ? <img src={i.photo} alt="" className="h-full w-full object-cover" loading="lazy" />
                   : i.name.slice(0, 1)}
               </span>
-              <span className="flex flex-1 flex-col gap-1 p-3">
-                <span className="line-clamp-1 text-[15px] font-extrabold text-[#162543]">{i.name}</span>
-                <span className="flex items-center gap-1 text-[13px]"><Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" aria-hidden /><span className="font-bold text-[#162543]">{i.avg.toFixed(1)}</span><span className="text-[#6b7a8f]">({i.count} {t(i.count === 1 ? "review" : "reviews")})</span></span>
-                {i.sub && <span className="line-clamp-1 text-[12.5px] text-[#6b7a8f]">{i.sub}</span>}
+              <span className="flex flex-1 flex-col gap-0.5 p-2.5">
+                <span className="line-clamp-1 text-[14px] font-extrabold text-[#162543]">{i.name}</span>
+                <span className="flex items-center gap-1 text-[12px]"><Star className="h-3.5 w-3.5 fill-[#f59e0b] text-[#f59e0b]" aria-hidden /><span className="font-bold text-[#162543]">{i.avg.toFixed(1)}</span><span className="text-[#6b7a8f]">({i.count} {t(i.count === 1 ? "review" : "reviews")})</span></span>
+                {i.sub && <span className="line-clamp-1 text-[11.5px] text-[#6b7a8f]">{i.sub}</span>}
               </span>
             </Link>
           </li>
         ))}
-      </ul>
+      </ScrollRow>
     </section>
   );
 }
