@@ -19,7 +19,7 @@ export default async function PropertiesRoute({params,searchParams}:{params:Prom
  // Classified listings are OFF by owner decision (feature-flags.ts): 404 while the flag is off.
  if(!DIR_ENABLED||!DIRECTORY_LISTINGS_ENABLED)notFound();
  const {locale}=await params,sp=await searchParams,en=locale==='en',basePath=(en?'/en':'')+'/inmuebles';
- const page=await loadDirectorySearch('inmuebles',sp),op=page.values.operation;
+ const page=await loadDirectorySearch('inmuebles',sp,{defaultSort:'best_rated'}),op=page.values.operation;
  const {filters,results}=searchSlots({vertical:'inmuebles',locale,page,basePath,title:en?'Properties':'Propiedades'});
  return <DirectoryShell><PropertiesHome locale={locale} selected={{operation:op==='sale'||op==='rent'?op:undefined,type:page.values.type,province:page.values.province}}
   sellHref={(en?'/en':'')+'/dashboard/pro/inventario/inmuebles'} filters={filters} results={results}/></DirectoryShell>;

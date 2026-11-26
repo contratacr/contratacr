@@ -66,10 +66,12 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const activeFilters=Object.entries(values).filter(([k,v])=>!!v&&!NOT_FILTERS.includes(k)).length;
  // Same sort rule as the filters form: price sorts only where a price exists; distance only with the visitor's position.
  const priceSorts=priceMode==='menu'||(priceMode==='product'&&!!values.product);
- const sorts=(['relevance','best_rated',...(values.lat?['distance'] as const:[]),...(priceSorts?['price_asc','price_desc'] as const:[]),'newest'] as SearchSort[]);
- const sort=(values.sort as SearchSort|undefined)??'relevance';
+ // Like the professionals search in production (owner 2026-11-26): Mejor calificados by default, Más cercanos (asks for the
+ // position), and the price sorts where prices exist. The chip shows the current order.
+ const sorts=(['best_rated','distance',...(priceSorts?['price_asc','price_desc'] as const:[])] as SearchSort[]);
+ const sort=(values.sort as SearchSort|undefined)??'best_rated';
  const menus:ChipMenu[]=[
-  {key:'sort',label:sort==='relevance'?t('Ordenar','Sort'):sortLabel(sorts.includes(sort)?sort:'relevance',en),active:sort!=='relevance',options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s==='relevance'?undefined:s}),current:s===sort}))},
+  {key:'sort',label:sortLabel(sorts.includes(sort)?sort:'best_rated',en),active:false,options:sorts.map(s=>({value:`sort-${s}`,label:sortLabel(s,en),href:link({sort:s==='best_rated'?undefined:s}),current:s===sort,...(s==='distance'&&!values.lat?{needsLocation:true}:{})}))},
   {key:'province',label:values.province??t('Provincia','Province'),active:!!values.province,options:[{value:'province-all',label:t('Todo el país','Whole country'),href:link({province:undefined,canton:undefined}),current:!values.province},
    ...CR_PROVINCES.map(p=>({value:p,label:p,href:link({province:p,canton:undefined}),current:values.province===p}))]},
   ...(kinds.length?[{key:'kind',label:kinds.find(k=>k.value===values.kind)?.[en?'en':'es']??t('Tipo','Type'),active:!!values.kind,

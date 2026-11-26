@@ -13,7 +13,7 @@ import { PlaceCard } from "@/components/directory/place-card";
 export async function morePlaces(section: string, values: Record<string, string>, locale: string, cursor: string, startRank: number): Promise<{ items: ReactNode; next: string | null; count: number }> {
   if (!DIR_ENABLED) return { items: null, next: null, count: 0 };
   const sp: SearchPageParams = { ...values, cursor };
-  const page = await loadDirectorySearch(section as SearchVertical, sp);
+  const page = await loadDirectorySearch(section as SearchVertical, sp, { defaultSort: "best_rated" });
   if (!page.ok) return { items: null, next: null, count: 0 };
   const places = page.result.items.flatMap((it) => (it.kind === "place" ? [it] : []));
   const extras = await placeCardExtras(places.map((p) => p.slug));

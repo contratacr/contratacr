@@ -18,6 +18,6 @@ export async function generateMetadata({params,searchParams}:{params:Promise<{lo
 export default async function SectionRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SearchPageParams>}){
  if(!DIR_ENABLED)notFound();
  const {locale}=await params,sp=await searchParams,en=locale==='en',basePath=(en?'/en':'')+'/restaurantes';
- const page=await loadDirectorySearch('restaurantes',sp);
+ const page=await loadDirectorySearch('restaurantes',sp,{defaultSort:'best_rated'});
  return <PlacesSectionHome section="restaurantes" locale={locale} page={page} basePath={basePath}/>;
 }

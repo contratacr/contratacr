@@ -11,7 +11,8 @@ import {CAPA_HOJA} from '@/lib/capas';
  * price, every section filter) lives in one drawer opened by «Filtros», on every screen size.
  */
 export const OPEN_DIR_FILTERS='ccr:dir-open-filters';
-export type ChipOption={value:string;label:string;href:string;current:boolean};
+export type ChipOption={value:string;label:string;href:string;current:boolean;
+ /** «Más cercanos» without a position: ask for it, then open the href with lat/lng (2 decimals, like the professionals search). */needsLocation?:boolean};
 export type ChipMenu={key:string;label:string;active:boolean;options:ChipOption[]};
 export type ChipToggle={key:string;label:string;href:string;active:boolean};
 
@@ -105,7 +106,7 @@ function SheetMenu({menu,openKey,setOpenKey,en}:{menu:ChipMenu;openKey:string|nu
    <button type="button" aria-label={en?'Close':'Cerrar'} className="absolute inset-0 bg-black/30" onClick={()=>setOpenKey(null)}/>
    <div className="absolute inset-x-0 bottom-0 max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2 shadow-2xl">
     <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-[#d1d5db]" aria-hidden="true"/>
-    <ul>{menu.options.map(o=><li key={o.value}><a href={o.href} aria-current={o.current?'true':undefined} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-[15px] ${o.current?'font-bold text-[#007fae]':'font-semibold text-[#162543]'}`}>{o.label}{o.current&&<span aria-hidden="true">✓</span>}</a></li>)}</ul>
+    <ul>{menu.options.map(o=><li key={o.value}><a href={o.href} aria-current={o.current?'true':undefined} onClick={o.needsLocation?(e)=>{e.preventDefault();if(!('geolocation' in navigator))return;navigator.geolocation.getCurrentPosition(pos=>{const u=new URL(o.href,location.href);u.searchParams.set('lat',pos.coords.latitude.toFixed(2));u.searchParams.set('lng',pos.coords.longitude.toFixed(2));location.assign(u.toString());},()=>setOpenKey(null),{timeout:10000,maximumAge:300000});}:undefined} className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-[15px] ${o.current?'font-bold text-[#007fae]':'font-semibold text-[#162543]'}`}>{o.label}{o.current&&<span aria-hidden="true">✓</span>}</a></li>)}</ul>
    </div>
   </div>,document.body)}
  </>;

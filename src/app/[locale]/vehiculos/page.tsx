@@ -21,7 +21,7 @@ export default async function VehiclesRoute({params,searchParams}:{params:Promis
  // Classified listings are OFF by owner decision (feature-flags.ts): 404 while the flag is off.
  if(!DIR_ENABLED||!DIRECTORY_LISTINGS_ENABLED)notFound();
  const {locale}=await params,sp=await searchParams,en=locale==='en',basePath=(en?'/en':'')+'/vehiculos';
- const [rows,page]=await Promise.all([createAdminClient().from('public_vehicle_listings').select('make_slug,make_name').limit(2000),loadDirectorySearch('vehiculos',sp)]);
+ const [rows,page]=await Promise.all([createAdminClient().from('public_vehicle_listings').select('make_slug,make_name').limit(2000),loadDirectorySearch('vehiculos',sp,{defaultSort:'best_rated'})]);
  const makes=[...new Map((rows.data??[]).map(r=>[r.make_slug as string,{slug:r.make_slug as string,name:r.make_name as string}])).values()].sort((a,b)=>a.name.localeCompare(b.name,'es'));
  const {filters,results}=searchSlots({vertical:'vehiculos',locale,page,basePath,title:en?'Vehicles for sale':'Vehículos en venta'});
  return <DirectoryShell><VehiclesHome locale={locale} makes={makes} selected={{type:page.values.type,make:page.values.make,province:page.values.province}}

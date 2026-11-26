@@ -1,4 +1,5 @@
 import 'server-only';
+import type {SearchSort} from './search-schemas';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {parseSearchParams,type DirectoryFacets,type DirectorySearchResult,type SearchParseError,type SearchVertical} from './search-schemas';
 import {DIR_HEALTH_ENABLED,isHealthSearchVertical,withoutDisabledFacetValues,withoutDisabledVerticals} from './feature-flags';
@@ -16,9 +17,11 @@ export function searchValues(sp:SearchPageParams):Record<string,string|undefined
  return Object.fromEntries(Object.entries(sp).flatMap(([k,v])=>typeof v==='string'&&v!==''&&k!=='vertical'&&k!=='locale'?[[k,v]]:[]));
 }
 
-export async function loadDirectorySearch(vertical:SearchVertical,sp:SearchPageParams):Promise<DirectorySearchPage>{
+export async function loadDirectorySearch(vertical:SearchVertical,sp:SearchPageParams,opts?:{defaultSort?:SearchSort}):Promise<DirectorySearchPage>{
  const values=searchValues(sp),params=new URLSearchParams(values as Record<string,string>);
  params.set('vertical',vertical);
+ // Section pages open on «Mejor calificados» like the professionals search (owner 2026-11-26); `values` keeps no sort.
+ if(opts?.defaultSort&&!params.get('sort'))params.set('sort',opts.defaultSort);
  const parsed=parseSearchParams(params);
  if(!parsed.ok)return {ok:false,values,reason:parsed.reason};
  // Launch flag: the health section is off (feature-flags.ts) → the page itself answers 404; never query it here.

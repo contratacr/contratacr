@@ -21,7 +21,7 @@ export async function generateMetadata({params,searchParams}:{params:Promise<{lo
 export default async function SectionRoute({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<SearchPageParams>}){
  if(!DIR_ENABLED)notFound();
  const {locale}=await params,sp=await searchParams,en=locale==='en',basePath=(en?'/en':'')+'/gasolineras';
- const page=await loadDirectorySearch('gasolineras',sp);
+ const page=await loadDirectorySearch('gasolineras',sp,{defaultSort:'best_rated'});
  // Fuel prices are national (ARESEP): one banner instead of a price per station.
  const national=await createAdminClient().rpc('public_price_current',{p_place_slug:null,p_item_slug:null});
  const banner=national.error||!national.data?null:<NationalFuelPrices prices={national.data as PublicPriceCurrent} locale={locale}/>;
