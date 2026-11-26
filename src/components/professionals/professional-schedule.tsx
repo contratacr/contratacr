@@ -1,6 +1,8 @@
 "use client";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { useSiteFeatures } from "@/components/site-features";
+import { Link } from "@/i18n/navigation";
+import { Star } from "lucide-react";
 
 import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -471,8 +473,16 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   ) : (
     whatsappDeLaTarjeta
   );
-  // Directory on (test, owner 2026-11-26, like Yelp): one green WhatsApp button across the card, the contact people use.
-  const contactButtons = !directoryOn ? contactButtonsClassic : <div data-pro-card-actions>{whatsappDeLaTarjeta}</div>;
+  // Directory on (test, owner 2026-11-26, like Google Maps): small chips with icon and word — WhatsApp (green, the main
+  // contact), Llamar and Reseña — in one row that slides if it does not fit.
+  const chip = "!h-8 !w-auto shrink-0 whitespace-nowrap !rounded-full !px-3 !text-[12.5px] !font-semibold";
+  const contactButtons = !directoryOn ? contactButtonsClassic : (
+    <div className="scrollbar-none -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-pro-card-actions>
+      <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="search" className={chip} buttonLabel="WhatsApp" />
+      {showCall && renderCall(`${secondaryContactBase} ${chip}`)}
+      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={`${secondaryContactBase} ${chip}`}><Star className="h-3.5 w-3.5 shrink-0" aria-hidden />{t("reviewShort")}</Link>
+    </div>
+  );
 
   // Perfil: agendar manda y ocupa su propia línea; debajo, escribir y llamar
   // comparten fila. El correo salió de aquí: repetía el mensaje y mandaba la

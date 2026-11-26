@@ -468,7 +468,8 @@
     "whatsappLong": "Contact via WhatsApp",
     "moreZones": "+{count, plural, one {# more area} other {# more areas}}",
     "atiendeTodoElPais": "Serves all of Costa Rica",
-    "writeReview": "Write a review"
+    "writeReview": "Write a review",
+    "reviewShort": "Review"
   },
   "selfAction": {
     "title": "This is your profile",

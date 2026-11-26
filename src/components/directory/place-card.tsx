@@ -2,7 +2,10 @@ import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types'
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
-import {MapPin} from 'lucide-react';
+import {MapPin,Navigation,Star} from 'lucide-react';
+import {resolvePlaceAction} from '@/lib/directory/place-actions';
+import {PlaceDirectionsMenu} from './place-directions-menu';
+import {actionIcon} from './place-action-buttons';
 import {PlaceSaveBookmark} from './place-save-bookmark';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {RatingLine} from './biz-ui';
@@ -77,6 +80,8 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 }
 
 const VERIFIED=new Set(['verified','license_verified']);
+// Quick action chip on result cards (Google Maps style): outline, icon + one word, 32px.
+const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-3 text-[12.5px] font-semibold text-[#162543] transition-colors hover:border-[#009FD9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
 
 /**
  * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round photo (first approved one) or
@@ -96,6 +101,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
  const verified=VERIFIED.has(level);
+ const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
+ const quick=(['call','whatsapp','directions'] as const).flatMap(id=>resolvePlaceAction(id,actionInput)??[]);
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
  const rated=item.rating.count>0&&item.rating.average!=null;
@@ -131,6 +138,13 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
      {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
     </ul>
     {item.price&&<PlacePriceLine price={item.price} en={en}/>}
+    {/* Owner 2026-11-26 (like Google Maps): small outline chips with icon and word — Llamar, WhatsApp, Cómo llegar, Reseña. */}
+    {quick.length>0&&<div className="scrollbar-none -mx-1 mt-1.5 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-place-quick-actions>
+     {quick.map(a=>a.type==='directions'&&a.maps
+      ?<PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${CHIP} relative z-10`} variant="pill"><Navigation className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>{a.short}</PlaceDirectionsMenu>
+      :<a key={a.id} href={a.href} data-place-action={a.id} className={`${CHIP} relative z-10 ${a.id==='whatsapp'?'!border-[#25D366] !text-[#128C4B]':''}`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-3.5 w-3.5 shrink-0')}{a.short}</a>)}
+     <a href={`${href}#escribir-resena`} data-place-action="review" className={`${CHIP} relative z-10`}><Star className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>{t('Reseña','Review')}</a>
+    </div>}
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>

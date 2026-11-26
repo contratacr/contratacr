@@ -468,7 +468,8 @@
     "whatsappLong": "Contactar por WhatsApp",
     "moreZones": "+{count, plural, one {# zona más} other {# zonas más}}",
     "atiendeTodoElPais": "Atiende en todo el país",
-    "writeReview": "Escribir reseña"
+    "writeReview": "Escribir reseña",
+    "reviewShort": "Reseña"
   },
   "selfAction": {
     "title": "Este es su perfil",
