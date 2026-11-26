@@ -112,7 +112,8 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
  for(const id of ['info','reviews','more'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
  await expect(page.locator('[data-place-tab="more"]')).toHaveText(en?'More':'Más');
  // «¿Ya visitó este lugar?» (owner 2026-11-26, like the professional profile): five stars; a tap opens the form with that rating.
- await page.locator('[data-place-tab="reviews"]').click();
+ const reviewsTab=page.locator('[data-place-tab="reviews"]');
+ await expect(async()=>{await reviewsTab.click({timeout:2000});await expect(reviewsTab).toHaveAttribute('aria-selected','true',{timeout:1000});}).toPass({timeout:30000});
  const prompt=page.locator('[data-place-review-open][data-ready]');
  await expect(prompt).toContainText(en?'Have you been here?':'¿Ya visitó este lugar?');
  await expect(prompt.locator('[data-place-review-star]')).toHaveCount(5);
