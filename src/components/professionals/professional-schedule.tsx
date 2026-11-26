@@ -1,9 +1,6 @@
 "use client";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { useSiteFeatures } from "@/components/site-features";
-import { Link } from "@/i18n/navigation";
-import { Star } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 import { PublicReservations } from "@/components/pro/public-reservations";
 import { getProfessionalDisplayName } from "@/lib/display-name";
@@ -474,14 +471,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   ) : (
     whatsappDeLaTarjeta
   );
-  // Directory on (test, owner 2026-11-26): the same layout as the place cards — one row: WhatsApp and Llamar (or the one
-  // there is), then a square «Escribir reseña» button.
-  const contactButtons = !directoryOn ? contactButtonsClassic : (
-    <div className="flex items-center gap-2" data-pro-card-actions>
-      <div className={cn("min-w-0 flex-1", showCall && "grid grid-cols-2 gap-2")}>{whatsappDeLaTarjeta}{showCall && renderCall()}</div>
-      <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review aria-label={t("writeReview")} title={t("writeReview")} className={cn(secondaryContactClass, "!w-11 shrink-0 !px-0")}><Star className="h-[18px] w-[18px] shrink-0" aria-hidden /></Link>
-    </div>
-  );
+  // Directory on (test, owner 2026-11-26, like Yelp): one green WhatsApp button across the card, the contact people use.
+  const contactButtons = !directoryOn ? contactButtonsClassic : <div data-pro-card-actions>{whatsappDeLaTarjeta}</div>;
 
   // Perfil: agendar manda y ocupa su propia línea; debajo, escribir y llamar
   // comparten fila. El correo salió de aquí: repetía el mensaje y mandaba la

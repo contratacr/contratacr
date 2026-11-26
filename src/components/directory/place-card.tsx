@@ -2,12 +2,7 @@ import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types'
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel} from '@/lib/directory/place-verticals';
-import {checkPlacePhone} from '@/lib/directory/phone';
-import {placeCardActions,resolvePlaceAction} from '@/lib/directory/place-actions';
-import {PlaceMapFocusButton} from './place-map-focus-button';
-import {MapPin,Navigation,Star} from 'lucide-react';
-import {PlaceDirectionsMenu} from './place-directions-menu';
-import {actionIcon} from './place-action-buttons';
+import {MapPin} from 'lucide-react';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {RatingLine} from './biz-ui';
 import {RESULT_CARD,ResultPhotoStrip,ResultThumb,resultChip} from '@/components/search/result-card-parts';
@@ -81,10 +76,6 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 }
 
 const VERIFIED=new Set(['verified','license_verified']);
-// Buttons: same pills as the professional card (ProfessionalSchedule: h-11, full width, 13px bold) in the places' brand colours.
-const actionBase='relative z-10 inline-flex h-11 w-full min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
-const actionPrimary=`${actionBase} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
-const actionSecondary=`${actionBase} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 
 /**
  * Result card of a place, same anatomy as ProfessionalCard (one visual system, owner decision 2026-11-21): round photo (first approved one) or
@@ -103,11 +94,6 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const level=item.verificationLevel as VerificationLevel;
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
  const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
- const phone=checkPlacePhone(item.phone);
- const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
- const cardActions=placeCardActions(actionInput);
- const contactPair=(['whatsapp','call'] as const).flatMap(id=>resolvePlaceAction(id,actionInput)??[]);
- const contact=contactPair.length?contactPair:cardActions.filter(a=>a.id==='directions').slice(0,1);
  const verified=VERIFIED.has(level);
  const priceLevel=placePriceLevel(item.attributes);
  const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
@@ -146,20 +132,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
     <ResultPhotoStrip className="mt-1" photos={(extra?.photos??[]).slice(1,4).map(u=>placePhotoSrc(u,320))}/>
    </div>
   </div>
-  {/* Owner 2026-11-26: contact (WhatsApp and Llamar when it has both; «Cómo llegar» when it has neither), then review and map. */}
-  <div className="flex min-w-0 flex-col gap-2 lg:ml-5 lg:w-[240px] lg:shrink-0 lg:justify-center lg:border-l lg:border-[#eef2f6] lg:pl-5" data-place-actions data-place-card-actions={contact.map(a=>a.id).join(' ')}>
-   <div className="flex items-center gap-2">
-    {contact.map(a=>{
-     if(a.type==='directions'&&a.maps)return <PlaceDirectionsMenu key={a.id} maps={a.maps} locale={locale} label={a.label} className={`${actionPrimary} relative z-10 !w-auto flex-1`} variant="pill"><Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>{a.label}</PlaceDirectionsMenu>;
-     // Both channels: WhatsApp green and Llamar white; only one: the brand primary.
-     const cls=contact.length>1?(a.id==='whatsapp'?`${actionPrimary} !bg-[#25D366] hover:!bg-[#1ebe5b]`:actionSecondary):actionPrimary;
-     return <a key={a.id} className={`${cls} !w-auto min-w-0 flex-1`} href={a.href} data-place-action={a.id} {...(a.id==='call'?{'data-place-phone':'','aria-label':`${a.label} ${phone?.kind==='cr'?phone.display:''}`}:{})} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{actionIcon(a.id,'h-4 w-4 shrink-0')}{a.label}</a>;
-    })}
-    {/* Owner 2026-11-26: one row — contact wide, then two square icon buttons (review, map). */}
-    <a className={`${actionSecondary} !w-11 shrink-0 !px-0`} href={`${href}#escribir-resena`} data-place-action="review" aria-label={t('Escribir reseña','Write a review')} title={t('Escribir reseña','Write a review')}><Star className="h-[18px] w-[18px] shrink-0" aria-hidden="true"/></a>
-    {item.location&&<PlaceMapFocusButton id={item.slug} label={t('Ver en el mapa','Show on the map')} className={`${actionSecondary} relative z-10 !w-11 shrink-0 !px-0 lg:hidden`}/>}
-   </div>
-  </div>
+  {/* Owner 2026-11-26 (like Yelp): no buttons on the card; the whole card opens the place, where Llamar, Cómo llegar and
+      Reseña live (and the map pin card has Llamar / Cómo llegar). */}
   {/* Whole card → the place page (stretched low-z overlay, like ProfessionalCard); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;
