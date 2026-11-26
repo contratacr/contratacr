@@ -9,7 +9,8 @@ import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
-import { directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
+import { DIRECTORY_SECTION_ICONS } from "@/lib/directory/directory-groups";
+import { DIRECTORY_SECTION_LABELS, directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter as useRouterDeNext } from "next/navigation";
 
@@ -2587,6 +2588,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       casa (hay abogados, contadores, desarrollo web). Van
                       DESPUÉS de los recientes: quien ya buscó algo ve primero
                       lo suyo, y de todos modos tiene ideas debajo. */}
+                  {/* Directory on (test): quick access to every business section, above the most searched services. */}
+                  {directoryOn && searchFocused && !searchQuery.trim() && (
+                    <div data-search-place-chips className="pb-3">
+                      <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
+                        {locale === "en" ? "Businesses" : "Negocios"}
+                      </p>
+                      <div className="flex flex-wrap gap-2 px-1">
+                        {directorySections.filter((id) => DIRECTORY_SECTION_LABELS[id]).map((id) => {
+                          const Icon = DIRECTORY_SECTION_ICONS[id] ?? Search;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              data-search-place-chip={id}
+                              onClick={() => { closeNativeSearch(); router.push(`/${id}`); }}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dbe5ee] bg-white px-3 text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
+                            >
+                              <Icon className="h-4 w-4 text-[#009FD9]" aria-hidden />
+                              {locale === "en" ? DIRECTORY_SECTION_LABELS[id].en : DIRECTORY_SECTION_LABELS[id].es}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {searchFocused && !searchQuery.trim() && (
                     <div className="space-y-1">
                       <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
