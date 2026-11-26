@@ -10,9 +10,16 @@ import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
  */
 export type PlaceTab={id:string;label:string;anchors?:string[];content:ReactNode};
 
-export function PlaceTabs({tabs,label,defaultTab}:{tabs:PlaceTab[];label:string;defaultTab?:string}){
+export function PlaceTabs({tabs,label,defaultTab,compact}:{tabs:PlaceTab[];label:string;defaultTab?:string;
+ /** Compact title (name + rating) shown in the sticky bar once the hero ([data-place-hero]) has scrolled away. Decorative: aria-hidden. */compact?:ReactNode}){
  const first=defaultTab&&tabs.some(t=>t.id===defaultTab)?defaultTab:tabs[0]?.id??'';
  const [active,setActive]=useState(first);
+ const [past,setPast]=useState(false);
+ useEffect(()=>{
+  const hero=document.querySelector('[data-place-hero]');if(!hero||!compact)return;
+  const io=new IntersectionObserver(([e])=>setPast(!!e&&!e.isIntersecting&&e.boundingClientRect.top<0),{rootMargin:'-64px 0px 0px 0px'});
+  io.observe(hero);return()=>io.disconnect();
+ },[compact]);
  const rail=useRef<HTMLDivElement>(null);
  // The tab list is recreated on every render of the page; the listeners read it through a ref and are bound once.
  const tabsRef=useRef(tabs);
@@ -45,18 +52,21 @@ export function PlaceTabs({tabs,label,defaultTab}:{tabs:PlaceTab[];label:string;
   requestAnimationFrame(()=>document.getElementById(`place-tab-${next.id}`)?.focus());
  };
  if(!tabs.length)return null;
- return <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm" data-place-tabs>
-  <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white lg:static [.ccr-native-app_&]:top-0">
-   <div role="tablist" aria-label={label} ref={rail} className="scrollbar-none flex overflow-x-auto scroll-smooth">
+ // 2026-11-26 redesign: no card around the tabs; a full-bleed sticky bar (phones and computers) with a brand underline,
+ // and the panels sit on the page. Once the hero has scrolled away the bar also shows the place's name and rating.
+ return <div data-place-tabs>
+  <div data-profile-tabs="" className="sticky top-16 z-20 -mx-4 border-b border-[#e5e9ee] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 sm:-mx-6 lg:mx-0 [.ccr-native-app_&]:top-0">
+   {compact&&<div aria-hidden="true" data-place-compact-title={past||undefined} className={`grid overflow-hidden px-4 transition-[grid-template-rows,opacity] duration-200 sm:px-6 lg:px-0 ${past?'grid-rows-[1fr] opacity-100':'grid-rows-[0fr] opacity-0'}`}>
+    <div className="min-h-0">{compact}</div></div>}
+   <div role="tablist" aria-label={label} ref={rail} className="scrollbar-none flex gap-1 overflow-x-auto scroll-smooth px-2 sm:px-4 lg:px-0">
     {tabs.map((tab,i)=><button key={tab.id} id={`place-tab-${tab.id}`} type="button" role="tab" data-place-tab={tab.id} aria-selected={active===tab.id}
      aria-controls={`place-panel-${tab.id}`} tabIndex={active===tab.id?0:-1} onClick={()=>setActive(tab.id)} onKeyDown={e=>onKey(e,i)}
-     className="relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#009FD9]"
-     style={{color:active===tab.id?'#009FD9':'#6b7280'}}>
-     {tab.label}{active===tab.id&&<span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#009FD9]"/>}
+     className={`relative shrink-0 px-3 py-3.5 text-[14px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#009FD9] sm:px-4 ${active===tab.id?'text-[#162543]':'text-[#6b7280] hover:text-[#162543]'}`}>
+     {tab.label}<span aria-hidden="true" className={`absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-[#009FD9] transition-opacity sm:inset-x-4 ${active===tab.id?'opacity-100':'opacity-0'}`}/>
     </button>)}
    </div>
   </div>
   {tabs.map(tab=><div key={tab.id} id={`place-panel-${tab.id}`} role="tabpanel" aria-labelledby={`place-tab-${tab.id}`} hidden={active!==tab.id}
-   data-place-panel={tab.id} className="space-y-8 p-4 sm:p-6">{tab.content}</div>)}
+   data-place-panel={tab.id} className="space-y-10 pt-6 sm:pt-8">{tab.content}</div>)}
  </div>;
 }

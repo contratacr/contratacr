@@ -6,7 +6,7 @@ import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
-import {PlacePage} from '@/components/directory/place-page';
+import {PAGE_CHIP,PlacePage} from '@/components/directory/place-page';
 import {PlaceClaimLink} from '@/components/directory/place-claim-link';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {PlaceBranches,nearestBranches} from '@/components/directory/place-branches';
@@ -28,7 +28,9 @@ import {PRO_WS_COOKIE} from '@/lib/pro/workspace-gate';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 import {crTodayISO} from '@/lib/time-cr';
 import type {PublicMenu} from '@/lib/directory/menu-schemas';
-import {isServiceReviewVertical,RESERVATION_VERTICALS} from '@/lib/directory/place-verticals';
+import {isServiceReviewVertical,placeSectionById,RESERVATION_VERTICALS} from '@/lib/directory/place-verticals';
+import {PLACE_SEARCH_VERTICALS,type DirectorySearchResult,type PlaceSearchItem} from '@/lib/directory/search-schemas';
+import {PlaceSimilar} from '@/components/directory/place-similar';
 import {PlaceReservation} from '@/components/directory/place-reservation';
 import {PlaceQuestions} from '@/components/directory/place-questions';
 import {PlaceEvents} from '@/components/directory/place-events';
@@ -37,7 +39,6 @@ import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
-import {CHIP} from '@/components/directory/place-card';
 import {proMoney} from '@/lib/pro/money';
 
 // LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
@@ -132,12 +133,19 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const appUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://contratacr.com').replace(/\/$/,'');
  const reviewData=reviews.data&&!reviews.error?reviews.data as PublicPlaceReviews:null;
  // Rating summary (Yelp model): counts per star, only when there are reviews; brand branches for «Otras sucursales».
- const [distribution,brandFull]=await Promise.all([
+ // «Lugares similares cerca» (2026-11-26 redesign): same section, nearest first (best rated when the place has no location).
+ const section=placeSectionById(vertical),searchVertical=section&&(PLACE_SEARCH_VERTICALS as readonly string[]).includes(section.section)?section.section:null;
+ const loc=place.location;
+ const [distribution,brandFull,nearby]=await Promise.all([
   reviewData&&reviewData.summary.count>0&&claim.data?.id?reviewDistribution(db,claim.data.id as string):Promise.resolve(null),
   placeBrand&&placeBrand.branches>1?db.rpc('dir_brand_public',{p_slug:placeBrand.slug}):Promise.resolve(null),
+  place.status==='published'&&searchVertical?db.rpc('dir_search',{p_vertical:searchVertical,p_q:null,p_filters:{},p_lat:loc?.lat??null,p_lng:loc?.lng??null,
+   p_radius_km:loc?25:null,p_sort:loc?'distance':'best_rated',p_cursor:null,p_limit:9}):Promise.resolve(null),
  ]);
  const branches=brandFull&&!brandFull.error&&brandFull.data&&!('mergedInto' in (brandFull.data as object))?nearestBranches((brandFull.data as PublicBrand).branches,slug,place.location,4):[];
- const branchExtras=branches.length?await placeCardExtras(branches.map(b=>b.slug)):{};
+ const similar=nearby&&!nearby.error&&nearby.data?((nearby.data as DirectorySearchResult).items.filter((i):i is PlaceSearchItem=>i.kind==='place'&&i.slug!==slug)).slice(0,8):[];
+ const cardExtras=branches.length||similar.length?await placeCardExtras([...branches.map(b=>b.slug),...similar.map(i=>i.slug)]):{};
+ const branchExtras=cardExtras;
  const reviewNote=!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
   ?(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about rates, fees, financial products or credit decisions, and ContrataCR gives no financial advice.'
    :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre tasas, comisiones, productos financieros ni decisiones de crédito, y ContrataCR no da asesoría financiera.')
@@ -150,16 +158,14 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
  return <DirectoryShell>{/* Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). */}<SectionHeaderTitle title={en?place.vertical.nameEn:place.vertical.nameEs} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
   orderLink={orderLink} brand={placeBrand} priceNote={priceNote} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
-  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={CHIP}/>:null}
-  saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={CHIP}/>:null}
+  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
+  saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{
-   top:(managesHere||reservationConfig)?<>
-    {managesHere&&<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">
+   top:managesHere?<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">
      <p className="text-sm">{en?'You manage this page. Update contact details, hours, menu, reservations and events for free.':'Usted administra esta ficha. Actualice gratis el contacto, el horario, el menú, las reservas y los eventos.'}</p>
      <a data-place-manage-link href={`${prefix}/dashboard/negocio`} className={cn(BIZ.primary,'shrink-0 text-sm')}>{en?'Manage this page':'Administrar esta ficha'}</a>
-    </div>}
-    {reservationConfig&&<PlaceReservation slug={slug} locale={locale} config={reservationConfig}/>}
-   </>:null,
+    </div>:null,
+   reservation:reservationConfig?<PlaceReservation slug={slug} locale={locale} config={reservationConfig}/>:null,
    offer:hasOffer?<>
     {menuData&&menuData.sections.length>0&&<section aria-labelledby="place-menu-title" className="space-y-3">
      <h2 id="place-menu-title" className={BIZ.h2}>{en?'Menu':'Menú'}</h2>
@@ -173,5 +179,8 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    reviews:reviewData?<PlaceReviews slug={slug} locale={locale} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    claim:unclaimed?<PlaceClaimLink slug={slug} locale={locale}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
+   similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null}))}
+    title={loc?(en?'Similar places nearby':'Lugares similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}
+    moreHref={!DIRECTORY_LISTINGS_ENABLED&&(place.vertical.pathEs==='vehiculos'||place.vertical.pathEs==='inmuebles')?null:`${en?'/en':''}/${place.vertical.pathEs}`}/>:null,
   }}/></DirectoryShell>;
 }

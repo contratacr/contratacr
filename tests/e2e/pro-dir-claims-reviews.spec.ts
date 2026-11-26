@@ -129,15 +129,15 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
   await login(context,user);
   await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
   await expect(page.getByText(t('Todavía no hay reseñas.','No reviews yet.'))).toBeVisible();
-  /* Launch polish: the review form opens from «Dejar una reseña». */await page.locator('[data-place-review-open][data-ready]').click({timeout:45000});
+  /* 2026-11-26: «¿Ya visitó este lugar?» — a tap on the fourth star opens the form with 4 stars. */await page.locator('[data-place-review-open][data-ready] [data-place-review-star="4"]').click({timeout:45000});
   await expect(page.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
-  await page.getByLabel(t('Calificación','Rating')).selectOption('4.5');
+  await expect(page.locator('[data-place-review-form] input[name="rating"]')).toHaveValue('4');
   await page.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Muy buena comida y atención rápida.','Great food and quick service.'));
   await page.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
   await expect(page.locator('[data-place-review-sent]')).toBeVisible();
   await page.reload();await openPlaceTab(page,'reviews');
   await expect(page.locator('[data-place-review]')).toHaveCount(1);
-  await expect(page.locator('[data-place-reviews]')).toContainText('4.5 / 5');// the rating uses one decimal with a point in both languages, like the professional profile (biz-ui ratingNumber)
+  await expect(page.locator('[data-rating-summary]')).toContainText('4.0');// one decimal with a point in both languages, like the professional profile
   // Links are refused by the shared review rules.
   const bad=await postJson(context,`/api/lugar/${slug}/resenas`,{actionId:uid(),rating:5,comment:'Vean https://ejemplo.com'});expect(bad.status).toBe(400);
  }finally{await cleanupDisposableAccount(user);}
@@ -145,7 +145,7 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
  try{
   await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
-  await g.locator('[data-place-review-open][data-ready]').click({timeout:45000});
+  await g.locator('[data-place-review-open][data-ready] [data-place-review-star="5"]').click({timeout:45000});
   await expect(g.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
   await g.getByLabel(t('Su nombre','Your name')).fill('Lucía Mora');
   await g.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Buen servicio.','Good service.'));

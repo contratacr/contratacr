@@ -15,7 +15,10 @@ test.afterEach(()=>hideSeededPlaces());
 const jpeg=(color:string)=>sharp({create:{width:1200,height:900,channels:3,background:color}})
  .withExif({IFD0:{Make:'E2E'},IFD3:{GPSLatitudeRef:'N',GPSLatitude:'9/1 56/1 0/1'}}).jpeg().toBuffer();
 async function upload(page:Page,file:{name:string;buffer:Buffer},caption?:string){
- await page.locator('[data-place-photo-open][data-ready]').click();
+ // Phones (owner 2026-11-26): «Agregar fotos» lives in the bar's «…» sheet; from lg it sits in the chip row.
+ const opener=page.locator('[data-place-photo-open][data-ready]').filter({visible:true});
+ if(!(await opener.count()))await expect(async()=>{await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await expect(page.locator('[data-place-more-menu]')).toBeVisible({timeout:1500});}).toPass({timeout:20000});
+ await page.locator('[data-place-photo-open][data-ready]').filter({visible:true}).click();
  const panel=page.locator('[data-place-photo-panel]');
  await expect(panel.locator('[data-photo-choose]')).toHaveText('Elegir fotos');
  await panel.locator('[data-photo-input]').setInputFiles({name:file.name,mimeType:'image/jpeg',buffer:file.buffer});

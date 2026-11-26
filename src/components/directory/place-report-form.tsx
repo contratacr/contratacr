@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
+import {Flag} from 'lucide-react';
 import {REPORT_KINDS,type ReportKind} from '@/lib/directory/types';
 
 /**
@@ -33,9 +34,10 @@ export function PlaceReportForm({slug,locale}:{slug:string;locale:string}){
  }
  if(state==='sent')return <section id="reportar" aria-live="polite" data-place-report="sent" className="rounded-2xl bg-emerald-50 p-5 text-emerald-900">
   {t('Gracias. Revisaremos su reporte. Si pidió el retiro, le escribiremos al correo indicado.','Thank you. We will review your report. If you requested removal, we will write to the e-mail you provided.')}</section>;
- return <details ref={box} id="reportar" className="scroll-mt-24 rounded-2xl border border-[#e3e9ef] bg-white px-5 py-3 text-[#162543]" data-place-report={state}>
-  <summary className="flex min-h-11 cursor-pointer items-center font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
-  <form onSubmit={submit} className="mt-4 space-y-3">
+ return <details ref={box} id="reportar" className="group scroll-mt-24 px-1 text-[#162543] open:rounded-2xl open:border open:border-[#e5e9ee] open:bg-white open:px-4 open:py-2" data-place-report={state}>
+  {/* A small grey link until it is opened (2026-11-26): the form is rarely needed and the card weighed on the page. */}
+  <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-[13.5px] font-semibold text-[#52627a] hover:text-[#162543] hover:underline group-open:text-[#162543] group-open:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] [&::-webkit-details-marker]:hidden"><Flag aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
+  <form onSubmit={submit} className="mt-2 space-y-3 pb-2">
    <label className="block text-sm font-medium" htmlFor="place-report-kind">{t('Motivo','Reason')}</label>
    <select id="place-report-kind" name="kind" required className="min-h-11 w-full rounded-lg border border-slate-300 px-3" onChange={()=>{reportId.current=null;}}>
     {REPORT_KINDS.map(k=><option key={k} value={k}>{LABELS[k][en?1:0]}</option>)}

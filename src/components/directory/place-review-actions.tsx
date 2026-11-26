@@ -69,8 +69,9 @@ export function FlagReview({slug,reviewId,locale}:{slug:string;reviewId:string;l
    flagId.current='';setState(r.status===429?'limit':j.reason==='flag_own_review'?'own':'error');
   }catch{setState('error');}
  };
- return <details className="mt-2 text-sm" data-review-flag={reviewId}>
-  <summary className={`inline-flex min-h-11 cursor-pointer items-center text-slate-700 underline underline-offset-2 ${ring}`}>{t('Reportar esta reseña','Report this review')}</summary>
+ return <details className="group -mb-2 text-sm" data-review-flag={reviewId}>
+  {/* Subtle (2026-11-26): small grey, right-aligned, underlined only on hover; 44 px tap height kept. */}
+  <summary className={`ml-auto flex min-h-11 w-fit cursor-pointer list-none items-center text-[12px] font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline group-open:text-slate-700 [&::-webkit-details-marker]:hidden ${ring}`}>{t('Reportar esta reseña','Report this review')}</summary>
   <form className="mt-2 space-y-2 rounded-xl border border-slate-200 p-3" onSubmit={e=>{e.preventDefault();void submit(e.currentTarget);}}>
    <label className="flex flex-col gap-1 font-medium">{t('Motivo','Reason')}
     <select aria-label={t('Motivo','Reason')} value={reason} onChange={e=>{setReason(e.target.value);flagId.current='';}} className={`${field} ${SELECT_CLASS}`} style={SELECT_STYLE}>{REVIEW_FLAG_REASONS.map(r=><option key={r} value={r}>{REVIEW_FLAG_LABELS[r][en?1:0]}</option>)}</select></label>

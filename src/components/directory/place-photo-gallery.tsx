@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore} from 'react';
 const noSubscribe=()=>()=>{};
-import {ChevronLeft,ChevronRight,Flag,X} from 'lucide-react';
+import {Camera,ChevronLeft,ChevronRight,Flag,X} from 'lucide-react';
 import {PHOTO_FLAG_REASONS,photoAlt,photoReasonText,placePhotoId,placePhotoSrc} from '@/lib/directory/place-photos';
 
 /**
@@ -14,8 +14,11 @@ const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
 const FLAG_TEXT:Record<string,[string,string]>={not_this_place:['No es de este lugar','Not this place'],offensive:['Ofensiva','Offensive'],private_info:['Muestra datos privados o personas','Shows private data or people'],
  copyright:['Es de otra persona (derechos)','Belongs to someone else (copyright)'],spam:['Publicidad o spam','Advertising or spam'],other:['Otro motivo','Other reason']};
 
-/** `mosaic` (2026-11-19, Yelp model): header strip — first photo large, up to four more, «Ver las N fotos» on top. */
-export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'|'strip'}){
+/** `mosaic` (2026-11-19, Yelp model): header strip — first photo large, up to four more, «Ver las N fotos» on top.
+ *  `hero` (2026-11-26 redesign): fills the place hero (absolute, the parent sets the height). Phones: one photo per
+ *  screen width, swiped sideways, with a «1 / N» counter; from sm: the Yelp-like mosaic (one large + up to four). The
+ *  same buttons serve both layouts (each photo is rendered once). */
+export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'|'strip'|'hero'}){
  const t=(es:string,english:string)=>en?english:es;
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [open,setOpen]=useState<number|null>(null);const opener=useRef<HTMLButtonElement|null>(null);const dialog=useRef<HTMLDivElement>(null);
@@ -32,8 +35,26 @@ export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:G
  },[open,close,step]);
  const alt=(i:number)=>photoAlt(photos[i]?.caption,placeName,i+1,en);
  const cur=open===null?null:photos[open]!;
+ const [slide,setSlide]=useState(0);
+ const shown=photos.slice(0,5),n=shown.length;
+ const heroGrid=n===1?'sm:grid-cols-1':n===2?'sm:grid-cols-2':n===3?'sm:grid-cols-3 sm:grid-rows-2':'sm:grid-cols-4 sm:grid-rows-2';
  return <>
-  {variant==='strip'?<div data-place-photo-strip={Math.min(photos.length,5)}>
+  {variant==='hero'?<div className="absolute inset-0" data-place-photo-strip={n}>
+   <ul onScroll={e=>{const el=e.currentTarget;setSlide(Math.round(el.scrollLeft/Math.max(1,el.clientWidth)));}}
+    className={`scrollbar-none flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain sm:grid sm:gap-1 sm:overflow-hidden ${heroGrid}`}>
+    {shown.map((p,i)=><li key={p.url} className={`h-full w-full shrink-0 snap-center sm:h-auto sm:min-h-0 sm:w-auto ${i===0&&n>2?'sm:col-span-2 sm:row-span-2':''} ${i>0&&n===3?'':''}`}>
+     <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-strip-thumb={i}
+      aria-label={t(`Ver foto ${i+1} de ${photos.length}: ${alt(i)}`,`View photo ${i+1} of ${photos.length}: ${alt(i)}`)} className={`group relative block h-full w-full overflow-hidden bg-[#1c2b45] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route or validated https seed URL */}
+      <img src={placePhotoSrc(p.url,i===0?1600:800)} alt={alt(i)} width={i===0?1600:800} height={i===0?1200:600} loading={i===0?'eager':'lazy'} fetchPriority={i===0?'high':undefined} decoding="async"
+       className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"/>
+      {i===4&&photos.length>5&&<span aria-hidden="true" className="absolute inset-0 hidden place-items-center bg-[#162543]/55 text-xl font-bold text-white sm:grid">+{photos.length-5}</span>}
+     </button></li>)}
+   </ul>
+   {n>1&&<span aria-hidden="true" className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1 text-[12px] font-bold tabular-nums text-white backdrop-blur sm:hidden">{Math.min(slide,n-1)+1} / {photos.length}</span>}
+   <a href="#fotos" data-place-strip-all className={`absolute right-3 top-3 z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-white/95 px-3.5 text-[12.5px] font-bold text-[#162543] shadow-md backdrop-blur transition-colors hover:bg-white sm:bottom-5 sm:right-5 sm:top-auto sm:h-10 sm:px-4 sm:text-[13px] ${ring}`}>
+    <Camera aria-hidden="true" className="h-4 w-4 shrink-0"/>{photos.length===1?t('Ver la foto','See the photo'):t(`Ver las ${photos.length} fotos`,`See all ${photos.length} photos`)}</a>
+  </div>:variant==='strip'?<div data-place-photo-strip={Math.min(photos.length,5)}>
    <ul className={`flex snap-x gap-2 overflow-x-auto pb-1 sm:grid sm:h-[280px] sm:gap-2 sm:overflow-hidden sm:pb-0 ${photos.length===1?'sm:grid-cols-1':photos.length===2?'sm:grid-cols-2':'sm:grid-cols-4 sm:grid-rows-2'}`}>
     {photos.slice(0,5).map((p,i)=><li key={p.url} className={`h-32 w-44 shrink-0 snap-start sm:h-auto sm:min-h-0 sm:w-auto ${i===0&&photos.length>2?'max-sm:h-32 max-sm:w-56 sm:col-span-2 sm:row-span-2':''} ${i>0&&photos.length===3?'sm:col-span-2':''}`}>
      <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-strip-thumb={i}

@@ -99,8 +99,8 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  }
 });
 
-// Ficha tipo app móvil: pestañas, «¿Recomienda este lugar?» y hoja de compartir (ES y EN).
-for(const locale of ['es','en'] as const)test(`ficha: recomendación, pestañas y hoja de compartir [${locale}]`,async({page})=>{
+// Ficha tipo app móvil: pestañas, «¿Ya visitó este lugar?» y hoja de compartir (ES y EN).
+for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pestañas y hoja de compartir [${locale}]`,async({page},info)=>{
  const prefix=locale==='en'?'/en':'';
  const res=await page.goto(`${prefix}/restaurantes`,{waitUntil:'domcontentloaded'});
  if(!res||res.status()>=400){test.skip(true,'restaurantes no está activa en este entorno');return;}
@@ -111,19 +111,21 @@ for(const locale of ['es','en'] as const)test(`ficha: recomendación, pestañas 
  // Pestañas: Información, Reseñas y Más siempre; sin desbordar.
  for(const id of ['info','reviews','more'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
  await expect(page.locator('[data-place-tab="more"]')).toHaveText(en?'More':'Más');
- // Recomendación: tres opciones; «Sí» abre el formulario con 5 estrellas sugeridas.
- const rec=page.locator('[data-place-recommend]');
- await expect(rec).toBeVisible();
- await expect(rec.locator('[data-place-recommend-option]')).toHaveCount(3);
- await expect(rec).toContainText(en?'Would you recommend this place?':'¿Recomienda este lugar?');
+ // «¿Ya visitó este lugar?» (owner 2026-11-26, like the professional profile): five stars; a tap opens the form with that rating.
+ await page.locator('[data-place-tab="reviews"]').click();
+ const prompt=page.locator('[data-place-review-open][data-ready]');
+ await expect(prompt).toContainText(en?'Have you been here?':'¿Ya visitó este lugar?');
+ await expect(prompt.locator('[data-place-review-star]')).toHaveCount(5);
  await expect(async()=>{
-  await rec.locator('[data-place-recommend-option="maybe"]').click();
+  if(await prompt.count())await prompt.locator('[data-place-review-star="3"]').click({timeout:1500});
   await expect(page.locator('[data-place-review-form]')).toBeVisible({timeout:1500});
-  await expect(page.locator('[data-place-review-form] select[name="rating"]')).toHaveValue('3',{timeout:1500});
+  await expect(page.locator('[data-place-review-form] input[name="rating"]')).toHaveValue('3',{timeout:1500});
  }).toPass({timeout:15000});
  // Hoja de compartir: Copiar enlace, Enviar a amigos, Sugerir un cambio.
- const btn=page.locator('[data-place-actions-bar] [data-share-button]');
- await expect(async()=>{await btn.click();await expect(page.locator('[data-share-sheet]')).toBeVisible({timeout:1500});}).toPass({timeout:15000});
+ // Phones: Compartir lives in the bar's «…» sheet (owner 2026-11-26); from lg it is inline in the chip row.
+ const phone=isMobileProject(info);
+ const btn=phone?page.locator('[data-place-more-menu] [data-share-button]'):page.locator('[data-place-actions-bar] [data-share-button]');
+ await expect(async()=>{if(phone&&!(await page.locator('[data-place-more-menu]').count()))await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await btn.click();await expect(page.locator('[data-share-sheet]')).toBeVisible({timeout:1500});}).toPass({timeout:15000});
  await expect(page.locator('[data-share-copy]')).toHaveText(en?'Copy link':'Copiar enlace');
  await expect(page.locator('[data-share-send]')).toHaveText(en?'Send to friends':'Enviar a amigos');
  await expect(page.locator('[data-share-suggest]')).toHaveText(en?'Suggest an edit':'Sugerir un cambio');

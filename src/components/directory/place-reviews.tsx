@@ -3,8 +3,9 @@ import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {PhotoPicker,uploadPlacePhotos,type UploadOutcome} from './place-photo-upload';
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
-import {BIZ,RatingSummary,Stars} from './biz-ui';
+import {Stars} from './biz-ui';
 import {RECOMMEND_EVENT} from './place-recommend';
+import {CHIP} from './place-card';
 
 /**
  * LOCAL PRO ONLY (multivertical F5): reviews of a place. Same rules as professional reviews (half stars, 300
@@ -27,6 +28,8 @@ const noSubscribe=()=>()=>{};
  *  reviews (newest / best / worst; offered when every review is on the page) and «Escribir reseña» opened from the
  *  header action bar or the mobile bar through the #escribir-resena anchor. */
 type Sort='recent'|'best'|'worst';
+/** Soft avatar tints for the reviewer's initial (brand family). */
+const AVATAR=['bg-[#eaf7fd] text-[#0083b0]','bg-[#e8eefb] text-[#2b4c8c]','bg-[#e6f6f1] text-[#0f7660]','bg-[#fdf1e7] text-[#a6521b]'];
 export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [state,setState]=useState<'idle'|'sending'|'sent'>('idle'),[error,setError]=useState<string|null>(null),[writing,setWriting]=useState(false);
@@ -60,30 +63,53 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
   }catch{setState('idle');setError(REASONS.unavailable![en?1:0]);}
  };
  const input='min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]';
- return <section ref={sectionRef} id="resenas" aria-labelledby="place-reviews" className="scroll-mt-24 space-y-5" data-place-reviews={initial.summary.count}>
-  <span id="escribir-resena" className="block scroll-mt-24" aria-hidden="true"/>
-  <div className="flex flex-wrap items-end justify-between gap-3">
-   <h2 id="place-reviews" className={BIZ.h2}>{t('Reseñas','Reviews')}</h2>
-   {!initial.nextCursor&&initial.items.length>1&&<label className="flex items-center gap-2 text-sm font-semibold text-[#334155]">{t('Ordenar por','Sort by')}
-    <select data-place-review-sort value={sort} onChange={e=>setSort(e.target.value as Sort)} className="min-h-11 rounded-full border border-[#cfd9e3] bg-white px-4 text-sm font-semibold text-[#162543]">
-     <option value="recent">{t('Más recientes','Newest')}</option><option value="best">{t('Mejor calificación','Highest rated')}</option><option value="worst">{t('Peor calificación','Lowest rated')}</option></select></label>}
-  </div>
+ const count=initial.summary.count,avg=initial.summary.average;
+ const max=Math.max(1,...(distribution??[]));
+ return <section ref={sectionRef} id="resenas" aria-labelledby="place-reviews" className="scroll-mt-32 space-y-6" data-place-reviews={count}>
+  <span id="escribir-resena" className="block scroll-mt-32" aria-hidden="true"/>
+  <h2 id="place-reviews" className="text-xl font-extrabold tracking-tight text-[#162543]">{t('Reseñas','Reviews')}</h2>
   {note&&<p role="note" data-place-review-note className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">{note}</p>}
-  {initial.summary.count>0&&initial.summary.average!=null
-   ?<RatingSummary average={initial.summary.average} count={initial.summary.count} distribution={distribution} en={en}/>
-   :<div data-place-reviews-empty className="flex items-center gap-4 rounded-2xl bg-[#f7fafc] p-5"><Stars value={0} size="lg"/><p className="text-base font-semibold text-[#162543]">{t('Todavía no hay reseñas.','No reviews yet.')}</p></div>}
-  {items.length>0&&<ul className="divide-y divide-[#e8edf2]">{items.map(r=><li key={r.id} data-place-review={r.id} className="space-y-2 py-5 first:pt-1">
-   <div className="flex items-center gap-3">
-    <span aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf6fb] text-base font-bold text-[#0b4f6c]">{r.name.trim().charAt(0).toUpperCase()}</span>
-    <div className="min-w-0"><p className="truncate font-bold text-[#162543]">{r.name}</p>
-     {r.guest&&<p className="text-xs text-slate-600">{t('sin cuenta, contactó a la empresa','no account, contacted the business')}</p>}</div>
+  {/* Summary (2026-11-26 redesign): the big score beside the 5→1 bars, on one soft brand panel. */}
+  {count>0&&avg!=null
+   ?<div data-rating-summary={count} className="grid gap-5 rounded-2xl bg-gradient-to-br from-[#f3f9fc] to-white p-5 ring-1 ring-[#e5eef4] sm:grid-cols-[170px_1fr] sm:items-center sm:gap-8 sm:p-6">
+    <div className="flex items-center gap-4 sm:block sm:space-y-2">
+     <p className="text-[52px] font-extrabold leading-none tracking-tight text-[#162543]">{avg.toFixed(1)}</p>
+     <div className="space-y-1"><Stars value={avg} size="lg" label={en?`${avg.toFixed(1)} out of 5`:`${avg.toFixed(1)} de 5`}/>
+      <p className="text-sm font-medium text-[#526277]">{count} {en?(count===1?'review':'reviews'):(count===1?'reseña':'reseñas')}</p></div>
+    </div>
+    {distribution&&distribution.length===5&&<ul className="space-y-2" aria-label={t('Calificaciones por estrellas','Ratings by stars')} data-rating-distribution>
+     {[5,4,3,2,1].map(st=>{const n=distribution[st-1]??0;return <li key={st} className="grid grid-cols-[64px_1fr_28px] items-center gap-3 text-[13px]" data-rating-bar={st}>
+      <span className="whitespace-nowrap font-semibold text-[#334155]">{st} {en?(st===1?'star':'stars'):(st===1?'estrella':'estrellas')}</span>
+      <span className="h-2 overflow-hidden rounded-full bg-[#e3eaf0]" aria-hidden="true"><span className="block h-full rounded-full bg-[#f5a623]" style={{width:`${(n/max)*100}%`}}/></span>
+      <span className="text-right tabular-nums text-[#526277]">{n}</span></li>;})}
+    </ul>}
    </div>
-   <p className="flex flex-wrap items-center gap-2 text-sm"><Stars value={r.rating} size="sm" label={t(`${String(r.rating).replace('.',',')} de 5`,`${r.rating} out of 5`)}/><span className="text-slate-600">{date(r.createdAt)}{r.edited?` · ${t('editada','edited')}`:''}</span></p>
-   <p className="break-words text-[15px] leading-6 text-[#1f2937]">{r.comment}</p>
-   {r.ownerReply&&<div className="mt-2 rounded-xl bg-[#f7fafc] p-3 text-sm" data-owner-reply><p><span className="font-semibold">{t('Respuesta de la empresa: ','Reply from the business: ')}</span><span className="break-words">{r.ownerReply.text}</span></p>
-    <p className="text-xs text-slate-600">{date(r.ownerReply.at)}{r.ownerReply.edited?` · ${t('editada','edited')}${r.ownerReply.editedAt?` ${date(r.ownerReply.editedAt)}`:''}`:''}</p></div>}
-   {manage?(()=>{const target=manage.find(m=>m.reviewId===r.id);return target?<OwnerReplyEditor target={target} locale={locale}/>:null;})():<FlagReview slug={slug} reviewId={r.id} locale={locale}/>}
-  </li>)}</ul>}
+   :<div data-place-reviews-empty className="flex items-center gap-4 rounded-2xl bg-[#f7fafc] p-5"><Stars value={0} size="lg"/><p className="text-base font-semibold text-[#162543]">{t('Todavía no hay reseñas.','No reviews yet.')}</p></div>}
+  {items.length>0&&<div className="space-y-3">
+   <div className="flex flex-wrap items-center justify-between gap-3">
+    <p className="text-[15px] font-extrabold text-[#162543]">{t('Reseñas recomendadas','Recommended reviews')}</p>
+    {/* Sort as a small segmented control of brand chips (2026-11-26) instead of a raw select. */}
+    {!initial.nextCursor&&initial.items.length>1&&<div role="radiogroup" aria-label={t('Ordenar por','Sort by')} data-place-review-sort={sort} className="flex gap-1">
+     {([['recent',t('Recientes','Newest')],['best',t('Mejores','Highest')],['worst',t('Peores','Lowest')]] as [Sort,string][]).map(([v,label])=><button key={v} type="button" role="radio" aria-checked={sort===v} onClick={()=>setSort(v)}
+      className={`${CHIP} border ${sort===v?'border-[#009FD9] !bg-[#EBF5FB] !text-[#00688f]':'border-[#d7e1ea] !bg-white !text-[#162543] hover:!bg-[#f6f9fb]'}`}>{label}</button>)}
+    </div>}
+   </div>
+   <ul className="space-y-3">{items.map(r=>{const initial=r.name.trim().charAt(0).toUpperCase();const hue=AVATAR[(initial.charCodeAt(0)||0)%AVATAR.length]!;
+    return <li key={r.id} data-place-review={r.id} className="space-y-3 rounded-2xl border border-[#e8edf2] bg-white p-4 sm:p-5">
+    <div className="flex items-center gap-3">
+     <span aria-hidden="true" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-[17px] font-extrabold ${hue}`}>{initial}</span>
+     <div className="min-w-0 flex-1"><p className="truncate font-bold text-[#162543]">{r.name}</p>
+      {r.guest&&<p className="text-[12.5px] text-slate-600">{t('sin cuenta, contactó a la empresa','no account, contacted the business')}</p>}</div>
+    </div>
+    <p className="flex flex-wrap items-center gap-2 text-[13px]"><Stars value={r.rating} size="sm" label={t(`${String(r.rating).replace('.',',')} de 5`,`${r.rating} out of 5`)}/><span className="text-slate-600">{date(r.createdAt)}{r.edited?` · ${t('editada','edited')}`:''}</span></p>
+    <p className="break-words text-[15px] leading-7 text-[#1f2937]">{r.comment}</p>
+    {r.ownerReply&&<div className="rounded-xl border-l-[3px] border-[#009FD9] bg-[#f5fafd] px-4 py-3 text-sm" data-owner-reply>
+     <p className="mb-1 flex items-center gap-1.5 text-[12.5px] font-extrabold uppercase tracking-wide text-[#0083b0]">{t('Respuesta de la empresa','Reply from the business')}</p>
+     <p className="break-words leading-6 text-[#1f2937]">{r.ownerReply.text}</p>
+     <p className="mt-1 text-xs text-slate-600">{date(r.ownerReply.at)}{r.ownerReply.edited?` · ${t('editada','edited')}${r.ownerReply.editedAt?` ${date(r.ownerReply.editedAt)}`:''}`:''}</p></div>}
+    {manage?(()=>{const target=manage.find(m=>m.reviewId===r.id);return target?<OwnerReplyEditor target={target} locale={locale}/>:null;})():<FlagReview slug={slug} reviewId={r.id} locale={locale}/>}
+   </li>;})}</ul>
+  </div>}
   {manage?<p className="rounded-2xl bg-[#F7FAFC] p-4 text-sm text-slate-700" data-place-review-manager>{t('Usted administra esta empresa: puede responder las reseñas, pero no reseñarla.','You manage this business: you can reply to reviews, but not review it.')}</p>
   :state==='sent'
    ?<p role="status" data-place-review-sent className="rounded-2xl bg-emerald-50 p-4 text-emerald-900">{t('Gracias. Su reseña se publicó; recargue la página para verla.','Thank you. Your review was published; reload the page to see it.')}
@@ -92,15 +118,15 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    // Launch polish: the form opens from one «Escribir reseña» button instead of filling the page from the start.
    :!writing
     // Like the professional profile (owner 2026-11-26): «¿Ya visitó este lugar?» with five stars; a tap opens the form with that rating.
-    ?<div data-place-review-open data-ready={ready||undefined} className="rounded-2xl border border-[#e5e9ee] bg-white p-4 shadow-sm">
-     <p className="text-[15px] font-extrabold text-[#162543]">{t('¿Ya visitó este lugar?','Have you been here?')}</p>
+    ?<div data-place-review-open data-ready={ready||undefined} className="flex flex-col gap-2 rounded-2xl bg-[#162543] p-5 text-white sm:flex-row sm:items-center sm:justify-between">
+     <p className="text-[16px] font-extrabold">{t('¿Ya visitó este lugar?','Have you been here?')}</p>
      <div className="mt-2 flex gap-1" role="group" aria-label={t('Calificar','Rate')}>
       {[1,2,3,4,5].map(n=><button key={n} type="button" data-place-review-star={n} aria-label={t(`${n} de 5`,`${n} out of 5`)} onClick={()=>{setSuggested(String(n));setWriting(true);}}
-       className="grid h-10 w-10 place-items-center rounded-lg text-[#cfd8e3] transition-colors hover:text-[#f59e0b]"><svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>)}
+       className="peer grid h-11 w-11 place-items-center rounded-lg text-white/35 transition-colors hover:text-[#f5a623] focus-visible:text-[#f5a623] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white [&:has(~:hover)]:text-[#f5a623]"><svg viewBox="0 0 24 24" className="h-8 w-8 fill-current" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg></button>)}
      </div>
     </div>
-   :<form ref={form} onSubmit={e=>{e.preventDefault();void submit();}} className="space-y-3 rounded-2xl border border-[#d7e1ea] p-4" data-place-review-form data-ready={ready||undefined}>
-    <h3 className="font-semibold">{t('Su reseña','Your review')}</h3>
+   :<form ref={form} onSubmit={e=>{e.preventDefault();void submit();}} className="space-y-4 rounded-2xl border border-[#e5e9ee] bg-white p-4 shadow-sm" data-place-review-form data-ready={ready||undefined}>
+    <h3 className="text-[15px] font-extrabold text-[#162543]">{t('Su reseña','Your review')}</h3>
     {!signedIn&&<label className="flex flex-col gap-1 text-sm font-medium">{t('Su nombre','Your name')}<input name="authorName" maxLength={80} autoComplete="name" className={input}/></label>}
     <fieldset className="text-sm"><legend className="mb-1 font-medium">{t('Calificación','Rating')}</legend>
      <input type="hidden" name="rating" value={suggested}/>

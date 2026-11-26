@@ -36,7 +36,8 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
   // 2026-11-26 (owner: card-like header): no tile without photos; ONE chip row (Llamar…, Guardar, Compartir) replaces the
  // phones' fixed bar; the side card keeps «Llamar» from lg and the claim link (after the tabs on phones).
  await expect(page.locator('[data-place-header] [data-hero-tile]')).toHaveCount(0);
- await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
+ // Phones: Guardar/Compartir/Agregar fotos live in the bar's «…» sheet (owner 2026-11-26); inline from lg.
+ if(!info.project.name.includes('mobile'))await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
  await expect(page.locator('[data-place-actions-bar] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();
