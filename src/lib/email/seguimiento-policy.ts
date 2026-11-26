@@ -122,7 +122,7 @@ function listaNatural(items: string[]) {
 export function proSummaryEmail(period: string, d: NonNullable<FollowupContext["pro"]>): FollowupEmail {
   const contactos = d.contacts > 0 ? ` y ${plural(d.contacts, "contacto por WhatsApp o llamada", "contactos por WhatsApp o llamada")}` : "";
   const consejo = !d.hasReviews ? "Pedir una reseña a clientes anteriores ayuda a que quienes visitan su perfil confíen en su trabajo."
-    : !d.hasPhotos ? "Agregar fotos de trabajos anteriores ayuda a que los clientes vean lo que usted hace."
+    : !d.hasPhotos ? "Agregar fotos de casos de éxito ayuda a que los clientes vean lo que usted hace."
     : !d.hasPrice ? "Indicar un precio de referencia ayuda a que los clientes sepan qué esperar antes de escribirle."
     : "Mantener sus servicios y zonas de trabajo al día ayuda a que le encuentren las personas correctas.";
   return {
