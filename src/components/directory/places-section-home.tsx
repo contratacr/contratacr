@@ -97,7 +97,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  return <div className="ccr-buscar-pagina flex min-h-screen flex-col bg-white" data-places-home={section}>
   <LandingNavbar forceCompactSearch mobileSearch/>
   <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden/>
-  <DirectoryQuickNav/>
+  <DirectoryQuickNav floating={{title:c.title[i],listLabel:t('Ver lista','Show list')}}/>
   {/* Title row: the same strip as /profesionales (accent bar · H1 · count · chips). Phones carry the title in the sheet. */}
   <div className="hidden bg-white lg:block">
    <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">

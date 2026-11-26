@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -205,7 +205,9 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
 // Owner, 2026-11-26: the most important ones only, like Yelp (Profesionales, Restaurantes, Gasolineras, Farmacias, Más).
 export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasolineras", "farmacias"];
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
-export function DirectoryQuickNav({ className, spacer }: { className?: string; spacer?: boolean }) {
+/** `floating` (map screens, phones): no bar — one white card floats over the map with the brand ▾, the search showing the
+ *  section and a list button that raises the results sheet (owner, 2026-11-26). */
+export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string; listLabel: string } }) {
   const { directorySections } = useSiteFeatures();
   const pathname = usePathname() ?? "/";
   const locale = useLocale();
@@ -224,10 +226,10 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
     <>
     {/* Phones (owner, 2026-11-26): this IS the header, compact like Airbnb/Booking — the ContrataCR symbol with a chevron
         (opens the menu) and one search bar on the first row, the sections below. The navbar's own phone row hides while this one shows (body.ccr-dir-header). */}
-    <PhoneHeaderFlag navRef={navRef} />
+    <PhoneHeaderFlag navRef={navRef} floating={!!floating} />
     {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
-    <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
-      <ul data-quick-nav-collapsed={collapsed ? "" : undefined} className={cn("mx-auto grid w-full max-w-[1920px] grid-cols-5 overflow-hidden px-1 pb-1.5 transition-[max-height,opacity,padding] duration-200 max-lg:max-h-24", collapsed && "max-lg:max-h-0 max-lg:pb-0 max-lg:opacity-0", "sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8")}>
+    <nav ref={navRef} data-quick-nav data-quick-nav-floating={floating ? "" : undefined} aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:flex max-lg:flex-col max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", floating && "max-lg:fixed max-lg:inset-x-3 max-lg:top-0 max-lg:bg-transparent max-lg:pt-[calc(env(safe-area-inset-top)+10px)] max-lg:shadow-none", className)}>
+      <ul data-quick-nav-collapsed={collapsed ? "" : undefined} className={cn(floating && "max-lg:!hidden", "mx-auto grid w-full max-w-[1920px] grid-cols-5 overflow-hidden px-1 pb-1.5 transition-[max-height,opacity,padding] duration-200 max-lg:max-h-24", collapsed && "max-lg:max-h-0 max-lg:pb-0 max-lg:opacity-0", "sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8")}>
         {items.map(({ key, href, label, icon: Icon, active }) => (
           <li key={key} className="min-w-0 sm:shrink-0">
             <Link
@@ -245,14 +247,18 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
           </li>
         ))}
       </ul>
-      <div data-ccr-menu-row className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
+      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-2xl bg-white py-2 pl-3 pr-1.5 shadow-[0_8px_24px_-10px_rgba(22,37,67,0.45)]")}>
         <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
           className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
-          className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
+          className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)]", floating && "border-transparent shadow-none pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
           <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />
-          <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
+          <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? floating.title : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
+        {floating && (
+          <button type="button" data-quick-nav-list onClick={() => window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: "list" } }))} aria-label={floating.listLabel}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]"><List className="h-5 w-5" strokeWidth={2.4} aria-hidden /></button>
+        )}
       </div>
     </nav>
     </>
@@ -261,14 +267,15 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
 
 /** While the directory header is SHOWN on a phone, the navbar's own row (logo, account) steps aside so the page has one
  * header. Checked on mount and on resize: pages that keep this row desktop-only (Categorías) keep their navbar. */
-function PhoneHeaderFlag({ navRef }: { navRef: React.RefObject<HTMLElement | null> }) {
+function PhoneHeaderFlag({ navRef, floating }: { navRef: React.RefObject<HTMLElement | null>; floating: boolean }) {
   useEffect(() => {
     const root = document.documentElement;
     const sync = () => {
       const on = window.innerWidth < 1024 && !!navRef.current?.getClientRects().length;
       document.body.classList.toggle("ccr-dir-header", on);
       // Layouts that fill the screen under the header (search map and sheet) read this height; it is this row's now.
-      if (on && navRef.current) root.style.setProperty("--ccr-native-header-height", `${Math.round(navRef.current.getBoundingClientRect().height)}px`);
+      // Floating card (map screens): the map runs under it, from the very top.
+      if (on && navRef.current) root.style.setProperty("--ccr-native-header-height", floating ? "0px" : `${Math.round(navRef.current.getBoundingClientRect().height)}px`);
       else root.style.removeProperty("--ccr-native-header-height");
     };
     sync();
@@ -276,7 +283,7 @@ function PhoneHeaderFlag({ navRef }: { navRef: React.RefObject<HTMLElement | nul
     if (navRef.current) ro.observe(navRef.current);
     window.addEventListener("resize", sync);
     return () => { ro.disconnect(); window.removeEventListener("resize", sync); document.body.classList.remove("ccr-dir-header"); root.style.removeProperty("--ccr-native-header-height"); };
-  }, [navRef]);
+  }, [navRef, floating]);
   return null;
 }
 
