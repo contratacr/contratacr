@@ -57,7 +57,9 @@ export async function ProsSection() {
   const enabled = sitemapSections().map((x) => x.section as string);
   const directoryOn = enabled.length > 0;
   if (directoryOn) {
-    const empresas = ["restaurantes", "farmacias", "supermercados", "gasolineras"].filter((id) => enabled.includes(id) && placeSection(id));
+    // Every business section that is on (owner 2026-11-26: «todo», not just four), most used first.
+    const ORDER = ["restaurantes", "farmacias", "supermercados", "gasolineras", "cafes", "talleres", "ferreterias", "belleza", "veterinarias", "salud", "gimnasios", "pulperias", "bancos", "hospedaje", "tours"];
+    const empresas = [...ORDER, ...enabled.filter((id) => !ORDER.includes(id))].filter((id) => enabled.includes(id) && placeSection(id));
     if (empresas.length >= 2) secciones.push({
       id: "empresas-directorio",
       label: t("companiesTab"),
@@ -69,7 +71,7 @@ export async function ProsSection() {
   return (
     <section className="ccr-home-services-section bg-white pb-5 pt-5 sm:pb-7 sm:pt-7">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-4 whitespace-nowrap text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
+        <h2 className={`mb-4 whitespace-nowrap text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl${directoryOn ? " text-center" : ""}`}>
           {directoryOn
             ? <>{t("titleDirectoryPre")} <span className="text-[#009FD9]">{t("titleDirectoryHighlight")}</span></>
             : <>{t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span></>}

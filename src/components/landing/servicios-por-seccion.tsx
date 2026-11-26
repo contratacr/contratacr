@@ -113,27 +113,27 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
             role={indice === activa ? "tabpanel" : undefined}
             aria-hidden={indice !== activa || undefined}
             className={cn(
-              "grid grid-cols-2 gap-3 transition-opacity duration-200 sm:gap-4 lg:grid-cols-4",
+              s.icono === "store" ? "grid grid-cols-3 gap-2.5 transition-opacity duration-200 sm:gap-4 lg:grid-cols-6" : "grid grid-cols-2 gap-3 transition-opacity duration-200 sm:gap-4 lg:grid-cols-4",
               indice === activa ? "relative opacity-100" : "pointer-events-none invisible absolute inset-x-0 top-0 opacity-0",
             )}
           >
-            {s.servicios.slice(0, 4).map((servicio) => (
+            {s.servicios.slice(0, s.icono === "store" ? 24 : 4).map((servicio) => (
               <Link
                 key={servicio.id}
                 href={servicio.href}
                 tabIndex={indice === activa ? undefined : -1}
                 onClick={() => setTocado(servicio.id)}
                 data-tocado={tocado === servicio.id || undefined}
-                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/5.2]"
+                className={cn("group relative block overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)]", servicio.place ? "aspect-square" : "aspect-[4/5] lg:aspect-[4/5.2]")}
               >
                 {/* Start the four prepared photos together, including the second
                     mobile row. Unvisited groups still mount no photos, and the
                     hero retains high network priority over these normal requests. */}
                 {servicio.place
-                  ? <HeroTile verticalId={servicio.place} className="pointer-events-none absolute inset-0 h-full w-full" iconClass="h-12 w-12 lg:h-16 lg:w-16" />
+                  ? <HeroTile verticalId={servicio.place} className="pointer-events-none absolute inset-0 h-full w-full" iconClass="h-8 w-8 lg:h-12 lg:w-12" />
                   : <ServiceImage categoryId={servicio.id} badge={false} loading="eager" diferida={indice !== activa && !preparadas.has(indice)} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />}
                 <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />
-                <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
+                <span className={cn("absolute inset-x-0 bottom-0 font-bold leading-tight text-white drop-shadow", servicio.place ? "p-2 text-[12.5px] sm:p-3 sm:text-sm" : "p-3.5 text-[15px] sm:p-4 sm:text-base lg:p-6 lg:text-2xl")}>
                   {servicio.label}
                 </span>
               </Link>
