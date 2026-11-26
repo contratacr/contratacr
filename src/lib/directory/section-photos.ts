@@ -17,6 +17,8 @@ const IDS: Record<string, string> = {
   gimnasios: "1534438327276-14e5300c3a48",
   veterinarias: "1628009368231-7bb7cfcb0def",
   belleza: "1560066984-138dadb4c035",
+  parqueos: "1470224114660-3f6686c562eb", // parqueo con líneas amarillas, sin marcas (2026-11-26)
+  lavacar: "1754296577179-0e14f78a1262", // carro cubierto de espuma, sin logotipo visible (2026-11-26)
 };
 export function sectionPhoto(section: string, width = 700): string | null {
   const id = IDS[section];

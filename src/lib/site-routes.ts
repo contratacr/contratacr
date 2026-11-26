@@ -32,6 +32,10 @@ export const RUTAS_DEL_SITIO = new Set([
   "lugar", "restaurantes", "farmacias", "supermercados", "gasolineras", "vehiculos", "inmuebles", "como-ordenamos",
   // Secciones nuevas del directorio (aprobadas el 2026-11-17, solo desarrollo).
   "cafes", "pulperias", "ferreterias", "hospedaje", "salud", "veterinarias", "talleres", "belleza", "gimnasios", "tours", "bancos",
+  // Parqueos y lavacar (2026-11-26, solo desarrollo): lugares que agrega el equipo de ContrataCR.
+  "parqueos", "lavacar",
+  // src/app/actions: módulo de acciones del servidor (no es una página), declarado para que nunca se tome como perfil.
+  "actions",
   // P3 (solo desarrollo): comparador de precios de supermercados y farmacias (solo venta libre).
   "precios",
   // IA 2026-11-21: hub "Lugares" y página "Para negocios y profesionales" (solo con el directorio encendido).

@@ -36,6 +36,8 @@ export const PLACE_ACTIONS:Record<string,PlaceActionSpec>={
  fitness:{bar:['call','directions','hours','review'],side:['call','directions','hours','website'],head:[],card:['call','directions']},
  tours:{bar:['website','call','directions','review'],side:['website','call','directions'],head:[],card:['directions','call']},
  banking:{bar:['directions','call','hours','review'],side:['directions','call','hours','website'],head:[],card:['directions','call']},
+ parking:{bar:['directions','call','hours','review'],side:['directions','call','whatsapp','hours','website'],head:[],card:['directions','call']},
+ car_wash:{bar:['call','whatsapp','directions','review'],side:['call','whatsapp','directions','hours','website'],head:[],card:['call','directions']},
  vehicle_dealer:{bar:['call','directions','website','review'],side:['call','directions','website'],head:[],card:['call','directions']},
  real_estate:{bar:['call','directions','website','review'],side:['call','directions','website'],head:[],card:['call','directions']},
 };

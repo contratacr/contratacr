@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useLocale } from "next-intl";
-import { ArrowLeft, Briefcase, ChevronRight, Droplets, FileText, Hammer, Megaphone, Scissors, Sparkles, Store, Wrench, Zap, Calculator, Coffee, Beer, IceCream, Fuel, Users, Flower2, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Briefcase, ChevronRight, Droplets, FileText, Hammer, Megaphone, Scissors, Sparkles, Store, Wrench, Zap, Calculator, Coffee, Beer, IceCream, Fuel, Users, Flower2, SquareParking, Hotel, House, type LucideIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
 import { DIRECTORY_SECTION_ICONS, enabledDirectoryGroups, pick, type Bilingual } from "@/lib/directory/directory-groups";
@@ -36,9 +36,15 @@ const CURATED: Group[] = [
     service("spas", "Spas", "Spas", Sparkles, "spa"),
   ] },
   { id: "autos", label: { es: "Servicios automotrices", en: "Auto services" }, rows: [
-    service("lavacar", "Lavacar", "Car wash", Droplets, "lavado_vehiculos"),
+    place("lavacar", "Lavacar", "Car washes", Droplets, "/lavacar", "lavacar"),
     place("taller", "Taller mecánico", "Auto repair", Wrench, "/talleres", "talleres"),
     place("gasolineras", "Gasolineras", "Fuel stations", Fuel, "/gasolineras", "gasolineras"),
+    place("parqueos", "Parqueos", "Parking", SquareParking, "/parqueos", "parqueos"),
+  ] },
+  // Owner 2026-11-26: hotels and houses/apartments by the day, one tap away (kind filters of /hospedaje).
+  { id: "hospedaje", label: { es: "Dónde quedarse", en: "Places to stay" }, rows: [
+    place("hoteles", "Hoteles", "Hotels", Hotel, "/hospedaje?kind=hotel", "hospedaje"),
+    place("por-dias", "Casas y apartamentos por días", "Vacation rentals", House, "/hospedaje?kind=vacation_rental", "hospedaje"),
   ] },
 ];
 

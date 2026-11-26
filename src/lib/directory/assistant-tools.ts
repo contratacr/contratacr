@@ -18,7 +18,7 @@ export type ToolLocale='es'|'en';
 // prices (the answer says so and recalls 9-1-1); bancos = map points only (no rates, fees or products; a price question
 // about a bank is answered with places and that limit, never with figures).
 export const PLACE_TOOL_VERTICALS=['restaurantes','farmacias','supermercados','gasolineras',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
 export type PlaceToolVertical=typeof PLACE_TOOL_VERTICALS[number];
 
 export const DIRECTORY_TOOLS=[
@@ -79,11 +79,13 @@ const SECTION_TERMS:Record<PlaceToolVertical,string[]>={
  hospedaje:['hotel','hoteles','hostal','hostales','cabinas','hospedaje','hostel','hostels','hotels','lodging'],
  salud:['clinica','clinicas','consultorio','consultorios','ebais','hospital','hospitales','laboratorio clinico','optica','opticas','clinic','clinics','dental clinic'],
  veterinarias:['veterinaria','veterinarias','tienda de mascotas','tiendas de mascotas','pet shop','pet shops','vet clinic','veterinary clinic'],
- talleres:['taller mecanico','talleres mecanicos','talleres','lavacar','lava car','llantera','llanteras','car wash','car repair shop','tyre shop'],
+ talleres:['taller mecanico','talleres mecanicos','talleres','llantera','llanteras','car repair shop','tyre shop'],
  belleza:['salon de belleza','salones de belleza','barberia','barberias','peluqueria','peluquerias','beauty salon','barber shop','nail salon'],
  gimnasios:['gimnasio','gimnasios','gym','gyms'],
  tours:['tour','tours','atraccion','atracciones','museo','museos','attraction','attractions','museum','museums'],
  bancos:['banco','bancos','cajero','cajeros','cajero automatico','cajeros automaticos','atm','atms','bank','banks'],
+ parqueos:['parqueo','parqueos','parqueadero','estacionamiento','car park','parking lot'],
+ lavacar:['lavacar','lavacarros','lava car','autolavado','car wash','car washes'],
 };
 /** Sections whose prices the compare tool may look up (products only; never consultations, rates or room prices). */
 const PRICE_SECTIONS=new Set<PlaceToolVertical>(['farmacias','supermercados','pulperias','ferreterias','veterinarias']);
@@ -130,7 +132,8 @@ const SECTION_NAME:Record<PlaceToolVertical,[string,string]>={restaurantes:['res
  cafes:['cafés, panaderías y bares','cafés, bakeries and bars'],pulperias:['pulperías y minisúper','corner stores'],ferreterias:['ferreterías','hardware stores'],
  hospedaje:['hospedajes','places to stay'],salud:['establecimientos de salud','health facilities'],veterinarias:['veterinarias y tiendas de mascotas','vets and pet shops'],
  talleres:['talleres y servicios para vehículos','car services'],belleza:['salones de belleza y barberías','beauty salons and barbers'],gimnasios:['gimnasios','gyms'],
- tours:['tours y atracciones','tours and attractions'],bancos:['bancos y cajeros','banks and ATMs']};
+ tours:['tours y atracciones','tours and attractions'],bancos:['bancos y cajeros','banks and ATMs'],
+ parqueos:['parqueos','parking'],lavacar:['lavacar','car washes']};
 /** Fixed limit line per sensitive section (2026-11-17 policy, pending lawyer review). */
 function sectionLimit(v:PlaceToolVertical,en:boolean):string{
  const t=(es:string,english:string)=>en?english:es;

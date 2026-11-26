@@ -65,7 +65,7 @@ export async function ProsSection() {
     const GROUP_OF: Record<string, string> = {
       restaurantes: "restaurantes", cafes: "restaurantes", supermercados: "comercios", pulperias: "comercios",
       ferreterias: "construccion_ingenieria", farmacias: "salud", salud: "salud", veterinarias: "mascotas",
-      gimnasios: "bienestar", belleza: "belleza", talleres: "automotriz", gasolineras: "automotriz",
+      gimnasios: "bienestar", belleza: "belleza", talleres: "automotriz", gasolineras: "automotriz", parqueos: "automotriz", lavacar: "automotriz",
       hospedaje: "turismo", tours: "turismo", bancos: "profesional",
     };
     const place = (id: string) => ({ id, label: (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id, href: `/${id}`, place: placeSection(id)!.id });

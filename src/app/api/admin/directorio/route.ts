@@ -7,7 +7,8 @@ import {dirDbError,dirFail,dirOk} from '@/lib/directory/public-route';
 import {photoStaffDecisionSchema} from '@/lib/directory/place-photos';
 import {photoDbError} from '@/lib/directory/place-photos-server';
 import {FEATURE_STAFF_QUEUES,FEATURE_STAFF_RPC,featureStaffDecisionSchema} from '@/lib/directory/place-features';
-import {DIR_ENABLED} from '@/lib/directory/feature-flags';
+import {DIR_ENABLED,DIR_HEALTH_ENABLED} from '@/lib/directory/feature-flags';
+import {buildPlaceCreateInput} from '@/lib/directory/admin-place-create';
 
 // LOCAL PRO ONLY (multivertical M1, development only): staff queue of the public directory. Administrators with a
 // verified MFA session only (getApiAdmin, checked on EVERY request; never trusted from the browser).
@@ -16,6 +17,7 @@ import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 //       every decision lands in the immutable dir_moderation_log with its reason).
 // Place features round (2026-11-17): GET ?queue=questions[&filter=flagged|hidden|recent]|events[&filter=new|hidden|recent]|brands[&q=]|brand_claims;
 //  POST featureStaffDecisionSchema (qa, event, brand_merge, brand_split, brand_claim) → dir_admin_* (same guarantees).
+// 2026-11-26: POST {kind:'place_create'} → dir_admin_place_create (a place added by hand by the team; admin-place-create.ts).
 export async function GET(req:Request){
  if(!DIR_ENABLED)return new Response(null,{status:404});
  const admin=await getApiAdmin();if(!admin)return dirFail(403,'forbidden','Se requiere acceso administrativo verificado.');
@@ -73,6 +75,15 @@ export async function POST(req:Request){
  const admin=await getApiAdmin();if(!admin)return dirFail(403,'forbidden','Se requiere acceso administrativo verificado.');
  let raw:unknown;try{raw=await proBoundedJson(req,8192);}catch{return dirFail(400,'invalid');}
  const rawKind=(raw as {kind?:unknown})?.kind;
+ // 2026-11-26 (owner, «los agregamos nosotros»): the team creates a published place by hand → dir_admin_place_create
+ // (create + hours + publish in one transaction, source `equipo`, logged in dir_moderation_log kind 'place').
+ if(rawKind==='place_create'){
+  const built=buildPlaceCreateInput(raw);
+  if(!built.ok)return dirFail(400,'invalid_'+built.field.replace(/[^a-zA-Z0-9]/g,'').slice(0,30),'Revise los datos.');
+  if(!DIR_HEALTH_ENABLED&&built.input.place.vertical==='health')return dirFail(400,'invalid_vertical','Revise los datos.');
+  const r=await createAdminClient().rpc('dir_admin_place_create',{p_actor:admin.id,p_input:JSON.parse(JSON.stringify(built.input))});
+  return r.error?dirDbError(r.error):dirOk(r.data);
+ }
  if(rawKind==='photo'){
   const f=photoStaffDecisionSchema.safeParse(raw);
   if(!f.success)return dirFail(400,f.error.issues[0]?.path[0]==='reason'?'reason_required':'invalid','Revise los datos.');

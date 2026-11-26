@@ -43,7 +43,9 @@ export const PLACE_SECTIONS=[
    k('electrical','Material eléctrico','Electrical supplies'),k('bathroom','Baños y loza sanitaria','Bathroom fittings'),k('diy','Hogar y bricolaje','Home improvement'),k('trade','Distribuidor para el oficio','Trade supplier')]},
  {section:'hospedaje',id:'lodging',nameEs:'Hospedaje',nameEn:'Lodging',pathEn:'lodging',priceMode:null,added:true,policy:{tourism:true},
   kinds:[k('hotel','Hotel','Hotel'),k('hostel','Hostal','Hostel'),k('guest_house','Casa de huéspedes','Guest house'),k('cabins','Cabinas','Cabins'),
-   k('apartment','Apartamentos turísticos','Holiday apartments'),k('motel','Motel','Motel'),k('camping','Camping','Campsite')]},
+   k('apartment','Apartamentos turísticos','Holiday apartments'),k('motel','Motel','Motel'),k('camping','Camping','Campsite'),
+   // 2026-11-26 (owner): houses and apartments rented by the day, added by the team. Never named after a rental platform.
+   k('vacation_rental','Casa o apartamento por días','Vacation rental')]},
  {section:'salud',id:'health',nameEs:'Salud',nameEn:'Health',pathEn:'health',priceMode:null,added:true,policy:{health:true},
   kinds:[k('clinic','Clínica','Clinic'),k('doctors','Consultorio médico','Medical practice'),k('dentist','Odontología','Dental practice'),k('hospital','Hospital','Hospital'),
    k('laboratory','Laboratorio clínico','Medical laboratory'),k('physiotherapy','Fisioterapia','Physiotherapy'),k('psychology','Psicología','Psychology'),
@@ -65,6 +67,13 @@ export const PLACE_SECTIONS=[
    k('travel_agency','Agencia de viajes','Travel agency')]},
  {section:'bancos',id:'banking',nameEs:'Bancos y cajeros',nameEn:'Banks and ATMs',pathEn:'banks',priceMode:null,added:true,policy:{mapOnly:true},
   kinds:[k('bank','Banco','Bank'),k('atm','Cajero automático','ATM'),k('exchange','Casa de cambio','Currency exchange')]},
+ // 2026-11-26 (owner): parking and car washes, places the ContrataCR team adds by hand (admin form). No prices; map only on phones.
+ {section:'parqueos',id:'parking',nameEs:'Parqueos',nameEn:'Parking',pathEn:'parking',priceMode:null,added:true,policy:{},
+  kinds:[k('public','Parqueo público','Public parking'),k('covered','Parqueo techado o edificio','Covered or multi-storey parking'),
+   k('motorcycle','Parqueo para motos','Motorcycle parking'),k('truck','Parqueo para camiones','Truck parking')]},
+ {section:'lavacar',id:'car_wash',nameEs:'Lavacar',nameEn:'Car washes',pathEn:'car-wash',priceMode:null,added:true,policy:{},
+  kinds:[k('car_wash','Lavacar','Car wash'),k('detailing','Detallado y estética automotriz','Car detailing'),k('self_service','Autolavado','Self-service car wash'),
+   k('motorcycle_wash','Lavado de motos','Motorcycle wash')]},
 ] as const satisfies readonly PlaceSectionDef[];
 
 export type PlaceSectionKey=typeof PLACE_SECTIONS[number]['section'];

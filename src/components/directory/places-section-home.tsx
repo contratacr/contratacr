@@ -36,7 +36,7 @@ import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} fro
 // map and pins only on phones (the nearest one open now).
 const CARD_SECTIONS=new Set(['restaurantes','cafes','belleza']);
 export type PlaceSection='restaurantes'|'farmacias'|'supermercados'|'gasolineras'|'cafes'|'pulperias'|'ferreterias'|'hospedaje'|'salud'|
- 'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos';
+ 'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos'|'parqueos'|'lavacar';
 type Copy={title:[string,string]};
 /** H1 of each section (the metadata title of its page). */
 const COPY:Record<PlaceSection,Copy>={
@@ -55,6 +55,8 @@ const COPY:Record<PlaceSection,Copy>={
  gimnasios:{title:['Gimnasios en Costa Rica','Gyms in Costa Rica']},
  tours:{title:['Tours y atracciones en Costa Rica','Tours and attractions in Costa Rica']},
  bancos:{title:['Bancos y cajeros en Costa Rica','Banks and ATMs in Costa Rica']},
+ parqueos:{title:['Parqueos en Costa Rica','Parking in Costa Rica']},
+ lavacar:{title:['Lavacar en Costa Rica','Car washes in Costa Rica']},
 };
 const fmt=(n:number,en:boolean)=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,en?',':'.');
 const NOT_FILTERS=['q','sort','cursor','page','lat','lng'];

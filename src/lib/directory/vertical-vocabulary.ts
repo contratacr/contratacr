@@ -23,7 +23,8 @@ export type DirectoryVertical =
   | "belleza"
   | "gimnasios"
   | "tours"
-  | "bancos";
+  | "bancos"
+  | "lavacar";
 
 export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> = {
   vehiculos: [
@@ -90,8 +91,8 @@ export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> =
     "veterinary", "alimento para perro",
   ],
   talleres: [
-    "taller", "talleres", "taller mecanico", "lavacar", "lava car", "llantera", "llanteras", "repuestos", "riteve", "revision tecnica",
-    "car wash", "car repair", "tyre shop", "auto parts",
+    "taller", "talleres", "taller mecanico", "llantera", "llanteras", "repuestos", "riteve", "revision tecnica",
+    "car repair", "tyre shop", "auto parts",
   ],
   belleza: [
     "salon de belleza", "barberia", "barberias", "peluqueria", "peluquerias", "estetica", "unas", "spa", "manicure", "tatuajes",
@@ -110,6 +111,10 @@ export const VERTICAL_VOCABULARY: Record<DirectoryVertical, readonly string[]> =
   parqueos: [
     "parqueo", "parqueos", "parqueadero", "estacionamiento", "parking", "garaje", "garage", "cochera",
     "parqueo publico", "valet", "park",
+  ],
+  // 2026-11-26: own section (/lavacar), split out of talleres.
+  lavacar: [
+    "lavacar", "lavacarros", "lava car", "autolavado", "lavado de carros", "lavado de autos", "car wash", "car detailing",
   ],
 };
 

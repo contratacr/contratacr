@@ -481,8 +481,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   const contactButtons = !directoryOn ? contactButtonsClassic : (
     <div className="scrollbar-none relative z-10 -mx-1 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [touch-action:pan-x_pan-y]" data-pro-card-actions>
       <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="search" className={chip} buttonLabel="WhatsApp" />
-      {showCall && renderCall(`${secondaryContactBase} ${chip}`)}
       <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={`${secondaryContactBase} ${chip}`}><Star className="h-3.5 w-3.5 shrink-0" aria-hidden />{t("reviewShort")}</Link>
+      {showCall && renderCall(`${secondaryContactBase} ${chip}`)}
     </div>
   );
 

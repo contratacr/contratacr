@@ -11,10 +11,10 @@ import {NEW_PLACE_SECTIONS,PLACE_SECTIONS,placeSection} from './place-verticals'
 
 // 2026-11-17: + cafes, pulperias, ferreterias, hospedaje, salud, veterinarias, talleres, belleza, gimnasios, tours, bancos.
 export const SEARCH_VERTICALS=['restaurantes','gasolineras','farmacias','supermercados','agencias','lugares','vehiculos','inmuebles',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
 export type SearchVertical=typeof SEARCH_VERTICALS[number];
 export const PLACE_SEARCH_VERTICALS=['restaurantes','gasolineras','farmacias','supermercados','agencias','lugares',
- 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos'] as const;
+ 'cafes','pulperias','ferreterias','hospedaje','salud','veterinarias','talleres','belleza','gimnasios','tours','bancos','parqueos','lavacar'] as const;
 export const SEARCH_SORTS=['relevance','best_rated','distance','price_asc','price_desc','newest'] as const;
 export type SearchSort=typeof SEARCH_SORTS[number];
 export const SEARCH_PAGE_SIZE=20;
@@ -150,7 +150,7 @@ const GENERIC_TERMS:Partial<Record<SearchVertical,string[]>>={
  cafes:['cafe','cafes','cafeteria','cafeterias','panaderia','panaderias','bar','bares','coffee shop','bakery','bakeries','bars'],
  pulperias:['pulperia','pulperias','minisuper','mini super','abastecedor','corner store','corner stores'],
  ferreterias:['ferreteria','ferreterias','hardware store','hardware stores','hardware'],
- hospedaje:['hospedaje','hotel','hoteles','hostal','hostales','cabinas','lodging','hotels','hostel','hostels'],
+ hospedaje:['hospedaje','hotel','hoteles','hostal','hostales','cabinas','lodging','hotels','hostel','hostels','casa por dias','apartamento por dias','alquiler por dias','vacation rental','vacation rentals'],
  salud:['salud','clinica','clinicas','consultorio','consultorios','health','clinic','clinics'],
  veterinarias:['veterinaria','veterinarias','veterinario','vet','vets','veterinary','pet shop','tienda de mascotas'],
  talleres:['taller','talleres','taller mecanico','mecanico','car repair','garage','mechanic'],
@@ -158,6 +158,8 @@ const GENERIC_TERMS:Partial<Record<SearchVertical,string[]>>={
  gimnasios:['gimnasio','gimnasios','gym','gyms'],
  tours:['tour','tours','atraccion','atracciones','attraction','attractions'],
  bancos:['banco','bancos','cajero','cajeros','cajero automatico','bank','banks','atm','atms'],
+ parqueos:['parqueo','parqueos','parqueadero','estacionamiento','parking','car park'],
+ lavacar:['lavacar','lavacarros','lava car','autolavado','car wash','car washes'],
 };
 const CONNECTORS=['en','de','del','la','el','los','las','cerca','cerca de','near','in','the','y','and','a'];
 const INTENT_TO_SEARCH:Partial<Record<IntentVertical,SearchVertical>>={restaurantes:'restaurantes',gasolineras:'gasolineras',farmacias:'farmacias',

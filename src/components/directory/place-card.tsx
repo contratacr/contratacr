@@ -122,16 +122,16 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const status=extra?.hours?.length?openStatus(extra.hours):null;
  const statusText=status?openStatusText(status,en,en?DAYS_EN:DAYS_ES):item.open24h?{label:t('Abierto 24 horas','Open 24 hours'),detail:null,open:true}
   :item.openNow===true?{label:t('Abierto ahora','Open now'),detail:null,open:true}:item.openNow===false?{label:t('Cerrado','Closed'),detail:null,open:false}:null;
- // Every action this place has, in this order, each with its own icon and in the ContrataCR colours.
+ // Every action this place has, in this order (Reservar, Reseñar, WhatsApp, Llamar, Waze, Maps), each with its own icon and in the ContrataCR colours.
  const maps=item.location?mapLinks(item.location.lat,item.location.lng):null;
  const wa=claimed&&extra?.whatsapp?`https://wa.me/${extra.whatsapp.replace(/[^0-9]/g,'').replace(/^(\d{8})$/,'506$1')}`:null;
  const call=resolvePlaceAction('call',actionInput);
  const actions:{id:string;label:string;href:string;icon:ReactNode;external?:boolean}[]=[
   ...(claimed&&extra?.reservation?[{id:'reserve',label:t('Reservar','Reserve'),href:`${href}#place-reservations`,icon:<CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
+  {id:'review',label:t('Reseñar','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>},
   ...(wa?[{id:'whatsapp',label:'WhatsApp',href:wa,icon:<WhatsAppLogo className="h-4 w-4 shrink-0"/>,external:true}]:[]),
   ...(call?[{id:'call',label:t('Llamar','Call'),href:call.href,icon:<Phone className="h-4 w-4 shrink-0" aria-hidden="true"/>}]:[]),
-  {id:'review',label:t('Reseñar','Review'),href:`${href}#escribir-resena`,icon:<Star className="h-4 w-4 shrink-0" aria-hidden="true"/>},
-  ...(maps?[{id:'maps',label:'Maps',href:maps.google,icon:<GoogleMapsIcon className="h-4 w-4 shrink-0"/>,external:true},{id:'waze',label:'Waze',href:maps.waze,icon:<WazeIcon className="h-4 w-4 shrink-0"/>,external:true}]:[]),
+  ...(maps?[{id:'waze',label:'Waze',href:maps.waze,icon:<WazeIcon className="h-4 w-4 shrink-0"/>,external:true},{id:'maps',label:'Maps',href:maps.google,icon:<GoogleMapsIcon className="h-4 w-4 shrink-0"/>,external:true}]:[]),
  ];
  const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}

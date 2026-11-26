@@ -12,35 +12,40 @@ const list=<T extends [string,...string[]]>(values:T,max:number)=>z.array(z.enum
 /** The `kind` subtype of a 2026-11-17 section: one of its PLACE_SECTIONS kinds. */
 const kindOf=(id:string)=>{const values=placeSectionById(id)?.kinds.map(x=>x.value)??[];return z.string().refine(v=>values.includes(v),'Tipo inválido para esta sección.').optional();};
 
+/** WhatsApp number recorded by the team or an import (2026-11-26); shown as the WhatsApp button until the owner sets a «Pedir» link. */
+const contact={whatsapp:z.string().trim().regex(/^\+?[0-9][0-9 ()-]{6,22}$/,'WhatsApp inválido.').optional()};
 /** Bounded, typed attributes per vertical. No price, sponsorship or ranking keys: order never depends on payment. */
 export const verticalAttributeSchemas={
- restaurant:z.object({cuisines:z.array(text(40)).max(10).optional(),priceLevel:z.number().int().min(1).max(4).optional(),
+ restaurant:z.object({...contact,cuisines:z.array(text(40)).max(10).optional(),priceLevel:z.number().int().min(1).max(4).optional(),
   // Costa Rica: menus show prices with IVA; the 10 % service charge is disclosed separately.
   serviceCharge:bool,delivery:bool,takeaway:bool,reservations:bool,vegetarianOptions:bool}).strict(),
- fuel:z.object({brand:text(60).optional(),fuels:list(['regular','super','diesel','lpg','electric'],5),open24h:bool,
+ fuel:z.object({...contact,brand:text(60).optional(),fuels:list(['regular','super','diesel','lpg','electric'],5),open24h:bool,
   services:list(['shop','air','car_wash','restroom','atm'],5)}).strict(),
  // Decreto 36868-S: no medicine prices or advertising here; only operational facts.
- pharmacy:z.object({licenseNumber:z.string().trim().regex(/^[A-Za-z0-9-]{3,30}$/,'Número de permiso inválido.').optional(),onDuty:bool,delivery:bool,acceptsPrescriptions:bool}).strict(),
- grocery:z.object({chain:text(60).optional(),format:z.enum(['supermarket','minimarket','wholesale','pulperia']).optional(),delivery:bool,
+ pharmacy:z.object({...contact,licenseNumber:z.string().trim().regex(/^[A-Za-z0-9-]{3,30}$/,'Número de permiso inválido.').optional(),onDuty:bool,delivery:bool,acceptsPrescriptions:bool}).strict(),
+ grocery:z.object({...contact,chain:text(60).optional(),format:z.enum(['supermarket','minimarket','wholesale','pulperia']).optional(),delivery:bool,
   paymentMethods:list(['cash','card','sinpe','transfer'],4)}).strict(),
- vehicle_dealer:z.object({brands:z.array(text(40)).max(30).optional(),newVehicles:bool,usedVehicles:bool,financing:bool,workshop:bool}).strict(),
- real_estate:z.object({operations:list(['sale','rent'],2),propertyTypes:list(['house','apartment','lot','office','commercial','farm'],6)}).strict(),
+ vehicle_dealer:z.object({...contact,brands:z.array(text(40)).max(30).optional(),newVehicles:bool,usedVehicles:bool,financing:bool,workshop:bool}).strict(),
+ real_estate:z.object({...contact,operations:list(['sale','rent'],2),propertyTypes:list(['house','apartment','lot','office','commercial','farm'],6)}).strict(),
  // 2026-11-17 sections (place-verticals.ts). `kind` = the one subtype (from OSM tags at import). Small on purpose: no
  // prices of consultations/treatments, no official-status claims (ICT declaratoria, stars, SUGEF products).
- cafe_bar:z.object({kind:kindOf('cafe_bar'),cuisines:z.array(text(40)).max(10).optional(),priceLevel:z.number().int().min(1).max(4).optional(),
+ cafe_bar:z.object({...contact,kind:kindOf('cafe_bar'),cuisines:z.array(text(40)).max(10).optional(),priceLevel:z.number().int().min(1).max(4).optional(),
   serviceCharge:bool,delivery:bool,takeaway:bool,reservations:bool,vegetarianOptions:bool}).strict(),
- convenience:z.object({kind:kindOf('convenience'),delivery:bool,paymentMethods:list(['cash','card','sinpe','transfer'],4)}).strict(),
- hardware:z.object({kind:kindOf('hardware'),delivery:bool,paymentMethods:list(['cash','card','sinpe','transfer'],4)}).strict(),
- lodging:z.object({kind:kindOf('lodging'),pool:bool,wifi:bool,parking:bool,breakfast:bool,petFriendly:bool}).strict(),
+ convenience:z.object({...contact,kind:kindOf('convenience'),delivery:bool,paymentMethods:list(['cash','card','sinpe','transfer'],4)}).strict(),
+ hardware:z.object({...contact,kind:kindOf('hardware'),delivery:bool,paymentMethods:list(['cash','card','sinpe','transfer'],4)}).strict(),
+ lodging:z.object({...contact,kind:kindOf('lodging'),pool:bool,wifi:bool,parking:bool,breakfast:bool,petFriendly:bool}).strict(),
  // Establishments only; publicService = EBAIS / CCSS / public hospital (operator:type=public in OSM).
- health:z.object({kind:kindOf('health'),publicService:bool,emergency:bool}).strict(),
- vet_pets:z.object({kind:kindOf('vet_pets'),emergency:bool,delivery:bool}).strict(),
- auto_services:z.object({kind:kindOf('auto_services'),services:list(['repair','motorcycle_repair','car_wash','tyres','inspection','parts'],6)}).strict(),
- beauty:z.object({kind:kindOf('beauty'),byAppointment:bool}).strict(),
- fitness:z.object({kind:kindOf('fitness')}).strict(),
- tours:z.object({kind:kindOf('tours')}).strict(),
+ health:z.object({...contact,kind:kindOf('health'),publicService:bool,emergency:bool}).strict(),
+ vet_pets:z.object({...contact,kind:kindOf('vet_pets'),emergency:bool,delivery:bool}).strict(),
+ auto_services:z.object({...contact,kind:kindOf('auto_services'),services:list(['repair','motorcycle_repair','car_wash','tyres','inspection','parts'],6)}).strict(),
+ beauty:z.object({...contact,kind:kindOf('beauty'),byAppointment:bool}).strict(),
+ fitness:z.object({...contact,kind:kindOf('fitness')}).strict(),
+ tours:z.object({...contact,kind:kindOf('tours')}).strict(),
  // Map points only: no rates, products or financial data. atm = the bank branch has an ATM.
- banking:z.object({kind:kindOf('banking'),atm:bool,operator:text(80).optional()}).strict(),
+ banking:z.object({...contact,kind:kindOf('banking'),atm:bool,operator:text(80).optional()}).strict(),
+ // 2026-11-26: parking and car washes (added by the team).
+ parking:z.object({...contact,kind:kindOf('parking')}).strict(),
+ car_wash:z.object({...contact,kind:kindOf('car_wash')}).strict(),
 } satisfies Record<DirectoryVertical,z.ZodType>;
 export function placeAttributesSchema(vertical:DirectoryVertical){return verticalAttributeSchemas[vertical];}
 

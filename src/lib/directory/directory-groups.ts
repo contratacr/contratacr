@@ -1,4 +1,4 @@
-import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, type LucideIcon } from "lucide-react";
+import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, SquareParking, Droplets, type LucideIcon } from "lucide-react";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { idiomaDe } from "@/lib/prefijo-de-idioma";
 
@@ -10,7 +10,7 @@ import { idiomaDe } from "@/lib/prefijo-de-idioma";
 export const DIRECTORY_SECTION_ICONS: Record<string, LucideIcon> = {
   restaurantes: Utensils, cafes: Coffee, supermercados: ShoppingCart, pulperias: Store, farmacias: Pill, ferreterias: Hammer,
   gasolineras: Fuel, talleres: Wrench, hospedaje: BedDouble, tours: Compass, belleza: Scissors, gimnasios: Dumbbell,
-  veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark,
+  veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark, parqueos: SquareParking, lavacar: Droplets,
 };
 export type Bilingual = { es: string; en: string };
 export type DirectoryGroup = { id: string; es: string; en: string; icon: LucideIcon; sections: readonly string[] };
@@ -19,7 +19,7 @@ export const DIRECTORY_GROUPS: readonly DirectoryGroup[] = [
   { id: "comer", es: "Comer y beber", en: "Food and drink", icon: Utensils, sections: ["restaurantes", "cafes"] },
   { id: "compras", es: "Compras", en: "Shopping", icon: ShoppingCart, sections: ["supermercados", "pulperias", "ferreterias", "farmacias"] },
   { id: "salud", es: "Salud y bienestar", en: "Health and wellness", icon: HeartPulse, sections: ["salud", "veterinarias", "belleza", "gimnasios"] },
-  { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: Car, sections: ["gasolineras", "talleres"] },
+  { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: Car, sections: ["gasolineras", "talleres", "parqueos", "lavacar"] },
   { id: "viajes", es: "Viajes", en: "Travel", icon: Plane, sections: ["hospedaje", "tours"] },
   { id: "dinero", es: "Dinero", en: "Money", icon: Landmark, sections: ["bancos"] },
 ];
@@ -37,10 +37,12 @@ export const DIRECTORY_SECTION_BLURBS: Record<string, Bilingual> = {
   belleza: { es: "Salones, barberías y spas", en: "Salons, barbers and spas" },
   gimnasios: { es: "Gimnasios y centros deportivos", en: "Gyms and sports centers" },
   gasolineras: { es: "Gasolineras y precios de combustible", en: "Fuel stations and fuel prices" },
-  talleres: { es: "Talleres mecánicos, lavacar y llantas", en: "Auto repair, car wash and tires" },
+  talleres: { es: "Talleres mecánicos, llantas y repuestos", en: "Auto repair, tires and parts" },
   hospedaje: { es: "Hoteles, cabinas y alojamientos", en: "Hotels, cabins and lodging" },
   tours: { es: "Tours y actividades turísticas", en: "Tours and tourist activities" },
   bancos: { es: "Bancos y cajeros automáticos", en: "Banks and ATMs" },
+  parqueos: { es: "Parqueos públicos, techados y para motos", en: "Public, covered and motorcycle parking" },
+  lavacar: { es: "Lavacar, autolavado y detallado", en: "Car washes, self-service and detailing" },
 };
 
 export type ResolvedDirectoryGroup = { id: string; label: Bilingual; icon: LucideIcon; sections: { section: string; label: Bilingual }[] };
@@ -60,7 +62,7 @@ export function enabledDirectoryGroups(enabled: readonly string[]): ResolvedDire
 /** CURATED menu (owner decision 2026-11-22, Yelp style): only the place categories people actually search for appear in the
  * Categorías menu, the mobile drawer, the footer and the home tiles; the rest (pulperias, ferreterias, tours, gimnasios,
  * talleres) stay reachable from /lugares ("Ver todos los lugares"). Order = order shown. */
-export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
+export const CURATED_PLACE_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias", "farmacias", "gasolineras", "talleres", "parqueos", "lavacar", "bancos", "hospedaje", "tours", "salud", "gimnasios", "veterinarias", "belleza"];
 
 /** The curated place sections that are enabled, in curated order. */
 export function curatedPlaces(enabled: readonly string[]): { section: string; label: Bilingual }[] {
@@ -96,7 +98,7 @@ export const PLACE_MENU_GROUPS: Record<string, readonly string[]> = {
   comercios: ["restaurantes", "cafes", "supermercados", "pulperias", "ferreterias"],
   salud: ["salud", "farmacias"],
   bienestar: ["gimnasios"],
-  automotriz: ["gasolineras", "talleres"],
+  automotriz: ["gasolineras", "talleres", "parqueos", "lavacar"],
   belleza: ["belleza"],
   mascotas: ["veterinarias"],
   turismo: ["hospedaje", "tours"],

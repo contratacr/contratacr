@@ -80,13 +80,15 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const photos=place.media.filter(m=>m.kind==='photo').map(m=>({url:m.url,caption:(en?m.altEn:m.altEs)??null}));
  const brandAbout=brand?(en?brand.descriptionEn:brand.descriptionEs):null;
  const address=place.address.line?`${place.address.line}${place.address.locality?`, ${place.address.locality}`:''}`:null;
- const order=orderLink&&place.status==='published'?orderLink:null;
+ // The owner's «Pedir» link wins; otherwise the WhatsApp number the team recorded (attributes.whatsapp, 2026-11-26).
+ const teamWa=typeof place.attributes?.whatsapp==='string'&&place.attributes.whatsapp?{channel:'whatsapp' as const,value:place.attributes.whatsapp}:null;
+ const order=(orderLink??teamWa)&&place.status==='published'?(orderLink??teamWa):null;
  const published=place.status==='published';
  const actionInput:PlaceActionInput={slug:place.slug,name:place.name,verticalId:place.vertical.id,locale,phone:place.phone,website:place.website,location:place.location,
   hasHours:place.hours.length>0,hasMenu,hasPrices:!!slots.offer&&place.vertical.id==='fuel',reservation,order,reviewable:published};
  const sideActions=placeSideActions(actionInput);
- // ONE chip row, same chips and order as the result card (owner 2026-11-26): Reservar, WhatsApp, Llamar, Reseñar, Maps,
- // Waze; then «Pedir» (web/phone link), «Sitio web», and the page tools (Guardar, Compartir, Agregar fotos). Only what exists.
+ // ONE chip row, same chips and order as the result card (owner 2026-11-26): Reservar, Reseñar, WhatsApp, Llamar, Waze,
+ // Maps; then «Pedir» (web/phone link), «Sitio web», and the page tools (Guardar, Compartir, Agregar fotos). Only what exists.
  const pick=(id:Parameters<typeof resolvePlaceAction>[0])=>published?resolvePlaceAction(id,actionInput):null;
  const chipActions:{action:PlaceAction;icon:ReactNode;label:string}[]=[];
  const reserve=reservation?pick('reserve'):null;if(reserve)chipActions.push({action:reserve,icon:<CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>,label:t('Reservar','Reserve')});
@@ -190,10 +192,12 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // Category line, like the result card: «Restaurantes · Soda · Comida típica · ₡₡ · No reclamado».
  const dot=<span aria-hidden="true"> · </span>;
  const chips=<div className={CHIP_ROW} data-place-actions-bar data-place-quick-actions={chipActions.map(c=>c.action.id).join(' ')}>
-  {chipActions.map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
+  {/* Order (owner 2026-11-26): Reservar first where it exists, then Reseñar, then contact, then Waze and Maps. */}
+  {chipActions.filter(c=>c.action.id==='reserve').map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
   {published&&<a href="#escribir-resena" data-place-write-review data-place-action="review" className={CHIP}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>}
-  {maps&&<a href={maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={CHIP}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
+  {chipActions.filter(c=>c.action.id!=='reserve').map(c=><ActionButton key={c.action.id} action={c.action} slug={place.slug} locale={locale} className={CHIP}>{c.icon}{c.label}</ActionButton>)}
   {maps&&<a href={maps.waze} data-place-action="waze" target="_blank" rel="noopener noreferrer" className={CHIP}><WazeIcon className="h-4 w-4 shrink-0"/>Waze</a>}
+  {maps&&<a href={maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={CHIP}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
   {orderAction&&<ActionButton action={orderAction} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('order','h-4 w-4 shrink-0')}{orderAction.label}</ActionButton>}
   {site&&<ActionButton action={site} slug={place.slug} locale={locale} className={CHIP}>{actionIcon('website','h-4 w-4 shrink-0')}{site.label}</ActionButton>}
   {saveSlot}

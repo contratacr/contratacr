@@ -3,7 +3,8 @@
 
 // 2026-11-17: + the eleven place sections approved by the owner (src/lib/directory/place-verticals.ts).
 export const DIRECTORY_VERTICALS=['restaurant','fuel','pharmacy','grocery','vehicle_dealer','real_estate',
- 'cafe_bar','convenience','hardware','lodging','health','vet_pets','auto_services','beauty','fitness','tours','banking'] as const;
+ 'cafe_bar','convenience','hardware','lodging','health','vet_pets','auto_services','beauty','fitness','tours','banking',
+ 'parking','car_wash'] as const;
 export type DirectoryVertical=typeof DIRECTORY_VERTICALS[number];
 export const PLACE_STATUSES=['draft','published','hidden','closed_permanently','removed'] as const;
 export type PlaceStatus=typeof PLACE_STATUSES[number];
