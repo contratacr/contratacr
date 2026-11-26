@@ -8,10 +8,12 @@ import {proBoundedJson,proSameOrigin} from '@/lib/pro/route-common';
 import {dirDeviceId,dirEnabledOnly,dirFail,dirOk,dirPepper,hmacHex} from '@/lib/directory/public-route';
 import {PLACE_PHOTO_BUCKET,placePhotoFlagSchema} from '@/lib/directory/place-photos';
 import {photoDbError} from '@/lib/directory/place-photos-server';
+import {placePhotoStoreOf} from '@/lib/directory/place-photo-store';
 
 // LOCAL (launch round 2026-11-18): one uploaded place photo.
-//  GET ?s=320|800|1600 → the stored variant from the private bucket, only while approved on a public place
-//      (an administrator with MFA also sees pending/hidden ones for the queue preview, never cached).
+//  GET ?s=320|800|1600 → the stored variant from its store (R2 or the private Supabase bucket, place-photo-store.ts),
+//      only while approved on a public place (an administrator with MFA also sees pending/hidden ones for the queue
+//      preview, never cached). Short public cache on purpose: a photo hidden by moderation or removed must stop being served soon, so the URL is never «immutable».
 //  POST {flagId, reason, message?} → «Reportar foto» (dir_place_photo_flag_create; device HMAC without an account).
 const idSchema=z.string().uuid();
 export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
@@ -22,10 +24,11 @@ export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
  let staff=false,o=await db.rpc('dir_place_photo_object',{p_id:id,p_staff:false});
  if(!o.error&&!o.data&&await getApiAdmin()){staff=true;o=await db.rpc('dir_place_photo_object',{p_id:id,p_staff:true});}
  if(o.error)return new Response(null,{status:503});if(!o.data)return new Response(null,{status:404});
- const path=(o.data as Record<string,string>)['path'+size]!;
- const file=await db.storage.from(PLACE_PHOTO_BUCKET).download(path);
- if(file.error||!file.data)return new Response(null,{status:404});
- return new Response(file.data,{headers:{'Content-Type':path.endsWith('.jpg')?'image/jpeg':'image/webp','X-Content-Type-Options':'nosniff',
+ const row=o.data as Record<string,string>,path=row['path'+size]!;
+ const store=await placePhotoStoreOf(db.storage.from(PLACE_PHOTO_BUCKET),row.store);if(!store)return new Response(null,{status:503});
+ let file;try{file=await store.get(path);}catch{return new Response(null,{status:503});}
+ if(!file)return new Response(null,{status:404});
+ return new Response(file.bytes as Uint8Array<ArrayBuffer>,{headers:{'Content-Type':path.endsWith('.jpg')?'image/jpeg':'image/webp','X-Content-Type-Options':'nosniff',
   'Cache-Control':staff?'no-store, private':'public, max-age=300, stale-while-revalidate=86400','Content-Security-Policy':"default-src 'none'"}});
 }
 export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){

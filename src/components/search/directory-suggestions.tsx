@@ -39,8 +39,8 @@ export function DirectorySuggestionRows({
   if (!items.length) return null;
   const en = locale === "en";
   return (
-    <div data-search-places-group="" role="group" aria-label={en ? "Companies" : "Empresas"} className="@container">
-      <SuggestionGroupLabel variant={variant}>{en ? "Companies" : "Empresas"}</SuggestionGroupLabel>
+    <div data-search-places-group="" role="group" aria-label={en ? "Places" : "Lugares"} className="@container">
+      <SuggestionGroupLabel variant={variant}>{en ? "Places" : "Lugares"}</SuggestionGroupLabel>
       {items.map((item, i) => {
         const Icon = DIRECTORY_SECTION_ICONS[item.section] ?? Store;
         const active = i === activeIndex;

@@ -182,11 +182,13 @@
     "publishRequest": "Post a request",
     "findProfessionals": "Find professionals",
     "freeBadge": "Free",
-    "searchBusinesses": "Companies",
+    "searchBusinesses": "Places",
     "searchTopServices": "Most searched professionals",
     "searchPros": "Professionals",
     "rotatingPrefix": "Search",
-    "rotatingWords": "professionals|restaurants|pharmacies|attractions|stores|auto repair|gas stations|hotels|parking|car wash|vets|supermarkets"
+    "rotatingWords": "professionals|restaurants|pharmacies|attractions|stores|auto repair|gas stations|hotels|parking|car wash|vets|supermarkets",
+    "searchSeeAllPros": "See all professionals",
+    "searchSeeAllPlaces": "See all categories"
   },
   "home": {
     "accountDeletion": {

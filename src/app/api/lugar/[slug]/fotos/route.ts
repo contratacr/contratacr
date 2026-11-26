@@ -10,6 +10,7 @@ import {dirEnabledOnly,dirFail,dirOk} from '@/lib/directory/public-route';
 import {photoDbError} from '@/lib/directory/place-photos-server';
 import {PHOTO_MAX_BYTES,PHOTO_VARIANTS,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant} from '@/lib/directory/photo-pipeline';
 import {pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
+import {placePhotoStoreOf,uploadPlacePhotoStore} from '@/lib/directory/place-photo-store';
 import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCaption,placePhotoFieldsSchema,placePhotoRemoveSchema,placePhotoUrl} from '@/lib/directory/place-photos';
 
 // LOCAL (launch round 2026-11-18): photos of a directory place.
@@ -52,7 +53,15 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
   let raw:unknown;try{raw=await proBoundedJson(req,1024);}catch{return dirFail(400,'invalid');}
   const body=placePhotoRemoveSchema.safeParse(raw);if(!body.success)return dirFail(400,'invalid');
   const r=await db.rpc('dir_place_photo_remove',{p_actor:actor,p_member:member,p_input:{actionId:body.data.actionId,mediaId:body.data.mediaId}});
-  return r.error?photoDbError(r.error):dirOk(r.data);
+  if(r.error)return photoDbError(r.error);
+  // Best effort: the row is already final (removed, never served again); a failed delete only leaves an orphan.
+  const gone=await db.from('dir_place_media').select('status,photo_store,path_1600,path_800,path_320').eq('id',body.data.mediaId).maybeSingle();
+  if(!gone.error&&gone.data?.status==='removed'){
+   const paths=[gone.data.path_1600,gone.data.path_800,gone.data.path_320].filter((p):p is string=>typeof p==='string');
+   try{const store=await placePhotoStoreOf(db.storage.from(PLACE_PHOTO_BUCKET),gone.data.photo_store);if(!store)throw Error('no R2 binding');await store.remove(paths);}
+   catch{console.error('[place-photos] objects left after removal',body.data.mediaId);}
+  }
+  return dirOk(r.data);
  }
 
  let form:FormData;
@@ -78,20 +87,22 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  if(same.error)return dirFail(503,'unavailable');if(same.data?.length)return dirFail(409,'duplicate');
 
  const path=(v:PhotoVariant)=>v.path.replace(/^dir-listings\//,PLACE_PHOTO_PREFIX+'/');
- const bucket=db.storage.from(PLACE_PHOTO_BUCKET),created:string[]=[];
- const cleanup=async()=>{if(created.length){const removed=await bucket.remove(created);if(removed.error)console.error('[place-photos] orphan objects',created);}};
+ const store=await uploadPlacePhotoStore(db.storage.from(PLACE_PHOTO_BUCKET)),created:string[]=[];
+ const cleanup=async()=>{if(created.length){try{await store.remove(created);}catch{console.error('[place-photos] orphan objects',store.name,created);}}};
  for(const size of PHOTO_VARIANTS){
   const v=photo.variants[size],key=path(v);
-  const up=await bucket.upload(key,v.bytes,{contentType:v.contentType,upsert:false,cacheControl:'31536000'});
-  if(up.error){
-   const stored=String((up.error as {statusCode?:string|number}).statusCode)==='409'?await bucket.download(key):null;
-   const same=stored&&!stored.error&&stored.data&&await sha256Hex(new Uint8Array(await stored.data.arrayBuffer()))===await sha256Hex(v.bytes);
-   if(!same){await cleanup();return dirFail(503,'unavailable','No se pudo guardar la foto. Reintente.');}
-  }else created.push(key);
+  let put:'created'|'exists'|'failed';try{put=await store.put(key,v.bytes,v.contentType);}catch{put='failed';}
+  if(put==='exists'){
+   // A retry after a crash between storing and recording: keep the object only if it is the same image.
+   let stored=null;try{stored=await store.get(key);}catch{}
+   if(!stored||await sha256Hex(stored.bytes)!==await sha256Hex(v.bytes))put='failed';
+  }else if(put==='created')created.push(key);
+  if(put==='failed'){await cleanup();return dirFail(503,'unavailable','No se pudo guardar la foto. Reintente.');}
  }
  const caption=cleanCaption(fields.data.caption);
  const input={actionId,mediaId,slug,review:fields.data.review==='1',...(caption?{caption}:{}),sha256:photo.sha256,width:photo.width,height:photo.height,
-  path1600:path(photo.variants[1600]),path800:path(photo.variants[800]),path320:path(photo.variants[320]),url:placePhotoUrl(mediaId)};
+  path1600:path(photo.variants[1600]),path800:path(photo.variants[800]),path320:path(photo.variants[320]),url:placePhotoUrl(mediaId),
+  ...(store.name==='r2'?{store:'r2'}:{})};
  const r=await db.rpc('dir_place_photo_add',{p_actor:actor,p_member:member,p_input:input});
  if(r.error){
   const row=await db.from('dir_place_media').select('id').eq('id',mediaId).maybeSingle();

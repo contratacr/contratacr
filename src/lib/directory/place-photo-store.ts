@@ -1,5 +1,3 @@
-import {PLACE_PHOTO_BUCKET} from './place-photos';
-
 /**
  * Where uploaded place photos live (owner decision 2026-11-26: stay on free tiers). Server only.
  *  - 'r2': Cloudflare R2 binding PLACE_PHOTOS of the Worker (10 GB free, free egress). Object key
@@ -36,7 +34,6 @@ export type SupabaseBucketLike={
  download(path:string):Promise<{data:Blob|null;error:unknown}>;
  remove(paths:string[]):Promise<{error:unknown}>;
 };
-type StorageClient={storage:{from(bucket:string):unknown}};
 
 const typeOf=(path:string)=>path.endsWith('.jpg')?'image/jpeg':'image/webp';
 
@@ -82,16 +79,15 @@ export async function placePhotosR2Binding():Promise<R2BucketLike|null>{
  catch{return null;}
 }
 const projectHost=()=>new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname;
-const supabaseStore=(db:StorageClient)=>createSupabasePlacePhotoStore(db.storage.from(PLACE_PHOTO_BUCKET) as SupabaseBucketLike);
 
-/** Store for NEW uploads: R2 when the Worker has the binding, Supabase Storage otherwise. */
-export async function uploadPlacePhotoStore(db:StorageClient,r2?:R2BucketLike|null):Promise<PlacePhotoStore>{
+/** Store for NEW uploads: R2 when the Worker has the binding, otherwise `supabase` (db.storage.from(PLACE_PHOTO_BUCKET)). */
+export async function uploadPlacePhotoStore(supabase:SupabaseBucketLike,r2?:R2BucketLike|null):Promise<PlacePhotoStore>{
  const bucket=r2===undefined?await placePhotosR2Binding():r2;
- return bucket?createR2PlacePhotoStore(bucket,projectHost()):supabaseStore(db);
+ return bucket?createR2PlacePhotoStore(bucket,projectHost()):createSupabasePlacePhotoStore(supabase);
 }
 /** Store an existing photo lives in (dir_place_media.photo_store). null when it is in R2 but this runtime has no binding. */
-export async function placePhotoStoreOf(db:StorageClient,name:unknown,r2?:R2BucketLike|null):Promise<PlacePhotoStore|null>{
- if(name!=='r2')return supabaseStore(db);
+export async function placePhotoStoreOf(supabase:SupabaseBucketLike,name:unknown,r2?:R2BucketLike|null):Promise<PlacePhotoStore|null>{
+ if(name!=='r2')return createSupabasePlacePhotoStore(supabase);
  const bucket=r2===undefined?await placePhotosR2Binding():r2;
  return bucket?createR2PlacePhotoStore(bucket,projectHost()):null;
 }

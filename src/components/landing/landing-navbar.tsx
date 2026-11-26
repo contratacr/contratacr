@@ -575,6 +575,9 @@ function guardarCapacidad(capacidad: CapacidadGuardada) {
 // `hydrated` en LandingNavbar).
 let encabezadoYaHidratado = false;
 
+// Search sheet (owner 2026-11-26): the most used places first; the rest are one tap away in Categorías.
+const SEARCH_PLACE_ORDER = ["restaurantes", "farmacias", "hospedaje", "atracciones", "supermercados", "talleres", "gasolineras", "parqueos", "tiendas", "cafes"];
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -2613,7 +2616,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       {/* Everything, in order (owner 2026-11-26): every professional category, then every company section. */}
                       <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">{t("searchPros")}</p>
                       <div className="grid grid-cols-2 gap-2">
-                        {CATEGORY_GROUPS.filter((g) => g.id !== "otro" && g.id !== "restaurantes").map((g) => {
+                        {CATEGORY_GROUPS.filter((g) => g.id !== "otro" && g.id !== "restaurantes").slice(0, 6).map((g) => {
                           const Icon = getCategoryGroupVisual(g.id).Icon;
                           return (
                             <button key={g.id} type="button" data-search-pro-group={g.id} onClick={() => { closeNativeSearch(); router.push(`/profesionales?grupo=${g.id}`); }}
@@ -2624,6 +2627,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           );
                         })}
                       </div>
+                      <button type="button" onClick={() => { closeNativeSearch(); router.push("/profesionales"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPros")}</button>
                     </div>
                   )}
                   {/* Directory on (test): quick access to every business section, above the most searched services. */}
@@ -2633,7 +2637,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         {t("searchBusinesses")}
                       </p>
                       <div className="grid grid-cols-2 gap-2">
-                        {directorySections.filter((id) => DIRECTORY_SECTION_LABELS[id]).map((id) => {
+                        {SEARCH_PLACE_ORDER.filter((id) => directorySections.includes(id) && DIRECTORY_SECTION_LABELS[id]).slice(0, 6).map((id) => {
                           const Icon = DIRECTORY_SECTION_ICONS[id] ?? Search;
                           return (
                             <button
@@ -2649,6 +2653,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           );
                         })}
                       </div>
+                      <button type="button" onClick={() => { closeNativeSearch(); router.push("/categorias"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPlaces")}</button>
                     </div>
                   )}
                   {!directoryOn && searchFocused && !searchQuery.trim() && (

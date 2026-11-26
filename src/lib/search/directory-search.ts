@@ -42,8 +42,8 @@ export function directorySectionLabel(section: string, locale: string): string {
 }
 
 const PLACEHOLDER_CLASSIC = { es: "¿Qué servicio está buscando?", en: "What service are you looking for?" };
-const PLACEHOLDER_SHORT = { es: "Profesionales o empresas", en: "Professionals or companies" };
-const PLACEHOLDER_FULL = { es: "Busque profesionales o empresas", en: "Search professionals or companies" };
+const PLACEHOLDER_SHORT = { es: "Profesionales o lugares", en: "Professionals or places" };
+const PLACEHOLDER_FULL = { es: "Busque profesionales o lugares", en: "Search professionals or places" };
 
 /** Placeholder of the unified search field (directory on) or the classic one. */
 export function unifiedSearchPlaceholder(locale: string, directoryOn: boolean, short = false): string {
