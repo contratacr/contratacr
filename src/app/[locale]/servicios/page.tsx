@@ -4,6 +4,7 @@ import { DIR_ENABLED } from "@/lib/directory/feature-flags";
 import { PLACE_SECTIONS } from "@/lib/directory/place-verticals";
 import { countDirectoryPlaces } from "@/lib/directory/search-server";
 import type { SearchVertical } from "@/lib/directory/search-schemas";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ServiciosClient } from "./servicios-client";
 
 /**
@@ -26,10 +27,18 @@ const placeTotals = unstable_cache(async () => {
   return Object.fromEntries(entries) as Record<string, number | null>;
 }, ["servicios-place-totals-v1"], { revalidate: 600 });
 
+/** Published professionals (same rule as the public listings), for the "Profesionales" tile. Null when the count fails. */
+const professionalsTotal = unstable_cache(async () => {
+  const { count, error } = await createAdminClient().from("professionals").select("id", { count: "exact", head: true })
+    .eq("is_banned", false).eq("oculto_del_buscador", false).neq("verification_status", "rejected");
+  return error ? null : count;
+}, ["servicios-professionals-total-v1"], { revalidate: 600 });
+
 export default async function ServiciosPage() {
-  const [catalogoInicial, placeTotalsBySection] = await Promise.all([
+  const [catalogoInicial, placeTotalsBySection, prosTotal] = await Promise.all([
     catalogoParaElCliente(),
     DIR_ENABLED ? placeTotals().catch(() => ({} as Record<string, number | null>)) : Promise.resolve({} as Record<string, number | null>),
+    DIR_ENABLED ? professionalsTotal().catch(() => null) : Promise.resolve(null),
   ]);
-  return <ServiciosClient catalogoInicial={catalogoInicial} placeTotals={placeTotalsBySection} />;
+  return <ServiciosClient catalogoInicial={catalogoInicial} placeTotals={placeTotalsBySection} prosTotal={prosTotal} />;
 }

@@ -34,7 +34,7 @@ import { DirectoryQuickNav } from "@/components/landing/directory-nav";
 import { useSiteFeatures } from "@/components/site-features";
 import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
 
-export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null> }) {
+export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal = null }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null>; prosTotal?: number | null }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
   // pre-renderiza en una capa de módulos donde el registro de servicios está
   // vacío: pintaba el catálogo fijo y, al hidratar, los diez grupos cambiaban de
@@ -346,7 +346,9 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                         <span aria-hidden className="grid h-20 w-full place-items-center bg-[linear-gradient(135deg,#dff3fc,#b9e3f6)] text-[#0083b0] sm:h-24"><Users className="h-9 w-9 sm:h-11 sm:w-11" strokeWidth={1.75} /></span>
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
                           <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{locale === "en" ? "Professionals" : "Profesionales"}</span>
-                          <span className="line-clamp-2 text-xs leading-snug text-[#64748b]">{locale === "en" ? "All services" : "Todos los servicios"}</span>
+                          {typeof prosTotal === "number" && prosTotal > 0
+                            ? <span data-pros-tile-count={prosTotal} className="text-xs font-semibold text-[#0083b0]">{prosTotal.toLocaleString(locale === "en" ? "en-US" : "es-CR")} {locale === "en" ? (prosTotal === 1 ? "professional" : "professionals") : (prosTotal === 1 ? "profesional" : "profesionales")}</span>
+                            : <span className="line-clamp-2 text-xs leading-snug text-[#64748b]">{locale === "en" ? "All services" : "Todos los servicios"}</span>}
                         </span>
                       </button>
                     </li>
