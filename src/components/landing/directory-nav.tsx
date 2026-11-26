@@ -247,7 +247,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
       </ul>
       <div className="order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden">
         <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
-          className="-ml-1 inline-flex h-10 shrink-0 items-center gap-0.5 rounded-xl pl-1 pr-0.5"><ContrataCRMark /><ChevronDown className="h-4 w-4 text-[#162543]" strokeWidth={2.5} aria-hidden /></button>
+          className="group -ml-1 inline-flex h-10 shrink-0 items-center gap-0.5 rounded-xl pl-1 pr-0.5"><ContrataCRMark /><ChevronDown className="h-4 w-4 text-[#162543] transition-transform duration-200 group-active:-rotate-90" strokeWidth={2.5} aria-hidden /></button>
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
           className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-1 pr-3 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[17px] w-[17px]" aria-hidden /></span>
