@@ -84,7 +84,7 @@ export function useThemes(locale: string): Theme[] {
 export function CategoriesMenuFooter({ locale, onNavigate }: { locale: string; onNavigate: () => void }) {
   return (
     <div className="mt-4 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 pt-3">
-      <Link href="/servicios" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold text-[#009FD9] hover:underline">
+      <Link href="/categorias" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-bold text-[#009FD9] hover:underline">
         <Compass className="h-4 w-4" aria-hidden />{pick(TXT.allCategories, locale)}
       </Link>
       <Link href="/precios" onClick={onNavigate} data-nav-places-prices className={FOOT_LINK}>{pick(TXT.prices, locale)}</Link>
@@ -122,7 +122,7 @@ export function CategoriesDrawerGroup({ locale, itemClass, textClass, icon, onNa
               )}
             </div>
           ))}
-          <Link href="/servicios" prefetch={true} onClick={onNavigate} className="ccr-menu-sub-fila font-bold text-[#009FD9]">{pick(TXT.allCategories, locale)}</Link>
+          <Link href="/categorias" prefetch={true} onClick={onNavigate} className="ccr-menu-sub-fila font-bold text-[#009FD9]">{pick(TXT.allCategories, locale)}</Link>
           <Link href="/precios" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.prices, locale)}</Link>
           <Link href="/eventos" prefetch={false} onClick={onNavigate} className="ccr-menu-sub-fila">{pick(TXT.events, locale)}</Link>
         </div>
@@ -156,7 +156,7 @@ export function FooterPlacesColumn({ locale, heading, open, onToggle, interactiv
             <Link href={row.href} className={linkClass}>{row.label}</Link>
           </li>
         ))}
-        <li><Link href="/servicios" className={linkClass}>{pick(TXT.allCategories, locale)}</Link></li>
+        <li><Link href="/categorias" className={linkClass}>{pick(TXT.allCategories, locale)}</Link></li>
         <li><Link href="/precios" className={linkClass}>{pick(TXT.prices, locale)}</Link></li>
       </ul>
     </nav>
@@ -218,7 +218,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
   const items: { key: string; href: string; label: string; icon: LucideIcon; active: boolean }[] = [
     pros, ...sections.map(place),
-    { key: "more", href: "/servicios", label: t("more"), icon: MoreHorizontal, active: pathname === "/servicios" || pathname === "/lugares" },
+    { key: "more", href: "/categorias", label: t("more"), icon: MoreHorizontal, active: pathname === "/categorias" || pathname === "/servicios" || pathname === "/lugares" },
   ];
   return (
     <>

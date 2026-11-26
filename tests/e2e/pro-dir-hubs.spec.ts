@@ -17,7 +17,7 @@ for (const language of ["es", "en"] as const) {
 
   test(`/lugares no longer exists: the old address goes to Categorías [${language}]`, async ({ page }) => {
     await page.goto(`${prefix}/lugares`, { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(new RegExp(`${prefix}/servicios$`));
+    await expect(page).toHaveURL(new RegExp(`${prefix}/categorias$`));
     await expect(page.locator("[data-places-hub-group]")).toHaveCount(0);
   });
 
@@ -40,9 +40,9 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   await expect(header.getByRole("button", { name: /^Lugares$/ })).toHaveCount(0);
   await expect(header.locator("[data-nav-business]")).toHaveCount(0);
   const link = header.getByRole("link", { name: /^Categorías$/ });
-  await expect(link).toHaveAttribute("href", "/servicios");
+  await expect(link).toHaveAttribute("href", "/categorias");
   await link.click();
-  await expect(page).toHaveURL(/\/servicios$/);
+  await expect(page).toHaveURL(/\/categorias$/);
   await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
   // The page lists the businesses as tiles on top, once each, and the professional groups below without place rows.
   const tiles = page.locator("[data-place-tiles] [data-place-tile]");
@@ -64,11 +64,11 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expect(row.locator('[data-quick-nav-link="restaurantes"]')).toHaveAttribute("aria-current", "page");
   await expect(row.locator('[data-quick-nav-link="farmacias"]')).toHaveAttribute("href", "/farmacias");
   await expect(row.locator('[data-quick-nav-link="pros"]')).toHaveAttribute("href", "/profesionales");
-  await expect(row.locator('[data-quick-nav-link="more"]')).toHaveAttribute("href", "/servicios");
+  await expect(row.locator('[data-quick-nav-link="more"]')).toHaveAttribute("href", "/categorias");
   await row.locator('[data-quick-nav-link="farmacias"]').focus();
   await expect(row.locator('[data-quick-nav-link="farmacias"]')).toBeFocused();
   await row.locator('[data-quick-nav-link="more"]').click();
-  await expect(page).toHaveURL(/\/servicios$/);
+  await expect(page).toHaveURL(/\/categorias$/);
   await expect(page.getByRole("navigation", { name: /Accesos rápidos|Quick links/ }).locator('[data-quick-nav-link="more"]')).toHaveAttribute("aria-current", "page");
   // The row is in flow: the fixed bar keeps its height (64px) and the row starts right below it.
   const bar = await page.getByTestId("landing-navbar").filter({ visible: true }).boundingBox();
@@ -106,7 +106,7 @@ test("mobile drawer: Categorías is a plain link to the full page and there is n
   await waitForInteractivePage(page);
   await page.getByRole("button", { name: /Abrir men[uú]|Open menu|Mi cuenta y men[uú]|My account and menu/i }).filter({ visible: true }).first().click();
   const drawer = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
-  await expect(drawer.getByRole("link", { name: /^Categorías$|^Categories$/ })).toHaveAttribute("href", /\/servicios$/);
+  await expect(drawer.getByRole("link", { name: /^Categorías$|^Categories$/ })).toHaveAttribute("href", /\/categorias$/);
   await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toHaveCount(0);
   await expect(drawer.getByRole("link", { name: /Para negocios y profesionales|For businesses and professionals/ })).toHaveCount(0);
   await expect(drawer.getByRole("button", { name: /^Lugares$|^Places$/ })).toHaveCount(0);

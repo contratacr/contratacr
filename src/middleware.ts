@@ -7,6 +7,7 @@ import { MIDDLEWARE_PRINT_ROUTES, PRINT_NONCE_HEADER, newPrintNonce, printConten
 import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/registration-state";
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
+import { DIR_ENABLED } from "@/lib/directory/feature-flags";
 import { ALL_CATEGORIES } from "@/lib/data/categories";
 import { RAIZ_DE_BUSQUEDA, SIN_SERVICIO, esProvinciaDeRuta, filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
@@ -316,7 +317,8 @@ export async function middleware(request: NextRequest) {
   // un componente no llega a la respuesta; el del middleware sí. Los archivos
   // de página se dejan como respaldo para la navegación interna.
   const RENOMBRADAS: Record<string, string> = {
-    "/categorias": "/servicios",
+    // Directory on (test, owner 2026-11-26): the catalog page is Categorías at /categorias; /servicios moves there.
+    ...(DIR_ENABLED ? { "/servicios": "/categorias" } : { "/categorias": "/servicios" }),
     "/contacto": "/soporte",
     // Dos direcciones con nombre de otra época. La página se llama «¿Qué es la
     // verificación de identidad?» y el enlace del pie «Mejorar mi perfil»; las

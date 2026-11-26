@@ -1893,7 +1893,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-1", effectiveMarketplaceDesktop && "gap-0.5")}>
                 {/* Categorias - mega-menu with autocomplete + curated columns */}
                   <Link
-                    href="/servicios"
+                    href={directoryOn ? "/categorias" : "/servicios"}
                     data-nav-categorias=""
                     onClick={() => setOpenMenu(null)}
                     className={cn(
@@ -2839,7 +2839,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )}
                 </div>
                 )}
-                  <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
+                  <Link href={directoryOn ? "/categorias" : "/servicios"} prefetch={true} onClick={cerrarCajon} className={claseCajon(directoryOn ? "/categorias" : "/servicios")}>
                     <DrawerIcon><Compass /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{directoryOn ? t("categoriesMenu") : t("categories")}</span>
                   </Link>

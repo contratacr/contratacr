@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 
 export default async function PlacesHubRedirect({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  permanentRedirect(rutaConIdioma(locale, "/servicios"));
+  permanentRedirect(rutaConIdioma(locale, "/categorias"));
 }

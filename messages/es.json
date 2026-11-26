@@ -2513,7 +2513,8 @@
     "prosTile": "Profesionales",
     "prosTileAll": "Todos los servicios",
     "prosTileCount": "{count, plural, =1 {# profesional} other {# profesionales}}",
-    "backToCategories": "Categorías"
+    "backToCategories": "Categorías",
+    "pageTitleDirectory": "Categorías"
   },
   "installGuide": {
     "eyebrow": "Acceso rápido",

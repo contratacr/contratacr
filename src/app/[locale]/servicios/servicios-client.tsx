@@ -148,7 +148,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
   const mobileGroup = mobileGroupKey
     ? mobileGroups.find((group) => group.key === mobileGroupKey) ?? null
     : null;
-  const servicesTitle = locale === "en" ? "Services" : "Servicios";
+  const servicesTitle = directorySections.length > 0 ? tp("pageTitleDirectory") : locale === "en" ? "Services" : "Servicios";
   const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio está buscando?";
   const serviceResultsTitle = locale === "en" ? "Matching services" : "Servicios encontrados";
 
