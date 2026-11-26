@@ -7,13 +7,13 @@ import { readFileSync } from 'node:fs';
 let script: string, css: string;
 test.beforeAll(async () => {
  const result = await build({stdin:{contents:`import React from 'react'; import {createRoot} from 'react-dom/client'; import {CookiePreferences} from './src/components/privacy/cookie-preferences'; import {AdvertisingPreferences} from './src/components/privacy/advertising-preferences'; createRoot(document.getElementById('root')).render(<><main><h1>ContrataCR</h1><AdvertisingPreferences/></main><CookiePreferences/></>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,jsx:'automatic',format:'iife',platform:'browser',tsconfig:'tsconfig.json',define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'framework-boundaries',setup(b){
- b.onResolve({filter:/^(next-intl|@\/i18n\/navigation)$/},args=>({path:args.path,namespace:'boundary'}));
- b.onLoad({filter:/.*/,namespace:'boundary'},args=>({contents:args.path==='next-intl'?`export const useLocale=()=>document.documentElement.lang;`:`import React from 'react'; export const Link=({children,...props})=>React.createElement('a',props,children);`,resolveDir:process.cwd()}));
+ b.onResolve({filter:/^(next-intl|@\/i18n\/navigation|next\/navigation)$/},args=>({path:args.path,namespace:'boundary'}));
+ b.onLoad({filter:/.*/,namespace:'boundary'},args=>({contents:args.path==='next-intl'?`export const useLocale=()=>document.documentElement.lang;`:args.path==='next/navigation'?`export const usePathname=()=>null;`:`import React from 'react'; export const Link=({children,...props})=>React.createElement('a',props,children);`,resolveDir:process.cwd()}));
  }}]});
  script=result.outputFiles[0].text;
  css=(await postcss([tailwind()]).process(readFileSync('src/app/globals.css','utf8'),{from:'src/app/globals.css'})).css;
 });
-for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`consent UI ${locale} ${width}: explicit choices, independent purposes and reopening`,async({page})=>{
+for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`consent UI ${locale} ${width}: one Continuar button, close, no refusal button, independent purposes and reopening`,async({page})=>{
  await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
  await page.setViewportSize({width,height:width===320?568:width===390?700:900});
  await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
@@ -21,18 +21,24 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  await page.goto('http://localhost/cookie-harness');
  await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
  const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
- await expect(banner.getByRole('heading',{name:locale==='en'?'Cookies and privacy':'Cookies y privacidad',exact:true})).toBeVisible();
+ await expect(banner.getByRole('heading',{name:locale==='en'?'Cookies and tracking pixels':'Cookies y píxeles de seguimiento',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('contratacr:consent:advertising:v1'))).toBeNull();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  // A stable classic scrollbar gutter reduces the rendered root width even when clientWidth still reports the viewport.
  const box=await banner.boundingBox();expect(box).not.toBeNull();
  if(width<640){expect(box!.x).toBe(0);expect(box!.width).toBe(await page.evaluate(()=>document.documentElement.getBoundingClientRect().width));expect(Math.abs(box!.y+box!.height-page.viewportSize()!.height)).toBeLessThan(1);}
  else {expect(box!.x).toBeGreaterThan(0);expect(box!.width).toBeLessThan(width);expect(box!.y+box!.height).toBeLessThan(page.viewportSize()!.height);}
- const primary= banner.getByRole('button').filter({hasText:locale==='en'?/^(Settings|Agree)$/:/^(Configuración|De acuerdo)$/});
- await expect(primary).toHaveCount(2);
- expect(await primary.evaluateAll(nodes=>new Set(nodes.map(n=>{const s=getComputedStyle(n);return `${s.color}|${s.backgroundColor}|${s.borderColor}`;})).size)).toBe(1);
-
- await banner.getByRole('button',{name:locale==='en'?'Settings':'Configuración',exact:true}).click();
+ // Like a retail notice: ONE prominent button plus a close X. Never a refusal button.
+ const continuar=banner.getByRole('button',{name:locale==='en'?'Continue to site':'Continuar',exact:true});
+ await expect(continuar).toBeVisible();
+ await expect(banner.getByRole('button',{name:locale==='en'?'Close':'Cerrar',exact:true})).toBeVisible();
+ await expect(banner.getByRole('button')).toHaveCount(2);
+ await expect(banner.getByRole('button',{name:/rechaz|reject|decline|configur|settings/i})).toHaveCount(0);
+ await expect(banner).toContainText(locale==='en'?'By browsing our site, you agree':'Al navegar por nuestro sitio, usted acepta');
+ expect((await continuar.boundingBox())!.width).toBeGreaterThan(Math.min(width,380)*0.6);
+ await expect(banner.getByRole('link',{name:locale==='en'?'Cookie Policy and Privacy Notice':'Política de cookies y Aviso de privacidad',exact:true})).toHaveAttribute('href',/privacidad#cookies/);
+ // The settings stay reachable (footer / privacy policy button), outside the notice.
+ await page.locator('main button').click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  if(width===390){expect(await dialog.evaluate(n=>n.scrollHeight<=n.clientHeight)).toBe(true);}
  await expect(dialog.getByRole('button',{name:locale==='en'?'Back':'Volver',exact:true})).toBeVisible();
@@ -79,7 +85,53 @@ for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`co
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.addStyleTag({content:css});await page.addScriptTag({content:script});
  await expect(banner).toBeVisible();
  await page.screenshot({path:`/tmp/ccr-cookies-${locale}-${width}.png`});
- await banner.getByRole('button',{name:locale==='en'?'Agree':'De acuerdo',exact:true}).click();
+ await banner.getByRole('button',{name:locale==='en'?'Continue to site':'Continuar',exact:true}).click();
  await expect(banner).toHaveCount(0);
  expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).choice))).toEqual(['accepted','accepted']);
+ expect(await page.evaluate(()=>['analytics','advertising'].map(p=>JSON.parse(localStorage.getItem(`contratacr:consent:${p}:v1`)! ).source))).toEqual(['click','click']);
+});
+
+const choicesOf=(page:import('playwright/test').Page)=>page.evaluate(()=>['analytics','advertising'].map(p=>{const raw=localStorage.getItem(`contratacr:consent:${p}:v1`);return raw?JSON.parse(raw):null;}));
+async function openHarness(page:import('playwright/test').Page,locale:string,seed?:()=>void){
+ await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
+ if(seed) await page.addInitScript(seed);
+ await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
+ await page.route('**/cookie-harness',r=>r.fulfill({contentType:'text/html',body:`<!doctype html><html lang="${locale}"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div></body></html>`}));
+ await page.goto('http://localhost/cookie-harness');
+ await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
+}
+test('closing the notice with the X accepts, recorded as "close"',async({page})=>{
+ await openHarness(page,'es');
+ const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ await banner.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await expect(banner).toHaveCount(0);
+ const saved=await choicesOf(page);
+ expect(saved.map(c=>c.choice)).toEqual(['accepted','accepted']);
+ expect(saved.map(c=>c.source)).toEqual(['close','close']);
+});
+test('a refusal saved earlier survives the X and Continuar (even if expired)',async({page})=>{
+ await openHarness(page,'es',()=>{ localStorage.setItem('contratacr:consent:analytics:v1',JSON.stringify({version:'1999-01-01',choice:'declined',at:'2020-01-01T00:00:00.000Z'})); });
+ const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ await banner.getByRole('button',{name:'Cerrar',exact:true}).click();
+ const saved=await choicesOf(page);
+ expect(saved[0].choice).toBe('declined');
+ expect(saved[1].choice).toBe('accepted');
+});
+test('Continuar keeps a refusal that is still valid',async({page})=>{
+ await openHarness(page,'es',()=>{ localStorage.setItem('contratacr:consent:advertising:v1',JSON.stringify({version:'2026-10-29',choice:'declined',at:new Date().toISOString()})); });
+ const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ await banner.getByRole('button',{name:'Continuar',exact:true}).click();
+ const saved=await choicesOf(page);
+ expect(saved.map(c=>c.choice)).toEqual(['accepted','declined']);
+});
+test('withdrawing from the footer settings stops measurement and the notice does not come back',async({page})=>{
+ await openHarness(page,'es');
+ await page.locator('[data-cookie-banner]').getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.locator('main button').click();
+ const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
+ for(const box of await dialog.getByRole('checkbox').all()) await box.uncheck();
+ await dialog.getByRole('button',{name:'Guardar',exact:true}).click();
+ expect((await choicesOf(page)).map(c=>c.choice)).toEqual(['declined','declined']);
+ await expect(page.locator('[data-cookie-banner]')).toHaveCount(0);
+ expect(await page.evaluate(()=>document.cookie)).toContain('ccr_ads_consent_v2=declined');
 });

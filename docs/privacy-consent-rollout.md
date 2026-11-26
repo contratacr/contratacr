@@ -1,5 +1,17 @@
 # Consentimiento de estadísticas y publicidad — 29 de octubre de 2026
 
+> **Actualización 26-nov-2026 (decisión de Isaac):** en la web el aviso pasó a un
+> solo botón «Continuar» y una X, sin botón de rechazo, como el de Gymshark. Pulsar
+> «Continuar», cerrar con la X o pasar a OTRA página de la app (navegación del
+> cliente; una recarga o la primera vista no cuentan) equivale a aceptar estadísticas
+> y medición publicitaria. Nunca se cambia una negativa guardada antes (aunque haya
+> vencido). En la app nativa solo «Continuar» acepta. La elección guarda
+> `source` (`click`, `close` o `implicit`) en el navegador; solo `click` se refleja
+> en el libro de consentimientos de la cuenta. Retirar o cambiar la elección:
+> «Configurar cookies y privacidad» en el pie y en /privacidad. No hay confirmación
+> legal de que el consentimiento implícito baste bajo la Ley 8968; es una decisión
+> de riesgo asumida por Isaac. El texto de abajo describe el diseño anterior.
+
 Decisión de producto: consentimiento previo por finalidad en web y apps. «Solo
 necesarias» no se interpreta como permiso de analítica o Meta. Las operaciones
 solicitadas, sesión, seguridad, idioma y preferencias siguen funcionando.

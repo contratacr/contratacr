@@ -4,6 +4,10 @@ export const OPTIONAL_CONSENT_EVENT = "contratacr:privacy-choice";
 export const ADS_CONSENT_COOKIE = "ccr_ads_consent_v2";
 export type OptionalPurpose = "advertising" | "analytics" | "ai";
 export type OptionalChoice = "accepted" | "declined" | "unknown";
+/** How a choice was made. "click" = pressed Continuar/Aceptar or saved the settings;
+ * "close" = dismissed the notice with the X; "implicit" = kept browsing after the
+ * notice was shown. Only "click" is mirrored to the account ledger. */
+export type OptionalChoiceSource = "click" | "close" | "implicit";
 const WITHDRAWAL_KEY = "contratacr:advertising-withdrawal-pending";
 let withdrawalInFlight: Promise<void> | null = null;
 const MAX_AGE = 180 * 86400;
@@ -47,10 +51,10 @@ export function syncAdvertisingCookie() {
   document.cookie = `ccr_meta_consent=declined; Max-Age=0${suffix}`;
 }
 
-export function saveOptionalConsent(purpose: OptionalPurpose, choice: Exclude<OptionalChoice, "unknown">) {
+export function saveOptionalConsent(purpose: OptionalPurpose, choice: Exclude<OptionalChoice, "unknown">, source: OptionalChoiceSource = "click") {
   if (typeof window === "undefined") return;
   // If storage is blocked, do not claim consent was saved or enable tracking.
-  window.localStorage.setItem(consentKey(purpose), JSON.stringify({ version: purpose === "ai" ? "2026-10-19" : OPTIONAL_CONSENT_VERSION, choice, at: new Date().toISOString() }));
+  window.localStorage.setItem(consentKey(purpose), JSON.stringify({ version: purpose === "ai" ? "2026-10-19" : OPTIONAL_CONSENT_VERSION, choice, source, at: new Date().toISOString() }));
   if (purpose === "analytics") {
     syncAnalyticsCookie();
     if (choice === "declined") window.localStorage.setItem("contratacr:statistics-cleanup-pending", "1");
@@ -70,7 +74,27 @@ export function saveOptionalConsent(purpose: OptionalPurpose, choice: Exclude<Op
       }
     }
   }
-  window.dispatchEvent(new CustomEvent(OPTIONAL_CONSENT_EVENT, { detail: { purpose, choice } }));
+  window.dispatchEvent(new CustomEvent(OPTIONAL_CONSENT_EVENT, { detail: { purpose, choice, source } }));
+}
+
+/** A refusal the person made earlier, even if it has expired or its version changed.
+ * Closing the notice or browsing on must never turn it into an acceptance. */
+export function hasStoredRefusal(purpose: "analytics" | "advertising"): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    if (window.localStorage.getItem(WITHDRAWAL_KEY)) return true;
+    if (window.localStorage.getItem("contratacr:analytics-consent") === "declined") return true;
+    const raw = window.localStorage.getItem(consentKey(purpose));
+    return raw ? JSON.parse(raw)?.choice === "declined" : false;
+  } catch { return true; } // If storage cannot be read, assume refusal.
+}
+
+/** Implied acceptance (notice shown, person closed it or kept browsing). Only purposes
+ * still undecided and never refused are accepted; stored refusals are left untouched. */
+export function acceptUndecidedOptionalConsent(source: Exclude<OptionalChoiceSource, "click">) {
+  for (const purpose of ["analytics", "advertising"] as const) {
+    if (readOptionalConsent(purpose) === "unknown" && !hasStoredRefusal(purpose)) saveOptionalConsent(purpose, "accepted", source);
+  }
 }
 
 export function subscribeOptionalConsent(onChange: () => void) {
