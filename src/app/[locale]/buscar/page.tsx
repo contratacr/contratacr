@@ -579,7 +579,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           de la pantalla tras hidratar, la columna lo aplastaba a 0 y el mapa
           subía 124px de golpe (salto medido de 0,19 en cada apertura). */}
       <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden />
-      <DirectoryQuickNav className="hidden lg:block"/>
+      <DirectoryQuickNav/>
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as

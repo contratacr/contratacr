@@ -200,8 +200,9 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
 
 /** Second row under the main bar (Yelp style): quick links to the most used directory sections, "Profesionales" and "Más"
  * (all categories). In flow (not fixed), so it never changes the navbar height other layouts measure. Renders nothing while
- * the directory is off. Horizontal scroll on phones (links stay focusable; the browser scrolls the focused one into view). */
-export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "cafes", "supermercados", "farmacias", "gasolineras", "talleres", "salud", "belleza"];
+ * the directory is off. On phones the five links are equal columns, icon above label. */
+// Owner, 2026-11-26: the most important ones only, like Yelp (Restaurantes, Profesionales, Gasolineras, Farmacias, Más).
+export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasolineras", "farmacias"];
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
 export function DirectoryQuickNav({ className, spacer }: { className?: string; spacer?: boolean }) {
   const { directorySections } = useSiteFeatures();
@@ -210,29 +211,30 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const t = useTranslations("quickNav");
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
   if (!sections.length) return null;
+  const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
+  const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
   const items: { key: string; href: string; label: string; icon: LucideIcon; active: boolean }[] = [
-    { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" },
-    ...sections.map((s) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` })),
+    ...sections.slice(0, 1).map(place), pros, ...sections.slice(1).map(place),
     { key: "more", href: "/servicios", label: t("more"), icon: MoreHorizontal, active: pathname === "/servicios" || pathname === "/lugares" },
   ];
   return (
     <>
     {spacer && <div className="h-16" aria-hidden />}
     <nav data-quick-nav aria-label={t("label")} className={cn("border-b border-[#162543]/10 bg-white", className)}>
-      <ul className="mx-auto flex max-w-[1920px] items-center gap-0.5 overflow-x-auto px-3 py-1.5 [scrollbar-width:none] sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
+      <ul className="mx-auto grid max-w-[1920px] grid-cols-5 px-1 py-1 sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8">
         {items.map(({ key, href, label, icon: Icon, active }) => (
-          <li key={key} className="shrink-0">
+          <li key={key} className="min-w-0 sm:shrink-0">
             <Link
               href={href}
               prefetch={false}
               aria-current={active ? "page" : undefined}
               data-quick-nav-link={key}
               className={cn(
-                "inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:min-h-0 sm:flex-row sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
                 active ? "bg-[#eaf7fd] font-bold text-[#0083b0]" : "font-semibold text-[#162543] hover:bg-[#f3f6f9] hover:text-[#0083b0]",
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden />{label}
+              <Icon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" aria-hidden /><span className="max-w-full truncate">{label}</span>
             </Link>
           </li>
         ))}

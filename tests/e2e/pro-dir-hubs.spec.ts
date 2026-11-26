@@ -56,7 +56,7 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
 });
 
 test("quick links row under the navbar: sections, Profesionales and Más, active state, keyboard", async ({ page }, testInfo) => {
-  test.skip(isMobileProject(testInfo), "Desktop: the row also exists on phones but only on pages without their own sheet");
+  test.skip(isMobileProject(testInfo), "Desktop layout of the row");
   await page.setViewportSize({ width: 1280, height: 900 });
   await gotoOK(page, "/restaurantes");
   const row = page.getByRole("navigation", { name: /Accesos rápidos|Quick links/ });
@@ -78,10 +78,13 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expectNoHorizontalOverflow(page);
 });
 
-test("quick links row is desktop-only: phones use the drawer and the page does not widen", async ({ page }, testInfo) => {
+test("quick links row on phones: Restaurantes, Profesionales, Gasolineras, Farmacias and Más, without widening the page", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile only");
   await gotoOK(page, "/");
-  await expect(page.locator("[data-quick-nav]").filter({ visible: true })).toHaveCount(0);
+  const row = page.locator("[data-quick-nav]").filter({ visible: true });
+  await expect(row).toHaveCount(1);
+  const keys = await row.locator("[data-quick-nav-link]").evaluateAll((links) => links.map((l) => l.getAttribute("data-quick-nav-link")));
+  expect(keys).toEqual(["restaurantes", "pros", "gasolineras", "farmacias", "more"]);
   await expectNoHorizontalOverflow(page);
 });
 

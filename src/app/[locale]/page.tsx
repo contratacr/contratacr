@@ -96,7 +96,7 @@ export default async function HomePage({
     <div className="min-h-screen flex flex-col bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
       <LandingNavbar />
-      <DirectoryQuickNav spacer className="max-lg:hidden" />
+      <DirectoryQuickNav spacer />
 
       <main className="ccr-portada flex-1">
         {deletionStatus && (
