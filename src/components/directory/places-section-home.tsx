@@ -79,7 +79,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  const facets=page.ok?page.facets:null;
  const toggles:ChipToggle[]=[
   {key:'open-now',label:t('Abierto ahora','Open now'),href:link({openNow:on('openNow')?undefined:'1'}),active:on('openNow')},
-  {key:'open-24h',label:t('24 horas','24 hours'),href:link({open24h:on('open24h')?undefined:'1'}),active:on('open24h')},
+  // «24 horas» left the chips (owner 2026-11-26): «Abierto ahora» already covers it.
  ];
  const clear=activeFilters>0?{href:hrefWith(basePath,{q:values.q}),label:t('Limpiar filtros','Clear filters')}:undefined;
  const total=facets?.total??null,where=values.canton??values.province;
