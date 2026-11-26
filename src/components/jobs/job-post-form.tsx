@@ -104,6 +104,9 @@ const JOB_POST_COPY = {
     salaryType: "Tipo de salario",
     salaryFixed: "Salario fijo",
     salaryRangeOption: "Rango",
+    salaryFromOption: "Desde",
+    salaryUpToOption: "Hasta",
+    salaryUpTo: "Salario hasta",
     salaryAmount: "Salario",
     salaryFrom: "Salario desde",
     salaryTo: "Salario hasta",
@@ -175,6 +178,9 @@ const JOB_POST_COPY = {
     salaryType: "Salary type",
     salaryFixed: "Fixed salary",
     salaryRangeOption: "Range",
+    salaryFromOption: "From",
+    salaryUpToOption: "Up to",
+    salaryUpTo: "Salary up to",
     salaryAmount: "Salary",
     salaryFrom: "Salary from",
     salaryTo: "Salary to",
@@ -381,9 +387,10 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   }, [initialJob?.contact_whatsapp, professionalId]);
   const [currency, setCurrency] = useState<string>(initialJob?.currency ?? "CRC");
   const [salaryPeriod, setSalaryPeriod] = useState<string>(initialJob?.salary_period ?? "monthly");
-  // Un solo monto (o dos iguales) es un salario fijo; solo dos montos distintos son un rango.
-  const [salaryMode, setSalaryMode] = useState<"fixed" | "range">(
-    initialJob?.salary_min != null && initialJob?.salary_max != null && initialJob.salary_min !== initialJob.salary_max ? "range" : initialJob?.salary_min != null || initialJob?.salary_max != null ? "fixed" : "range",
+  // Cuatro formas de decir el salario: fijo (dos montos iguales), rango (dos
+  // distintos), "desde" (solo el mínimo) y "hasta" (solo el máximo).
+  const [salaryMode, setSalaryMode] = useState<"fixed" | "range" | "from" | "upto">(
+    initialJob?.salary_min != null && initialJob?.salary_max != null ? (initialJob.salary_min === initialJob.salary_max ? "fixed" : "range") : initialJob?.salary_min != null ? "from" : initialJob?.salary_max != null ? "upto" : "range",
   );
   const [deadline, setDeadline] = useState(initialJob?.application_deadline ?? "");
   const [responsibilities, setResponsibilities] = useState<string[]>(Array.isArray(initialJob?.responsibilities) && initialJob.responsibilities.length ? initialJob.responsibilities : [""]);
@@ -409,11 +416,11 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     const cleanResponsibilities = responsibilities.map((item) => item.trim()).filter(Boolean);
     const cleanRequirements = requirements.map((item) => item.trim()).filter(Boolean);
     const cleanBenefits = benefits.map((item) => item.trim()).filter(Boolean);
-    const salaryFrom = parseOptionalWholeNumber(form.get("salary_min"));
-    const salaryTo = salaryMode === "fixed" ? null : parseOptionalWholeNumber(form.get("salary_max"));
-    // Un solo monto escrito es un salario fijo: se guarda igual en ambos extremos.
-    const salaryMin = salaryFrom ?? salaryTo;
-    const salaryMax = salaryTo ?? salaryFrom;
+    const salaryFirst = parseOptionalWholeNumber(form.get("salary_min"));
+    const salarySecond = salaryMode === "range" ? parseOptionalWholeNumber(form.get("salary_max")) : null;
+    // Fijo, "desde" y "hasta" usan un solo campo; el modo decide dónde se guarda.
+    const salaryMin = salaryMode === "upto" ? null : salaryFirst;
+    const salaryMax = salaryMode === "upto" || salaryMode === "fixed" ? salaryFirst : salarySecond;
     const openings = Number(form.get("openings") || 1);
     const nextErrors: FieldErrors = {};
     if (title.length < 3) nextErrors.title = copy.titleShort;
@@ -620,13 +627,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <p className="text-sm font-medium text-[#374151]" id="salary-type-label">{copy.salaryType}</p>
-              <div role="group" aria-labelledby="salary-type-label" className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-[#f1f5f9] p-1">
-                {(["fixed", "range"] as const).map((mode) => (
-                  <button key={mode} type="button" data-salary-mode={mode} aria-pressed={salaryMode === mode} onClick={() => { setSalaryMode(mode); setConCambios(true); }} className={cn("min-h-10 rounded-lg px-3 text-sm font-semibold transition-colors", salaryMode === mode ? "bg-white text-[#162543] shadow-sm" : "text-[#68778d]")}>{mode === "fixed" ? copy.salaryFixed : copy.salaryRangeOption}</button>
+              <div role="group" aria-labelledby="salary-type-label" className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl sm:grid-cols-4 bg-[#f1f5f9] p-1">
+                {(["fixed", "range", "from", "upto"] as const).map((mode) => (
+                  <button key={mode} type="button" data-salary-mode={mode} aria-pressed={salaryMode === mode} onClick={() => { setSalaryMode(mode); setConCambios(true); }} className={cn("min-h-10 rounded-lg px-3 text-sm font-semibold transition-colors", salaryMode === mode ? "bg-white text-[#162543] shadow-sm" : "text-[#68778d]")}>{mode === "fixed" ? copy.salaryFixed : mode === "range" ? copy.salaryRangeOption : mode === "from" ? copy.salaryFromOption : copy.salaryUpToOption}</button>
                 ))}
               </div>
             </div>
-            <label className="text-sm font-medium text-[#374151]">{salaryMode === "fixed" ? copy.salaryAmount : copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? initialJob?.salary_max ?? ""} placeholder={salaryMode === "fixed" ? "500000" : "450000"} className={FIELD_CLASS} />{salaryMode === "fixed" ? <FieldError>{fieldErrors.salary}</FieldError> : null}</label>
+            <label className="text-sm font-medium text-[#374151]">{salaryMode === "fixed" ? copy.salaryAmount : salaryMode === "upto" ? copy.salaryUpTo : copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? initialJob?.salary_max ?? ""} placeholder={salaryMode === "fixed" ? "500000" : salaryMode === "upto" ? "650000" : "450000"} className={FIELD_CLASS} />{salaryMode !== "range" ? <FieldError>{fieldErrors.salary}</FieldError> : null}</label>
             {salaryMode === "range" ? (
               <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min != null ? (initialJob?.salary_max ?? "") : ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
             ) : null}

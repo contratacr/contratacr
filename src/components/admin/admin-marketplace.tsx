@@ -115,8 +115,9 @@ function salaryLabel(item: JobItem) {
   const min = money(item.salary.min, item.salary.currency);
   const max = money(item.salary.max, item.salary.currency);
   const period = item.salary.period === "hour" ? "por hora" : item.salary.period === "year" ? "por año" : item.salary.period === "project" ? "por proyecto" : "por mes";
-  if (min && max && item.salary.min !== item.salary.max) return `${min} - ${max} ${period}`;
-  if (min || max) return `${min ?? max} ${period}`;
+  if (min && max) return item.salary.min === item.salary.max ? `${min} ${period}` : `${min} - ${max} ${period}`;
+  if (min) return `Desde ${min} ${period}`;
+  if (max) return `Hasta ${max} ${period}`;
   return "A convenir";
 }
 
