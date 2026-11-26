@@ -16,7 +16,7 @@ const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border
 // "Encuentra profesionales en tu zona" — an interactive map of Costa Rica.
 // Click a province on the map → it highlights and the panel shows its cantones
 // + REAL coverage (computed server-side; never a fabricated count).
-export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
+export function FindByZone({ coverage, companies = null }: { coverage: ZoneCoverage; companies?: Record<string, number> | null }) {
   const t = useTranslations("landing.zones");
   const directoryOn = useSiteFeatures().directorySections.length > 0;
   const router = useRouter();
@@ -70,7 +70,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-7 text-center sm:mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744]">
-            {t("heading")}
+            {directoryOn ? t("headingDirectory") : t("heading")}
           </h2>
         </div>
 
@@ -132,6 +132,9 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 <div>
                   {/* Province name has priority — never truncate it. */}
                   <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
+                  {directoryOn && companies && (companies[province.id] ?? 0) > 0 && (
+                    <span className="block text-[12px] font-semibold text-[#0089bb]" data-zone-companies-count>{t("companiesCount", { count: companies[province.id] })}</span>
+                  )}
                   {count > 0 ? (
                     <span className="block text-[12px] font-semibold text-[#0089bb]">
                       {t("coverageCount", { count })}

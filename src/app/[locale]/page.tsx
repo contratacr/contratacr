@@ -13,6 +13,9 @@ import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
+import { unstable_cache } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { PROVINCES } from "@/lib/data/cr-geography";
 import { CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -71,9 +74,24 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
 ]);
 
 async function HomeZoneCoverage() {
-  const coverage = await getZoneCoverage();
-  return <FindByZone coverage={coverage} />;
+  // Directory on (owner 2026-11-26): the zones block also says how many companies each province has.
+  const directoryOn = sitemapSections().length > 0;
+  const [coverage, companies] = await Promise.all([getZoneCoverage(), directoryOn ? companiesByProvince() : Promise.resolve(null)]);
+  return <FindByZone coverage={coverage} companies={companies} />;
 }
+
+const companiesByProvince = unstable_cache(async (): Promise<Record<string, number> | null> => {
+  try {
+    const db = createAdminClient();
+    const entries = await Promise.all(PROVINCES.map(async (p) => {
+      const { count, error } = await db.from("dir_places").select("id", { count: "exact", head: true }).eq("status", "published").eq("admin_area_1", p.name);
+      return [p.id, error ? 0 : count ?? 0] as const;
+    }));
+    return Object.fromEntries(entries);
+  } catch {
+    return null;
+  }
+}, ["home-companies-by-province-v1"], { revalidate: 600 });
 
 export default async function HomePage({
   searchParams,
