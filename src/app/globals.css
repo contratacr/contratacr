@@ -2553,3 +2553,9 @@ html[data-pro-denied~="finance:delete"] [data-pro-delete="finance"],
 html[data-pro-denied~="work:export"] [data-pro-export="work"],
 html[data-pro-denied~="sales:export"] [data-pro-export="sales"],
 html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: none !important; }
+
+/* Directory header on phones (owner, 2026-11-26): the quick-nav row with the sections and the search is the header; the
+   navbar's own phone row (logo, ☰) steps aside while it is mounted. The drawer is outside the header and still opens. */
+@media (max-width: 1023px) {
+  body.ccr-dir-header [data-testid="landing-navbar"] { display: none; }
+}

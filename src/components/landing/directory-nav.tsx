@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, UserRound, Search, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
-import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
+import { DIRECTORY_SECTION_LABELS, unifiedSearchPlaceholder } from "@/lib/search/directory-search";
 import { DIRECTORY_SECTION_ICONS, groupPlaces, curatedGroupItems, pick } from "@/lib/directory/directory-groups";
 import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
@@ -210,6 +210,7 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   const locale = useLocale();
   const t = useTranslations("quickNav");
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
+  const navRef = useRef<HTMLElement>(null);
   if (!sections.length) return null;
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
@@ -219,8 +220,11 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
   ];
   return (
     <>
-    {spacer && <div className="h-16" aria-hidden />}
-    <nav data-quick-nav aria-label={t("label")} className={cn("border-b border-[#162543]/10 bg-white", className)}>
+    {/* Phones (owner, 2026-11-26, like Yelp): this row IS the header — sections on top, one search bar below, no logo.
+        The navbar's own phone row hides while this one is mounted (body.ccr-dir-header); its drawer still opens from ☰. */}
+    <PhoneHeaderFlag navRef={navRef} />
+    {spacer && <div className="hidden h-16 lg:block" aria-hidden />}
+    <nav ref={navRef} data-quick-nav aria-label={t("label")} className={cn("bg-white max-lg:sticky max-lg:top-0 max-lg:z-[60] max-lg:pt-[env(safe-area-inset-top)] max-lg:shadow-[0_6px_12px_-10px_rgba(22,37,67,0.35)] lg:border-b lg:border-[#162543]/10", className)}>
       <ul className="mx-auto grid max-w-[1920px] grid-cols-5 px-1 py-1 sm:flex sm:items-center sm:gap-0.5 sm:px-6 sm:py-1.5 lg:px-8">
         {items.map(({ key, href, label, icon: Icon, active }) => (
           <li key={key} className="min-w-0 sm:shrink-0">
@@ -230,16 +234,37 @@ export function DirectoryQuickNav({ className, spacer }: { className?: string; s
               aria-current={active ? "page" : undefined}
               data-quick-nav-link={key}
               className={cn(
-                "flex flex-col items-center justify-start gap-1 rounded-xl px-0.5 py-1 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
+                "flex flex-col items-center justify-start gap-1.5 rounded-xl px-0.5 py-1.5 text-center text-[11px] leading-tight transition-colors sm:inline-flex sm:h-9 sm:flex-row sm:justify-center sm:py-0 sm:gap-1.5 sm:whitespace-nowrap sm:rounded-full sm:px-2.5 sm:text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#009FD9]",
                 active ? "font-bold text-[#0083b0] sm:bg-[#eaf7fd]" : "font-semibold text-[#162543] sm:hover:bg-[#f3f6f9] hover:text-[#0083b0]",
               )}
             >
-              <span className={cn("inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eaf7fd] text-[#009FD9] sm:text-current")}><Icon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden /></span><span className="max-w-full truncate">{label}</span>
+              <span className={cn("inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent", active ? "bg-[#009FD9] text-white sm:text-current" : "bg-[#eef3f7] text-[#162543] sm:text-current")}><Icon className="h-6 w-6 sm:h-4 sm:w-4" strokeWidth={1.75} aria-hidden /></span><span className="max-w-full truncate">{label}</span>
             </Link>
           </li>
         ))}
       </ul>
+      <div className="flex items-center gap-1 px-3 pb-3 pt-1 lg:hidden">
+        <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
+          className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-full border border-[#d7e1ea] bg-white pl-1.5 pr-4 text-left shadow-[0_6px_18px_-10px_rgba(22,37,67,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-white"><Search className="h-[18px] w-[18px]" aria-hidden /></span>
+          <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[#5b6b82]">{unifiedSearchPlaceholder(locale, true)}</span>
+        </button>
+        <button type="button" data-quick-nav-menu onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eef3f7] text-[#162543] active:scale-95"><UserRound className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden /></button>
+      </div>
     </nav>
     </>
   );
+}
+
+/** While the directory header is SHOWN on a phone, the navbar's own row (logo, account) steps aside so the page has one
+ * header. Checked on mount and on resize: pages that keep this row desktop-only (Categorías) keep their navbar. */
+function PhoneHeaderFlag({ navRef }: { navRef: React.RefObject<HTMLElement | null> }) {
+  useEffect(() => {
+    const sync = () => document.body.classList.toggle("ccr-dir-header", window.innerWidth < 1024 && !!navRef.current?.getClientRects().length);
+    sync();
+    window.addEventListener("resize", sync);
+    return () => { window.removeEventListener("resize", sync); document.body.classList.remove("ccr-dir-header"); };
+  }, [navRef]);
+  return null;
 }

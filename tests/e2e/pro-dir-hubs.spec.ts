@@ -104,7 +104,7 @@ test("mobile drawer: Categorías is a plain link to the full page and there is n
   test.skip(!isMobileProject(testInfo), "Mobile navigation only");
   await gotoOK(page, "/");
   await waitForInteractivePage(page);
-  await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).filter({ visible: true }).first().click();
+  await page.getByRole("button", { name: /Abrir men[uú]|Open menu|Mi cuenta y men[uú]|My account and menu/i }).filter({ visible: true }).first().click();
   const drawer = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
   await expect(drawer.getByRole("link", { name: /^Categorías$|^Categories$/ })).toHaveAttribute("href", /\/servicios$/);
   await expect(drawer.getByRole("button", { name: /^Categorías$|^Categories$/ })).toHaveCount(0);
