@@ -113,7 +113,7 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
     if (list[i]) slides.push(list[i]!);
     if (companies[i]) slides.push(companies[i]!);
   }
-  return <HomeHeroSlides slides={slides.slice(0, 8)} />;
+  return <HomeHeroSlides slides={slides.slice(0, 8)} searchLabel={t("seeButton")} />;
 }
 
 async function HomeZoneCoverage() {

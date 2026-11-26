@@ -3092,30 +3092,31 @@
       "default3": "Recommended near you",
       "places": {
         "restaurantes": {
-          "title": "Where to eat near you",
+          "title": "People's favourites, near you",
           "button": "Restaurants"
         },
         "parqueos": {
-          "title": "Parking made easy",
+          "title": "Find where to leave your car",
           "button": "Parking"
         },
         "farmacias": {
-          "title": "Pharmacies open now",
+          "title": "See which ones are open now",
           "button": "Pharmacies"
         },
         "hospedaje": {
-          "title": "Where to stay this time",
+          "title": "Hotels and homes for your next trip",
           "button": "Lodging"
         },
         "lavacar": {
-          "title": "Your car like new",
+          "title": "Get your car looking new",
           "button": "Car wash"
         },
         "gasolineras": {
-          "title": "Fuel at the best price",
+          "title": "Compare prices before you fill up",
           "button": "Gas stations"
         }
-      }
+      },
+      "seeButton": "See"
     },
     "homeCategories": {
       "title": "Categories",

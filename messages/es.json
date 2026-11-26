@@ -3092,30 +3092,31 @@
       "default3": "Recomendados en su zona",
       "places": {
         "restaurantes": {
-          "title": "Dónde comer cerca de usted",
+          "title": "Los favoritos de la gente, cerca de usted",
           "button": "Restaurantes"
         },
         "parqueos": {
-          "title": "Parqueo sin vueltas",
+          "title": "Encuentre dónde dejar su carro",
           "button": "Parqueos"
         },
         "farmacias": {
-          "title": "Farmacias abiertas ahora",
+          "title": "Vea cuáles están abiertas ahora",
           "button": "Farmacias"
         },
         "hospedaje": {
-          "title": "Dónde quedarse esta vez",
+          "title": "Hoteles y casas para su próximo viaje",
           "button": "Hospedaje"
         },
         "lavacar": {
-          "title": "Su carro como nuevo",
+          "title": "Deje su carro como nuevo",
           "button": "Lavacar"
         },
         "gasolineras": {
-          "title": "Combustible al mejor precio",
+          "title": "Compare precios antes de cargar",
           "button": "Gasolineras"
         }
-      }
+      },
+      "seeButton": "Ver"
     },
     "homeCategories": {
       "title": "Categorías",

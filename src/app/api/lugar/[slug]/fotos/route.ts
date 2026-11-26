@@ -14,11 +14,13 @@ import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCapti
 
 // LOCAL (launch round 2026-11-18): photos of a directory place.
 //  POST multipart {file, uploadId, caption?, review?=1} → photo-pipeline (magic bytes JPEG/PNG/WebP — HEIC arrives as JPEG
-//       from the browser —, 20 MiB, 24 MP, re-encode 1600/800/320 WebP without EXIF/GPS, sha256) → private bucket
-//       dir-place-photos at dir-places/<photo id>/<size>.webp → dir_place_photo_add. Manager of the claimed place (or a
+//       from the browser —, 20 MiB, 24 MP, re-encode 1600/800/320 WebP without EXIF/GPS, sha256) → photo store (Worker:
+//       R2 binding PLACE_PHOTOS; elsewhere the private bucket dir-place-photos — place-photo-store.ts) at
+//       dir-places/<photo id>/<size>.webp → dir_place_photo_add (records the store). Manager of the claimed place (or a
 //       Pro team member whose role allows listing.publish): published at once; anyone else signed in: pending moderation.
 //       Idempotent by uploadId (photo id and actionId derived from account + place + uploadId). 20 photos per person a day.
-//  POST JSON {action:'remove', actionId, mediaId} → dir_place_photo_remove (uploader, or manager for owner photos).
+//  POST JSON {action:'remove', actionId, mediaId} → dir_place_photo_remove (uploader, or manager for owner photos), then the
+//       three objects are deleted from the store the photo lives in (removal is final; a staff «hide» keeps them).
 // Local runs use the loopback Supabase Storage only (sandbox); nothing is sent to production.
 const FIELDS=['file','uploadId','caption','review'] as const;
 type Db=ReturnType<typeof createAdminClient>;
