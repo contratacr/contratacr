@@ -477,7 +477,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // contact), Llamar and Reseña — in one row that slides if it does not fit.
   const chip = "!h-8 !w-auto shrink-0 whitespace-nowrap !rounded-full !border-0 !bg-[#eaf7fd] !px-3 !text-[12.5px] !font-bold !text-[#0083b0] hover:!bg-[#d9f0fb]";
   const contactButtons = !directoryOn ? contactButtonsClassic : (
-    <div className="scrollbar-none -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-pro-card-actions>
+    <div className="scrollbar-none relative z-10 -mx-1 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [touch-action:pan-x_pan-y]" data-pro-card-actions>
       <DirectChatLauncher categoryId={activeCategory} searchArea={analyticsArea} professionalId={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource="search" className={chip} buttonLabel="WhatsApp" />
       {showCall && renderCall(`${secondaryContactBase} ${chip}`)}
       <Link href={`/profesionales/${professional.slug}#resenas`} prefetch={false} data-pro-card-review className={`${secondaryContactBase} ${chip}`}><Star className="h-3.5 w-3.5 shrink-0" aria-hidden />{t("reviewShort")}</Link>

@@ -683,7 +683,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className={`${soloMapa ? "max-lg:hidden " : ""}ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:flex-[3] lg:max-w-4xl lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0`}>
+          <div ref={listRef} className={`${soloMapa ? "max-lg:hidden " : ""}ccr-search-sheet-scroll min-w-0 flex-1 [touch-action:pan-x_pan-y] overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:flex-[3] lg:max-w-4xl lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0`}>
             {/* En computadora los filtros viven en la fila del título (ver
                 buscar/page.tsx). Aquí ya no se dibujan: quedaban en un renglón
                 propio encima de la lista, que solo empujaba los resultados. */}

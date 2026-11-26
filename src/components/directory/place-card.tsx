@@ -150,7 +150,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
    {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
   </ul>}
   {item.price&&<PlacePriceLine price={item.price} en={en}/>}
-  <div className="scrollbar-none -mx-1 mt-2 flex gap-1.5 overflow-x-auto px-1 pb-0.5" data-place-quick-actions={actions.map(a=>a.id).join(' ')}>
+  <div className="scrollbar-none relative z-10 -mx-1 mt-2 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [touch-action:pan-x_pan-y]" data-place-quick-actions={actions.map(a=>a.id).join(' ')}>
    {actions.map(a=><a key={a.id} href={a.href} data-place-action={a.id} className={`${CHIP} relative z-10`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
   </div>
   {/* Whole card → the place page (stretched low-z overlay); the name link is the focusable one. */}
