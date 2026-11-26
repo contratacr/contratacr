@@ -132,10 +132,10 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
           {/* ── Active-province panel ── */}
           <div className="rounded-3xl bg-white border border-[#eef2f6] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
             {directoryOn && (
-              <div role="tablist" aria-label={t("kindLabel")} className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-[#eef3f7] p-1" data-zone-kind>
+              <div role="tablist" aria-label={t("kindLabel")} className="-mx-7 -mt-7 mb-5 grid grid-cols-2 border-b border-[#eef2f6] sm:-mx-8 sm:-mt-8" data-zone-kind>
                 {(["pros", "companies"] as const).map((k) => (
                   <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} data-zone-kind-option={k}
-                    className={`h-9 rounded-lg text-sm font-bold transition-colors ${kind === k ? "bg-white text-[#162543] shadow-sm" : "text-[#526277]"}`}>
+                    className={`relative h-12 text-[15px] font-bold transition-colors ${kind === k ? "text-[#009FD9] after:absolute after:inset-x-6 after:bottom-0 after:h-[3px] after:rounded-full after:bg-[#009FD9]" : "text-[#6b7686]"}`}>
                     {k === "pros" ? t("kindPros") : t("kindCompanies")}
                   </button>
                 ))}
@@ -149,12 +149,11 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
                 <div>
                   {/* Province name has priority — never truncate it. */}
                   <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
-                  {count > 0 ? (
-                    <span className="block text-[12px] font-semibold text-[#0089bb]">
-                      {t("coverageCount", { count })}
-                      {/* Directory on (owner 2026-11-26): the same line also says how many companies the province has. */}
-                      {directoryOn && companies && (companies[province.id] ?? 0) > 0 && <span data-zone-companies-count> · {t("companiesCount", { count: companies[province.id] })}</span>}
-                    </span>
+                  {/* Each tab says only its own count (owner 2026-11-26). */}
+                  {directoryOn && kind === "companies" ? (
+                    <span className="block text-[12px] font-semibold text-[#0089bb]" data-zone-companies-count>{t("companiesCount", { count: companies?.[province.id] ?? 0 })}</span>
+                  ) : count > 0 ? (
+                    <span className="block text-[12px] font-semibold text-[#0089bb]">{t("coverageCount", { count })}</span>
                   ) : (
                     <span className="block text-[12px] font-medium text-[#68778d]">{t("noPros")}</span>
                   )}
@@ -173,14 +172,14 @@ export function FindByZone({ coverage, companies = null }: { coverage: ZoneCover
             {directoryOn && kind === "companies" ? (
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("companiesIn", { province: province.name })}</p>
-                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3" data-zone-company-sections>
+                <div className="mb-6 grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3" data-zone-company-sections>
                   {ZONE_SECTIONS.filter((id) => directorySections.includes(id)).map((id) => {
                     const Icon = DIRECTORY_SECTION_ICONS[id] ?? MapPin;
                     return (
                       <button key={id} type="button" onClick={() => router.push(`/${id}?province=${encodeURIComponent(province.name)}`)}
-                        className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5 text-left text-sm font-semibold leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors">
+                        className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-left text-sm font-medium leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors">
                         <Icon className="h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
-                        <span className="truncate text-[13px]">{(DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es}</span>
+                        <span className="truncate">{(DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es}</span>
                       </button>
                     );
                   })}
