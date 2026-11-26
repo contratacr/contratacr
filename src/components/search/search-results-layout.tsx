@@ -39,6 +39,8 @@ interface SearchResultsLayoutProps {
   hojaAbiertaAlInicio?: boolean;
   /** Phones: open on the map (Waze style) with the sheet folded to its lowest stop (owner, 2026-11-26: businesses). */
   mapaPrimero?: boolean;
+  /** Phones: only the map and pins (owner, 2026-11-26: businesses) — the sheet keeps the filters and the count, no cards. */
+  soloMapa?: boolean;
   /** Mobile title row of the sheet header (Yelp app model): bold category, grey place and a Map/List toggle that
    *  moves the sheet between its lowest and highest stops. */
   titleRow?: { title: string; subtitle?: string; mapLabel: string; listLabel: string };
@@ -120,7 +122,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, mapaPrimero = false, titleRow }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData = [], apiKey = "", map, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false, mapaPrimero = false, soloMapa = false, titleRow }: SearchResultsLayoutProps) {
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -591,7 +593,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           ref={sheetRef}
-          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
+          className={(soloMapa ? "max-lg:!h-auto max-lg:![transform:none] " : "")+"ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"}
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
@@ -629,6 +631,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           >
             <div
               data-sheet-drag-handle
+              hidden={soloMapa || undefined}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
@@ -669,7 +672,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:flex-[3] lg:max-w-4xl lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0`}>
+          <div ref={listRef} className={`${soloMapa ? "max-lg:hidden " : ""}ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:flex-[3] lg:max-w-4xl lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0`}>
             {/* En computadora los filtros viven en la fila del título (ver
                 buscar/page.tsx). Aquí ya no se dibujan: quedaban en un renglón
                 propio encima de la lista, que solo empujaba los resultados. */}
@@ -677,7 +680,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
         </div>
         {searchAreaVisible && (
-        <div className="pointer-events-none fixed inset-x-0 top-[calc(var(--ccr-native-header-height,124px)+0.75rem)] z-40 flex justify-center px-4 lg:hidden">
+        <div className={`pointer-events-none fixed inset-x-0 ${soloMapa ? "top-[calc(env(safe-area-inset-top)+84px)]" : "top-[calc(var(--ccr-native-header-height,124px)+0.75rem)]"} z-40 flex justify-center px-4 lg:hidden`}>
           <button
             type="button"
             onClick={() => {

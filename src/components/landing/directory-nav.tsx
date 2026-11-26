@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -206,8 +206,8 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
 export const QUICK_NAV_SECTIONS: readonly string[] = ["restaurantes", "gasolineras", "farmacias"];
 /** `spacer`: also reserve the fixed navbar height first (pages whose first block starts under the bar, like the home). */
 /** `floating` (map screens, phones): no bar — one white card floats over the map with the brand ▾, the search showing the
- *  section and a list button that raises the results sheet (owner, 2026-11-26). */
-export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string; listLabel: string } }) {
+ *  section and the businesses are pins only (owner, 2026-11-26). */
+export function DirectoryQuickNav({ className, spacer, floating }: { className?: string; spacer?: boolean; floating?: { title: string } }) {
   const { directorySections } = useSiteFeatures();
   const pathname = usePathname() ?? "/";
   const locale = useLocale();
@@ -255,10 +255,6 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
           <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />
           <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? floating.title : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
-        {floating && (
-          <button type="button" data-quick-nav-list onClick={() => window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: "list" } }))} aria-label={floating.listLabel}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]"><List className="h-5 w-5" strokeWidth={2.4} aria-hidden /></button>
-        )}
       </div>
     </nav>
     </>

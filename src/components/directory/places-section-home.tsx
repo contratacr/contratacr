@@ -97,7 +97,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  return <div className="ccr-buscar-pagina flex min-h-screen flex-col bg-white" data-places-home={section}>
   <LandingNavbar forceCompactSearch mobileSearch/>
   <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden/>
-  <DirectoryQuickNav floating={{title:c.title[i],listLabel:t('Ver lista','Show list')}}/>
+  <DirectoryQuickNav floating={{title:c.title[i]}}/>
   {/* Title row: the same strip as /profesionales (accent bar · H1 · count · chips). Phones carry the title in the sheet. */}
   <div className="hidden bg-white lg:block">
    <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">
@@ -116,7 +116,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0} soloMapa={points.length>0}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
