@@ -8,6 +8,7 @@ import { HomeFeed } from "@/components/landing/home-feed";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { HomeTopRated } from "@/components/landing/home-top-rated";
+import { HomeCategories } from "@/components/landing/home-categories";
 import { HomeHeroSlides, type HeroSlide } from "@/components/landing/home-hero-slides";
 import { getSupplyCounts } from "@/lib/queries/supply";
 import { categoryGroupId, categoryImageUrl } from "@/lib/data/category-images";
@@ -175,11 +176,11 @@ export default async function HomePage({
             prueba de que ContrataCR ya tiene negocios de verdad. */}
         {/* Directory on: the best-rated professionals and companies instead of the brands strip (owner 2026-11-26). */}
         {/* Directory on (owner 2026-11-26): the best-rated professionals and companies right under the photos (instead of the
-            brands strip), then Lo más buscado (every category). Directory off: production order. */}
+            brands strip), then Categorías (like the Categorías page). Directory off: production order. */}
         {directoryOn ? (
           <>
             <Suspense fallback={null}><HomeTopRated /></Suspense>
-            <Suspense fallback={null}><ProsSection /></Suspense>
+            <Suspense fallback={null}><HomeCategories /></Suspense>
           </>
         ) : (
           <>

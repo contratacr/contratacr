@@ -3073,6 +3073,10 @@
       },
       "default": "Profesionales verificados",
       "search": "Busque profesionales o empresas"
+    },
+    "homeCategories": {
+      "title": "Categorías",
+      "all": "Ver todas las categorías"
     }
   },
   "saveStatus": {
