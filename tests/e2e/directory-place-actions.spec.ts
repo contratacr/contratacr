@@ -70,9 +70,9 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  // 2026-11-26 (owner, identity card like the professional profile): one round avatar — the first photo, else the section tile; no placeholder.
  await expect(page.locator('[data-place-header] [data-place-avatar]')).toHaveCount(1);
  await expect(page.locator('[data-place-photo-placeholder]')).toHaveCount(0);
- // One chip row like the result card (Reseñar always; Guardar/Compartir at the end); no fixed bottom bar.
+ // The card keeps its actions; «Reseñar» lives only inside Reseñas (owner 2026-11-26), not in the card; no fixed bottom bar.
  await expect(chips).toBeVisible();
- await expect(chips.locator('[data-place-write-review]')).toHaveAttribute('href','#escribir-resena');
+ await expect(chips.locator('[data-place-write-review]')).toHaveCount(0);
  await expect(page.locator('[data-place-mobile-bar]')).toHaveCount(0);
  if(!mobile)await expect(page.locator('[data-place-side-card] [data-place-side-actions]')).toBeVisible();
  // Ningún botón de acción sin destino.

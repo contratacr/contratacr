@@ -245,7 +245,6 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
 
  // ── Identity card (the classic professional profile card) ──
  const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex text-[#14b2ec]"><VerifiedSeal className="h-5 w-5 sm:h-6 sm:w-6" label={verification}/></span>:null;
- const reviewable=published&&reviews;
  const hasPhotos=photos.length>0;
  const avatarInner=hasPhotos
   // eslint-disable-next-line @next/next/no-img-element -- approved place photo (R2), painted by the server like the professional avatar
@@ -260,9 +259,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {contactActions.map((x,i)=>{const isWa=x===wa;return <ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={isWa?CONTACT_WA:i===0?CONTACT_PRIMARY:CONTACT_SECONDARY}>
    {isWa?<WhatsAppLogo className="h-5 w-5 shrink-0"/>:actionIcon(x.id,'h-5 w-5 shrink-0')}<span className="truncate">{isWa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.short}</span></ActionButton>;})}
  </div>;
- const extras=<PlaceChipRail className={CHIP_ROW} data-place-quick-actions={[reserve?.id,reviewable?'review':null,goChip?'waze maps':null,orderAction?.id,site?.id].filter(Boolean).join(' ')}>
+ const extras=<PlaceChipRail className={CHIP_ROW} data-place-quick-actions={[reserve?.id,goChip?'waze maps':null,orderAction?.id,site?.id].filter(Boolean).join(' ')}>
   {reserve&&<ActionButton action={reserve} slug={place.slug} locale={locale} className={PAGE_CHIP}><CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reservar','Reserve')}</ActionButton>}
-  {reviewable&&<a href="#escribir-resena" data-place-write-review data-place-action="review" className={PAGE_CHIP}><Star aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reseñar','Review')}</a>}
+  {/* «Reseñar» lives only inside Reseñas (owner 2026-11-26), like the professional profile. */}
   {/* Plain links (a dropdown would be clipped by the sliding row): Waze and Google Maps, phones only (the side card has «Cómo llegar» from lg). */}
   {goChip?.maps&&<a href={goChip.maps.waze} data-place-action="waze" target="_blank" rel="noopener noreferrer" className={cn(PAGE_CHIP,'lg:hidden')}><WazeIcon className="h-4 w-4 shrink-0"/>Waze</a>}
   {goChip?.maps&&<a href={goChip.maps.google} data-place-action="maps" target="_blank" rel="noopener noreferrer" className={cn(PAGE_CHIP,'lg:hidden')}><GoogleMapsIcon className="h-4 w-4 shrink-0"/>Maps</a>}
