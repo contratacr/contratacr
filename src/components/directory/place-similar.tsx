@@ -1,4 +1,4 @@
-import {ArrowRight,MapPin,Star} from 'lucide-react';
+import {MapPin,Star} from 'lucide-react';
 import {ScrollRow} from '@/components/landing/scroll-row';
 import type {PlaceSearchItem} from '@/lib/directory/search-schemas';
 import {kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
@@ -9,7 +9,7 @@ import {ratingNumber,reviewsLabel} from './biz-ui';
 /**
  * «Lugares similares cerca» (2026-11-26 redesign, Yelp «People also viewed» model): other published places of the same
  * section, nearest first (dir_search, sort=distance). A sideways rail with arrows on the title row (owner 2026-11-27, like
- * «Mejor calificados»), ending in a «Ver más» card. Each card is one
+ * «Mejor calificados»), up to the 10 nearest (owner 2026-11-27: no «Ver más» card). Each card is one
  * link with the first approved photo (or the section photo, dimmed) and only real data: rating, kind, area, distance.
  * Own hooks (data-similar-*) so page-wide place hooks keep counting only the place itself.
  */
@@ -18,7 +18,7 @@ export type SimilarPlace={item:PlaceSearchItem;photo:string|null};
 export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:SimilarPlace[];locale:string;sectionPath:string;title:string;moreHref:string|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  if(!places.length)return null;
- void sectionPath;
+ void sectionPath;void moreHref;
  return <section aria-labelledby="place-similar" data-similar-places={places.length} className="-mx-4 sm:-mx-4">
   <ScrollRow title={<h2 id="place-similar" className="pr-24 text-xl font-extrabold tracking-tight text-[#162543] sm:text-2xl">{title}</h2>} prevLabel={t('Anteriores','Previous')} nextLabel={t('Siguientes','Next')}>
    {places.map(({item,photo})=>{
@@ -43,11 +43,6 @@ export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:
       </span>
      </a>
     </li>;})}
-   {moreHref&&<li className="w-[40%] max-w-[160px] shrink-0 snap-start">
-    <a href={moreHref} className="flex h-full min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#c9dbe7] bg-[#f5fafd] p-4 text-center text-[14px] font-bold text-[#0083b0] hover:bg-[#eaf7fd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-     <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-sm"><ArrowRight className="h-5 w-5"/></span>{t('Ver más','See more')}
-    </a>
-   </li>}
   </ScrollRow>
  </section>;
 }

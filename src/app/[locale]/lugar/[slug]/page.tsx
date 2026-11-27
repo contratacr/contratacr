@@ -140,10 +140,10 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
   reviewData&&reviewData.summary.count>0&&claim.data?.id?reviewDistribution(db,claim.data.id as string):Promise.resolve(null),
   placeBrand&&placeBrand.branches>1?db.rpc('dir_brand_public',{p_slug:placeBrand.slug}):Promise.resolve(null),
   place.status==='published'&&searchVertical?db.rpc('dir_search',{p_vertical:searchVertical,p_q:null,p_filters:{},p_lat:loc?.lat??null,p_lng:loc?.lng??null,
-   p_radius_km:loc?25:null,p_sort:loc?'distance':'best_rated',p_cursor:null,p_limit:9}):Promise.resolve(null),
+   p_radius_km:loc?25:null,p_sort:loc?'distance':'best_rated',p_cursor:null,p_limit:11}):Promise.resolve(null),
  ]);
  const branches=brandFull&&!brandFull.error&&brandFull.data&&!('mergedInto' in (brandFull.data as object))?nearestBranches((brandFull.data as PublicBrand).branches,slug,place.location,4):[];
- const similar=nearby&&!nearby.error&&nearby.data?((nearby.data as DirectorySearchResult).items.filter((i):i is PlaceSearchItem=>i.kind==='place'&&i.slug!==slug)).slice(0,8):[];
+ const similar=nearby&&!nearby.error&&nearby.data?((nearby.data as DirectorySearchResult).items.filter((i):i is PlaceSearchItem=>i.kind==='place'&&i.slug!==slug)).slice(0,10):[];
  const cardExtras=branches.length||similar.length?await placeCardExtras([...branches.map(b=>b.slug),...similar.map(i=>i.slug)]):{};
  const branchExtras=cardExtras;
  const reviewNote=!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
