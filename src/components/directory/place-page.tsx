@@ -61,6 +61,7 @@ const H2=BIZ.h2;
 
 
 export type PlacePageSlots={
+ /** «Vista de la calle» (Mapillary) when the place has no photo. */streetView?:ReactNode;
  /** Owner shortcut, first in the «Información» tab. */top?:ReactNode;
  /** Reservations form, after location, hours and amenities (the «Reservar» chip jumps to it). */reservation?:ReactNode;
  /** Menu link, prices, price report, dealer/agency listings («Menú» / «Precios» tab). */offer?:ReactNode;
@@ -365,6 +366,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
       </div>
      </div>}
     </header>
+    {!hasPhotos&&slots.streetView&&<div className="mb-6">{slots.streetView}</div>}
     {contactBar}
     {published&&viewer&&<PlaceFichaMenu slug={place.slug} name={place.name} locale={locale} signedIn={viewer.signedIn} loginHref={viewer.loginHref} isManager={viewer.isManager}/>}
 
