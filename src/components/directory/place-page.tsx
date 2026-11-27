@@ -10,6 +10,7 @@ import {kindLabel,placeSectionById,reviewsOn} from '@/lib/directory/place-vertic
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
 import {PlaceMapDialog} from './place-map-dialog';
 import {PlacePhotoGallery} from './place-photo-gallery';
+import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {placeAmenities,placeCuisines,placePriceLevel} from '@/lib/directory/place-amenities';
@@ -282,7 +283,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const avatar=hasPhotos
   ?<a href="#fotos" data-place-avatar="photo" aria-label={t(`Ver las fotos de ${place.name}`,`See photos of ${place.name}`)} className={cn(avatarClass,ring,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>
    {/* eslint-disable-next-line @next/next/no-img-element -- approved place photo (R2), painted by the server like the professional avatar */}
-   <img src={photos[0]!.url} alt={photos[0]!.caption??place.name} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover"/></a>
+   <img src={placePhotoSrc(photos[0]!.url,320)} alt={photos[0]!.caption??place.name} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover"/></a>
   :null;
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
  // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom

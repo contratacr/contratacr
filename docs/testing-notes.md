@@ -128,6 +128,7 @@ Casos límite:
 
 Estado actual (rediseño de producción-profesional, más reciente prevalece):
 - [ ] Tarjeta de identidad como el perfil profesional: hero con fotos (teléfono: deslizar "1 / N", "Ver las N fotos"; desde sm mosaico); sin fotos: foto de sección con licencia libre difuminada bajo velo azul marino (nunca icono). Sin avatar si no hay foto real.
+- [ ] El avatar redondo de la ficha usa la misma ruta que la galería (`/api/fotos-lugar/<id>?s=320`): se ve también en local, no solo en producción.
 - [ ] Nombre, calificación, etiquetas, nivel de precio y estado abierto sobre el hero; línea gris "<nombre> · <dirección>" solo con dirección de calle.
 - [ ] Fila de iconos centrada (sitio web, redes, Google Maps, Waze) con el estilo del perfil profesional.
 - [ ] Pestañas (orden actual): **Menú/Precios · Reseñas · Fotos · Ubicación · Información**; abre en la primera. Sin pestaña Menú/Precios vacía cuando no hay menú ni ítem con precio.
