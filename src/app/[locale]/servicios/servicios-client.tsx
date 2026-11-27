@@ -386,10 +386,15 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
-                <Link key={id} href={rutaDeBusqueda({ categoria: id })} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
-                  <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                <Link key={id} href={rutaDeBusqueda({ categoria: id })} data-group-service-row={id} className="flex min-h-[62px] items-center gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                  {/* Owner 2026-11-26: a small icon, the same for every service of the group, instead of photos. */}
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]" aria-hidden>
+                    <mobileGroup.Icon className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="min-w-0 flex-1 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                     {getCategoryLabel(id, locale)}
                   </span>
+                  <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" aria-hidden />
                 </Link>
               ))}
             </section>
