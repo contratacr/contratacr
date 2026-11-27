@@ -29,7 +29,7 @@ const TXT = {
   allCategories: { es: "Ver todas las categorías", en: "See all categories" },
   prices: { es: "Comparar precios", en: "Compare prices" },
   events: { es: "Eventos", en: "Events" },
-  places: { es: "Lugares", en: "Places" },
+  places: { es: "Negocios", en: "Businesses" },
   categories: { es: "Categorías", en: "Categories" },
   options: { es: "{n} opciones", en: "{n} options" },
 };
@@ -173,7 +173,7 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
     <section data-home-directory aria-labelledby="ccr-home-directorio" className="bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 text-center sm:mb-8">
-          <h2 id="ccr-home-directorio" className="text-2xl font-extrabold text-[#1a2744] sm:text-3xl">{en ? "Companies" : "Empresas"}</h2>
+          <h2 id="ccr-home-directorio" className="text-2xl font-extrabold text-[#1a2744] sm:text-3xl">{en ? "Businesses" : "Negocios"}</h2>
           <p className="mx-auto mt-2 max-w-2xl text-[15px] text-[#5b6b82] sm:text-base">
             {en ? "Find restaurants, shops and services across Costa Rica: hours, photos, reviews and contact details." : "Encuentre restaurantes, comercios y servicios en todo Costa Rica: horarios, fotos, reseñas y datos de contacto."}
           </p>

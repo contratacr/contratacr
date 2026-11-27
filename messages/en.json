@@ -182,12 +182,12 @@
     "publishRequest": "Post a request",
     "findProfessionals": "Find professionals",
     "freeBadge": "Free",
-    "searchBusinesses": "Places",
-    "searchTopServices": "Most searched professionals",
-    "searchPros": "Professionals",
+    "searchBusinesses": "Businesses",
+    "searchTopServices": "Most searched services",
+    "searchPros": "Services",
     "rotatingPrefix": "Find",
     "rotatingWords": "the best professionals|the best restaurants|the best pharmacies|the best attractions|the best stores|the best auto repair|the best gas stations|the best hotels|the best parking|the best car wash|the best vets|the best supermarkets",
-    "searchSeeAllPros": "See all professionals",
+    "searchSeeAllPros": "See all services",
     "searchSeeAllPlaces": "See all categories"
   },
   "home": {
@@ -929,11 +929,11 @@
       "title": "Categories"
     },
     "dir": {
-      "tagline": "Professionals, companies and reviews in Costa Rica. Search, compare and get in touch with confidence.",
+      "tagline": "Services, businesses and reviews in Costa Rica. Search, compare and get in touch with confidence.",
       "searchTitle": "Search",
-      "companies": "Find companies",
-      "offerTitle": "For professionals and companies",
-      "company": "Add or claim my company",
+      "companies": "Find businesses",
+      "offerTitle": "For professionals and businesses",
+      "company": "Add or claim my business",
       "tools": "Tools"
     }
   },
@@ -2936,8 +2936,8 @@
       "search": "Search",
       "titular": "Find *verified*|professionals in Costa Rica.",
       "titularPc": "Find *verified* professionals|in Costa Rica.",
-      "titularLugares": "Find professionals|and *businesses* in Costa Rica.",
-      "titularLugaresPc": "Find professionals and *businesses*|in Costa Rica.",
+      "titularLugares": "Find services|and *businesses* in Costa Rica.",
+      "titularLugaresPc": "Find services and *businesses*|in Costa Rica.",
       "puertasAria": "What would you like to do",
       "puertaServicio": "Hire a service",
       "puertaLugar": "Explore categories",
@@ -2945,8 +2945,8 @@
       "intentLugar": "Explore categories",
       "botonBuscar": "Search",
       "botonPublicar": "Post a request",
-      "titularDirectorio": "Professionals, companies|and *reviews* in Costa Rica.",
-      "titularDirectorioPc": "Professionals, companies and *reviews*|in Costa Rica.",
+      "titularDirectorio": "Services, businesses|and *reviews* in Costa Rica.",
+      "titularDirectorioPc": "Services, businesses and *reviews*|in Costa Rica.",
       "slides": {
         "electricidad": {
           "titulo": "Electrical trouble?",
@@ -2982,7 +2982,7 @@
       "moreSections": "More sections",
       "titleDirectoryPre": "Most",
       "titleDirectoryHighlight": "searched",
-      "companiesTab": "Companies",
+      "companiesTab": "Businesses",
       "viewAllCategories": "See all categories"
     },
     "zones": {
@@ -2999,17 +2999,17 @@
       "geoUnsupported": "Your browser doesn't allow location. Choose your province on the map.",
       "geoFailed": "We couldn't get your location. Choose your province on the map.",
       "disclaimer": "We don't promise nationwide coverage: we only show the professionals who actually work in your area.",
-      "viewCompanies": "See companies nearby",
+      "viewCompanies": "See businesses nearby",
       "headingDirectory": "Explore by province",
       "nearMe": "Search near me",
-      "viewProsShort": "Professionals",
+      "viewProsShort": "Services",
       "viewPlaces": "Businesses",
       "placesCount": "{count, plural, one {# business} other {# businesses}}",
-      "companiesCount": "{count, plural, one {# company} other {# companies}}",
+      "companiesCount": "{count, plural, one {# business} other {# businesses}}",
       "kindLabel": "What you are looking for",
-      "kindPros": "Professionals",
-      "kindCompanies": "Companies",
-      "companiesIn": "Companies in {province}",
+      "kindPros": "Services",
+      "kindCompanies": "Businesses",
+      "companiesIn": "Businesses in {province}",
       "viewCompaniesAll": "See all categories",
       "prosCount": "{count, plural, one {# professional} other {# professionals}}"
     },
@@ -3048,11 +3048,11 @@
           "pestana": "Deals"
         },
         "empresas": {
-          "titulo": "Find companies",
+          "titulo": "Find businesses",
           "texto": "Restaurants, pharmacies, gas stations and more on the map, with hours, reviews and directions.",
-          "cta": "See companies",
-          "alt": "Companies on the ContrataCR app map",
-          "pestana": "Companies"
+          "cta": "See businesses",
+          "alt": "Businesses on the ContrataCR app map",
+          "pestana": "Businesses"
         }
       }
     },
@@ -3102,7 +3102,7 @@
         "seguridad": "Your peace of mind first"
       },
       "default": "Chosen by their reviews",
-      "search": "Search professionals or companies",
+      "search": "Search services or businesses",
       "default2": "Reviews from real customers",
       "default3": "Recommended near you",
       "places": {
@@ -4062,7 +4062,7 @@
     "activityError": "Something went wrong",
     "receivedQuotes": "Received quotes",
     "noPublicRequests": "You have not posted any public request. Need another professional?",
-    "savedCompanies": "Saved companies (My lists)"
+    "savedCompanies": "Saved businesses (My lists)"
   },
   "ProRegistrationCopy": {
     "backToLead": "Back to lead",

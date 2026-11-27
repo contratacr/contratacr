@@ -172,7 +172,7 @@
     "goToPanel": "Ir a mi panel",
     "places": "Categorías",
     "more": "Más",
-    "forBusiness": "Para empresas y profesionales",
+    "forBusiness": "Para negocios y profesionales",
     "promotions": "Promociones",
     "clientRequests": "Solicitudes de clientes",
     "requests": "Solicitudes",
@@ -182,12 +182,12 @@
     "publishRequest": "Publicar solicitud",
     "findProfessionals": "Buscar profesionales",
     "freeBadge": "Gratis",
-    "searchBusinesses": "Lugares",
-    "searchTopServices": "Profesionales más buscados",
-    "searchPros": "Profesionales",
+    "searchBusinesses": "Negocios",
+    "searchTopServices": "Servicios más buscados",
+    "searchPros": "Servicios",
     "rotatingPrefix": "Encuentre",
     "rotatingWords": "los mejores profesionales|los mejores restaurantes|las mejores farmacias|las mejores atracciones|las mejores tiendas|los mejores talleres|las mejores gasolineras|los mejores hoteles|los mejores parqueos|los mejores lavacar|las mejores veterinarias|los mejores supermercados",
-    "searchSeeAllPros": "Ver todos los profesionales",
+    "searchSeeAllPros": "Ver todos los servicios",
     "searchSeeAllPlaces": "Ver todas las categorías"
   },
   "home": {
@@ -929,11 +929,11 @@
       "title": "Categorías"
     },
     "dir": {
-      "tagline": "Profesionales, empresas y reseñas de Costa Rica. Busque, compare y contacte con confianza.",
+      "tagline": "Servicios, negocios y reseñas de Costa Rica. Busque, compare y contacte con confianza.",
       "searchTitle": "Buscar",
-      "companies": "Buscar empresas",
-      "offerTitle": "Para profesionales y empresas",
-      "company": "Agregar o reclamar mi empresa",
+      "companies": "Buscar negocios",
+      "offerTitle": "Para profesionales y negocios",
+      "company": "Agregar o reclamar mi negocio",
       "tools": "Herramientas"
     }
   },
@@ -2936,8 +2936,8 @@
       "search": "Buscar",
       "titular": "Encuentre profesionales|*verificados* en Costa Rica.",
       "titularPc": "Encuentre profesionales *verificados*|en Costa Rica.",
-      "titularLugares": "Encuentre profesionales|y *empresas* en Costa Rica.",
-      "titularLugaresPc": "Encuentre profesionales y *empresas*|en Costa Rica.",
+      "titularLugares": "Encuentre servicios|y *negocios* en Costa Rica.",
+      "titularLugaresPc": "Encuentre servicios y *negocios*|en Costa Rica.",
       "puertasAria": "Qué desea hacer",
       "puertaServicio": "Contratar un servicio",
       "puertaLugar": "Explorar categorías",
@@ -2945,8 +2945,8 @@
       "intentLugar": "Explorar categorías",
       "botonBuscar": "Buscar",
       "botonPublicar": "Publicar solicitud",
-      "titularDirectorio": "Profesionales, empresas|y *reseñas* en Costa Rica.",
-      "titularDirectorioPc": "Profesionales, empresas y *reseñas*|en Costa Rica.",
+      "titularDirectorio": "Servicios, negocios|y *reseñas* en Costa Rica.",
+      "titularDirectorioPc": "Servicios, negocios y *reseñas*|en Costa Rica.",
       "slides": {
         "electricidad": {
           "titulo": "¿Problemas con la electricidad?",
@@ -2982,7 +2982,7 @@
       "moreSections": "Más secciones",
       "titleDirectoryPre": "Lo más",
       "titleDirectoryHighlight": "buscado",
-      "companiesTab": "Empresas",
+      "companiesTab": "Negocios",
       "viewAllCategories": "Ver todas las categorías"
     },
     "zones": {
@@ -2999,17 +2999,17 @@
       "geoUnsupported": "Su navegador no permite ubicación. Elija su provincia en el mapa.",
       "geoFailed": "No pudimos obtener su ubicación. Elija su provincia en el mapa.",
       "disclaimer": "No prometemos cobertura en todo el país: le mostramos solo a los profesionales que realmente trabajan en su zona.",
-      "viewCompanies": "Ver empresas cerca",
+      "viewCompanies": "Ver negocios cerca",
       "headingDirectory": "Explore por provincia",
       "nearMe": "Buscar cerca de mí",
-      "viewProsShort": "Profesionales",
+      "viewProsShort": "Servicios",
       "viewPlaces": "Negocios",
       "placesCount": "{count, plural, one {# negocio} other {# negocios}}",
-      "companiesCount": "{count, plural, one {# empresa} other {# empresas}}",
+      "companiesCount": "{count, plural, one {# negocio} other {# negocios}}",
       "kindLabel": "Qué busca",
-      "kindPros": "Profesionales",
-      "kindCompanies": "Empresas",
-      "companiesIn": "Empresas en {province}",
+      "kindPros": "Servicios",
+      "kindCompanies": "Negocios",
+      "companiesIn": "Negocios en {province}",
       "viewCompaniesAll": "Ver todas las categorías",
       "prosCount": "{count, plural, one {# profesional} other {# profesionales}}"
     },
@@ -3048,11 +3048,11 @@
           "pestana": "Promociones"
         },
         "empresas": {
-          "titulo": "Encuentre empresas",
+          "titulo": "Encuentre negocios",
           "texto": "Restaurantes, farmacias, gasolineras y más en el mapa, con horario, reseñas y cómo llegar.",
-          "cta": "Ver empresas",
-          "alt": "Empresas en el mapa de la app de ContrataCR",
-          "pestana": "Empresas"
+          "cta": "Ver negocios",
+          "alt": "Negocios en el mapa de la app de ContrataCR",
+          "pestana": "Negocios"
         }
       }
     },
@@ -3102,7 +3102,7 @@
         "seguridad": "Su tranquilidad, primero"
       },
       "default": "Elegidos por sus reseñas",
-      "search": "Busque profesionales o empresas",
+      "search": "Busque servicios o negocios",
       "default2": "Reseñas de clientes reales",
       "default3": "Recomendados en su zona",
       "places": {
@@ -4062,7 +4062,7 @@
     "activityError": "No se pudo completar la acción",
     "receivedQuotes": "Cotizaciones recibidas",
     "noPublicRequests": "No ha publicado solicitudes. ¿Necesita otro profesional?",
-    "savedCompanies": "Empresas guardadas (Mis listas)"
+    "savedCompanies": "Negocios guardados (Mis listas)"
   },
   "ProRegistrationCopy": {
     "backToLead": "Volver a solicitud",
@@ -4092,11 +4092,11 @@
     "workPhotos": "Casos de éxito"
   },
   "businessHub": {
-    "metaTitle": "Para empresas y profesionales",
+    "metaTitle": "Para negocios y profesionales",
     "metaDescription": "Ofrezca sus servicios como profesional o reclame gratis la ficha de su negocio en ContrataCR.",
     "breadcrumbLabel": "Ruta de navegación",
     "home": "Inicio",
-    "title": "Para empresas y profesionales",
+    "title": "Para negocios y profesionales",
     "intro": "Elija cómo quiere que lo encuentren sus clientes.",
     "proTitle": "Soy profesional: ofrecer mis servicios",
     "proB1": "Perfil propio con sus servicios y su zona",

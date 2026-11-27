@@ -146,7 +146,7 @@ export function SearchEntry({ onClose, initialText = "", autoVoice = false }: { 
 
             {visits.length > 0 && (
               <section className="mt-5" data-search-visited>
-                <h2 className="mb-1 text-[16px] font-extrabold">{t("Empresas vistas recientemente", "Recently viewed companies")}</h2>
+                <h2 className="mb-1 text-[16px] font-extrabold">{t("Negocios vistos recientemente", "Recently viewed businesses")}</h2>
                 <ul>
                   {visits.map((v) => (
                     <li key={v.id}>

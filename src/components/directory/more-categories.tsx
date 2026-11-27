@@ -49,7 +49,7 @@ const CURATED: Group[] = [
 ];
 
 const MORE_IN_APP: Group = { id: "mas", label: { es: "Más en ContrataCR", en: "More on ContrataCR" }, rows: [
-  { key: "profesionales", label: { es: "Profesionales", en: "Professionals" }, icon: Users, href: "/profesionales" },
+  { key: "profesionales", label: { es: "Servicios", en: "Services" }, icon: Users, href: "/profesionales" },
   { key: "empleos", label: { es: "Empleos", en: "Jobs" }, icon: Briefcase, href: "/empleos" },
   { key: "promociones", label: { es: "Promociones", en: "Promotions" }, icon: Megaphone, href: "/promociones" },
   { key: "solicitudes", label: { es: "Solicitudes", en: "Requests" }, icon: FileText, href: "/solicitudes" },
