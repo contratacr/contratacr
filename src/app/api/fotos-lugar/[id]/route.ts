@@ -15,6 +15,7 @@ import {placePhotoStoreOf} from '@/lib/directory/place-photo-store';
 //      only while approved on a public place (an administrator with MFA also sees pending/hidden ones for the queue
 //      preview, never cached). Short public cache on purpose: a photo hidden by moderation or removed must stop being
 //      served soon, so the URL is never «immutable».
+//  GET ?meta=1 → {attribution} (author, licence, licence URL, source page) of a Commons photo, else null.
 //  POST {flagId, reason, message?} → «Reportar foto» (dir_place_photo_flag_create; device HMAC without an account).
 const idSchema=z.string().uuid();
 export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
@@ -26,6 +27,11 @@ export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
  if(!o.error&&!o.data&&await getApiAdmin()){staff=true;o=await db.rpc('dir_place_photo_object',{p_id:id,p_staff:true});}
  if(o.error)return new Response(null,{status:503});if(!o.data)return new Response(null,{status:404});
  const row=o.data as Record<string,string>,path=row['path'+size]!;
+ // ?meta=1 → credit of a freely licensed photo (Wikimedia Commons): {attribution} or {attribution:null}; the gallery shows it under the full-size photo.
+ if(new URL(req.url).searchParams.get('meta')==='1'){
+  const a=(o.data as {attribution?:Record<string,unknown>|null}).attribution,ok=!!a&&typeof a==='object';
+  return Response.json({attribution:ok?{author:a.author??null,license:a.license??null,licenseUrl:a.licenseUrl??null,sourceUrl:a.sourceUrl??null,provider:a.provider??null}:null},{headers:{'Cache-Control':'public, max-age=300, stale-while-revalidate=86400'}});
+ }
  const store=await placePhotoStoreOf(db.storage.from(PLACE_PHOTO_BUCKET),row.store);if(!store)return new Response(null,{status:503});
  let file;try{file=await store.get(path);}catch{return new Response(null,{status:503});}
  if(!file)return new Response(null,{status:404});

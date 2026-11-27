@@ -220,6 +220,7 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Atracciones reclasificadas desde tours (`dir_import_reclassify`).
 - [ ] Filtro `--inside-only`: nada fuera de las provincias (frontera).
 - [ ] Muestreo: nombres genéricos descartados; duplicados; direcciones vacías.
+- [ ] Fotos libres (docs/directory-photos.md, migraciones 540 y 541): `commons-photos.mjs` pone foto activa a lugares con etiqueta OSM `wikimedia_commons`/`image` de Commons o `wikidata` (P18), solo CC0, dominio público, CC BY y CC BY-SA, con autor y licencia guardados; `openverse-photos.mjs` solo sugiere: la foto queda **pendiente** en Admin, Fotos (con nota «Sugerida automáticamente (Openverse) — verificar que sea el lugar» y enlace a la fuente), y se publica solo si se aprueba. Probar: aprobar y rechazar una sugerida, ver su crédito, repetir el script (no duplica).
 - [ ] Términos 13.1 y `/como-ordenamos` listan las secciones nuevas y explican las sin reseñas; «Origen de los datos» enlaza © OpenStreetMap y la licencia ODbL.
 
 ## 13. Cloudflare / infra

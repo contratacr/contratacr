@@ -104,10 +104,25 @@ export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:G
    </div>
    <div className="mx-auto w-full max-w-3xl space-y-2 p-4 text-sm">
     {cur.caption&&<p>{cur.caption}</p>}
+    {placePhotoId(cur.url)&&<PhotoCredit key={'c'+cur.url} id={placePhotoId(cur.url)!} en={en}/>}
     {placePhotoId(cur.url)&&<ReportPhoto key={cur.url} id={placePhotoId(cur.url)!} en={en}/>}
    </div>
   </div>}
  </>;
+}
+
+type Credit={author:string|null;license:string|null;licenseUrl:string|null;sourceUrl:string|null;provider:string|null};
+/** Credit of a freely licensed photo (Wikimedia Commons / Openverse): «Foto: <Autor> · <Licencia> · Wikimedia Commons», linked to the source page. Nothing for uploaded photos. */
+function PhotoCredit({id,en}:{id:string;en:boolean}){
+ const [credit,setCredit]=useState<Credit|null>(null);
+ useEffect(()=>{let live=true;
+  fetch(`/api/fotos-lugar/${id}?meta=1`).then(r=>r.ok?r.json():null).then((j:{attribution?:Credit|null}|null)=>{if(live)setCredit(j?.attribution??null);}).catch(()=>{});
+  return()=>{live=false;};},[id]);
+ if(!credit||!credit.sourceUrl||!credit.license)return null;
+ const link='underline decoration-white/40 hover:text-white';
+ return <p data-photo-credit className="text-[12.5px] text-white/75">{en?'Photo':'Foto'}: {credit.author?`${credit.author} · `:''}
+  {credit.licenseUrl?<a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className={link}>{credit.license}</a>:credit.license}
+  {' · '}<a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer" className={link}>{credit.provider??'Wikimedia Commons'}</a></p>;
 }
 
 function ReportPhoto({id,en}:{id:string;en:boolean}){
