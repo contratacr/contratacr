@@ -940,7 +940,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     .map((id) => catLabel(id)).filter(Boolean).slice(0, 2);
                   return [...oficios, locationText].filter(Boolean).join(" · ") || null;
                 })()}
-                stats={(professional.reviewCount > 0 || expYears > 0 || hasCasos) ? (
+                stats={(professional.reviewCount > 0 || expYears > 0) ? (
                   <div className="flex flex-wrap items-center gap-2 text-[13px]">
                     {professional.reviewCount > 0 && (
                       <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`}
@@ -957,13 +957,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         <span className="whitespace-nowrap">{t("statYears")}</span>
                       </span>
                     )}
-                    {hasCasos && (
-                      <button type="button" onClick={() => setActiveTab("casos")}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f1f4f8] px-3 font-semibold text-[#334155] transition-colors hover:bg-[#e7ecf2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-                        <Images className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                        <span className="whitespace-nowrap">{t("tabs.casos")}</span>
-                      </button>
-                    )}
+                    {/* Like production: los casos de éxito have their own tab, not a pill up here (owner 2026-11-26). */}
                   </div>
                 ) : null}
                 menu={<MenuFicha opciones={opcionesDeLaFicha} />}
