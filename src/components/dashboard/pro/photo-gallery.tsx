@@ -21,6 +21,8 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { deleteOwnedMediaUrls } from "@/lib/client-media-cleanup";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
+import { InstagramImportButton } from "@/components/integrations/instagram-import";
+import { INSTAGRAM_IMPORT_UI_ENABLED } from "@/lib/integrations/instagram/enabled-client";
 
 // NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
 // when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
@@ -450,6 +452,21 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 )}
               </div>
               <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple className="hidden" onChange={(e) => { if (e.target.files?.length) uploadPhotos(e.target.files); e.target.value = ""; }} />
+              {/* 2026-11-27: photos of the professional's own Instagram, up to the free slots of this case (docs/instagram-import.md). */}
+              {INSTAGRAM_IMPORT_UI_ENABLED && draft.photos.length < MAX_PHOTOS_PER_CASE && (
+                <div className="mt-3">
+                  <InstagramImportButton
+                    target="portfolio"
+                    locale={locale}
+                    max={MAX_PHOTOS_PER_CASE - draft.photos.length}
+                    disabled={uploading}
+                    onImported={(r) => {
+                      setFaltanFotos(false);
+                      setDraft((d) => (d ? { ...d, photos: [...d.photos, ...r.urls.filter((u) => !d.photos.includes(u))].slice(0, MAX_PHOTOS_PER_CASE) } : d));
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div ref={tituloRef}>

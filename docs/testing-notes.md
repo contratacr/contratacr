@@ -201,6 +201,19 @@ Decisión del dueño 2026-11-26: el perfil es igual al de producción también c
 - [ ] `/api/vista-calle/<placeId>` responde 302 a la miniatura de Mapillary (caché 5 min), 404 para lugares sin vista o no publicados; nunca muestra el token; la URL se renueva después de 1 h.
 - [ ] Script `scripts/directory/mapillary-streetview.mjs`: dry run por defecto, `--apply` guarda found/none, relanzarlo omite lo revisado en 90 días; máximo 5 consultas por segundo. En test/prod requiere `wrangler secret put MAPILLARY_CLIENT_TOKEN` y el OK de Isaac.
 
+### Importar desde Instagram (2026-11-27, `docs/instagram-import.md`)
+
+Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en `next dev` se usa el simulador (sin cuenta real).
+- [ ] Dueño de un negocio: ficha → "Agregar fotos" → botón "Importar desde Instagram" (solo administradores del negocio; un cliente no lo ve).
+- [ ] Profesional: Casos de éxito → nuevo o editar caso → "Importar desde Instagram" bajo las fotos; "Elija hasta N fotos" con N = espacios libres del caso (un caso nuevo: 5). Sin espacios, el botón no aparece.
+- [ ] Simulador: "Conectar Instagram" abre una ventana "Prueba local" → "Permitir" → la ventana se cierra y aparece la cuadrícula (8 fotos; el video no sale). "Cancelar" deja la hoja en "Conectar".
+- [ ] Elegir hasta 10 (la undécima queda desactivada); "Importar seleccionadas" exige la casilla de derechos ("Son de mi propia cuenta de Instagram…"); resultado "Se agregaron N fotos." y las fotos aparecen en la ficha publicadas de inmediato.
+- [ ] Duplicados: al reabrir, las ya importadas dicen "Ya importada" y no se pueden elegir; repetir la importación de una ya importada se omite ("N fotos ya estaban importadas y se omitieron"). Si se borró la foto del negocio, o el caso no se guardó, se puede volver a importar.
+- [ ] "Desconectar Instagram" borra el token y la hoja vuelve a "Conectar su cuenta de Instagram (Empresa o Creador)".
+- [ ] Ventana emergente bloqueada: la conexión sigue en la misma pestaña y vuelve a la pantalla de origen.
+- [ ] Banderas apagadas: ningún botón de Instagram en la ficha ni en Casos de éxito; `/api/integrations/instagram/*` y `/integraciones/instagram/*` responden 404.
+- [ ] Requiere la app real de Meta (pendiente, la crea Isaac): conexión con una cuenta Empresa/Creador real, revisión de `instagram_business_basic`, vencimiento del token a los 60 días (hoy pide reconectar), carrusel (solo se importa la portada).
+
 ## 10. Registro
 
 - [ ] `/registro` con directorio encendido: la tarjeta Profesional pregunta «Profesional independiente» (formulario actual) o «Empresa o local».

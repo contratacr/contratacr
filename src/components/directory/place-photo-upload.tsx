@@ -4,6 +4,9 @@ const noSubscribe=()=>()=>{};
 import {ImagePlus,X} from 'lucide-react';
 import {PUBLIC_IMAGE_OPTIONS,prepareImageForUpload} from '@/lib/client-image-upload';
 import {makePlaceVariants} from '@/lib/client-image-variants';
+import {useRouter} from 'next/navigation';
+import {InstagramImportButton} from '@/components/integrations/instagram-import';
+import {INSTAGRAM_IMPORT_UI_ENABLED} from '@/lib/integrations/instagram/enabled-client';
 import {PLACE_PHOTO_ACCEPT,PLACE_PHOTO_BATCH,checkPhotoPick,photoReasonText} from '@/lib/directory/place-photos';
 
 /**
@@ -68,7 +71,7 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();
  // Owner 2026-11-27: everyone confirms the photos are theirs or that they have permission (Terms §10) before uploading.
- const [rights,setRights]=useState(false);const panel=useRef<HTMLDivElement>(null);
+ const [rights,setRights]=useState(false);const panel=useRef<HTMLDivElement>(null);const router=useRouter();
  useEffect(()=>{if(!openOn)return;const on=()=>{setOpen(true);setResult(null);};window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn]);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
  const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
@@ -89,6 +92,8 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
    <p className="text-sm text-slate-700">{isManager?t('Como administrador de la empresa, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
     :t('Sus fotos se revisan antes de publicarse. Suba solo fotos tomadas por usted, sin personas reconocibles ni datos privados.','Your photos are reviewed before they are published. Only upload photos you took, without recognisable people or private data.')}</p>
    <PhotoPicker files={files} onChange={setFiles} en={en} disabled={busy}/>
+   {/* 2026-11-27: managers can also bring photos from the business's own Instagram (docs/instagram-import.md). */}
+   {isManager&&INSTAGRAM_IMPORT_UI_ENABLED&&<InstagramImportButton target="place" slug={slug} locale={locale} disabled={busy} onImported={()=>router.refresh()}/>}
    <label htmlFor={captionId} className="flex flex-col gap-1 text-sm font-medium">{t('Descripción (opcional)','Caption (optional)')}
     <input id={captionId} value={caption} onChange={e=>setCaption(e.target.value)} maxLength={200} placeholder={t('Ej.: Terraza del segundo piso','E.g. Second-floor terrace')} className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]"/></label>
    <label className="flex items-start gap-2.5 text-sm text-[#334155]" data-place-photo-rights>
