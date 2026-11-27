@@ -92,11 +92,8 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  ];
  const on=(k:string)=>values[k]==='1'||values[k]==='true';
  const facets=page.ok?page.facets:null;
- const nearMe=sort==='distance'&&!!values.lat;
  const toggles:ChipToggle[]=[
-  // First chip (owner 2026-11-26): «Cerca de mí» = nearest first, with the visitor's position.
-  {key:'near-me',label:t('Cerca de mí','Near me'),href:nearMe?link({sort:undefined,lat:undefined,lng:undefined}):link({sort:'distance'}),active:nearMe,
-   needsLocation:!nearMe,locationFailed:t('Sin ubicación','No location')},
+  // «Cerca de mí» left the chips (owner 2026-11-26): it lives in the search's location field; «Más cercanos» stays in Ordenar.
   {key:'open-now',label:t('Abierto ahora','Open now'),href:link({openNow:on('openNow')?undefined:'1'}),active:on('openNow')},
   // «24 horas» left the chips (owner 2026-11-26): «Abierto ahora» already covers it.
  ];
