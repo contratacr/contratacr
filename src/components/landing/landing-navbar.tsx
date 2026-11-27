@@ -3027,7 +3027,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   );
 }
 
-/** Directory on (owner 2026-11-26): "Busque y compare profesionales", "… restaurantes"; the word rises from the centre and fades out every few seconds. */
+/** Directory on (owner 2026-11-26): "Encuentre profesionales cerca de usted", "Encuentre restaurantes…"; the word rises from the centre and fades out every few seconds. */
 function RotatingSearchHint() {
   const t = useTranslations("header");
   const words = t("rotatingWords").split("|");
@@ -3039,16 +3039,21 @@ function RotatingSearchHint() {
     return () => window.clearInterval(id);
   }, [words.length]);
   const prev = (i - 1 + words.length) % words.length;
+  // The word's box glides to the new word's width, so "cerca de usted" moves smoothly instead of jumping.
+  const inRef = useRef<HTMLSpanElement>(null);
+  const [w, setW] = useState<number | null>(null);
+  useLayoutEffect(() => { if (inRef.current) setW(inRef.current.scrollWidth); }, [i]);
   // The new word rises into place while the previous one keeps rising and fades out (both share one grid cell).
   return (
     <span className="flex min-w-0 flex-1 items-baseline gap-[0.3em] overflow-hidden whitespace-nowrap text-[15px] font-medium text-[#8f9aaa]" data-rotating-search-hint>
       <span className="shrink-0">{t("rotatingPrefix")}</span>
-      <span className="relative inline-grid min-w-0 overflow-hidden py-[2px] [&>*]:col-start-1 [&>*]:row-start-1">
+      <span className="relative inline-grid shrink-0 overflow-hidden py-[2px] [&>*]:col-start-1 [&>*]:row-start-1" style={w != null ? { width: w, transition: "width 480ms cubic-bezier(.2,.8,.2,1)" } : undefined}>
         {ticked ? (
-          <span key={`out-${i}`} aria-hidden className="truncate font-semibold text-[#162543] opacity-0 animate-[ccr-word-out_520ms_cubic-bezier(.4,0,.2,1)]">{words[prev]}</span>
+          <span key={`out-${i}`} aria-hidden className="w-max font-semibold text-[#162543] opacity-0 animate-[ccr-word-out_520ms_cubic-bezier(.4,0,.2,1)]">{words[prev]}</span>
         ) : null}
-        <span key={`in-${i}`} className="truncate font-semibold text-[#162543] animate-[ccr-word-in_520ms_cubic-bezier(.2,.8,.2,1)]">{words[i]}</span>
+        <span key={`in-${i}`} ref={inRef} className="w-max font-semibold text-[#162543] animate-[ccr-word-in_520ms_cubic-bezier(.2,.8,.2,1)]">{words[i]}</span>
       </span>
+      <span className="min-w-0 truncate">{t("rotatingSuffix")}</span>
     </span>
   );
 }

@@ -185,7 +185,8 @@
     "searchBusinesses": "Places",
     "searchTopServices": "Most searched professionals",
     "searchPros": "Professionals",
-    "rotatingPrefix": "Search and compare",
+    "rotatingPrefix": "Find",
+    "rotatingSuffix": "near you",
     "rotatingWords": "professionals|restaurants|pharmacies|attractions|stores|auto repair|gas stations|hotels|parking|car wash|vets|supermarkets",
     "searchSeeAllPros": "See all professionals",
     "searchSeeAllPlaces": "See all categories"
