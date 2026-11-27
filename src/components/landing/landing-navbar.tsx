@@ -2651,7 +2651,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           );
                         })}
                       </div>
-                      <button type="button" onClick={() => { closeNativeSearch(); router.push("/profesionales"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPros")}</button>
+                      <button type="button" data-search-see-all-services onClick={() => { closeNativeSearch(); router.push("/categorias"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPros")}</button>
                     </div>
                   )}
                   {/* Directory on (test): quick access to every business section, above the most searched services. */}
@@ -2677,7 +2677,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           );
                         })}
                       </div>
-                      <button type="button" onClick={() => { closeNativeSearch(); router.push("/categorias"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPlaces")}</button>
+                      <button type="button" data-search-see-all-businesses onClick={() => { closeNativeSearch(); window.dispatchEvent(new CustomEvent("ccr:categorias-vista", { detail: "negocios" })); router.push("/categorias?vista=negocios"); }} className="mt-2 px-2 text-[14px] font-bold text-[#009FD9]">{t("searchSeeAllPlaces")}</button>
                     </div>
                   )}
                   {!directoryOn && searchFocused && !searchQuery.trim() && (
