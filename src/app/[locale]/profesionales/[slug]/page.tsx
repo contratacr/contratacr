@@ -2,6 +2,7 @@ import { ServerContactAvailability } from "@/components/professionals/server-con
 import { getProfessionalBySlug, fichaEnCache, searchProfessionals } from "@/lib/queries/professionals";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import type { SimilarPro } from "@/components/professionals/profile-similar";
+import { PROVINCES } from "@/lib/data/cr-geography";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
 import ProfileClient from "./profile-client";
@@ -48,12 +49,16 @@ async function profesionalesSimilares(pro: NonNullable<Awaited<ReturnType<typeof
   const oficio = pro.categoryId || pro.professions?.[0];
   if (!oficio) return [];
   try {
-    // Primero el oficio principal; si no alcanza, cualquiera de sus oficios.
-    let lista = await searchProfessionals({ categoryId: oficio, sortBy: "rating" });
-    if (lista.filter((p) => p.slug !== pro.slug).length < 3 && (pro.professions?.length ?? 0) > 1) {
-      lista = await searchProfessionals({ categoryIds: pro.professions, sortBy: "rating" });
-    }
-    return lista.filter((p) => p.slug !== pro.slug).slice(0, 6).map((p) => ({
+    // Owner 2026-11-27, «Profesionales similares cerca»: same trade in the same province first (best rated), then the
+    // rest of the country, then any of their trades; up to 10.
+    const provincia = PROVINCES.find((x) => x.name === pro.provinceName)?.id;
+    const vistos = new Set([pro.slug]);
+    const lista: Awaited<ReturnType<typeof searchProfessionals>> = [];
+    const sumar = (mas: typeof lista) => { for (const p of mas) if (!vistos.has(p.slug)) { vistos.add(p.slug); lista.push(p); } };
+    if (provincia) sumar(await searchProfessionals({ categoryId: oficio, provinceId: provincia, sortBy: "rating" }));
+    if (lista.length < 10) sumar(await searchProfessionals({ categoryId: oficio, sortBy: "rating" }));
+    if (lista.length < 10 && (pro.professions?.length ?? 0) > 1) sumar(await searchProfessionals({ categoryIds: pro.professions, sortBy: "rating" }));
+    return lista.slice(0, 10).map((p) => ({
       slug: p.slug,
       name: p.businessName?.trim() || proDisplayName(p.fullName),
       avatarUrl: p.avatarUrl ?? null,
