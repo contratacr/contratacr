@@ -154,11 +154,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   <a className={MAP_APP} href={directions.waze} data-directions-app="waze" rel="noopener noreferrer" target="_blank"><WazeIcon className="h-[18px] w-[18px] shrink-0"/>Waze</a></div>;
 
 
- // Right column from lg (the professional profile's contact column: same card, sticky): the place's actions, address,
- // claim and «Sugerir un cambio». On phones the contact actions are in the identity card, so only the claim box and
- // «Sugerir un cambio» show, under the tabs and only while «Información» is open (that is where they belong).
+ // Right column from lg only (the professional profile's contact column: same card, sticky): the place's actions and
+ // address. The claim box and «Sugerir un cambio» live at the end of «Información» (owner 2026-11-27).
  const sideCard=<div className="overflow-hidden lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:shadow-sm" data-place-side-card>
-  <div className="flex flex-col gap-1.5 p-5 max-lg:hidden">
+  <div className="flex flex-col gap-1.5 p-5">
    <p className="text-[17px] font-extrabold leading-tight text-[#162543]">{t('Contacte a esta empresa','Contact this business')}</p>
    {area&&<p className="flex items-center gap-1 text-[12.5px] font-semibold text-[#5f6f86]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span className="min-w-0">{area}</span></p>}
    {priceNote&&<p data-place-price-note className="text-xl font-bold leading-tight text-[#009FD9]">{priceNote}</p>}
@@ -169,8 +168,6 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    </div>
    {address&&<p className="mt-2 text-center text-[13px] text-[#68778d]">{address}</p>}
   </div>
-  {slots.claim&&<div className="lg:border-t lg:border-[#eef2f6]">{slots.claim}</div>}
-  <div className="border-[#eef2f6] max-lg:mt-2 max-lg:px-1 lg:border-t lg:py-1.5 lg:text-center"><a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-[13.5px] ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a></div>
  </div>;
 
  // ── «Contacto» and «Ubicación» tabs ──
@@ -239,9 +236,14 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   </section>}
   {slots.events}
   {slots.branches}
+  {/* Owner 2026-11-27: «¿Es su empresa?» and «Sugerir un cambio» live only here, at the end of «Información». */}
+  {(slots.claim||published)&&<div className="space-y-2" data-place-info-end>
+   {slots.claim}
+   <a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-[13.5px] ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a>
+  </div>}
  </>;
 
- // ── Tabs (only the ones with content), in the approved order: Menú/Precios · Reseñas · Fotos · Información · Ubicación ──
+ // ── Tabs (only the ones with content), in the approved order: Menú/Precios · Reseñas · Fotos · Ubicación · Información ──
  const offerLabel=offerTabLabel(place.vertical.id,en);
  const tabs:PlaceTab[]=[
   ...(slots.offer?[{id:'offer',label:offerLabel,anchors:['precios'],content:<div className="space-y-6">{slots.offer}</div>}]:[]),
@@ -249,9 +251,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   ...(photos.length>0?[{id:'photos',label:`${t('Fotos','Photos')} (${photos.length})`,anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-32 space-y-4">
    <h2 id="place-photos" className={H2}>{t('Fotos','Photos')} <span className="font-semibold text-[#94a3b8]">{photos.length}</span></h2>
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
-  // «Información» and «Ubicación» (owner 2026-11-27); old #mas/#contacto links land in «Información».
-  {id:'info',label:t('Información','Information'),anchors:['informacion','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas'],content:infoTab},
+  // «Ubicación» then «Información» (owner 2026-11-27); old #mas/#contacto links land in «Información».
   {id:'location',label:t('Ubicación','Location'),anchors:['ubicacion','mapa'],content:locationTab},
+  {id:'info',label:t('Información','Information'),anchors:['informacion','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas'],content:infoTab},
  ];
  // Like the professional profile, the page opens on its first tab: Menú/Precios when there is one, else Reseñas, else Información.
  const defaultTab=tabs[0]!.id;
@@ -302,8 +304,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   <RecordRecentVisit surface="negocios" visita={{id:`lugar:${place.slug}`,titulo:place.name,subtitulo:[vertical,place.address.adminArea2].filter(Boolean).join(' · '),imagen:photos[0]?.url,iniciales:place.name.slice(0,2).toUpperCase(),href:`${en?'/en':''}/lugar/${place.slug}`}}/>
 
   {/* Same two columns as the professional profile: identity card + tab card | sticky contact card (from lg).
-      On phones the side card (claim, «Sugerir un cambio») follows the tabs and only shows with «Información» open. */}
-  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_352px] max-lg:[&:has([data-place-panel=info][hidden])>aside]:hidden">
+      Phones have no side card: its actions are in the card's icon row and the bottom bar. */}
+  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_352px]">
    <div className="min-w-0">
     {/* ── IDENTITY CARD: photo | name, rating, kind · zone, today's status | (lg) actions row ── */}
     <header data-place-header data-place-hero className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
@@ -353,7 +355,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     <PlaceTabs variant="card" tabs={tabs} label={t('Secciones de la empresa','Business sections')} defaultTab={defaultTab}/>
    </div>
 
-   <aside aria-label={t('Contacto y ubicación','Contact and location')} className="min-w-0">
+   <aside aria-label={t('Contacto y ubicación','Contact and location')} className="min-w-0 max-lg:hidden">
     <div className="lg:sticky lg:top-20">{sideCard}</div>
    </aside>
   </div>

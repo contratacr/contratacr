@@ -42,7 +42,9 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  if(!info.project.name.includes('mobile'))await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
  await expect(page.locator('[data-place-contact-buttons] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
- await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();
+ // 2026-11-27: the claim box and «Sugerir un cambio» sit only at the end of «Información», never in the side card.
+ await expect(page.locator('[data-place-panel="info"] [data-place-info-end] [data-place-claim-link]')).toBeVisible();
+ await expect(page.locator('[data-place-side-card] [data-place-claim-link], [data-place-side-card] [data-place-suggest]')).toHaveCount(0);
  await expect(page.locator('[data-place-mobile-bar]')).toHaveCount(0);
  await expectNoHorizontalOverflow(page);
  const robots=await page.locator('meta[name="robots"]').getAttribute('content');expect(robots).not.toContain('noindex');// indexing rule 2026-11-18 (DIR_INDEX_IMPORTED): an imported place with a phone/hours is indexable
