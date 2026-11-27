@@ -1,5 +1,5 @@
 import { test, expect, type Page } from 'playwright/test';
-import {waitForInteractivePage} from './helpers';
+import {directoryEnabled, waitForInteractivePage} from './helpers';
 
 declare global { interface Window { __searchFocusTrace: { tag: string; to: string | null }[]; } }
 const routes = [
@@ -9,7 +9,9 @@ const routes = [
  { path:'/promociones', query:'web' },
 ];
 async function openSearch(page: Page, path: string) {
- await page.goto(path);
+ // Directory on (test only, 0eb6a9582): phones open the Proyectos hub at /solicitudes; the board with this search is
+ // ?vista=comunidad. Production (off) keeps /solicitudes.
+ await page.goto(path==='/solicitudes'&&await directoryEnabled(page.request)?'/solicitudes?vista=comunidad':path);
  await waitForInteractivePage(page);
  if(path==='/profesionales') {
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ccr:open-native-search')));

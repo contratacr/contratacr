@@ -1,11 +1,14 @@
 import {test,expect} from 'playwright/test';
-import {waitForInteractivePage} from './helpers';
+import {directoryEnabled, waitForInteractivePage} from './helpers';
 
 declare global {
  interface Window { __homePaint: {title: string;card: string;animation: string;hero: string;geometry: string}[]; }
 }
 for(const path of ['/', '/en']) test(`native Inicio ${path}: cold and cached entry never hide existing services`,async({page,context,baseURL})=>{
  test.skip((page.viewportSize()?.width??1280)>=1024,'Native phone layout');
+ // Directory on (test only): the native Inicio is the feed (HomeFeed in app/[locale]/page.tsx) with no brand ribbon, so
+ // the production services/hero/ribbon trio this measures is not painted. Production (off) is still checked here.
+ test.skip(await directoryEnabled(page.request),'Directory on: native Inicio is the HomeFeed, not the services home.');
  await context.addCookies([{name:'ccr_platform',value:'native',url:baseURL!}]);
  await page.addInitScript(()=>{
   localStorage.setItem('ccr:native-first-run-onboarding:v12','1');

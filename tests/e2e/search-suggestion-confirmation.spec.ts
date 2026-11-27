@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, waitForInteractivePage } from "./helpers";
+import { directoryEnabled, gotoOK, waitForInteractivePage } from "./helpers";
 
 for (const locationFirst of [false, true]) {
   test(`second suggestion submits immediately (${locationFirst ? "location" : "service"} first)`, async ({ page }) => {
@@ -41,6 +41,12 @@ test("a recent service submits immediately with an existing location", async ({ 
   await waitForInteractivePage(page);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
   const panel = page.locator(".ccr-native-search-panel");
+  // Directory on (375d53753, owner 2026-11-26): «Recientes» lists only opened profiles and businesses, never typed searches.
+  if (await directoryEnabled(page.request)) {
+    await expect(panel.getByRole("combobox").first()).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Desarrollo web", exact: true })).toHaveCount(0);
+    return;
+  }
   await panel.getByRole("button", { name: "Desarrollo web", exact: true }).click();
   await expect(page).toHaveURL(/\/profesionales\/desarrollo-web\/alajuela/);
 });
@@ -89,7 +95,10 @@ test("a recent professional opens directly without requiring search fields", asy
   await page.evaluate(href => localStorage.setItem("ccr-recent-visits:profesionales", JSON.stringify([{id:"test-recent",titulo:"Profesional reciente",href,at:Date.now()}])), href);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
   await page.locator(".ccr-native-search-panel").getByRole("link", { name: "Profesional reciente" }).click();
-  await expect(page).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  // The profile then rewrites its own address to the short shareable one (/<slug>, since 4-oct-2026, profile-client.tsx);
+  // on a slow server that can happen before the first check, so either address of THAT profile counts.
+  const slug = new URL(href!, "http://x").pathname.split("/").pop()!;
+  await expect(page).toHaveURL(new RegExp(`(?:${href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|/${slug}(?:[?#]|$))`));
 });
 
 for (const field of ["Servicio", "Ubicación"]) {
@@ -117,7 +126,15 @@ for (const field of ["Servicio", "Ubicación"]) {
     const service = page.getByRole("combobox", { name: /^(Servicio|Servicios, restaurantes y más)$/ }).filter({ visible: true }).first();
     const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
     await service.fill(""); await location.fill("");
+    const before = page.url();
     await (field === "Servicio" ? service : location).press("Enter");
+    // Directory on (40654154b, owner 2026-11-26; production unchanged): nothing to look for and no place → no search,
+    // the cursor goes to the first field so its suggestions open.
+    if (await directoryEnabled(page.request)) {
+      await expect(service).toBeFocused();
+      expect(page.url()).toBe(before);
+      return;
+    }
     await expect(page).toHaveURL(/\/profesionales\/?$/);
     if (mobile) await expect(page.locator(".ccr-native-search-panel")).toHaveCount(0);
   });
@@ -131,6 +148,12 @@ test("a recent service alone focuses location; the second selection submits", as
   const before = page.url();
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
   const panel = page.locator(".ccr-native-search-panel");
+  // Directory on (375d53753): typed searches are not offered as recents.
+  if (await directoryEnabled(page.request)) {
+    await expect(panel.getByRole("combobox").first()).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Desarrollo web", exact: true })).toHaveCount(0);
+    return;
+  }
   await panel.getByRole("button", { name: "Desarrollo web", exact: true }).click();
   const location = panel.getByRole("combobox", { name: "Ubicación", exact: true });
   await expect(location).toBeFocused();expect(page.url()).toBe(before);

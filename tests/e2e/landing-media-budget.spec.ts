@@ -1,6 +1,6 @@
 import { build } from "esbuild";
 import { test, expect } from "playwright/test";
-import { blockThirdParty, gotoOK, loginAs, waitForInteractivePage } from "./helpers";
+import { blockThirdParty, directoryEnabled, gotoOK, loginAs, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS } from "./seed";
 
 test("service tabs request their four photos before scrolling and retain visited groups", async ({ page }) => {
@@ -162,6 +162,11 @@ test.describe("home brand motion across sessions", () => {
   async function comprobarAvanceContinuo(page: import("playwright/test").Page, sesion: string) {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
+    // Directory on (test only; testing-notes §1 «Quitado»): the home has no brand ribbon. Production keeps it moving.
+    if (await directoryEnabled(page.request)) {
+      await expect(page.locator(".featured-brands-ribbon")).toHaveCount(0);
+      return;
+    }
     const cinta = page.locator(".featured-brands-ribbon");
     await cinta.scrollIntoViewIfNeeded();
     const juegos = page.locator(".featured-brands-set");

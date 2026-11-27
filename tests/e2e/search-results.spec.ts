@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "playwright/test";
 import { getCategoryLabel } from "../../src/lib/data/categories";
-import { expectHealthyPage, expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
+import { expectHealthyPage, expectNoHorizontalOverflow, directoryEnabled, directoryPhoneSearchEntry, firstProfessionalHref, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 async function openFiltersIfNeeded(page: Page, testInfo: TestInfo) {
@@ -212,8 +212,16 @@ test.describe("@seeded search results", () => {
     await waitForInteractivePage(page);
     const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesita|What service|What do you need|Servicios, restaurantes y más|Services, restaurants and more|Servicios, restaurantes|Services, restaurants/i }).filter({ visible: true }).first();
     // En el teléfono el campo de la portada abre el buscador a pantalla
-    // completa y el cursor pasa ahí: se escribe donde quedó el foco.
-    await search.click();
+    // completa y el cursor pasa ahí: se escribe donde quedó el foco. Con el directorio encendido la portada del
+    // teléfono lleva la pastilla «Busque profesionales o lugares» (testing-notes §2) que abre la misma hoja.
+    const phoneDirectory = isMobileProject(test.info()) && await directoryEnabled(page.request);
+    if (phoneDirectory) {
+      await expect(async () => {
+        await page.getByRole("button", { name: /Busque profesionales o lugares|Search professionals or places/i }).filter({ visible: true }).first().click();
+        await expect(page.locator(".ccr-native-search-panel")).toBeVisible({ timeout: 1500 });
+      }).toPass({ timeout: 15_000 });
+      await expect(search).toBeFocused();
+    } else await search.click();
     await page.keyboard.type("plomeria");
     await page.getByRole("option").filter({ hasText: /Plomer[ií]a|Plumbing/i }).filter({ visible: true }).first().click();
     const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
@@ -250,7 +258,9 @@ test.describe("@seeded search results", () => {
     await waitForInteractivePage(page);
 
     if (isMobileProject(testInfo)) {
-      await page.getByRole("button", { name: /Qu[eé] servicio|What service|Servicios, restaurantes y más|Services, restaurants and more|Servicios, restaurantes|Services, restaurants/i }).filter({ visible: true }).first().click();
+      // Directory on: the floating search card opens the sheet (testing-notes §2); production: the header button.
+      if (await directoryEnabled(page.request)) await directoryPhoneSearchEntry(page).click();
+      else await page.getByRole("button", { name: /Qu[eé] servicio|What service|Servicios, restaurantes y más|Services, restaurants and more|Servicios, restaurantes|Services, restaurants/i }).filter({ visible: true }).first().click();
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();
       // La lista de lugares se vuelve a pintar con CADA letra: el renglón se
@@ -325,7 +335,9 @@ test.describe("@seeded search results", () => {
     await gotoOK(page, "/profesionales?categoria=aire_acondicionado&provincia=al&canton=al-al");
     await waitForInteractivePage(page);
 
-    const summary = page.getByTestId("search-context-summary");
+    // Directory on: the navbar (and its summary) steps aside for the floating search card, which carries the same
+    // service and place (testing-notes §2); production keeps the header summary.
+    const summary = await directoryEnabled(page.request) ? directoryPhoneSearchEntry(page) : page.getByTestId("search-context-summary");
     await expect(summary).toBeVisible();
     await expect(summary).toContainText(/Aire acondicionado/i);
     await expect(summary).toContainText(/Alajuela/i);
@@ -334,6 +346,7 @@ test.describe("@seeded search results", () => {
 
   test("mobile search uses spare width for the full province before shortening location", async ({ page }, testInfo) => {
     test.skip(!isMobileProject(testInfo), "Compact search header is mobile only.");
+    test.skip(await directoryEnabled(page.request), "Directory on: the compact header summary is replaced by the floating search card (testing-notes §2).");
     await gotoOK(page, "/profesionales?q=Soldadura&ubicacion=Santa%20B%C3%A1rbara%2C%20Heredia");
     await waitForInteractivePage(page);
     const summary = page.getByTestId("search-context-summary");

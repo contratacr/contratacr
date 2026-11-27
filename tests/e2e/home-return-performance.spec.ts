@@ -66,6 +66,11 @@ test('home streams its main content while coverage and service data are still pe
     '@/components/landing/home-directory-bands':`export const HomeFeaturedPlaces=()=>null;export const HomePromoBand=()=>null;`,
     '@/components/directory/app-home':`export const AppHome=()=>null;`,
     '@/components/directory/app-home-data':`export const loadTopPlaces=async()=>[];`,
+    // Directory home pieces added 2026-11-26 (hero slides, feed, Mejor calificados, Categorías): off here too.
+    '@/components/landing/home-feed':`export const HomeFeed=()=>null;`,
+    '@/components/landing/home-top-rated':`export const HomeTopRated=()=>null;`,
+    '@/components/landing/home-categories':`export const HomeCategories=()=>null;`,
+    '@/components/landing/home-hero-slides':`export const HomeHeroSlides=()=>null;`,
   };
   const names:Record<string,string>={'app-download':'AppDownloadSection','landing-navbar':'LandingNavbar','landing-hero':'LandingHero','featured-brands':'FeaturedBrands','why-contratacr':'WhyContratacr','landing-footer':'LandingFooter','fade-in-up':'FadeInUp'};
   const result=await build({stdin:{contents:`import React from 'react';import{renderToReadableStream}from'react-dom/server';import Home from './src/app/[locale]/page';export async function render(){return renderToReadableStream(await Home({params:Promise.resolve({locale:'es'}),searchParams:Promise.resolve({})}))}export function release(){globalThis.__releaseCoverage?.();globalThis.__releaseSupply?.()}`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',plugins:[{name:'boundaries',setup(b){

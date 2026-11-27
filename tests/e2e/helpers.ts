@@ -513,6 +513,15 @@ export function directoryEnabled(request: APIRequestContext) {
   return directoryFlag;
 }
 
+/**
+ * Phone search entry with the directory on (testing-notes §2, PHONE_DIRECTORY_HEADER): the home and the search/map
+ * screens show the floating card («Accesos rápidos») instead of the navbar search; its second button (after ← or the
+ * menu) carries the service and place and opens the same search sheet. Specs use it only when directoryEnabled().
+ */
+export function directoryPhoneSearchEntry(page: Page) {
+  return page.locator("[data-quick-nav] [data-ccr-menu-row]").filter({ visible: true }).first().locator(":scope > button").nth(1);
+}
+
 export function isMobileProject(testInfo: TestInfo) {
   return testInfo.project.name.toLowerCase().includes("mobile");
 }
