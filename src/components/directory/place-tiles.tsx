@@ -27,13 +27,33 @@ export function PlaceTiles({ sections, totals, locale, className, leading }: { s
   return (
     <ul data-place-tiles className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5", className)}>
       {leading}
-      {sections.map((s) => {
+      {sections.flatMap((s) => (s === "cafes" ? ["cafes:cafeterias", "cafes:bares"] : [s])).map((key) => {
+        const [s, parte] = key.split(":") as [string, string | undefined];
         const def = placeSection(s);
         if (!def) return null;
+        // Owner 2026-11-26: «Cafés y bares» shows as two tiles, Cafeterías and Bares (same section, filtered by kind).
+        if (parte) {
+          const cafe = parte === "cafeterias";
+          const href = cafe ? "/cafes?kind=cafe,coffee_shop,bakery,ice_cream" : "/cafes?kind=bar,pub";
+          const label = cafe ? (en ? "Cafés" : "Cafeterías") : (en ? "Bars" : "Bares");
+          return (
+            <li key={key}>
+              <Link href={href} prefetch={false} data-place-tile={`cafes-${parte}`} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+                {sectionPhoto(cafe ? "cafes" : "bares")
+                  // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL
+                  ? <img src={sectionPhoto(cafe ? "cafes" : "bares", 500)!} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                  : <HeroTile verticalId={def.id} className="h-20 w-full sm:h-24" iconClass="h-9 w-9 sm:h-11 sm:w-11" />}
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
+                  <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{label}</span>
+                </span>
+              </Link>
+            </li>
+          );
+        }
         const total = totals[s];
         const blurb = DIRECTORY_SECTION_BLURBS[s];
         return (
-          <li key={s}>
+          <li key={key}>
             <Link href={`/${s}`} prefetch={false} data-place-tile={s} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
               {/* A real photo of the section (owner 2026-11-26); the brand tile only where there is none. */}
               {sectionPhoto(s)

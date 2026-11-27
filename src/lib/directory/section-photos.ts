@@ -27,6 +27,7 @@ const IDS: Record<string, string> = {
   tramites: "1555848962-6e79363ec58f", // sala de sesiones de un edificio público
   educacion: "1541339907198-e08756dedf3f", // graduación, birretes al aire
   transporte: "1544620347-c4fd4a3d5957", // autobús de pasajeros
+  bares: "1514362545857-3bc16c4c7d1b", // barra de bar (la misma foto de Bartending); tarjeta "Bares" de Cafés y bares
 };
 export function sectionPhoto(section: string, width = 700): string | null {
   const id = IDS[section];
