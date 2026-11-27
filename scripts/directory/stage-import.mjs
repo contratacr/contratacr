@@ -119,6 +119,37 @@ const EDUCATION={university:'university',college:'college',school:'school',kinde
  driving_school:'driving_school',music_school:'music_school'};
 const CAFE={cafe:'cafe',bar:'bar',pub:'pub',biergarten:'bar',ice_cream:'ice_cream'};
 const CAFE_SHOP={bakery:'bakery',pastry:'bakery',confectionery:'bakery',coffee:'coffee_shop',ice_cream:'ice_cream'};
+// 2026-11-27 cleanup (owner: «A169 - DEPOSITO ADUANERO ENCASPI S.A.» under Supermercados): obvious mis-hits of the shop /
+// amenity tag, found by sampling every section. {reason, to} where to = {vertical, attributes} (moved) or null (not
+// listed). Applied first by classifyTags (future imports) and to imported places by osm-reclassify-cleanup.mjs.
+const CUSTOMS_NAME=/\b(aduan[a-z]*|almacen(es)? fiscal(es)?|almacenadora|deposito aduanero|deposito fiscal|bodega fiscal|logistic[a-z]*|logistix|terminales de)\b/;
+const PRO_ASSOCIATION=/^colegio (federado|de (medicos|abogados|ingenieros|contadores|farmaceuticos|enfermeras|licenciados|periodistas|psicologos|arquitectos|microbiologos|cirujanos|quimicos|agronomos|biologos|geologos|ciencias economicas|trabajadores sociales|profesionales))\b/;
+const HQ_NAME=/\b(oficinas? centra(l|les)|oficinas? corporativas?|sede central|planta de produccion)\b/;
+const OFFICE_BUILDING=/\b(oficentro|ofibodegas?|centro corporativo|centro empresarial|parque empresarial|torres? corporativas?|edificio de servicios complementarios)\b/;
+const FOOD_WHOLESALE=/\b(food|grocer[a-z]*|general|supermarket|beverages?|fruits?|vegetables?|abarrotes)\b/;
+export function osmMisHit(t={}){
+ const n=fold(t.name),shop=t.shop,amenity=t.amenity;
+ if(!n)return null;
+ if(shop&&(t['Tica Code']||/^tica [aht] ?[0-9]{3}\b/.test(n)||CUSTOMS_NAME.test(n)))return {reason:'customs_warehouse',to:null};
+ if(shop&&/^corporacion gasolineras?\b/.test(n))return {reason:'fuel_company_office',to:null};
+ if((shop||['restaurant','fast_food','cafe','bar','pub'].includes(amenity))&&HQ_NAME.test(n))return {reason:'company_office',to:null};
+ if(shop==='mall'&&OFFICE_BUILDING.test(n))return {reason:'office_building',to:null};
+ if(amenity==='post_office'&&!shop&&!/\bcorreos\b/.test(fold(`${t.name} ${t.operator??''} ${t.brand??''}`)))return {reason:'private_courier',to:null};
+ if(EDUCATION[amenity]&&PRO_ASSOCIATION.test(n))return {reason:'professional_association',to:null};
+ if(amenity==='marketplace'&&/^importadora\b/.test(n))return {reason:'store_not_market',to:{vertical:'retail',attributes:{kind:'department_store'}}};
+ if(shop==='wholesale'){
+  if(/\bmuebles?\b/.test(n)||/\bhomex\b/.test(n))return {reason:'wholesale_furniture',to:{vertical:'retail',attributes:{kind:'furniture'}}};
+  if(/\b(autopartes|europartes|repuestos)\b/.test(n))return {reason:'wholesale_car_parts',to:{vertical:'auto_services',attributes:{kind:'parts'}}};
+  if(t.wholesale&&!FOOD_WHOLESALE.test(fold(t.wholesale)))return {reason:'wholesale_non_food',to:null};
+ }
+ if(['supermarket','greengrocer'].includes(shop)){
+  if(/^carniceria\b/.test(n))return {reason:'butcher_not_supermarket',to:{vertical:'food_shop',attributes:{kind:'butcher'}}};
+  if(/^(bodega de )?(pescaderia|marisqueria)\b/.test(n))return {reason:'seafood_not_supermarket',to:{vertical:'food_shop',attributes:{kind:'seafood'}}};
+  if(/^bazar\b/.test(n))return {reason:'variety_store_not_supermarket',to:{vertical:'retail',attributes:{kind:'variety_store'}}};
+  if(/^agroservicios?\b/.test(n))return {reason:'farm_supply_not_supermarket',to:{vertical:'retail',attributes:{kind:'other'}}};
+ }
+ return null;
+}
 const fitKind=t=>{const sp=String(t.sport??'');
  return /yoga/.test(sp)?'yoga':/crossfit/.test(sp)?'crossfit':/pilates/.test(sp)?'pilates':/dance/.test(sp)||t.leisure==='dance'||t.amenity==='dancing_school'?'dance'
   :/martial|karate|taekwondo|judo|jiu|boxing|muay|mma/.test(sp)||t.amenity==='dojo'?'martial_arts':t.leisure==='sports_centre'&&!/fitness/.test(sp)?'sports_centre':'gym';};
@@ -138,6 +169,7 @@ const fitKind=t=>{const sp=String(t.sport??'');
 export function classifyTags(tags={}){
  const t=tags,amenity=t.amenity,shop=t.shop,tourism=t.tourism,leisure=t.leisure,hc=t.healthcare;
  if(isAdultVenue(t))return null;
+ {const mis=osmMisHit(t);if(mis)return mis.to?{vertical:mis.to.vertical,attributes:{...mis.to.attributes}}:null;}
  if(amenity==='pharmacy'||hc==='pharmacy')return {vertical:'pharmacy'};
  if(amenity==='fuel')return {vertical:'fuel'};
  if(LODGING[tourism])return {vertical:'lodging',attributes:{kind:lodgingKind(t),...(t.swimming_pool==='yes'?{pool:true}:{}),...(['wlan','yes','free'].includes(t.internet_access)?{wifi:true}:{})}};
