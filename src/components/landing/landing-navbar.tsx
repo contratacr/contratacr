@@ -1947,10 +1947,25 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             entra a este menú. Antes solo se llegaba escribiendo
                             en el buscador de la barra, así que quien no sabía
                             que ese campo llevaba a algún lado no llegaba nunca. */}
-                        <Link href="/profesionales" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
-                          <Search className="h-5 w-5 shrink-0" />
-                          {locale === "en" ? "Find professionals" : "Buscar profesionales"}
-                        </Link>
+                        {/* Directory on (owner 2026-11-26): Servicios and Negocios first, the two tabs of Categorías. */}
+                        {directoryOn ? (
+                          <>
+                            <Link href="/categorias" data-explore-servicios onClick={() => { setOpenMenu(null); window.dispatchEvent(new CustomEvent("ccr:categorias-vista", { detail: "servicios" })); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                              <Search className="h-5 w-5 shrink-0" />
+                              {locale === "en" ? "Services" : "Servicios"}
+                            </Link>
+                            <Link href="/categorias?vista=negocios" data-explore-negocios onClick={() => { setOpenMenu(null); window.dispatchEvent(new CustomEvent("ccr:categorias-vista", { detail: "negocios" })); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                              <Store className="h-5 w-5 shrink-0" />
+                              {locale === "en" ? "Businesses" : "Negocios"}
+                            </Link>
+                            <div className="my-1 border-t border-gray-100" aria-hidden />
+                          </>
+                        ) : (
+                          <Link href="/profesionales" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                            <Search className="h-5 w-5 shrink-0" />
+                            {locale === "en" ? "Find professionals" : "Buscar profesionales"}
+                          </Link>
+                        )}
                         {EMPLEOS_VISIBLE && (
                           <Link href="/empleos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                             <Briefcase className="h-5 w-5 shrink-0" />

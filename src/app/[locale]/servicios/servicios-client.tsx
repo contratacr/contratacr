@@ -208,6 +208,12 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
   const [vistaElegida, setVista] = useState<"servicios" | "negocios" | null>(null);
   const vistaDeLaUrl = useSyncExternalStore(sinSuscripcion, () => new URLSearchParams(window.location.search).get("vista"), () => null);
   const vista = vistaElegida ?? (vistaDeLaUrl === "negocios" ? "negocios" : "servicios");
+  // The navbar "Explorar" menu can switch the tab while this page is already open (same URL path, no remount).
+  useEffect(() => {
+    const cambiar = (e: Event) => { const v = (e as CustomEvent<string>).detail; if (v === "servicios" || v === "negocios") setVista(v); };
+    window.addEventListener("ccr:categorias-vista", cambiar);
+    return () => window.removeEventListener("ccr:categorias-vista", cambiar);
+  }, []);
   const conPestanas = placeSectionsShown.length > 0;
   const pestanas = (clase?: string) => conPestanas && (
     <div role="tablist" aria-label={locale === "en" ? "What are you looking for?" : "¿Qué busca?"} data-categorias-tabs className={cn("grid grid-cols-2 gap-1 rounded-full bg-[#eef2f6] p-1", clase)}>
