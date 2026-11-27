@@ -39,6 +39,8 @@ import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
 import {proMoney} from '@/lib/pro/money';
+import {placeStreetViews} from '@/lib/directory/street-view-server';
+import {PlaceStreetView} from '@/components/directory/place-street-view';
 
 // LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
 // Only published (or permanently closed) places; every pharmacy since the owner decision of 2026-11-17 (its permit
@@ -145,6 +147,11 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const similar=nearby&&!nearby.error&&nearby.data?((nearby.data as DirectorySearchResult).items.filter((i):i is PlaceSearchItem=>i.kind==='place'&&i.slug!==slug)).slice(0,10):[];
  const cardExtras=branches.length||similar.length?await placeCardExtras([...branches.map(b=>b.slug),...similar.map(i=>i.slug)]):{};
  const branchExtras=cardExtras;
+ // «Vista de la calle» (Mapillary, CC BY-SA 4.0): only when the place has no photo of its own (dir_place_street_view, 543).
+ const placeId=claim.data?.id as string|undefined;
+ const ownStreetView=!placeId||place.media.some(m=>m.kind==='photo')?null:(await placeStreetViews([placeId],db)).get(placeId)??null;
+ // Spread on purpose: PlacePage renders slots.streetView once place-page.tsx declares it (until then it is ignored).
+ const streetViewSlot=ownStreetView?{streetView:<PlaceStreetView view={ownStreetView} en={en} placeName={place.name}/>}:{};
  const reviewNote=!isServiceReviewVertical(vertical)?undefined:vertical==='banking'
   ?(en?'Reviews may only describe attention and service (punctuality, treatment, cleanliness, waiting time). They are not about rates, fees, financial products or credit decisions, and ContrataCR gives no financial advice.'
    :'Las reseñas solo pueden describir la atención y el servicio (puntualidad, trato, limpieza, tiempo de espera). No tratan sobre tasas, comisiones, productos financieros ni decisiones de crédito, y ContrataCR no da asesoría financiera.')
@@ -165,6 +172,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{
+   ...streetViewSlot,
    top:managesHere?<div data-place-manage className="flex flex-col gap-3 rounded-2xl border border-[#d7e1ea] bg-[#F7FAFC] p-4 text-[#162543] sm:flex-row sm:items-center sm:justify-between">
      <p className="text-sm">{en?'You manage this page. Update contact details, hours, menu, reservations and events for free.':'Usted administra esta ficha. Actualice gratis el contacto, el horario, el menú, las reservas y los eventos.'}</p>
      <a data-place-manage-link href={`${prefix}/dashboard/negocio`} className={cn(BIZ.primary,'shrink-0 text-sm')}>{en?'Manage this page':'Administrar esta ficha'}</a>
@@ -182,7 +190,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    questions:qa?<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>:null,
    reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
-   similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null}))}
+   similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null,streetView:cardExtras[item.slug]?.streetView??null}))}
     title={loc?(en?'Similar businesses nearby':'Negocios similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}
     moreHref={!DIRECTORY_LISTINGS_ENABLED&&(place.vertical.pathEs==='vehiculos'||place.vertical.pathEs==='inmuebles')?null:`${en?'/en':''}/${place.vertical.pathEs}`}/>:null,
   }}/></DirectoryShell>;

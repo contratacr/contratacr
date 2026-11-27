@@ -16,6 +16,7 @@ import {RESULT_CARD,ResultPhotoStrip,resultChip} from '@/components/search/resul
 import {placePriceLevel} from '@/lib/directory/place-amenities';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import type {CardExtra} from '@/lib/directory/card-extras';
+import {StreetViewThumb} from './place-street-view';
 
 /**
  * LOCAL PRO ONLY (multivertical F6): result card of a place (restaurant, fuel station, pharmacy, supermarket,
@@ -156,6 +157,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   <p className="truncate text-[12.5px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
   {/* Photos the owner or the reviewers added go right under the name (owner 2026-11-26). */}
   {photos.length>0&&<ResultPhotoStrip className="mt-1" photos={photos}/>}
+  {/* No photo of its own: the Mapillary «Vista de la calle», labelled and credited (never as the business's photo). */}
+  {photos.length===0&&extra?.streetView&&<StreetViewThumb view={extra.streetView} en={en} className="mt-1 w-full max-w-[360px]"/>}
   {rated&&<div data-place-rating><RatingLine average={Number(item.rating.average)} count={item.rating.count} en={en} compact/></div>}
   {statusText&&<PlaceStatusLine status={statusText} className="text-[12.5px]"/>}
   {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>

@@ -2,11 +2,11 @@
   "scope": "Todos los archivos TypeScript de src/app, src/components y src/hooks, controles JSX declarados, pestañas del panel y specs permanentes. No enumera cada elemento dinámico renderizado ni componentes dentro de dependencias.",
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
-    "files": 1389,
-    "controls": 6531,
+    "files": 1391,
+    "controls": 6539,
     "pages": 147,
-    "handlers": 434,
-    "components": 739,
+    "handlers": 435,
+    "components": 740,
     "hooks": 29,
     "specs": 636
   },
@@ -3076,7 +3076,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 170,
+          "line": 178,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -3084,7 +3084,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 176,
+          "line": 184,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -16085,6 +16085,26 @@
       "priority": "P1"
     },
     {
+      "file": "src/app/api/vista-calle/[placeId]/route.ts",
+      "kind": "API / handler",
+      "group": "Otros: clasificación manual pendiente",
+      "route": "/api/vista-calle/[placeId]",
+      "exports": [
+        "GET"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "controls": [],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "API + integración BD + autorización/propiedad + idempotencia; smoke solo lectura",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
       "file": "src/app/api/webhooks/brevo/route.ts",
       "kind": "API / handler",
       "group": "Correos y campañas",
@@ -26748,7 +26768,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 152,
+          "line": 153,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26756,7 +26776,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 173,
+          "line": 176,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -26764,7 +26784,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 176,
+          "line": 179,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -27498,7 +27518,23 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 118,
+          "line": 124,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{credit.licenseUrl}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 125,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{credit.sourceUrl}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 133,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>setOpen(true)}",
@@ -27506,7 +27542,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 119,
+          "line": 134,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{async e=>{e.preventDefault();if(!flagId.current)flagId.current=crypto.randomUUID();setState('sending');setError(null);\n   try{const r=await fetch(`/api/fotos-lugar/${id}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({flagId:flagId.current,reason,...(message.trim()?{message:message.trim()}:{})})});\n    const j=await r.json().catch(()=>({})) as {reason?:string};if(r.ok){setState('sent');return;}setState('idle');\n    setError(j.reason==='message_required'?t('Explique el motivo (al menos 5 caracteres).','Explain the reason (at least 5 characters).'):photoReasonText(j.reason,en));}catch{setState('idle');setError(photoReasonText('unavailable',en));}}}",
@@ -27514,7 +27550,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 124,
+          "line": 139,
           "tag": "select",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setReason(e.target.value)}",
@@ -27522,7 +27558,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 126,
+          "line": 141,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>setMessage(e.target.value)}",
@@ -27530,7 +27566,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 127,
+          "line": 142,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -28405,7 +28441,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 31,
+          "line": 34,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -28461,6 +28497,75 @@
           "label": "{en?'Open in Waze':'Abrir en Waze'}",
           "handler": "",
           "destination": "{directions.waze}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        }
+      ],
+      "testIds": [],
+      "relatedSpecs": [],
+      "directReferences": [],
+      "evidence": "Sin referencia directa detectada; no implica ausencia de cobertura E2E",
+      "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
+      "coverage": "Alcance detallado pendiente de revisión; no certificado",
+      "priority": "P1"
+    },
+    {
+      "file": "src/components/directory/place-street-view.tsx",
+      "kind": "Componente",
+      "group": "Otros: clasificación manual pendiente",
+      "route": null,
+      "exports": [
+        "StreetViewCredit",
+        "StreetViewThumb",
+        "PlaceStreetView"
+      ],
+      "methods": [],
+      "controls": [
+        {
+          "line": 28,
+          "tag": "a",
+          "label": "{en?`Image by ${view.creator} on Mapillary (opens in a new tab)`:`Imagen de ${view.creator} en Mapillary (se abre en otra pestaña)`}",
+          "handler": "",
+          "destination": "{view.pageUrl}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 29,
+          "tag": "a",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "",
+          "destination": "{LICENSE_URL}",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 64,
+          "tag": "button",
+          "label": "{t(`Ver en grande: ${alt}`,`View large: ${alt}`)}",
+          "handler": "{()=>setOpen(true)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 74,
+          "tag": "div",
+          "label": "{streetViewLabel(en)}",
+          "handler": "{e=>{if(e.target===e.currentTarget)setOpen(false);}}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 78,
+          "tag": "button",
+          "label": "{t('Cerrar (Esc)','Close (Esc)')}",
+          "handler": "{()=>setOpen(false)}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 80,
+          "tag": "div",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{e=>{if(e.target===e.currentTarget)setOpen(false);}}",
+          "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
       ],

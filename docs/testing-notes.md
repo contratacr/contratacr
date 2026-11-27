@@ -189,6 +189,10 @@ Decisión del dueño 2026-11-26: el perfil es igual al de producción también c
 - [ ] Sin Cloudflare Images (el binding `images` se quitó); `images.unoptimized`.
 - [ ] Casos: foto enorme, HEIC, foto vertical con EXIF (orientación 6 sale 1067x1600), sin red a mitad de subida, sin R2 en local (usa bucket `local-uploads`).
 - [ ] Bandera apagada: subida de portafolio de profesionales sigue funcionando (1600 px WebP + miniatura 400 px).
+- [ ] Vista de la calle (Mapillary, migración 543, `docs/directory-photos.md`): solo en lugares sin ninguna foto propia; rótulo "Vista de la calle" sobre la imagen y crédito "© <creador> · Mapillary · CC BY-SA 4.0" enlazado a la imagen en mapillary.com y a la licencia; nota "No es una foto del negocio". Tocar abre la vista grande (Esc cierra). Un lugar con foto propia nunca la muestra.
+- [ ] Vista de la calle en tarjetas de resultados y en "Negocios similares cerca": imagen con rótulo y crédito en texto (sin enlace dentro de la tarjeta).
+- [ ] `/api/vista-calle/<placeId>` responde 302 a la miniatura de Mapillary (caché 5 min), 404 para lugares sin vista o no publicados; nunca muestra el token; la URL se renueva después de 1 h.
+- [ ] Script `scripts/directory/mapillary-streetview.mjs`: dry run por defecto, `--apply` guarda found/none, relanzarlo omite lo revisado en 90 días; máximo 5 consultas por segundo. En test/prod requiere `wrangler secret put MAPILLARY_CLIENT_TOKEN` y el OK de Isaac.
 
 ## 10. Registro
 
