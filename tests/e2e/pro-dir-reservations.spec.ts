@@ -135,14 +135,15 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
   const events=(await db.from('dir_reservation_events').select('action,member_id').eq('reservation_id',rows[1]!.id).order('id')).data!;
   expect(events.map(e=>[e.action,e.member_id])).toEqual([['request',null],['confirm',proOff?null:member!.id]]);// Pro off: confirmed by the owner
 
-  // Place page capture (reservation + Q&A + «Pedir»), ES and EN, as a signed-in visitor would see it.
+  // Place page capture (reservation + «Pedir»), ES and EN, as a signed-in visitor would see it.
   for(const language of ['es','en'] as const){
    const prefix=language==='en'?'/en':'/es';
    await gotoOK(page,`${prefix}/lugar/${slug}`);
    await expect(page.locator('html')).toHaveAttribute('lang',language);
    await expect(page.locator('[data-place-reservations][data-ready]')).toBeVisible({timeout:45000});
    await expect(page.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688880101');
-   await expect(page.locator('[data-place-questions]')).toContainText('¿Tienen mesas al aire libre?');
+   // «Preguntar» left the place page (owner 2026-11-26): the questions block is no longer shown there.
+   await expect(page.locator('[data-place-questions]')).toHaveCount(0);
    await featureShots(page,`place-page-${language}`,info);
   }
   // ---------------------------------------------------------------- customer self-service (private link)

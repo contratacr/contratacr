@@ -32,7 +32,7 @@ export function ProfileHero({
   const avatar = avatarUrl ? r2Thumb(avatarUrl, 320) : null;
   const cover = coverUrl ? r2Large(coverUrl, 1280) : null;
   return (
-    <section data-pro-hero className="relative -mx-4 mb-4 max-sm:-mt-4 overflow-hidden bg-white sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:border-[#e5e9ee] sm:shadow-[0_8px_30px_rgba(22,37,67,0.06)]">
+    <div data-pro-hero className="relative -mx-4 mb-4 max-sm:-mt-4 overflow-hidden bg-white sm:mx-0 sm:mb-6 sm:rounded-2xl sm:border sm:border-[#e5e9ee] sm:shadow-[0_8px_30px_rgba(22,37,67,0.06)]">
       <div aria-hidden="true" className="relative h-28 overflow-hidden bg-[#162543] sm:h-44 lg:h-52">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element -- decorative cover, same image helper as the gallery
@@ -64,11 +64,12 @@ export function ProfileHero({
           </ImagePreviewDialog>
           {menu && <div className="hidden pb-1 lg:block">{menu}</div>}
         </div>
-        <div className="mt-3 min-w-0" data-verification-owner>{name}</div>
+        {/* Below 360 px the name keeps the same measure as the account panel (it wraps at the same word). */}
+        <div className="mt-3 min-w-0 max-[359px]:pr-8" data-verification-owner>{name}</div>
         {subtitle && <div className="mt-1 text-[13.5px] font-semibold leading-snug text-[#5f6f86] sm:text-[14px]">{subtitle}</div>}
         {stats && <div className="mt-3">{stats}</div>}
         {contact && <div className="mt-4 rounded-2xl bg-[#f5fafd] p-4 ring-1 ring-[#e3eff6] lg:hidden">{contact}</div>}
       </div>
-    </section>
+    </div>
   );
 }
