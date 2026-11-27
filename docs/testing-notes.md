@@ -107,7 +107,7 @@ Dispositivos/límites:
 - [ ] Mapa estilo Yelp: tarjeta flotante con menú de marca, buscador con la sección, botón lista/mapa que sigue la hoja; el mapa acerca/aleja al subir/bajar la hoja; barra más alta sobre el mapa y más delgada sobre la lista; "Buscar en esta zona" compacto.
 - [ ] Resultados infinitos: se cargan 20 más al deslizar (esqueleto mientras carga); los pines de lo cargado se suman al mapa sin mover la cámara; nuevo filtro reinicia.
 - [ ] Orden: "Mejor calificados" por defecto (el chip muestra el orden actual), "Más cercanos" pide ubicación, precio ordena donde hay precios. Secciones sin reseñas: "Más relevantes" por defecto.
-- [ ] Chips: hoja de Ordenar, interruptores y menú de tipo; activos en azul de marca con check; hojas de chips abren desde un portal y siguen clicables; sin botón "Filtros" ni chip de provincia.
+- [ ] Chips: hoja de Ordenar, interruptores y menú de tipo; activos en azul de marca con check; hojas de chips abren desde un portal y siguen clicables; en teléfono sin botón "Filtros" ni chip de provincia (`0bc09b683`): el rango de precio y la provincia solo se aplican desde la dirección (`?priceMax=`, `?province=`) o, en computadora, desde «Filtros».
 - [ ] Tarjeta de resultado: posición antes del nombre ("1. Soda …"), sin insignia; foto bajo el nombre; línea de estado tipo Maps; una fila de acciones (a lo más dos botones) con iconos de color de marca; marcador para guardar (sin sesión: login y vuelve).
 - [ ] Orden de acciones: Reservar (si existe), Reseñar, WhatsApp, Llamar, Waze, Maps; profesionales: WhatsApp, Reseñar, Llamar. "Sitio web" solo en tarjetas de Hospedaje y Educación.
 - [ ] Fila de acciones se desliza de lado sin pelear con el scroll de la lista; icono de Waze redondo.
@@ -127,7 +127,7 @@ Casos límite:
 ## 6. Ficha de negocio `/negocios/<slug>`
 
 Estado actual (rediseño de producción-profesional, más reciente prevalece):
-- [ ] Tarjeta de identidad como el perfil profesional: hero con fotos (teléfono: deslizar "1 / N", "Ver las N fotos"; desde sm mosaico); sin fotos: foto de sección con licencia libre difuminada bajo velo azul marino (nunca icono). Sin avatar si no hay foto real.
+- [ ] Tarjeta de identidad como el perfil profesional (sin hero ni tira de fotos desde `1df672a1f`): avatar redondo con la primera foto aprobada, que lleva a Fotos. Sin foto real: sin avatar (nunca icono, ficha de sección ni foto de stock).
 - [ ] El avatar redondo de la ficha usa la misma ruta que la galería (`/api/fotos-lugar/<id>?s=320`): se ve también en local, no solo en producción.
 - [ ] Nombre, calificación, etiquetas, nivel de precio y estado abierto sobre el hero; línea gris "<nombre> · <dirección>" solo con dirección de calle.
 - [ ] Fila de iconos centrada (sitio web, redes, Google Maps, Waze) con el estilo del perfil profesional.
@@ -141,20 +141,22 @@ Estado actual (rediseño de producción-profesional, más reciente prevalece):
 - [ ] Salir de la ficha (2026-11-27, iPhone): desde /restaurantes tocar una tarjeta → «← Volver» regresa a /restaurantes, también después de tocar enlaces internos (#fotos, #resenas) y de abrir y cerrar el mapa grande (flecha, Esc o atrás). La flecha atrás del navegador y el gesto de iOS también regresan. Abierta directo (enlace compartido): «Volver» va a la portada. Igual en el perfil profesional. (`tests/e2e/directory-back-navigation.spec.ts`)
 - [ ] Columna lateral solo en escritorio (contacto y dirección); en teléfono no hay.
 - [ ] «Negocios similares cerca»: los 10 más cercanos en carril con flechas, sin tarjeta "Ver más", sin separador.
+- [ ] «Negocios similares cerca» sin foto real: tarjeta solo de texto (sin degradado ni inicial); a menos de 100 m la distancia dice «muy cerca» (`6ac114902`).
+- [ ] Teléfono con reservas: Reservar encabeza la barra inferior y no se repite como chip en la tarjeta de identidad (desde lg el chip sí aparece) (`6ac114902`).
 - [ ] Redes sociales: `attributes.social` solo acepta el dominio propio de cada red; un "sitio web" que es realmente Facebook/Instagram se muestra como red.
 - [ ] Sin pie de página del sitio en teléfonos.
 
 Quitado:
 - [ ] «No reclamado» (los no reclamados solo tienen la caja de reclamar al final).
 - [ ] Apple Maps (tarjeta de mapa y selector de «Cómo llegar»).
-- [ ] Pestaña/botón «Preguntar» (y «Más»).
+- [ ] Pestaña/botón «Preguntar» (y «Más»). La API `/api/lugar/<slug>/preguntas`, la cola «Preguntas» de `/admin/directorio` y la moderación siguen activas (`tests/e2e/pro-dir-questions.spec.ts` las prueba por API); nada de preguntas se ve en la ficha.
 - [ ] «¿Recomienda este lugar?».
 - [ ] «Reseñar» en la tarjeta de identidad (vive solo dentro de Reseñas); chips «Waze» y «Maps» como texto; chip «Sitio web» en el hero.
 - [ ] Línea de crédito de datos y enlace de reporte al final de la página (crédito ODbL ahora en Términos, "Origen de los datos"; el mapa mantiene su atribución).
 - [ ] Pie del sitio en teléfonos; tarjeta «Ver más» en lugares similares; Guardar/Compartir/Agregar fotos sueltos en teléfono.
 
 Casos límite:
-- [ ] Sin foto: foto de sección difuminada; Fotos vacía invita a agregar (con confirmación de derechos).
+- [ ] Sin foto: sin avatar y sin foto de sección; Fotos vacía invita a agregar (con confirmación de derechos).
 - [ ] Sin teléfono ni WhatsApp: barra inferior Reseñar; sin fila Contacto vacía.
 - [ ] Secciones sin reseñas (Trámites, Educación, Transporte, Centros comerciales): sin pestaña Reseñas, sin calificación, la API responde 403 `reviews_off`; caja de reclamar promete solo responder preguntas.
 - [ ] Reservas activas, muchas sucursales (no ensanchar el teléfono), nombre y dirección largos (envolver).
@@ -198,9 +200,9 @@ Decisión del dueño 2026-11-26: el perfil es igual al de producción también c
 - [ ] Sin Cloudflare Images (el binding `images` se quitó); `images.unoptimized`.
 - [ ] Casos: foto enorme, HEIC, foto vertical con EXIF (orientación 6 sale 1067x1600), sin red a mitad de subida, sin R2 en local (usa bucket `local-uploads`).
 - [ ] Bandera apagada: subida de portafolio de profesionales sigue funcionando (1600 px WebP + miniatura 400 px).
-- [ ] Vista de la calle (Mapillary, migración 543, `docs/directory-photos.md`): solo en lugares sin ninguna foto propia; rótulo "Vista de la calle" sobre la imagen y crédito "© <creador> · Mapillary · CC BY-SA 4.0" enlazado a la imagen en mapillary.com y a la licencia; nota "No es una foto del negocio". Tocar abre la vista grande (Esc cierra). Un lugar con foto propia nunca la muestra.
+- [ ] **Apagada desde `2ab082a33` (dueño 2026-11-27: «fotos de los negocios o nada», `STREET_VIEW_ENABLED=false`):** ninguna tarjeta, negocio similar ni ficha muestra vista de la calle. Lo siguiente queda para si se vuelve a encender. Vista de la calle (Mapillary, migración 543, `docs/directory-photos.md`): solo en lugares sin ninguna foto propia; rótulo "Vista de la calle" sobre la imagen y crédito "© <creador> · Mapillary · CC BY-SA 4.0" enlazado a la imagen en mapillary.com y a la licencia; nota "No es una foto del negocio". Tocar abre la vista grande (Esc cierra). Un lugar con foto propia nunca la muestra.
 - [ ] Vista de la calle en tarjetas de resultados y en "Negocios similares cerca": imagen con rótulo y crédito en texto (sin enlace dentro de la tarjeta).
-- [ ] `/api/vista-calle/<placeId>` responde 302 a la miniatura de Mapillary (caché 5 min), 404 para lugares sin vista o no publicados; nunca muestra el token; la URL se renueva después de 1 h.
+- [ ] `/api/vista-calle/<placeId>` (la ruta sigue activa con el directorio encendido) responde 302 a la miniatura de Mapillary (caché 5 min), 404 para un id inválido, lugares sin vista o no publicados (`pro-dir-photos.spec.ts` prueba los 404); nunca muestra el token; la URL se renueva después de 1 h.
 - [ ] Script `scripts/directory/mapillary-streetview.mjs`: dry run por defecto, `--apply` guarda found/none, relanzarlo omite lo revisado en 90 días; máximo 5 consultas por segundo. En test/prod requiere `wrangler secret put MAPILLARY_CLIENT_TOKEN` y el OK de Isaac.
 
 ### Importar desde Instagram (2026-11-27, `docs/instagram-import.md`)
