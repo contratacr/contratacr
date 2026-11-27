@@ -258,10 +258,11 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
  // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom
  // (the same AccionesAlPie strip as the professional profile): WhatsApp, Llamar and Cómo llegar, only those that exist.
- // Two buttons like the professional profile: WhatsApp and Llamar; Cómo llegar fills in when one is missing (Waze and
- // Maps chips stay in the card).
- const barActions=[wa,call,go].filter((x):x is PlaceAction=>!!x).slice(0,2);
- const barLabel=(x:PlaceAction)=>x===wa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.id==='directions'?t('Cómo llegar','Directions'):x.short;
+ // Two buttons like the professional profile: WhatsApp and Llamar; Reseñar fills in when one is missing (owner
+ // 2026-11-27; Waze and Maps chips stay in the card).
+ const reviewAction=pick('review');
+ const barActions=[wa,call,reviewAction].filter((x):x is PlaceAction=>!!x).slice(0,2);
+ const barLabel=(x:PlaceAction)=>x===wa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.id==='directions'?t('Cómo llegar','Directions'):x.id==='review'?t('Reseñar','Review'):x.short;
  const contactBar=published&&barActions.length>0&&<AccionesAlPie className="lg:hidden max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-sm:shadow-[0_-8px_24px_rgba(22,37,67,0.08)] sm:mt-4">
   <div className="flex w-full gap-2" data-place-contact-buttons={barActions.map(x=>x.id).join(' ')}>
    {barActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={x===wa?BAR_WA:i===0?BAR_PRIMARY:BAR_SECONDARY}>
