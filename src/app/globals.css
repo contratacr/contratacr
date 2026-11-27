@@ -2310,23 +2310,17 @@ html.ccr-native-app.ccr-js .ccr-portada #servicios-de-la-seccion > a {
 /* El menú entra como una sola superficie: logo, cierre y opciones juntos. */
 /* Owner 2026-11-26 («sorpréndame»): the menu drops from the very top like a curtain — its bottom edge starts rounded
    and flattens as it lands —, the logo row and the X come in (the X turns), and the options fall in one after another.
-   Closing is quicker: the options fade first and the curtain goes back up. */
+   Closing: the curtain goes back up with everything still on it (fading the options first left a blank white sheet). */
 .ccr-menu-completo {
   transform: none;
   clip-path: inset(0 0 100% 0 round 0 0 48px 48px);
-  transition: clip-path 280ms cubic-bezier(0.5, 0, 0.75, 0) 60ms, visibility 0s linear 340ms;
+  transition: clip-path 300ms cubic-bezier(0.5, 0, 0.75, 0), visibility 0s linear 300ms;
   will-change: clip-path;
   backface-visibility: hidden;
 }
 .ccr-menu-completo.ccr-menu-abierto {
   clip-path: inset(0 0 0 0 round 0 0 0 0);
   transition: clip-path 560ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
-}
-.ccr-menu-completo .ccr-menu-fila-superior,
-.ccr-menu-completo .ccr-menu-cuerpo nav > *,
-.ccr-menu-completo .ccr-menu-cuerpo > *:not(nav) {
-  opacity: 0;
-  transition: opacity 120ms ease-in;
 }
 /* Open: the final state is visible even if an engine skips the animation; the animation only adds the entry. */
 .ccr-menu-completo.ccr-menu-abierto .ccr-menu-fila-superior,
