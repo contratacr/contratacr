@@ -26,6 +26,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {basename,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {phoneFromTags,whatsappFromTags} from './osm-contact.mjs';
 
 export const PART_SIZE=5000;
 const cut=(value,max)=>{const text=typeof value==='string'?value.replace(/\s+/g,' ').trim():'';return text?text.slice(0,max):undefined;};
@@ -229,7 +230,9 @@ export const GENERIC_NAMES=new Set(['restaurante','restaurant','soda','cafe','ca
  'escuela','school','colegio','liceo','kinder','kinder garden','guarderia','universidad','university','instituto','academia',
  'terminal','terminal de buses','parada','bus station','aeropuerto','aerodromo','airport','alquiler de carros','rent a car','car rental']);
 export const isGenericName=name=>!/[\p{L}]/u.test(name??'')||GENERIC_NAMES.has(fold(name));
-const phoneOf=tags=>{const raw=cut(tags.phone??tags['contact:phone'],40);if(!raw)return undefined;const first=raw.split(/[;,]/)[0].trim();return /^\+?[0-9][0-9 ()-]{6,22}$/.test(first)?first:undefined;};
+const phoneOfRaw=tags=>{const raw=cut(tags.phone??tags['contact:phone'],40);if(!raw)return undefined;const first=raw.split(/[;,]/)[0].trim();return /^\+?[0-9][0-9 ()-]{6,22}$/.test(first)?first:undefined;};
+// 2026-11-27: normalized «+506XXXXXXXX» (osm-contact.mjs: phone, contact:phone, mobile…); the raw first value stays as the fallback.
+const phoneOf=tags=>phoneFromTags(tags)??phoneOfRaw(tags);
 function centroid(geometry){
  if(!geometry)return null;
  if(geometry.type==='Point')return {lng:geometry.coordinates?.[0],lat:geometry.coordinates?.[1],precision:'exact'};
@@ -256,7 +259,10 @@ function row(ref,tags,point,allowPhone,opts={}){
   addressLine:cut(street||tags['addr:full'],300),locality:cut(tags['addr:city']??tags['addr:place'],80),
   adminArea1:cut(tags['addr:province']??tags['addr:state'],80),adminArea2:cut(tags['addr:county']??tags['addr:canton'],80),adminArea3:cut(tags['addr:district']??tags['addr:suburb'],80),
   lat:Number.isFinite(point?.lat)?Math.round(point.lat*1e6)/1e6:null,lng:Number.isFinite(point?.lng)?Math.round(point.lng*1e6)/1e6:null,locationPrecision:point?.precision??'exact',
-  phone:allowPhone?phoneOf(tags):undefined,attributes:cls.attributes&&Object.keys(cls.attributes).length?cls.attributes:undefined};
+  phone:allowPhone?phoneOf(tags):undefined,attributes:undefined};
+ // WhatsApp (2026-11-27): only a number really tagged in OSM (osm-contact.mjs) → attributes.whatsapp.
+ const whatsapp=allowPhone?whatsappFromTags(tags):undefined,attrs={...(cls.attributes??{}),...(whatsapp?{whatsapp}:{})};
+ out.attributes=Object.keys(attrs).length?attrs:undefined;
  return Object.fromEntries(Object.entries(out).filter(([,v])=>v!==undefined));
 }
 const km=(a,b)=>{const r=Math.PI/180,dl=(b.lat-a.lat)*r,dg=(b.lng-a.lng)*r,x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dg/2)**2;return 2*6371.0088*Math.asin(Math.min(1,Math.sqrt(x)));};
