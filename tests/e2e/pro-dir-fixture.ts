@@ -169,3 +169,21 @@ export async function openPlaceTab(page:Page,id:'info'|'location'|'offer'|'revie
   await expect(tab).toHaveAttribute('aria-selected','true',{timeout:1000});
  }).toPass({timeout:30000});
 }
+
+/**
+ * The shared `next dev` (other people edit files while this runs) pushes rebuilds over its HMR socket, and a rebuild of a
+ * module on this page reloads it, which would drop the open sheet. The socket stays connected (hydration needs it), but
+ * rebuild/reload notices after the first sync are not passed to the page. A production build has no such socket.
+ * Also: the first request of a not-yet-compiled route (e.g. a 404 page) makes `next dev` push a new sync hash to every
+ * open page, which reloads them and drops their client state. Dev-only isolation (no effect on a production build).
+ */
+export async function quietDevReloads(context:BrowserContext){
+ await context.routeWebSocket(/\/_next\/(webpack-)?hmr/,ws=>{
+  const server=ws.connectToServer();let synced=false;
+  server.onMessage(m=>{let type='';try{type=String(JSON.parse(String(m)).type??'');}catch{}
+   if(type==='sync'){if(synced)return;synced=true;}
+   if(['building','built','serverComponentChanges','reloadPage','serverOnlyChanges','addedPage','removedPage','devPagesManifestUpdate'].includes(type))return;
+   ws.send(m);});
+  ws.onMessage(m=>server.send(m));
+ });
+}

@@ -54,9 +54,10 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
 
  const q=encodeURIComponent(`Soda Horario ${tag}`);
  await gotoOK(page,`${prefix}/restaurantes?q=${q}`);
- await expect(page.locator(`[data-search-item="p:${open247}"] [data-open="24h"]`)).toBeVisible();
- await expect(page.locator(`[data-search-item="p:${openNow}"] [data-open="now"]`)).toBeVisible();
- await expect(page.locator(`[data-search-item="p:${closed}"] [data-open="closed"]`)).toBeVisible();
+ // ae761fd7f (2026-11-26): result cards use the place page's Maps-like status line (PlaceStatusLine, data-open open|closed).
+ await expect(page.locator(`[data-search-item="p:${open247}"] [data-open="open"]`)).toHaveText(t('Abierto 24 horas','Open 24 hours'));
+ await expect(page.locator(`[data-search-item="p:${openNow}"] [data-open="open"]`)).toContainText(t('Abierto · cierra a las ','Open · closes at '));
+ await expect(page.locator(`[data-search-item="p:${closed}"] [data-open="closed"]`)).toContainText(t('Cerrado · abre ','Closed · opens '));
  await gotoOK(page,`${prefix}/restaurantes?q=${q}&openNow=1`);
  await expect(page.locator(`[data-search-item="p:${open247}"]`)).toBeVisible();
  await expect(page.locator(`[data-search-item="p:${openNow}"]`)).toBeVisible();

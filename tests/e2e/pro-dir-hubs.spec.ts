@@ -1,3 +1,4 @@
+import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 import { test, expect } from "playwright/test";
 import { expectNoHorizontalOverflow, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 import { dirDb, hideSeededPlaces, label, seedPlace } from "./pro-dir-fixture";
@@ -47,13 +48,18 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
   // Two tabs (owner 2026-11-26): "Servicios" is open first with the professional groups; "Negocios" shows the business tiles, once each.
   await expect(page.getByTestId("services-group-option").first()).toBeVisible();
-  await page.locator("[data-categorias-tab=negocios]").filter({ visible: true }).click();
-  await expect(page.locator("[data-categorias-tab=negocios]").filter({ visible: true })).toHaveAttribute("aria-selected", "true");
+  // The server-rendered tabs are visible before /categorias hydrates (its chunk loads after the link click): retry the click.
+  const negocios = page.locator("[data-categorias-tab=negocios]").filter({ visible: true });
+  await expect(async () => {
+    await negocios.click();
+    await expect(negocios).toHaveAttribute("aria-selected", "true", { timeout: 1500 });
+  }).toPass({ timeout: 30000 });
   const tiles = page.locator("[data-place-tiles] [data-place-tile]");
   // The page renders a mobile and a desktop tree; only the one for this viewport is visible.
   await expect(tiles.filter({ visible: true }).first()).toBeVisible();
   for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).filter({ visible: true }).count(), section).toBeLessThanOrEqual(1);
-  for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+(?:-[a-z]+)*$/);
+  // c7c8479b4 (2026-11-26): «Cafés y bares» is two tiles, Cafeterías and Bares, the same section filtered by kind.
+  for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+(?:-[a-z]+)*(?:\?kind=[a-z_]+(?:,[a-z_]+)*)?$/);
   await expect(page.locator("[data-nav-directory-section]")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });
@@ -81,10 +87,16 @@ test("quick links row under the navbar: sections, Profesionales and Más, active
   await expectNoHorizontalOverflow(page);
 });
 
-test("quick links row on phones: Profesionales, Restaurantes, Gasolineras, Farmacias and Más, without widening the page", async ({ page }, testInfo) => {
+test("quick links row on phones: none with the production navbar; with PHONE_DIRECTORY_HEADER Profesionales, Restaurantes, Gasolineras, Farmacias and Más", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "Mobile only");
   await gotoOK(page, "/");
   const row = page.locator("[data-quick-nav]").filter({ visible: true });
+  // 89804ad79 (owner 2026-11-26): phones show the production navbar; the quick links row comes back only with PHONE_DIRECTORY_HEADER.
+  if (!PHONE_DIRECTORY_HEADER) {
+    await expect(row).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+    return;
+  }
   await expect(row).toHaveCount(1);
   const keys = await row.locator("[data-quick-nav-link]").evaluateAll((links) => links.map((l) => l.getAttribute("data-quick-nav-link")));
   expect(keys).toEqual(["pros", "restaurantes", "gasolineras", "farmacias", "more"]);

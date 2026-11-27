@@ -38,8 +38,8 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   await claimByEmail(context,slug);await context.setExtraHTTPHeaders(randomIp());
   // Owner: «Agregar fotos» → published at once.
   await gotoOK(page,`/negocios/${slug}`);
-  // 2026-11-27 (owner): no photos → no avatar at all (never a section tile or a stock photo).
-  await expect(page.locator('[data-place-header] [data-place-avatar]')).toHaveCount(0);await expect(page.locator('[data-place-photo-strip]')).toHaveCount(0);
+  // 2026-11-27 (owner, «si no [hay foto] el ícono mejorado»): no photos → the round avatar is the section's improved icon, never a stock photo.
+  await expect(page.locator('[data-place-header] [data-place-avatar="section"]')).toHaveCount(1);await expect(page.locator('[data-place-photo-strip]')).toHaveCount(0);
   await upload(page,{name:'terraza.jpg',buffer:await jpeg('#2a9d8f')},'Terraza al atardecer');
   await expect(page.locator('[data-place-photo-result]')).toContainText('Se publicó 1 foto');
   await expectNoHorizontalOverflow(page);
@@ -70,7 +70,9 @@ test('place photos: owner publishes, customer pending → staff approves → vis
    // «Vista de la calle» redirect (owner of /api/vista-calle/[placeId]): a bad id or a place without a street view → 404.
    expect((await a.request.get('/api/vista-calle/no-es-un-id')).status()).toBe(404);
    expect((await a.request.get(`/api/vista-calle/${placeId}`,{maxRedirects:0})).status()).toBe(404);
-   await gotoOK(a,`/negocios/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);await expect(a.locator('[data-place-strip-thumb]')).toHaveCount(1);
+   await gotoOK(a,`/negocios/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);
+   // 1df672a1f (2026-11-26) dropped the photo hero/strip: the header shows the approved photo as the round avatar only.
+   await expect(a.locator('[data-place-header] [data-place-avatar="photo"]')).toHaveCount(1);await expect(a.locator('[data-place-strip-thumb]')).toHaveCount(0);
 
    // Staff approve (the admin queue lists it as pending) → visible.
    const queue=(await db.rpc('dir_admin_photo_queue',{p_filter:'pending',p_limit:200})).data as {id:string;slug:string}[];
@@ -84,6 +86,8 @@ test('place photos: owner publishes, customer pending → staff approves → vis
     const prefix=language==='en'?'/en':'';
     await gotoOK(a,`${prefix}/negocios/${slug}`);await openPlaceTab(a,'photos');
     const thumbs=a.locator('[data-place-photo-thumb]');await expect(thumbs).toHaveCount(2);
+    // 2+ photos: the production professional's «Casos de éxito» cards (owner 2026-11-27).
+    await expect(a.locator('[data-place-gallery][data-place-photo-cases]')).toBeVisible();
     await expect(a.locator('[data-hero-tile]')).toHaveCount(0);
     const alts=await a.locator('[data-place-gallery] img').evaluateAll(n=>n.map(i=>(i as HTMLImageElement).alt));
     expect(alts.sort()).toEqual(['Terraza al atardecer',language==='en'?`Photo 2 of ${name}`:`Foto 2 de ${name}`].sort());

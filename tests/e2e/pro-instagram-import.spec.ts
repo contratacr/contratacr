@@ -1,8 +1,8 @@
-import {test,expect,type BrowserContext,type Page} from 'playwright/test';
+import {test,expect,type Page} from 'playwright/test';
 import {mkdirSync} from 'node:fs';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,ownerFixture} from './pro-round2-fixture';
-import {claimByEmail,hideSeededPlaces,label,seedPlace} from './pro-dir-fixture';
+import {claimByEmail,hideSeededPlaces,label,quietDevReloads,seedPlace} from './pro-dir-fixture';
 
 // "Importar desde Instagram" (2026-11-27, docs/instagram-import.md), SANDBOX adapter of `next dev` (no Meta app exists):
 // the owner of a claimed place connects in the fake Instagram window, sees the account's photos (no video), imports 3 →
@@ -14,21 +14,6 @@ test.use({viewport:{width:390,height:844}});
 const shots=process.env.INSTAGRAM_SHOTS==='1'?'tmp/instagram':null;
 const shot=async(page:Page,name:string)=>{if(!shots)return;mkdirSync(shots,{recursive:true});await page.screenshot({path:`${shots}/${name}.png`});};
 
-/**
- * The shared `next dev` (other people edit files while this runs) pushes rebuilds over its HMR socket, and a rebuild of a
- * module on this page reloads it, which would drop the open sheet. The socket stays connected (hydration needs it), but
- * rebuild/reload notices after the first sync are not passed to the page. A production build has no such socket.
- */
-async function quietDevReloads(context:BrowserContext){
- await context.routeWebSocket(/\/_next\/(webpack-)?hmr/,ws=>{
-  const server=ws.connectToServer();let synced=false;
-  server.onMessage(m=>{let type='';try{type=String(JSON.parse(String(m)).type??'');}catch{}
-   if(type==='sync'){if(synced)return;synced=true;}
-   if(['building','built','serverComponentChanges','reloadPage','serverOnlyChanges','addedPage','removedPage','devPagesManifestUpdate'].includes(type))return;
-   ws.send(m);});
-  ws.onMessage(m=>server.send(m));
- });
-}
 /** `next dev` compiles a route on its first request: compile them all before any UI. */
 async function warm(page:Page){
  await quietDevReloads(page.context());

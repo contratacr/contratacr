@@ -21,7 +21,7 @@ test.afterEach(()=>hideSeededPlaces());
 
 for(const language of ['es','en'] as const)test(`F6: section pages, filters and pharmacy licence status [${language}]`,async({page},info)=>{
  test.setTimeout(300000);local(info.project.use.baseURL);
- const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page);
+ const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page),phone=(page.viewportSize()?.width??1280)<1024;
  const names:Record<string,string>={};
  for(const [section,vertical] of SECTIONS){
   names[section]=`E2E ${section} ${tag}`;
@@ -36,8 +36,9 @@ for(const language of ['es','en'] as const)test(`F6: section pages, filters and 
   await expect(page.locator(`[data-places-home="${section}"]`)).not.toContainText(en?'never depends on payment':'nunca depende de pagos');
   await expect(page.locator('[data-unverified-notice]')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
-  await openFilters(page);
-  await expect(page.locator('form[role="search"]')).toBeVisible();
+  // 0bc09b683 (owner 2026-11-26): phones have no «Filtros» button (the location lives in the search); computers keep it.
+  if(phone)await expect(page.locator('[data-dir-filters-button]').filter({visible:true})).toHaveCount(0);
+  else{await openFilters(page);await expect(page.locator('form[role="search"]')).toBeVisible();}
  }
  // Owner decision 2026-11-17: every pharmacy is shown. Without a verified licence: a neutral note; verified: the badge.
  await gotoOK(page,`${prefix}/farmacias?q=${encodeURIComponent('E2E farmacia sin permiso '+tag)}`);
@@ -47,11 +48,14 @@ for(const language of ['es','en'] as const)test(`F6: section pages, filters and 
  await gotoOK(page,`${prefix}/farmacias?q=${encodeURIComponent(names.farmacias!)}&province=Heredia`);
  await expect(page.locator(`[data-search-item="p:e2e-farmacias-${tag}"] [data-pharmacy-license="verified"]`)).toHaveText(en?'Operating license verified':'Permiso de funcionamiento verificado');
  // Filters are a plain GET form: choosing another province empties the result.
- await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(names.restaurantes!)}`);
- await openFilters(page);
- await page.locator('form[role="search"]').getByLabel(en?'Province':'Provincia').fill('Limón');
- await page.getByRole('button',{name:en?'Apply filters':'Aplicar filtros'}).click();
- await expect(page).toHaveURL(/province=Lim/);
+ if(phone)await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(names.restaurantes!)}&province=${encodeURIComponent('Limón')}`);
+ else{
+  await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(names.restaurantes!)}`);
+  await openFilters(page);
+  await page.locator('form[role="search"]').getByLabel(en?'Province':'Provincia').fill('Limón');
+  await page.getByRole('button',{name:en?'Apply filters':'Aplicar filtros'}).click();
+  await expect(page).toHaveURL(/province=Lim/);
+ }
  await expect(page.locator(`[data-search-item="p:e2e-restaurantes-${tag}"]`)).toHaveCount(0);
  await expect(page.getByRole('status')).toContainText(en?'No results':'No encontramos resultados');
  // Invalid filters answer with a message, never an error page.

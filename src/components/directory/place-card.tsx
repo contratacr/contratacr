@@ -8,6 +8,7 @@ import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {mapLinks} from '@/lib/directory/place-actions';
 import {WhatsAppLogo} from '@/components/ui/whatsapp-logo';
 import {GoogleMapsIcon,WazeIcon} from '@/components/ui/nav-app-icons';
+import {CardDirections} from './card-directions';
 import {resolvePlaceAction} from '@/lib/directory/place-actions';
 import {PlaceSaveBookmark} from './place-save-bookmark';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
@@ -142,7 +143,7 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  ];
  const byId=(id:string)=>actions.find(x=>x.id===id);
  const contact=byId('whatsapp')?{...byId('whatsapp')!,label:t('Contactar por WhatsApp','Contact on WhatsApp')}:byId('call');
- const second=byId('reserve')??(maps?{id:'maps',label:t('Cómo llegar','Directions'),href:maps.google,icon:<Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}:undefined);
+ const second=byId('reserve')??(maps?{id:'directions',label:t('Cómo llegar','Directions'),href:maps.google,icon:<Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}:undefined);
  const cardButtons=[contact,second].filter((x):x is NonNullable<typeof x>=>!!x);
  const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
@@ -171,9 +172,10 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   {item.price&&<PlacePriceLine price={item.price} en={en}/>}
   {/* Same buttons as the professional cards in production (owner 2026-11-26): full-width pills, one above the other,
       at most two. First the way to contact (WhatsApp in its green, else Llamar in ContrataCR blue), then Reservar
-      or Cómo llegar in white. Reseñar, Waze and the website stay on the place page. */}
+      or Cómo llegar in white (2026-11-27: it opens a small sheet — Ver en el mapa, Waze, Google Maps). Reseñar and the
+      website stay on the place page. */}
   {cardButtons.length>0&&<div className="relative z-10 mt-2 grid grid-cols-1 gap-2" data-place-quick-actions={cardButtons.map(a=>a.id).join(' ')}>
-   {cardButtons.map((a,i)=><a key={a.id} href={a.href} data-place-action={a.id} className={`relative z-10 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] ${i>0?CARD_SECONDARY:a.id==='whatsapp'?'ccr-boton-whatsapp text-white':'bg-[#009FD9] text-white hover:bg-[#0089bb]'}`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
+   {cardButtons.map((a,i)=>a.id==='directions'&&maps?<CardDirections key={a.id} id={item.slug} name={item.name} maps={maps} en={en} className={`relative z-10 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] ${i>0?CARD_SECONDARY:'bg-[#009FD9] text-white hover:bg-[#0089bb]'}`}/>:<a key={a.id} href={a.href} data-place-action={a.id} className={`relative z-10 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] ${i>0?CARD_SECONDARY:a.id==='whatsapp'?'ccr-boton-whatsapp text-white':'bg-[#009FD9] text-white hover:bg-[#0089bb]'}`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
   </div>}
   {/* Whole card → the place page (stretched low-z overlay); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>

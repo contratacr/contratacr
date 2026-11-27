@@ -13,6 +13,16 @@ async function openFilters(page:import('playwright/test').Page){const form=page.
  await expect(async()=>{if(!(await form.isVisible()))await b.click();await expect(form).toBeVisible({timeout:1500});}).toPass({timeout:30000});}
 
 
+// 0bc09b683 (owner 2026-11-26): phones have no «Filtros» drawer (only Ordenar, toggles and the type menu); the price range
+// still works as a plain GET parameter, so on phones the same filter is applied through the address.
+const isPhone=(page:import('playwright/test').Page)=>(page.viewportSize()?.width??1280)<1024;
+async function applyPriceMax(page:import('playwright/test').Page,max:string,submit:string){
+ if(isPhone(page)){const u=new URL(page.url());u.searchParams.set('priceMax',max);await gotoOK(page,u.pathname+u.search);return;}
+ await openFilters(page);const form=page.locator('form[role="search"]');
+ await form.getByLabel(/Precio máximo \(₡\)|Maximum price \(₡\)/).fill(max);
+ await Promise.all([page.waitForURL(new RegExp('priceMax='+max)),form.getByRole('button',{name:submit}).click()]);
+}
+
 // Owner decision 2026-11-17 (LOCAL Pro): «farmacias quiero mostrar todo y en todo donde aplique filtrar precios, solo
 // gasolineras no porque todo es igual».
 // - /restaurantes: ₡ range + price sorts on the menu's typical price (median dish, IVA + service included); restaurants
@@ -63,10 +73,8 @@ for(const language of ['es','en'] as const)test(`2026-11-17: restaurant price fi
  await gotoOK(page,`${prefix}/restaurantes?q=${q}&sort=price_desc`);
  expect(await keys(page)).toEqual([`p:soda-precio-b-${tag}`,`p:soda-precio-a-${tag}`,`p:soda-precio-c-${tag}`]);
  // The range from the plain GET form drops the places outside it, including the one without a menu.
- await openFilters(page);const form=page.locator('form[role="search"]');
- await expect(form.locator('[data-price-filters="menu"]')).toBeVisible();
- await form.getByLabel(t('Precio máximo (₡)','Maximum price (₡)')).fill('8000');
- await Promise.all([page.waitForURL(/priceMax=8000/),form.getByRole('button',{name:t('Aplicar filtros','Apply filters')}).click()]);
+ if(!isPhone(page)){await openFilters(page);await expect(page.locator('form[role="search"] [data-price-filters="menu"]')).toBeVisible();}
+ await applyPriceMax(page,'8000',t('Aplicar filtros','Apply filters'));
  expect(await keys(page)).toEqual([`p:soda-precio-a-${tag}`]);
  await expectNoHorizontalOverflow(page);
  if(info.project.name==='chromium-desktop'){await gotoOK(page,`${prefix}/restaurantes?q=${q}&sort=price_asc`);await shot(page,`restaurantes-precio-${language}`,1440);await shot(page,`restaurantes-precio-${language}`,390);}
@@ -90,9 +98,7 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
   await expect(norte).toContainText(t('dato del','as of'));
   // The out-of-date ₡900 never counts as a current price.
   await expect(page.locator(`[data-search-item="p:${seed.places.viejo}"] [data-place-price]`)).toHaveCount(0);
-  await openFilters(page);const form=page.locator('form[role="search"]');
-  await form.getByLabel(t('Precio máximo (₡)','Maximum price (₡)')).fill('1200');
-  await Promise.all([page.waitForURL(/priceMax=1200/),form.getByRole('button',{name:t('Aplicar filtros','Apply filters')}).click()]);
+  await applyPriceMax(page,'1200',t('Aplicar filtros','Apply filters'));
   expect(await keys(page)).toEqual([`p:${seed.places.norte}`]);
   if(info.project.name==='chromium-desktop'){await shot(page,`supermercados-producto-${language}`,1440);await shot(page,`supermercados-producto-${language}`,390);}
 
@@ -100,7 +106,7 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
   await gotoOK(page,`${prefix}/farmacias`);
   // 2026-11-19: no hint paragraph on the screen; the drawer offers the product field instead of the range inputs.
   await expect(page.locator('[data-price-filters-hint]')).toHaveCount(0);
-  await openFilters(page);await expect(page.locator('form[role="search"] input[name="product"]')).toBeVisible();
+  if(!isPhone(page)){await openFilters(page);await expect(page.locator('form[role="search"] input[name="product"]')).toBeVisible();}
   await expect(page.locator('form[role="search"] input[name="priceMin"]')).toHaveCount(0);
   await expect(page.locator('select[name="sort"] option[value="price_asc"]')).toHaveCount(0);
   await gotoOK(page,`${prefix}/farmacias?priceMax=900`);

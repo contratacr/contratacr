@@ -28,7 +28,7 @@ test.afterEach(()=>hideSeededPlaces());
 
 for(const language of ['es','en'] as const)test(`new sections: listings, type chips, kind labels and price modes [${language}]`,async({page},info)=>{
  test.setTimeout(420000);local(info.project.use.baseURL);
- const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page);
+ const en=language==='en',prefix=en?'/en':'',db=dirDb(),tag=label(),errors=collectPageErrors(page),phone=(page.viewportSize()?.width??1280)<1024;
  const healthOn=await healthEnabled(page);
  if(!healthOn)expect((await page.request.get(`${origin}${prefix}/salud`,{maxRedirects:0})).status(),'health listing while DIR_HEALTH_ENABLED is off').toBe(404);
  for(const s of PLACE_SECTIONS.filter(x=>x.added&&(healthOn||x.section!=='salud'))){
@@ -40,13 +40,17 @@ for(const language of ['es','en'] as const)test(`new sections: listings, type ch
   const tipo=page.locator('[data-chip-menu="kind"] > button').filter({visible:true});
   if(await tipo.count()){await expect(async()=>{if((await tipo.getAttribute('aria-expanded'))!=='true')await tipo.click();
    await expect(page.locator(`[data-chip="kind-${kind.value}"]`)).toBeVisible({timeout:1500});}).toPass({timeout:30000});await page.keyboard.press('Escape');}
-  await openFilters(page);
-  await expect(page.locator('form[role="search"]')).toBeVisible();
-  await expect(page.locator(`form[role="search"] select[name="kind"] option[value="${kind.value}"]`)).toHaveCount(1);
+  // 0bc09b683 (owner 2026-11-26): phones have no «Filtros» drawer (Ordenar, toggles and the «Tipo» menu only); the drawer
+  // with the kind field and the price range is checked on computers.
+  if(!phone){
+   await openFilters(page);
+   await expect(page.locator('form[role="search"]')).toBeVisible();
+   await expect(page.locator(`form[role="search"] select[name="kind"] option[value="${kind.value}"]`)).toHaveCount(1);
+  }else await expect(page.locator('[data-dir-filters-button]').filter({visible:true})).toHaveCount(0);
   expect(await page.locator('[data-search-item]').count(),`${s.section} lists imported places`).toBeGreaterThan(0);
   await expect(page.locator('[data-search-item] [data-place-kind]').first()).toBeVisible();
   // Price filter only where prices apply (menu: cafes; product: pulperías, ferreterías, veterinarias).
-  if(s.priceMode)await expect(page.locator(`[data-price-filters="${s.priceMode}"]`)).toBeVisible();
+  if(s.priceMode){if(!phone)await expect(page.locator(`[data-price-filters="${s.priceMode}"]`)).toBeVisible();}
   else{await expect(page.locator('[data-price-filters]')).toHaveCount(0);
    await expect(page.locator('select[name="sort"] option[value="price_asc"]')).toHaveCount(0);}
   await gotoOK(page,`${prefix}/${s.section}?q=${encodeURIComponent(`E2E ${s.section} ${tag}`)}&province=Heredia&kind=${kind.value}`);

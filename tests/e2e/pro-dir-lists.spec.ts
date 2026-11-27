@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,label,postJson,quietDevReloads,seedPlace,uid} from './pro-dir-fixture';
 import {featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): saved lists. Anonymous «Guardar» leads to sign in; a signed-in person
@@ -15,6 +15,9 @@ test.afterEach(()=>hideSeededPlaces());
 test('saved lists: save from the place page, private by default, share link without ids, CAS and isolation',async({page,context,browser},info)=>{
  test.setTimeout(300000);local(info.project.use.baseURL);
  const tag=label(),db=dirDb(),errors=collectPageErrors(page);
+ // The anonymous visit to a not-yet-compiled 404 makes `next dev` hot-reload every open page, which reset «Mis listas» to
+ // its first tab mid-test (trace: webpack hot-update, then a document GET /listas). Dev-only; see quietDevReloads.
+ await quietDevReloads(context);
  // «Mis listas» has tabs (He estado | Quiero ir | Listas); the lists manager lives in «Listas» and only after hydration.
  const openLists=async(path:string)=>{await gotoOK(page,path);await expect(page.locator('[data-my-lists][data-ready]')).toBeVisible({timeout:45000});await page.locator('[data-lists-tab="lists"]').click();await expect(page.locator('[data-lists-manager][data-ready]')).toBeVisible({timeout:45000});};
  const a=`soda-lista-${tag}`,b=`ferreteria-lista-${tag}`;
