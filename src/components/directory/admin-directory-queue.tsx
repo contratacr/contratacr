@@ -331,6 +331,8 @@ function BrandClaimCard({row,t,date,busy,decide}:{row:Row;t:T;date:(v:unknown)=>
 // Launch round (2026-11-18): uploaded place photos. Pending → approve/reject; approved → remove (hide) or dismiss reports;
 // hidden → restore. The preview uses the photo route, which serves non-approved photos only to administrators.
 const PHOTO_STATUS:Record<string,[string,string]>={pending:['Pendiente','Pending'],approved:['Publicada','Published'],hidden:['Retirada por el equipo','Taken down by staff'],rejected:['Rechazada','Rejected'],removed:['Quitada por quien la subió','Removed by uploader']};
+// 2026-11-27: automatic suggestions (openverse-photos.mjs) and free Commons photos are not «from a user».
+const PHOTO_ORIGIN:Record<string,[string,string]>={owner:['Del negocio','From the business'],user:['De una persona usuaria','From a user'],openverse:['Sugerida automáticamente (Openverse)','Suggested automatically (Openverse)'],commons:['Wikimedia Commons','Wikimedia Commons']};
 const PHOTO_FLAG:Record<string,[string,string]>={not_this_place:['No es de este lugar','Not this place'],offensive:['Ofensiva','Offensive'],private_info:['Datos privados o personas','Private data or people'],copyright:['Derechos de autor','Copyright'],spam:['Spam','Spam'],other:['Otro','Other']};
 function PhotoCard({row,en,t,date,busy,decide}:{row:Row;en:boolean;t:T;date:(v:unknown)=>string;busy:string|null;decide:Decide}){
  const ref=useRef<HTMLFormElement>(null),id=s(row.id),status=s(row.status),flags=(row.flags as {reason:string;message:string|null;at:string}[]|undefined)??[];
@@ -340,7 +342,7 @@ function PhotoCard({row,en,t,date,busy,decide}:{row:Row;en:boolean;t:T;date:(v:u
   {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route (staff preview) */}
   <a href={`/api/fotos-lugar/${id}?s=1600`} target="_blank" rel="noopener" className="shrink-0"><img src={`/api/fotos-lugar/${id}?s=320`} alt={s(row.caption)||t('Foto subida','Uploaded photo')} className="h-32 w-32 rounded-xl bg-slate-100 object-cover"/></a>
   <div className="min-w-0 flex-1 space-y-2">
-   <p className="text-sm"><PlaceLink slug={row.slug} name={row.placeName} en={en}/> · {pick(PHOTO_STATUS,status)} · {row.origin==='owner'?t('Del negocio','From the business'):t('De una persona usuaria','From a user')}{row.reviewId?` · ${t('en una reseña','on a review')}`:''} · {date(row.createdAt)}</p>
+   <p className="text-sm"><PlaceLink slug={row.slug} name={row.placeName} en={en}/> · {pick(PHOTO_STATUS,status)} · {pick(PHOTO_ORIGIN,PHOTO_ORIGIN[s(row.origin)]?s(row.origin):'user')}{row.reviewId?` · ${t('en una reseña','on a review')}`:''} · {date(row.createdAt)}</p>
    {row.caption?<p className="text-sm">&quot;{s(row.caption)}&quot;</p>:null}
    {row.reviewComment?<p className="text-sm text-slate-700">{t('Reseña: ','Review: ')}{s(row.reviewComment)}</p>:null}
    {flags.length>0&&<ul className="list-disc pl-5 text-sm text-red-900">{flags.map(f=><li key={f.at}>{pick(PHOTO_FLAG,f.reason)}{f.message?`: ${f.message}`:''} · {date(f.at)}</li>)}</ul>}

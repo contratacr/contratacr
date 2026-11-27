@@ -242,6 +242,7 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Clasificación: parqueos privados o "solo clientes" fuera; lavacar con tipo "Lavado completo"; cabinas siguen como cabinas; `shop=yes/vacant`, iglesias, cementerios, canchas y salones comunales fuera.
 - [ ] Teléfono con +506 normalizado y WhatsApp conservados; redes (facebook/instagram/tiktok/…) conservadas; correo, sitio web y horario de OSM.
 - [ ] Atracciones reclasificadas desde tours (`dir_import_reclassify`).
+- [ ] Admin, Fotos: el origen dice «Sugerida automáticamente (Openverse)» o «Wikimedia Commons» según la foto; «Del negocio» y «De una persona usuaria» solo para fotos subidas.
 - [ ] Limpieza de clasificación (2026-11-27, `osm-reclassify-cleanup.mjs`, simulacro por defecto, `--apply`): sin depósitos aduaneros/almacenes fiscales («TICA A…», «A169 - DEPOSITO ADUANERO…») en Supermercados, sin couriers privados (DHL, Jet Box, Aeropost) en Trámites, sin oficentros en Centros comerciales, sin colegios profesionales en Educación; «Bodega de pescaderia» en Mercados, «Bazar …» y mayoristas de muebles en Tiendas. Local: 107 ocultos, 11 movidos; relanzar no cambia nada.
 - [ ] Filtro `--inside-only`: nada fuera de las provincias (frontera).
 - [ ] Muestreo: nombres genéricos descartados; duplicados; direcciones vacías.
