@@ -24,7 +24,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
-  X, Ban, Images,
+  X, Ban, 
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerificationInfo } from "@/components/ui/verification-info";
