@@ -2308,15 +2308,19 @@ html.ccr-native-app.ccr-js .ccr-portada #servicios-de-la-seccion > a {
 }
 
 /* El menú entra como una sola superficie: logo, cierre y opciones juntos. */
+/* Owner 2026-11-26: the menu covers the screen from the very top and unfolds DOWNWARD (it used to slide in from the right). */
 .ccr-menu-completo {
-  transform: translate3d(100%, 0, 0);
-  transition: transform 220ms cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 220ms;
-  will-change: transform;
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+  opacity: 0.6;
+  transition: clip-path 220ms cubic-bezier(0.4, 0, 1, 1), opacity 200ms ease-in, visibility 0s linear 220ms;
+  will-change: clip-path;
   backface-visibility: hidden;
 }
 .ccr-menu-completo.ccr-menu-abierto {
-  transform: translate3d(0, 0, 0);
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+  transition: clip-path 340ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out, visibility 0s;
 }
 .ccr-menu-fondo {
   opacity: 0;
@@ -2562,24 +2566,7 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
      above is set after hydration, so on a refresh the main navbar flashed before the floating card took over. */
   body:has([data-quick-nav-floating]) [data-testid="landing-navbar"] { display: none; }
   /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
-  /* (Map screens with the floating card keep the production drawer: excluded here, owner 2026-11-26.) */
-  /* Its menu button is the symbol: the menu unfolds DOWNWARD right under that row (logo and search stay visible, the
-     same button closes it) and the chevron turns up while it is open. --ccr-menu-top is set by toggleBrandMenu. */
-  body.ccr-dir-header:not(:has([data-quick-nav-floating])) .ccr-menu-completo,
-  html:has([data-ccr-brand-menu]) .ccr-menu-completo {
-    top: var(--ccr-menu-top, 56px) !important; transform: none !important;
-    clip-path: inset(0 0 100% 0); opacity: 0;
-    transition: clip-path 240ms cubic-bezier(0.4, 0, 1, 1), opacity 200ms ease-in, visibility 0s linear 240ms;
-    box-shadow: inset 0 8px 12px -12px rgba(22, 37, 67, 0.35);
-  }
-  body.ccr-dir-header:not(:has([data-quick-nav-floating])) .ccr-menu-completo.ccr-menu-abierto,
-  html:has([data-ccr-brand-menu]) .ccr-menu-completo.ccr-menu-abierto {
-    clip-path: inset(0 0 0 0); opacity: 1;
-    transition: clip-path 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease-out, visibility 0s;
-  }
-  html:not(.ccr-menu-full) body.ccr-dir-header:not(:has([data-quick-nav-floating])) .ccr-menu-completo .ccr-menu-fila-superior,
-  html:not(.ccr-menu-full):has([data-ccr-brand-menu]) .ccr-menu-completo .ccr-menu-fila-superior { display: none; }
-  body.ccr-dir-header:not(:has([data-quick-nav-floating])) .ccr-menu-fondo, html:has([data-ccr-brand-menu]) .ccr-menu-fondo { top: var(--ccr-menu-top, 56px) !important; }
+  /* The menu opens the same way on every screen: full screen from the top (owner 2026-11-26). */
   html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-chevron] { transform: rotate(180deg); }
   /* Section screens: the brand + title opens the menu, so their own ☰ steps aside. */
   html:has([data-ccr-brand-menu]) [data-ccr-menu-burger] { display: none !important; }
