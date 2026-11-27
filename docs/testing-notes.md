@@ -77,6 +77,7 @@ Dispositivos/límites:
 - [ ] iPhone con teclado abierto: la tarjeta flotante no asoma.
 - [ ] Buscar sin permiso de ubicación: "Más cercanos" muestra "Sin ubicación".
 - [ ] Bandera apagada: navbar y buscador idénticos a producción.
+- [ ] Búsqueda de varias palabras en «Lugares» (migración 544, prefiltro `search_haystack` + puntaje plpgsql): «soda la», «farmacia fischel», «hotel san jose» responden en menos de 300 ms (local: 8,2 s → 78/32/37 ms) y con los mismos resultados que antes; «san jose» ~0,35 s, una sola palabra corta («la») ~1,8 s.
 
 ## 3. Menú
 
