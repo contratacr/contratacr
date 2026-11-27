@@ -53,10 +53,13 @@ const DIRECTORY_BUSINESS_SERVICES: Record<string, readonly string[]> = {
 const DIRECTORY_SERVICE_MOVES: Record<string, string> = {
   tiendas_mascotas: "mascotas",
   papelerias_librerias: "educacion",
+  // Owner 2026-11-26: no "Comercios" group of services any more. Cakes and bread made to order are a trade, and people
+  // look for them for parties: they go to Eventos.
+  panaderias: "eventos",
+  panaderia: "eventos",
 };
-/** Group names while the directory is on: "Comercios" keeps only food made to order; "Empresas" would clash with Negocios. */
+/** Group names while the directory is on: "Empresas" would clash with Negocios. */
 const DIRECTORY_GROUP_LABELS: Record<string, { es: string; en: string }> = {
-  comercios: { es: "Comida y repostería", en: "Food and baking" },
   profesional: { es: "Servicios para empresas", en: "Business services" },
 };
 

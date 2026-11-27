@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
-import {Check,ChevronDown,SlidersHorizontal,X} from 'lucide-react';
+import {Check,ChevronDown,Navigation,SlidersHorizontal,X} from 'lucide-react';
 import {CAPA_HOJA} from '@/lib/capas';
 
 /**
@@ -14,7 +14,9 @@ export const OPEN_DIR_FILTERS='ccr:dir-open-filters';
 export type ChipOption={value:string;label:string;href:string;current:boolean;
  /** «Más cercanos» without a position: ask for it, then open the href with lat/lng (2 decimals, like the professionals search). */needsLocation?:boolean};
 export type ChipMenu={key:string;label:string;active:boolean;options:ChipOption[]};
-export type ChipToggle={key:string;label:string;href:string;active:boolean};
+export type ChipToggle={key:string;label:string;href:string;active:boolean;
+ /** «Cerca de mí» without a position: ask for it, then open the href with lat/lng (2 decimals). */needsLocation?:boolean;
+ /** Short notice when the position cannot be read. */locationFailed?:string};
 
 const pill='ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border bg-white px-3 text-[12px] font-bold shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 const idle=`${pill} border-[#d7e1ea] text-[#162543] hover:border-[#009FD9]`;
@@ -46,7 +48,17 @@ export function PlacesFilterChips({variant,menus,toggles,filtersLabel,activeFilt
  const filters=<button type="button" data-dir-filters-button aria-haspopup="dialog" onClick={()=>window.dispatchEvent(new Event(OPEN_DIR_FILTERS))} className={activeFilters>0?on:idle}>
   <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/><span>{filtersLabel}{activeFilters>0?` (${activeFilters})`:''}</span></button>;
  // A toggle that is on reads as on (owner 2026-11-26): filled brand blue, white text and a check.
- const toggleChips=toggles.map(x=><a key={x.key} href={x.href} data-chip={x.key} aria-pressed={x.active} className={x.active?`${pill} border-[#009FD9] !bg-[#009FD9] text-white`:idle}>{x.active&&<Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden="true"/>}{x.label}</a>);
+ // «Cerca de mí» (owner 2026-11-26) asks for the position first; if it fails, the chip says so for a moment.
+ const [failedKey,setFailedKey]=useState<string|null>(null);
+ const askLocation=(x:ChipToggle)=>(e:React.MouseEvent)=>{
+  e.preventDefault();
+  const fail=()=>{setFailedKey(x.key);window.setTimeout(()=>setFailedKey(null),3500);};
+  if(!('geolocation' in navigator))return fail();
+  navigator.geolocation.getCurrentPosition(pos=>{const u=new URL(x.href,location.href);u.searchParams.set('lat',pos.coords.latitude.toFixed(2));u.searchParams.set('lng',pos.coords.longitude.toFixed(2));location.assign(u.toString());},fail,{timeout:10000,maximumAge:300000});
+ };
+ const toggleChips=toggles.map(x=><a key={x.key} href={x.href} data-chip={x.key} aria-pressed={x.active} onClick={x.needsLocation&&!x.active?askLocation(x):undefined} className={x.active?`${pill} border-[#009FD9] !bg-[#009FD9] text-white`:idle}>{x.active?<Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden="true"/>:x.needsLocation?<Navigation className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>:null}{failedKey===x.key&&x.locationFailed?x.locationFailed:x.label}</a>);
+ const nearChip=toggles[0]?.key==='near-me'?toggleChips[0]:null;
+ const otherToggles=nearChip?toggleChips.slice(1):toggleChips;
  // Phones (owner 2026-11-26, like Yelp): «Ordenar ▾», the toggles, then the other menus; each menu opens a bottom sheet
  // (a dropdown would be clipped by the chip rail).
  if(variant==='sheet'){
@@ -54,14 +66,16 @@ export function PlacesFilterChips({variant,menus,toggles,filtersLabel,activeFilt
   const [sortMenu,...otherMenus]=menus.filter(m=>m.key!=='province');
   return <div ref={root} className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto pb-0.5" aria-label={en?'Filters':'Filtros'} role="group">
    <div className="flex w-max min-w-full items-center gap-1">
+    {nearChip}
     {sortMenu&&<SheetMenu menu={sortMenu} openKey={openKey} setOpenKey={setOpenKey} en={en}/>}
-    {toggleChips}
+    {otherToggles}
     {otherMenus.map(m=><SheetMenu key={m.key} menu={m} openKey={openKey} setOpenKey={setOpenKey} en={en}/>)}
    </div></div>;
  }
  return <div ref={root} className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label={en?'Filters':'Filtros'} role="group">
+  {nearChip}
   {menus.map(m=><Menu key={m.key} menu={m} openKey={openKey} setOpenKey={setOpenKey}/>)}
-  {toggleChips}
+  {otherToggles}
   {filters}
   {clear&&<a href={clear.href} className="ml-1 text-[12px] font-semibold text-[#007fae] hover:underline">{clear.label}</a>}
  </div>;
