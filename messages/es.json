@@ -4252,5 +4252,8 @@
       "vertical": "Elija una sección.",
       "generic": "No se pudo publicar el lugar. Intente de nuevo."
     }
+  },
+  "placeMenuPage": {
+    "barTitle": "Menú"
   }
 }

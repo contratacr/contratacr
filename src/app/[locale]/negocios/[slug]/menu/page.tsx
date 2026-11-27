@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
+import {getTranslations} from 'next-intl/server';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {PlaceMenu} from '@/components/directory/place-menu';
 import {DirectoryShell} from '@/components/directory/directory-shell';
@@ -30,6 +31,6 @@ export default async function PlaceMenuRoute({params}:{params:Promise<{locale:st
  if(!DIR_ENABLED)notFound();
  const {locale,slug}=await params,menu=await load(slug);if(!menu)notFound();
  // Phones (owner 2026-11-27): «← Menú» bar like the place page, painted by the server; the arrow goes back to the listing.
- const barTitle=locale==='en'?'Menu':'Menú';
+ const barTitle=(await getTranslations({locale,namespace:'placeMenuPage'}))('barTitle');
  return <DirectoryShell section={{title:barTitle,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref={`/negocios/${slug}`} tambienEnLaWeb centrado/><PlaceMenu menu={menu} locale={locale}/></DirectoryShell>;
 }

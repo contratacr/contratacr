@@ -4252,5 +4252,8 @@
       "vertical": "Choose a section.",
       "generic": "The place could not be published. Please try again."
     }
+  },
+  "placeMenuPage": {
+    "barTitle": "Menu"
   }
 }
