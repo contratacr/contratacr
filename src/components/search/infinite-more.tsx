@@ -19,12 +19,13 @@ export function ResultSkeleton({ rows = 3 }: { rows?: number }) {
 
 /**
  * Infinite results (owner 2026-11-26): when the end of the list comes into view, the next page is asked for and appended;
- * a skeleton shows meanwhile. `load(next, startRank)` returns the server-rendered cards and the following cursor.
+ * a skeleton shows meanwhile. `load(next, startRank)` returns the server-rendered cards and the following cursor and,
+ * for place results, their map pins: those go to the results map (PlacesMap) as `ccr:places-map-add`.
  */
 export function InfiniteMore({ initialNext, startRank, load, label }: {
   initialNext: string | null;
   startRank: number;
-  load: (next: string, startRank: number) => Promise<{ items: ReactNode; next: string | null; count: number }>;
+  load: (next: string, startRank: number) => Promise<{ items: ReactNode; next: string | null; count: number; points?: unknown[] }>;
   label: string;
 }) {
   const [chunks, setChunks] = useState<ReactNode[]>([]);
@@ -44,6 +45,7 @@ export function InfiniteMore({ initialNext, startRank, load, label }: {
         setChunks((c) => [...c, r.items]);
         setRank((x) => x + r.count);
         setNext(r.next);
+        if (r.points?.length) window.dispatchEvent(new CustomEvent("ccr:places-map-add", { detail: { points: r.points } }));
       }).catch(() => setNext(null)).finally(() => setLoading(false));
     }, { root: scrollable, rootMargin: "600px 0px" });
     io.observe(el);

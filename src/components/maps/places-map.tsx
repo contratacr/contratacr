@@ -38,6 +38,7 @@ export type PlacesMapPoint = {
 };
 
 const SOURCE = "ccr-places";
+const NO_POINTS: PlacesMapPoint[] = [];
 
 // Selection state shared by every pin of this map: id → its pin elements, the open popup and the highlighted card.
 type Ctx = {
@@ -49,6 +50,10 @@ type Ctx = {
   popupId: string | null;
   active: string | null;
   canHover: boolean;
+  /** Every point on the map by id (first page + pages added by infinite scroll). */
+  points: Map<string, PlacesMapPoint>;
+  /** Grouped into count bubbles (GeoJSON source) or one marker per point. */
+  clustered: boolean;
 };
 
 function highlightCard(id: string, on: boolean, scroll: boolean) {
@@ -156,18 +161,21 @@ function pointMarker(ctx: Ctx | null, lib: MapLibreModule, p: PlacesMapPoint): M
  * a place its card number), so they stay focusable links/buttons. A cluster click zooms to the level where it splits.
  * The list on the page remains the accessible fallback for points hidden inside a pin.
  */
-function addClusteredMarkers(ctx: Ctx, points: PlacesMapPoint[]) {
+function clusterData(points: Iterable<PlacesMapPoint>): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: [...points].map((p) => ({ type: "Feature", properties: { id: p.id }, geometry: { type: "Point", coordinates: [p.lng, p.lat] } })),
+  };
+}
+function addClusteredMarkers(ctx: Ctx) {
   const { lib, map, en } = ctx;
-  const byId = new Map(points.map((p) => [p.id, p]));
+  const byId = ctx.points;
   map.addSource(SOURCE, {
     type: "geojson",
     cluster: true,
     clusterRadius: 48,
     clusterMaxZoom: 15,
-    data: {
-      type: "FeatureCollection",
-      features: points.map((p) => ({ type: "Feature", properties: { id: p.id }, geometry: { type: "Point", coordinates: [p.lng, p.lat] } })),
-    },
+    data: clusterData(byId.values()),
   });
   // Invisible layer: a source is only tiled while a layer uses it.
   map.addLayer({ id: `${SOURCE}-hit`, type: "circle", source: SOURCE, paint: { "circle-radius": 1, "circle-opacity": 0 } });
@@ -248,6 +256,25 @@ export function PlacesMap({
   const mediaCleanup = useRef<() => void>(() => {});
   const [state, setState] = useState<"idle" | "ready" | "failed">("idle");
   const key = points.map((p) => `${p.id}:${p.lat},${p.lng}`).join("|");
+  // Pins of the results loaded later by infinite scroll (ccr:places-map-add from InfiniteMore). They join the map without
+  // moving the camera; a new first page (other filters → other `key`) starts over.
+  const [added, setAdded] = useState<{ key: string; points: PlacesMapPoint[] }>({ key, points: [] });
+  const extra = added.key === key ? added.points : NO_POINTS;
+  const extraRef = useRef<PlacesMapPoint[]>([]);
+  useEffect(() => {
+    extraRef.current = [];
+    const onAdd = (event: Event) => {
+      const incoming = (event as CustomEvent<{ points?: PlacesMapPoint[] }>).detail?.points ?? [];
+      const seen = new Set([...points, ...extraRef.current].map((p) => p.id));
+      const fresh = incoming.filter((p) => p && typeof p.lat === "number" && typeof p.lng === "number" && !seen.has(p.id) && (seen.add(p.id), true));
+      if (!fresh.length) return;
+      extraRef.current = [...extraRef.current, ...fresh];
+      setAdded({ key, points: extraRef.current });
+    };
+    window.addEventListener("ccr:places-map-add", onAdd);
+    return () => window.removeEventListener("ccr:places-map-add", onAdd);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -269,7 +296,9 @@ export function PlacesMap({
             cooperativeGestures: cooperative,
           });
           mapRef.current = map;
-          const ctx: Ctx = { lib, map, en, byId: new Map(), popup: null, popupId: null, active: null, canHover: !!window.matchMedia?.("(hover: hover)").matches };
+          const clustered = cluster && points.length > 1;
+          const ctx: Ctx = { lib, map, en, byId: new Map(), popup: null, popupId: null, active: null, canHover: !!window.matchMedia?.("(hover: hover)").matches,
+            points: new Map([...points, ...extraRef.current].map((p) => [p.id, p])), clustered };
           ctxRef.current = ctx;
           // Same controls as the professionals map: zoom (+ fullscreen on the desktop results/branch maps).
           const nav = new lib.NavigationControl({ showCompass: false });
@@ -295,13 +324,12 @@ export function PlacesMap({
           });
           const bounds = new lib.LngLatBounds();
           for (const p of points) bounds.extend([p.lng, p.lat]);
-          const clustered = cluster && points.length > 1;
-          if (!clustered) for (const p of points) pointMarker(ctx, lib, p).addTo(map);
+          if (!clustered) for (const p of ctx.points.values()) pointMarker(ctx, lib, p).addTo(map);
           // The bare map is the results map under the mobile sheet: keep the points above it.
           if (points.length > 1) map.fitBounds(bounds, { padding: bare ? sheetAwarePadding(boxRef.current, 48) : 48, maxZoom: 15, duration: 0 });
           map.once("load", () => {
             if (cancelled) return;
-            if (clustered) addClusteredMarkers(ctx, points);
+            if (clustered) addClusteredMarkers(ctx);
             foldAttribution(map.getContainer());
             map.once("idle", () => foldAttribution(map.getContainer()));
             setState("ready");
@@ -363,23 +391,35 @@ export function PlacesMap({
     return () => window.removeEventListener("ccr:sheet-change", onSheet);
   }, [bare]);
 
+  // Pins added after the map started (infinite scroll): into the cluster source, or one marker each. No fitBounds.
+  useEffect(() => {
+    const ctx = ctxRef.current;
+    if (!ctx || !extra.length) return;
+    const fresh = extra.filter((p) => !ctx.points.has(p.id));
+    if (!fresh.length) return;
+    for (const p of fresh) ctx.points.set(p.id, p);
+    if (!ctx.clustered) { for (const p of fresh) pointMarker(ctx, ctx.lib, p).addTo(ctx.map); return; }
+    // Before «load» the source does not exist yet: addClusteredMarkers will read ctx.points then.
+    (ctx.map.getSource(SOURCE) as GeoJSONSource | undefined)?.setData(clusterData(ctx.points.values()));
+  }, [extra, state]);
+
   // «Ver en el mapa» on a result card (ccr:places-map-focus {id}): fly to that place and open its pin card.
   useEffect(() => {
     const onFocus = (event: Event) => {
       const id = (event as CustomEvent<{ id?: string }>).detail?.id;
       const ctx = ctxRef.current;
-      const p = id ? points.find((x) => x.id === id) : null;
+      const p = id ? ctx?.points.get(id) ?? null : null;
       if (!ctx || !p) return;
       ctx.map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(ctx.map.getZoom(), 16), duration: 600 });
       window.setTimeout(() => { if (ctxRef.current) openPopup(ctxRef.current, p); }, 650);
     };
     window.addEventListener("ccr:places-map-focus", onFocus);
     return () => window.removeEventListener("ccr:places-map-focus", onFocus);
-  }, [points]);
+  }, []);
 
   if (points.length === 0) return null;
   return (
-    <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length} data-map-state={state} onMouseMove={(e) => ctxRef.current && hoverProximity(ctxRef.current, e)} onMouseLeave={() => ctxRef.current && hidePopup(ctxRef.current)}>
+    <div className={`ccr-pmap relative overflow-hidden bg-[#eef2f6] ${bare ? "" : "rounded-2xl border border-[#d7e1ea] "}${className}`} data-places-map={points.length + extra.length} data-map-state={state} onMouseMove={(e) => ctxRef.current && hoverProximity(ctxRef.current, e)} onMouseLeave={() => ctxRef.current && hidePopup(ctxRef.current)}>
       <style dangerouslySetInnerHTML={{ __html: PIN_CSS }} />
       {/* Inline position: maplibre-gl.css sets `.maplibregl-map{position:relative}`, which beat a Tailwind
           `absolute inset-0` and left the map 0 px tall (clipped by its overflow:hidden). */}
