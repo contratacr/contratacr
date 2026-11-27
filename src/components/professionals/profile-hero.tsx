@@ -16,7 +16,7 @@ import { r2Thumb } from "@/lib/r2-image-url";
  * With the directory off (production) this component is not rendered: the classic header card stays.
  */
 export function ProfileHero({
-  avatarUrl, initials, altName, name, subtitle, stats, menu, contact, en,
+  avatarUrl, initials, altName, name, subtitle, stats, facts, menu, contact, en,
 }: {
   avatarUrl?: string | null;
   initials: string;
@@ -24,21 +24,23 @@ export function ProfileHero({
   name: ReactNode;
   subtitle?: ReactNode;
   stats?: ReactNode;
+  facts?: ReactNode;
   menu?: ReactNode;
   contact?: ReactNode;
   en: boolean;
 }) {
   const avatar = avatarUrl ? r2Thumb(avatarUrl, 320) : null;
   return (
-    <div data-pro-hero className="relative -mx-4 mb-4 max-sm:-mt-4 overflow-hidden bg-white sm:mx-0 sm:mb-6 sm:rounded-2xl sm:border sm:border-[#e5e9ee] sm:shadow-[0_8px_30px_rgba(22,37,67,0.06)]">
-      <div className="relative px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8">
-        <div className="flex items-end justify-between gap-3">
+    <div data-pro-hero className="relative -mx-4 mb-2 bg-white sm:mx-0">
+      <div className="px-4 pb-5 pt-4 sm:px-0 sm:pt-6">
+        {/* Identity row (redesign 2026-11-26): the one photo on the left, name, trade and zone, reviews and years. */}
+        <div className="flex items-center gap-4">
           <ImagePreviewDialog
             src={avatarUrl ?? undefined}
             alt={altName}
             openLabel={en ? "View profile photo" : "Ver foto de perfil"}
             closeLabel={en ? "Close" : "Cerrar"}
-            className="shrink-0 rounded-full"
+            className="shrink-0 self-start rounded-full"
           >
             <span data-profile-identity-avatar className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`}>
               {!avatar && <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{initials}</span>}
@@ -46,13 +48,16 @@ export function ProfileHero({
               {avatar && <img src={avatar} alt={altName} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover" />}
             </span>
           </ImagePreviewDialog>
-          {menu && <div className="hidden pb-1 lg:block">{menu}</div>}
+          {/* Below 360 px the name keeps the same measure as the account panel (it wraps at the same word). */}
+          <div className="min-w-0 flex-1">
+            <div className="min-w-0 max-[359px]:pr-8" data-verification-owner>{name}</div>
+            {subtitle && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#5f6f86] sm:text-[14px]">{subtitle}</div>}
+            {stats && <div className="mt-2">{stats}</div>}
+          </div>
+          {menu && <div className="hidden shrink-0 self-start lg:block">{menu}</div>}
         </div>
-        {/* Below 360 px the name keeps the same measure as the account panel (it wraps at the same word). */}
-        <div className="mt-3 min-w-0 max-[359px]:pr-8" data-verification-owner>{name}</div>
-        {subtitle && <div className="mt-1 text-[13.5px] font-semibold leading-snug text-[#5f6f86] sm:text-[14px]">{subtitle}</div>}
-        {stats && <div className="mt-3">{stats}</div>}
-        {contact && <div className="mt-4 rounded-2xl bg-[#f5fafd] p-4 ring-1 ring-[#e3eff6] lg:hidden">{contact}</div>}
+        {facts && <div className="mt-5">{facts}</div>}
+        {contact && <div className="mt-5 lg:hidden">{contact}</div>}
       </div>
     </div>
   );

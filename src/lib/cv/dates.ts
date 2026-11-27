@@ -11,7 +11,9 @@ function datePart(value: string): { year: string; month: string } | null {
   if (named) { const month = monthNames.findIndex(m => new RegExp(`^(?:${m})`).test(named[1])); if (month >= 0) return { month: String(month + 1), year: named[2] }; }
   return null;
 }
-export function parseCvDates(period: string): CvDates | null {
+export function parseCvDates(rawPeriod: string): CvDates | null {
+  // Stored CVs can carry a non-text period (null, a number, an old object): read it as empty instead of crashing the profile.
+  const period = typeof rawPeriod === 'string' ? rawPeriod : '';
   if (!period.trim()) return blankDates();
   const parts = period.trim().split(/\s*(?:[–—]|\s-\s|\bto\b|\bhasta\b|\ba\b)\s*/i);
   if (parts.length > 2) return null;
@@ -25,7 +27,8 @@ export function serializeCvDates(value: CvDates): string {
   const part = (year: string, month: string) => year ? `${month ? month.padStart(2, '0') + '/' : ''}${year}` : '';
   return [part(value.startYear, value.startMonth), value.current ? 'Present' : part(value.endYear, value.endMonth)].join(' – ').replace(/\s*–\s*$/, '').trim();
 }
-export function invalidCvDates(period: string, requireMonths = true): boolean {
+export function invalidCvDates(rawPeriod: string, requireMonths = true): boolean {
+  const period = typeof rawPeriod === 'string' ? rawPeriod : '';
   const d = parseCvDates(period);
   if (!d) return false; // Preserve unrecognized legacy dates for manual review.
   if ((d.current || d.endYear) && !d.startYear) return true;
@@ -33,7 +36,8 @@ export function invalidCvDates(period: string, requireMonths = true): boolean {
   if (!d.startYear || !d.endYear || d.current) return false;
   return Number(d.endYear) < Number(d.startYear) || (d.endYear === d.startYear && !!d.startMonth && !!d.endMonth && Number(d.endMonth) < Number(d.startMonth));
 }
-export function formatCvDates(period: string, english: boolean, duration = false, now = new Date()): string {
+export function formatCvDates(rawPeriod: string, english: boolean, duration = false, now = new Date()): string {
+  const period = typeof rawPeriod === 'string' ? rawPeriod : '';
   const d = parseCvDates(period);
   if (!d || invalidCvDates(period, false)) return period;
   const months = english ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];

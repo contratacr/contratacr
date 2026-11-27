@@ -24,7 +24,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, SearchX, Globe, BadgePercent, Share2, Link2, ChevronRight, Bookmark,
-  X, Ban, 
+  X, Ban, ChevronDown, 
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerificationInfo } from "@/components/ui/verification-info";
@@ -462,6 +462,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     };
   }, []);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
+  // Directory-on redesign (owner 2026-11-26): the service list shows five, then "Ver los N servicios".
+  const [verTodosServicios, setVerTodosServicios] = useState(false);
+  // Directory-on redesign: every section after Servicios is a row that opens in place.
+  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(() => new Set());
+  const alternarSeccion = (k: string) => setAbiertas((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
 
   // Recarga puntual del perfil (tras publicar una reseña, por ejemplo): pide
   // los datos frescos y actualiza lista, promedio y contador.
@@ -714,8 +719,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // de una pestaña era el mismo error que el muro de registro.
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
+    // Directory on: the shortcuts follow the page order (work photos before reviews).
+    ...(directoryOn && hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     { id: "resenas",        label: t("tabs.resenas") },
-    ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
+    ...(!directoryOn && hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(publicOffers.length > 0 ? [{ id: "promociones" as Tab, label: locale === "en" ? "Promotions" : "Promociones" }] : []),
     ...(EMPLEOS_VISIBLE && publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
     // La formación vuelve a tener pestaña propia: solo aparece si hay algo que mostrar.
@@ -856,7 +863,26 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Derivado durante el render (no en un efecto): así la pestaña nueva ya está
   // montada en el mismo cuadro en que se elige, sin un cuadro vacío.
   if (!pestanasVisitadas.has(tabEfectiva)) setPestanasVisitadas((previas) => new Set(previas).add(tabEfectiva));
-  const montada = (id: string) => id === tabEfectiva || pestanasVisitadas.has(id);
+  // Directory on (owner 2026-11-26): one page, every section shown; the tab row becomes shortcuts that scroll to each.
+  const montada = (id: string) => directoryOn || id === tabEfectiva || pestanasVisitadas.has(id);
+  // One row per section (redesign 2026-11-26): name, a short hint and a chevron; tapping opens the section right below.
+  const filaSeccion = (k: string) => {
+    const en = locale === "en";
+    const etiqueta = TABS.find((x) => x.id === k)?.label ?? k;
+    const pista = k === "resenas" && professional.reviewCount > 0
+      ? `★ ${professional.ratingAvg.toFixed(1)} · ${professional.reviewCount}`
+      : k === "casos" && professional.portfolioUrls?.length ? `${professional.portfolioUrls.length} ${en ? (professional.portfolioUrls.length === 1 ? "photo" : "photos") : (professional.portfolioUrls.length === 1 ? "foto" : "fotos")}` : "";
+    const abierta = abiertas.has(k);
+    const orden = ({ casos: "order-2", resenas: "order-3", promociones: "order-4", empleos: "order-5", certificaciones: "order-6", sobre: "order-7" } as Record<string, string>)[k];
+    return (
+      <button key={`fila-${k}`} type="button" onClick={() => alternarSeccion(k)} aria-expanded={abierta} aria-controls={`perfil-${k}`} data-profile-row={k}
+        className={cn("flex min-h-[58px] w-full items-center gap-3 border-t border-[#eef2f6] text-left", orden)}>
+        <span className="min-w-0 flex-1 text-[16px] font-bold text-[#162543]">{etiqueta}</span>
+        {pista && <span className="shrink-0 text-[13px] font-semibold text-[#68778d]">{pista}</span>}
+        <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#8a97a8] transition-transform", abierta && "rotate-180")} aria-hidden />
+      </button>
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -946,26 +972,29 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   const lugar = zonas > 1 ? (en ? `${zonas} service areas` : `${zonas} zonas de servicio`) : locationText;
                   return [oficios, lugar].filter(Boolean).join(" · ") || null;
                 })()}
-                stats={(professional.reviewCount > 0 || expYears > 0) ? (
-                  <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                    {professional.reviewCount > 0 && (
-                      <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#fff6e8] px-3 font-semibold text-[#7a4a06] transition-colors hover:bg-[#ffefd6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-                        <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
-                        <span className="text-[14px] font-extrabold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                        <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
-                      </button>
-                    )}
-                    {expYears > 0 && (
-                      <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#eaf7fd] px-3 font-semibold text-[#0b5f80]">
-                        <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                        <span className="text-[14px] font-extrabold text-[#162543]">{expYears}</span>
-                        <span className="whitespace-nowrap">{t("statYears")}</span>
-                      </span>
-                    )}
-                    {/* Like production: los casos de éxito have their own tab, not a pill up here (owner 2026-11-26). */}
-                  </div>
-                ) : null}
+                facts={(() => {
+                  // Key facts (owner 2026-11-26): only real data, never repeated below — rating, experience, service areas.
+                  const en = locale === "en";
+                  const zonas = Array.isArray(professional.workplaces) ? professional.workplaces.length : 0;
+                  const nServicios = new Set(services.map((x) => (x as { category?: string }).category ?? "")).size || services.length;
+                  const items = [
+                    professional.reviewCount > 0 ? { k: "resenas", label: en ? `${professional.reviewCount} reviews` : `${professional.reviewCount} ${professional.reviewCount === 1 ? "reseña" : "reseñas"}`, value: `★ ${professional.ratingAvg.toFixed(1)}` } : null,
+                    expYears > 0 ? { k: "experiencia", label: en ? "Experience" : "Experiencia", value: en ? `${expYears} yrs` : `${expYears} ${expYears === 1 ? "año" : "años"}` } : null,
+                    zonas > 0 ? { k: "zonas", label: en ? "Service areas" : "Zonas", value: String(zonas) } : null,
+                    nServicios > 0 ? { k: "servicios", label: en ? "Services" : "Servicios", value: String(nServicios) } : null,
+                  ].filter(Boolean).slice(0, 3) as { k: string; label: string; value: string }[];
+                  return items.length ? (
+                    <dl className="grid grid-cols-3 divide-x divide-[#e5e9ee] rounded-2xl bg-[#f5f8fb] py-3" data-profile-facts>
+                      {items.map((i) => (
+                        <div key={i.k} className="min-w-0 px-2 text-center">
+                          <dt className="text-[11.5px] font-semibold text-[#68778d]">{i.label}</dt>
+                          <dd className="truncate text-[15px] font-extrabold text-[#162543]">{i.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null;
+                })()}
+                stats={null}
                 menu={<MenuFicha opciones={opcionesDeLaFicha} />}
                 contact={bloqueContacto(true)}
               />
@@ -1099,12 +1128,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
               <div className={directoryOn ? "" : "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm"}>
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div data-profile-tabs="" className={directoryOn
+                {!directoryOn && <div data-profile-tabs="" className={directoryOn
                   ? "group/carril relative sticky top-16 z-20 -mx-4 border-b border-[#e5e9ee] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 sm:mx-0 [.ccr-native-app_&]:top-0"
                   : "group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl"}>
                   <FlechasDeCarril carril={carrilPestanasRef} />
                   <div
-                    role="tablist"
+                    role={directoryOn ? "navigation" : "tablist"}
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
                     ref={carrilPestanasRef}
                     style={{ maskImage: mascaraPestanas, WebkitMaskImage: mascaraPestanas }}
@@ -1114,29 +1143,32 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     {TABS.map(tab => (
                       <button
                         key={tab.id}
-                        role="tab"
-                        aria-selected={tabEfectiva === tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        role={directoryOn ? undefined : "tab"}
+                        aria-selected={directoryOn ? undefined : tabEfectiva === tab.id}
+                        onClick={() => {
+                          if (!directoryOn) return setActiveTab(tab.id);
+                          document.getElementById(`perfil-${tab.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
                         className={cn(
                           "relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors",
-                          directoryOn && "px-3 py-3.5 text-[14px] font-bold sm:px-4",
+                          directoryOn && "mx-1 my-2 h-9 rounded-full bg-[#f1f4f8] px-4 py-0 text-[14px] font-bold text-[#162543] first:ml-0 hover:bg-[#e6ecf2]",
                         )}
-                        style={{ color: tabEfectiva === tab.id ? (directoryOn ? "#162543" : "#009FD9") : "#6b7280" }}
+                        style={directoryOn ? undefined : { color: tabEfectiva === tab.id ? "#009FD9" : "#6b7280" }}
                       >
                         {tab.label}
-                        {tabEfectiva === tab.id && (
+                        {!directoryOn && tabEfectiva === tab.id && (
                           <span className={directoryOn ? "absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-[#009FD9] sm:inset-x-4" : "absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full"} />
                         )}
                       </button>
                     ))}
                   </div>
-                </div>
+                </div>}
 
                 {/* Tab content */}
-                <div className={directoryOn ? "pb-2 pt-6 sm:pt-8" : "p-6"}>
+                <div className={directoryOn ? "flex flex-col pb-2 pt-6 sm:pt-8" : "p-6"}>
 
                   {/* ── TAB: Servicios ── */}
-                  {montada("servicios") && <div hidden={tabEfectiva !== "servicios"}>{(() => {
+                  {montada("servicios") && <div id="perfil-servicios" data-profile-section="servicios" hidden={!directoryOn && tabEfectiva !== "servicios"} className={directoryOn ? "scroll-mt-36 order-1" : undefined}>{(() => {
                     // Text-only service cards: ONE card per service CATEGORY (the pro's professions),
                     // with its description, price and request action. Images belong to casos/photos.
                     const rawProfs = (professional.professions && professional.professions.length > 0)
@@ -1159,8 +1191,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         {cats.length === 0 ? (
                           <FichaVacio icono="servicios" titulo={t("noServices")} />
                         ) : (
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {cats.map((cat) => {
+                          <>
+                          <div className={directoryOn ? "divide-y divide-[#eef2f6]" : "grid grid-cols-1 gap-4 sm:grid-cols-2"} data-profile-services>
+                            {(directoryOn && !verTodosServicios ? cats.slice(0, 3) : cats).map((cat) => {
                               const items = byCat.get(cat) ?? [];
                               // ONE clean summary per service: its description + price (the model is
                               // services-only). No icon overlay on the photo; the action is a single
@@ -1186,18 +1219,43 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               const credentialIssuer = credential?.professionalCredentialIssuer?.trim();
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
+                              if (directoryOn) {
+                                // One row per service: photo (theirs, else the Categorías one), name, price, a line of description.
+                                const foto = serviceImageUrl ? r2Large(serviceImageUrl, 240) : categoryImageUrl(cat)?.replace("w=1100", "w=240");
+                                return (
+                                  <div key={cat} className="flex gap-3.5 py-3.5 first:pt-0" data-profile-service={cat}>
+                                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#eef2f6]">
+                                      {/* eslint-disable-next-line @next/next/no-img-element -- small thumbnail, sized by the URL */}
+                                      {foto && <img src={foto} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-start justify-between gap-3">
+                                        <h3 className="min-w-0 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
+                                        <p className="shrink-0 text-right leading-tight">
+                                          <span className="block text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
+                                          {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
+                                        </p>
+                                      </div>
+                                      {description
+                                        ? <p className="mt-0.5 line-clamp-2 text-[13.5px] leading-snug text-[#526277] [overflow-wrap:anywhere]">{description}</p>
+                                        : <p className="mt-0.5 text-[13.5px] leading-snug text-[#68778d]">{t("askForDetails")}</p>}
+                                      {hasFullDescription && (
+                                        <button type="button" onClick={() => setServiceDescriptionOpen({ title, description })} className="mt-1 text-left text-xs font-semibold text-[#009FD9] hover:text-[#0089bb]">{t("readFullDescription")}</button>
+                                      )}
+                                      {credentialNumber && (
+                                        <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold leading-snug text-[#526277]">
+                                          <BadgeCheck className="mt-px h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                                          <span className="min-w-0">{credentialLabel}: {credentialNumber}{credentialIssuer ? ` · ${credentialIssuer}` : ""}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
                               return (
                                 <article key={cat} className={directoryOn
                                   ? "flex flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(22,37,67,0.08)]"
                                   : "flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#e5e7eb] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]"}>
-                                  {/* Directory on (owner 2026-11-26): every service has a picture — the one the
-                                      professional added, else the same photo the service has in Categorías. */}
-                                  {directoryOn && !serviceImageUrl && categoryImageUrl(cat) && (
-                                    <span className="block aspect-[16/9] w-full overflow-hidden border-b border-[#e5e7eb] bg-[#eef2f6]" data-service-fallback-photo>
-                                      {/* eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL */}
-                                      <img src={categoryImageUrl(cat)!.replace("w=1100", "w=900")} alt="" loading="lazy" className="h-full w-full object-cover" />
-                                    </span>
-                                  )}
                                   {serviceImageUrl && (
                                     <ImagePreviewDialog
                                       src={serviceImageUrl}
@@ -1272,6 +1330,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               );
                             })}
                           </div>
+                          {directoryOn && cats.length > 3 && (
+                            <button type="button" onClick={() => setVerTodosServicios((v) => !v)} className="mt-3 inline-flex h-10 items-center rounded-full border border-[#d7e1ea] px-4 text-sm font-bold text-[#162543] hover:bg-[#f6f9fb]">
+                              {verTodosServicios ? (locale === "en" ? "Show fewer" : "Ver menos") : (locale === "en" ? `See all ${cats.length} services` : `Ver los ${cats.length} servicios`)}
+                            </button>
+                          )}
+                          </>
                         )}
                       </div>
                     );
@@ -1282,7 +1346,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
-                  {montada("promociones") && <div hidden={tabEfectiva !== "promociones"}>{(
+                  {directoryOn && montada("promociones") && filaSeccion("promociones")}{montada("promociones") && <div id="perfil-promociones" data-profile-section="promociones" hidden={directoryOn ? !abiertas.has("promociones") : tabEfectiva !== "promociones"} className={directoryOn ? "scroll-mt-36 order-4 pb-6" : undefined}>{(
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1333,7 +1397,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     </section>
                   )}</div>}
 
-                  {montada("empleos") && <div hidden={tabEfectiva !== "empleos"}>{(
+                  {directoryOn && montada("empleos") && filaSeccion("empleos")}{montada("empleos") && <div id="perfil-empleos" data-profile-section="empleos" hidden={directoryOn ? !abiertas.has("empleos") : tabEfectiva !== "empleos"} className={directoryOn ? "scroll-mt-36 order-5 pb-6" : undefined}>{(
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1376,7 +1440,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     </section>
                   )}</div>}
 
-                  {montada("casos") && <div hidden={tabEfectiva !== "casos"}>{(
+                  {directoryOn && montada("casos") && filaSeccion("casos")}{montada("casos") && <div id="perfil-casos" data-profile-section="casos" hidden={directoryOn ? !abiertas.has("casos") : tabEfectiva !== "casos"} className={directoryOn ? "scroll-mt-36 order-2 pb-6" : undefined}>{(
                     <div className="flex flex-col gap-6">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
@@ -1422,7 +1486,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   )}</div>}
 
                   {/* ── TAB: Currículum (texto, sin imágenes) ── */}
-                  {montada("certificaciones") && <div hidden={tabEfectiva !== "certificaciones"}>{hasCerts && (
+                  {directoryOn && montada("certificaciones") && filaSeccion("certificaciones")}{montada("certificaciones") && <div id="perfil-certificaciones" data-profile-section="certificaciones" hidden={directoryOn ? !abiertas.has("certificaciones") : tabEfectiva !== "certificaciones"} className={directoryOn ? "scroll-mt-36 order-6 pb-6" : undefined}>{hasCerts && (
                     <CvProfileDetails
                       professionalId={professional.id}
                       slug={professional.slug ?? slug}
@@ -1435,7 +1499,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   )}</div>}
 
                   {/* ── TAB: Reseñas ── */}
-                  {montada("resenas") && <div hidden={tabEfectiva !== "resenas"}>{(
+                  {directoryOn && montada("resenas") && filaSeccion("resenas")}{montada("resenas") && <div id="perfil-resenas" data-profile-section="resenas" hidden={directoryOn ? !abiertas.has("resenas") : tabEfectiva !== "resenas"} className={directoryOn ? "scroll-mt-36 order-3 pb-6" : undefined}>{(
                     <div>
                       <ReviewSection
                         professionalId={professional.id}
@@ -1451,7 +1515,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   )}</div>}
 
                   {/* ── TAB: Sobre mí ── */}
-                  {montada("sobre") && <div hidden={tabEfectiva !== "sobre"}>{(() => {
+                  {directoryOn && montada("sobre") && filaSeccion("sobre")}{montada("sobre") && <div id="perfil-sobre" data-profile-section="sobre" hidden={directoryOn ? !abiertas.has("sobre") : tabEfectiva !== "sobre"} className={directoryOn ? "scroll-mt-36 order-7 pb-6" : undefined}>{(() => {
                     // Facts in display order — each = brand-tint icon + uppercase label + value
                     // + an optional caption, laid out in a hairline-divided grid (owner mockup).
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
