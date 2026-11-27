@@ -303,7 +303,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // Phones: without Reservar/Pedir the chip row is empty (its tools live in the bar's «…»), so it is not drawn. The website
  // is the globe of the icon row below (like the professional profile), not a chip.
  const extras=<PlaceChipRail className={cn(CHIP_ROW,!(reserve||orderAction)&&'max-lg:hidden')} data-place-quick-actions={[reserve?.id,orderAction?.id].filter(Boolean).join(' ')}>
-  {reserve&&<ActionButton action={reserve} slug={place.slug} locale={locale} className={PAGE_CHIP}><CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reservar','Reserve')}</ActionButton>}
+  {/* Phones: Reservar already leads the bottom bar, so the card chip shows from lg only (no duplicate). */}{reserve&&<ActionButton action={reserve} slug={place.slug} locale={locale} className={cn(PAGE_CHIP,barActions.includes(reserve)&&'max-lg:hidden')}><CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reservar','Reserve')}</ActionButton>}
   {/* «Reseñar» lives only inside Reseñas (owner 2026-11-26), like the professional profile. */}
   {orderAction&&<ActionButton action={orderAction} slug={place.slug} locale={locale} className={PAGE_CHIP}>{actionIcon('order','h-4 w-4 shrink-0')}{orderAction.label}</ActionButton>}
   {/* Guardar, Compartir, Agregar fotos: inline on computers; on phones in the bar's «…» (PlaceFichaMenu, MenuFicha like the
