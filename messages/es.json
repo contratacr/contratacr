@@ -2529,7 +2529,7 @@
     "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
     "messages": "Mensajes",
     "notifications": "Notificaciones",
-    "prosTile": "Profesionales",
+    "prosTile": "Servicios",
     "prosTileAll": "Todos los servicios",
     "prosTileCount": "{count, plural, =1 {# profesional} other {# profesionales}}",
     "servicesCount": "{count, plural, =1 {# servicio} other {# servicios}}",

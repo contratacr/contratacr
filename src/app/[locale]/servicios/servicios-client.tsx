@@ -37,6 +37,29 @@ import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/plac
 
 const sinSuscripcion = () => () => {};
 
+/** Service entries of the old "Comercios" group that are businesses: hidden while one of their Negocios sections is on. */
+const DIRECTORY_BUSINESS_SERVICES: Record<string, readonly string[]> = {
+  restaurantes_comida: ["restaurantes"],
+  cafeterias: ["cafes"],
+  farmacias: ["farmacias"],
+  gasolineras: ["gasolineras"],
+  supermercados_minisuper: ["supermercados", "pulperias"],
+  ferreterias: ["ferreterias"],
+  carnicerias_verdulerias: ["mercados-y-carnicerias"],
+  papelerias_librerias: ["tiendas"],
+  tiendas_mascotas: ["tiendas", "veterinarias"],
+};
+/** Trades of "Comercios" that stay as services, moved to the group where people look for them (directory on only). */
+const DIRECTORY_SERVICE_MOVES: Record<string, string> = {
+  tiendas_mascotas: "mascotas",
+  papelerias_librerias: "educacion",
+};
+/** Group names while the directory is on: "Comercios" keeps only food made to order; "Empresas" would clash with Negocios. */
+const DIRECTORY_GROUP_LABELS: Record<string, { es: string; en: string }> = {
+  comercios: { es: "Comida y repostería", en: "Food and baking" },
+  profesional: { es: "Servicios para empresas", en: "Business services" },
+};
+
 export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null>; prosTotal?: number | null }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
   // pre-renderiza en una capa de módulos donde el registro de servicios está
@@ -71,10 +94,18 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
     void categoryCatalogVersion;
     const categories = getAllCategories();
     const idsByGroup = new Map<string, string[]>();
+    // Directory on (owner 2026-11-26): the "Comercios" group is split. Businesses live in the Negocios tab, so their
+    // service entries leave this list; real trades move to the group where people look for them. Production
+    // (directory off) keeps the catalogue exactly as it is.
+    const dirOn = directorySections.length > 0;
+    const onSection = (s: string) => (directorySections as readonly string[]).includes(s);
+    const negocio = (id: string) => DIRECTORY_BUSINESS_SERVICES[id]?.some(onSection) ?? false;
     for (const category of categories) {
-      const ids = idsByGroup.get(category.groupId) ?? [];
+      if (dirOn && negocio(category.id)) continue;
+      const groupId = dirOn ? (DIRECTORY_SERVICE_MOVES[category.id] ?? category.groupId) : category.groupId;
+      const ids = idsByGroup.get(groupId) ?? [];
       ids.push(category.id);
-      idsByGroup.set(category.groupId, ids);
+      idsByGroup.set(groupId, ids);
     }
     // Los negocios viven en "Empresas" (arriba): aquí solo oficios, sin repetir los que ya son una sección del directorio,
     // y sin grupos que se quedan vacíos al quitarlos.
@@ -83,7 +114,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
       return {
         key: group.id,
         Icon: getCategoryGroupIcon(group.id, group.iconKey),
-        label: getCategoryGroupLabel(group.id, locale),
+        label: (directorySections.length > 0 && DIRECTORY_GROUP_LABELS[group.id]?.[locale === "en" ? "en" : "es"]) || getCategoryGroupLabel(group.id, locale),
         ids: (idsByGroup.get(group.id) ?? []).filter((id) => !(hasPlaces && SERVICE_MENU_HIDE.has(id))),
       };
     }).filter((group) => group.ids.length > 0);

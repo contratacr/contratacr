@@ -21,7 +21,7 @@ export async function HomeCategories() {
   const tp = await getTranslations("categoriesPage");
   const label = (id: string) => (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id;
   const items = [
-    { key: "pros", href: "/profesionales", label: tp("prosTile"), photo: categoryImageUrl("electricidad")!.replace("w=1100", "w=700") },
+    { key: "pros", href: "/categorias", label: tp("prosTile"), photo: categoryImageUrl("electricidad")!.replace("w=1100", "w=700") },
     ...ORDER.filter((id) => enabled.includes(id) && sectionPhoto(id)).map((id) => ({ key: id, href: `/${id}`, label: label(id), photo: sectionPhoto(id)! })),
   ];
   return (
