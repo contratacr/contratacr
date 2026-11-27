@@ -693,7 +693,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
         </div>
         {soloMapa && floatingFilters && (
-          <div data-floating-filters className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+84px)] z-40 flex justify-center gap-2 px-4 lg:hidden">
+          <div data-floating-filters className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+68px)] z-40 flex justify-center gap-2 px-4 lg:hidden">
             <div className="pointer-events-auto flex gap-2">{floatingFilters}</div>
           </div>
         )}
@@ -706,7 +706,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
               window.dispatchEvent(new CustomEvent("ccr:search-this-area"));
             }}
             disabled={areaSearching}
-            className="pointer-events-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-[#d7dde3] bg-white px-4 text-[13px] font-bold text-[#162543] disabled:opacity-70"
+            className="pointer-events-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-[#d7dde3] bg-white px-3.5 text-[12.5px] font-bold text-[#162543] shadow-sm disabled:opacity-70"
           >
             {areaSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#009FD9]" /> : <RefreshCw className="h-3.5 w-3.5" />}
             {areaSearching

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, List, ArrowLeft, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, LayoutList, Menu, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
@@ -258,18 +258,19 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
           </li>
         ))}
       </ul>
-      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white pl-2 pr-2 transition-[padding] duration-300", floating && (sheetList ? "py-0.5" : "py-2.5"))}>
-        {/* Search and map screens (owner 2026-11-26, like Yelp): ← back to the home instead of the brand menu. */}
+      <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white pl-2 pr-2 transition-[padding] duration-300", floating && "py-1")}>
+        {/* Search and map screens (owner 2026-11-26): the navbar menu (☰) on the left, like the rest of the app. */}
         {floating ? (
-          <Link href="/" prefetch={false} data-quick-nav-back aria-label={floating.back ?? "Inicio"} className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[#162543]">
-            <ArrowLeft className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden />
-          </Link>
+          <button type="button" data-quick-nav-burger onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[#162543]">
+            <Menu className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden />
+          </button>
         ) : (
           <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
             className="group inline-flex h-10 shrink-0 items-center pr-1.5"><BrandMenuMark /></button>
         )}
         <button type="button" data-quick-nav-search onClick={() => window.dispatchEvent(new Event("ccr:open-native-search"))}
-          className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left", floating && "border-transparent pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
+          className={cn("flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-[#d7e1ea] bg-white pl-3.5 pr-3 text-left", floating && "h-10 border-transparent pl-1", "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]")}>
           {!floating && <Search className="h-5 w-5 shrink-0 text-[#162543]" aria-hidden />}
           <span className={cn("min-w-0 flex-1 truncate text-[14px]", floating ? "font-bold text-[#162543]" : "font-medium text-[#5b6b82]")}>{floating ? <><span className="font-extrabold">{floating.title}</span>{floating.subtitle && <span className="ml-1.5 font-medium text-[#6b7a8f]">{floating.subtitle}</span>}</> : unifiedSearchPlaceholder(locale, true)}</span>
         </button>
@@ -332,7 +333,8 @@ function FloatingListToggle({ labels }: { labels: { list: string; map: string } 
     <button type="button" data-quick-nav-list aria-label={list ? labels.map : labels.list}
       onClick={() => { const next = !list; setList(next); window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: next ? "list" : "map" } })); }}
       className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543]">
-      {list ? <MapIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden /> : <List className="h-5 w-5" strokeWidth={2.4} aria-hidden />}
+      {/* On the map: the cards icon (open the result cards); on the cards: the map icon. */}
+      {list ? <MapIcon className="h-5 w-5" strokeWidth={2.2} aria-hidden /> : <LayoutList className="h-5 w-5" strokeWidth={2.2} aria-hidden />}
     </button>
   );
 }

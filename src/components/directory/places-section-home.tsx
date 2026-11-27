@@ -100,6 +100,8 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
   {key:'open-now',label:t('Abierto ahora','Open now'),href:link({openNow:on('openNow')?undefined:'1'}),active:on('openNow')},
   // «24 horas» left the chips (owner 2026-11-26): «Abierto ahora» already covers it.
  ];
+ // The map's floating pill is «Abierto ahora» (not the first chip: «Cerca de mí» needs the position flow of the chip row).
+ const openNowToggle=toggles.find(x=>x.key==='open-now')!;
  const clear=activeFilters>0?{href:hrefWith(basePath,{q:values.q}),label:t('Limpiar filtros','Clear filters')}:undefined;
  const total=facets?.total??null,where=values.canton??values.province;
  const count=total==null?null:`${fmt(total,en)} ${t(total===1?'negocio':'negocios',total===1?'business':'businesses')} ${where?t(`en ${where}`,`in ${where}`):t('en Costa Rica','in Costa Rica')}`;
@@ -138,7 +140,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&!CARD_SECTIONS.has(section)} soloMapa={points.length>0&&!CARD_SECTIONS.has(section)} floatingFilters={<a href={toggles[0]!.href} data-chip="open-now" aria-pressed={toggles[0]!.active} className={`inline-flex h-10 items-center gap-1.5 rounded-[10px] border px-4 text-[13px] font-bold ${toggles[0]!.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{toggles[0]!.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{toggles[0]!.label}</a>}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&!CARD_SECTIONS.has(section)} soloMapa={points.length>0&&!CARD_SECTIONS.has(section)} floatingFilters={<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
