@@ -106,7 +106,8 @@ test('lead form: «Agregar cliente» is inline (no tab switch) and preselects th
  const ui=read('src/components/pro/manual-lead-editor.tsx');
  assert.ok(!/onAddCustomer\(\)/.test(ui)&&!ui.includes('awaitCreatedCustomer('),'no navigation to Clientes');
  assert.match(ui,/<InlineCustomerCreate actor=\{actor\}/);
- assert.match(ui,/retain\(\{\.\.\.memory\.current\?\?edit,clientId:client\.id\}\)/,'the draft keeps every field and gets the new client id');
+ // b3f4f1082 (same address as the customer on by default) also copies the address in that same retain: extra fields allowed.
+ assert.match(ui,/retain\(\{\.\.\.memory\.current\?\?edit,clientId:client\.id[,}]/,'the draft keeps every field and gets the new client id');
  assert.match(ui,/selected=\{createdClient&&createdClient\.id===edit\.clientId\?createdClient:undefined\}/);
  const inline=read('src/components/pro/inline-customer-create.tsx');
  assert.ok(!/<form\s/.test(inline),'no nested <form> inside the lead form');assert.match(inline,/event\.key==='Enter'\)\{event\.preventDefault\(\)/);
@@ -116,7 +117,10 @@ test('lead form: «Agregar cliente» is inline (no tab switch) and preselects th
 test('Spanish placeholders never use «tu»; English placeholders unchanged',()=>{
  const es=read('messages/es.json'),en=read('messages/en.json'),modal=read('src/components/auth/client-registration-modal.tsx');
  assert.ok(!es.includes('tu@email.com')&&!es.includes('"tu_usuario"'));
- assert.equal((es.match(/"emailPlaceholder": "nombre@correo\.com"/g)??[]).length,5);assert.match(es,/"socialUserPlaceholder": "nombre_usuario"/);
- assert.equal((en.match(/"emailPlaceholder": "you@email\.com"/g)??[]).length,5);assert.match(en,/"socialUserPlaceholder": "your_username"/);
- assert.ok(!modal.includes('"tu@email.com"'));assert.equal((modal.match(/placeholder=\{locale === "en" \? "you@email\.com" : "nombre@correo\.com"\}/g)??[]).length,2);
+ // Six since 713a09d5f (2026-11-19) added ClientSurfaceCopy.emailPlaceholder with the same neutral placeholder.
+ assert.equal((es.match(/"emailPlaceholder": "nombre@correo\.com"/g)??[]).length,6);assert.match(es,/"socialUserPlaceholder": "nombre_usuario"/);
+ assert.equal((en.match(/"emailPlaceholder": "you@email\.com"/g)??[]).length,6);assert.match(en,/"socialUserPlaceholder": "your_username"/);
+ assert.ok(!modal.includes('"tu@email.com"'));
+ // 713a09d5f moved the modal's inline placeholders to messages (ClientSurfaceCopy, bilingual budget): both fields read it.
+ assert.equal((modal.match(/placeholder=\{cs\("emailPlaceholder"\)\}/g)??[]).length,2);
 });

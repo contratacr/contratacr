@@ -63,6 +63,8 @@ const pageRules = [
   [/^\/\[locale\]\/(?:vehiculos|inmuebles)(?:\/|$)/, "pro-dir-listings.spec.ts"],
   // Directory app tabs (WS5): Proyectos hub on /solicitudes (mobile) and the full-screen Asistente.
   [/^\/\[locale\]\/asistente$/, "directory-app-projects-assistant.spec.ts"],
+  // Importar desde Instagram: the OAuth popup's landing page and the sandbox consent screen (adapter, no real Meta call).
+  [/^\/\[locale\]\/integraciones\/instagram\/(?:listo|sandbox)$/, "pro-instagram-import.spec.ts"],
   [/^\/\[locale\](?:\/|$)/, "public-smoke.spec.ts"],
   [/^\/$/, "public-smoke.spec.ts"],
 ];
@@ -72,6 +74,11 @@ const handlerRules = [
   // listing inventory and photos, restaurant menu.
   // Owner/user place photos (upload, moderation and private serving) and "Mi negocio" without Pro (/api/negocio/*).
   [/^\/api\/(?:fotos-lugar\/\[id\]|lugar\/\[slug\]\/fotos)$/, "pro-dir-photos.spec.ts"],
+  // «Vista de la calle» (Mapillary, 2026-11-27; off in the UI since the owner's «fotos de los negocios o nada»): the image redirect
+  // answers 404 for a bad id or a place without a street view.
+  [/^\/api\/vista-calle\/\[placeId\]$/, "pro-dir-photos.spec.ts"],
+  // Importar desde Instagram (sandbox adapter): connect, OAuth callback, connection, media list/item and import.
+  [/^\/api\/integrations\/instagram\/(?:callback|connect|connection|import|media(?:\/\[id\])?)$/, "pro-instagram-import.spec.ts"],
   [/^\/api\/negocio(?:\/(?:lugar|menu|perfil|reservas|respuestas))?$/, "pro-dir-business-tools.spec.ts"],
   [/^\/api\/negocio\/(?:buscar|solicitud)$/, "pro-dir-business-signup.spec.ts"],
   [/^\/api\/directorio\/(?:search|facets)$/, "pro-dir-search.spec.ts"],

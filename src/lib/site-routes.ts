@@ -47,6 +47,8 @@ export const RUTAS_DEL_SITIO = new Set([
   "asistente", "yo",
   // Herramientas (2026-11-26): lista simple de todas las herramientas de Pro y las gratis (solo con Pro encendido).
   "herramientas",
+  // Importar desde Instagram (2026-11-27): página a la que vuelve la ventana de conexión y la pantalla del sandbox.
+  "integraciones",
   // Ronda de funciones del directorio (2026-11-17, solo desarrollo): agenda de eventos, páginas de marca, mis listas y
   // listas compartidas (/lista/<token>).
   "eventos", "marca", "listas", "lista",
