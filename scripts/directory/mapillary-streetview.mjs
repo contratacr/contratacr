@@ -7,9 +7,9 @@
 // per place right away, so an interrupted run resumes where it stopped (places checked in the last 90 days are skipped).
 //
 //   source ~/bin/pro-local-env.sh        # needs MAPILLARY_CLIENT_TOKEN (server-side secret, never printed)
-//   node scripts/directory/mapillary-streetview.mjs [--apply] [--vertical restaurant,cafe_bar] [--all] [--limit N] [--slug s] [--force]
+//   node scripts/directory/mapillary-streetview.mjs [--apply] [--vertical restaurant,cafe_bar] [--all] [--limit N] [--slug s] [--force] [--concurrency 4]
 // Default sections: restaurant, cafe_bar, lodging, beauty, auto_services. --all: every section.
-// ≤ 5 requests per second. Safe by default: refuses a Supabase URL that is not local unless --remote-ok is passed (only with the owner's OK).
+// ≤ 5 requests per second in total, whatever the concurrency (the API answers in ~0.5–1 s, so 4 workers keep the rate busy). Safe by default: refuses a Supabase URL that is not local unless --remote-ok is passed (only with the owner's OK).
 import {pathToFileURL} from 'node:url';
 import {STREET_VIEW_FIELDS,STREET_VIEW_RADII_M,STREET_VIEW_REFRESH_DAYS,bboxAround,isMapillaryThumbUrl,selectStreetView} from '../../src/lib/directory/street-view.ts';
 
@@ -17,11 +17,13 @@ export const MIN_INTERVAL_MS=200; // ≤ 5 requests per second
 export const PRIORITY_VERTICALS=['restaurant','cafe_bar','lodging','beauty','auto_services'];
 const GRAPH='https://graph.mapillary.com/images';
 
-let last=0;
+let nextSlot=0;
+/** Shared rate limit for every concurrent worker: each request takes the next 200 ms slot. */
+async function takeSlot(){const at=Math.max(Date.now(),nextSlot);nextSlot=at+MIN_INTERVAL_MS;const wait=at-Date.now();if(wait>0)await new Promise(r=>setTimeout(r,wait));}
 /** GET a Graph API URL with the token in the Authorization header. Errors carry the status only, never the URL or token. */
 async function graphGet(url,token,{retries=4}={}){
  for(let attempt=0;;attempt++){
-  const wait=last+MIN_INTERVAL_MS-Date.now();if(wait>0)await new Promise(r=>setTimeout(r,wait));last=Date.now();
+  await takeSlot();
   let res;
   try{res=await fetch(url,{headers:{Authorization:`OAuth ${token}`,Accept:'application/json'},signal:AbortSignal.timeout(30000)});}
   catch(e){if(attempt>=retries)throw new Error(`red: ${e?.name??'error'}`);await new Promise(r=>setTimeout(r,1000*2**attempt));continue;}
@@ -80,11 +82,12 @@ async function main(){
  }
  const todo=places.filter(p=>!withPhoto.has(p.id)&&(force||!fresh.has(p.id))).slice(0,limit);
  console.log(`Lugares publicados con ubicación: ${places.length} · con foto propia: ${withPhoto.size} · revisados hace <${STREET_VIEW_REFRESH_DAYS} días: ${fresh.size} · por revisar: ${todo.length}`);
- console.log(`Tiempo estimado: ${Math.ceil(todo.length*1.6*MIN_INTERVAL_MS/60000)} min (≤ 5 consultas por segundo).`);
+ console.log(`Tiempo estimado: ${Math.ceil(todo.length*1.6*MIN_INTERVAL_MS/60000)} min o más (≤ 5 consultas por segundo).`);
 
  const stats={};const bump=(v,k)=>{(stats[v]??={revisados:0,con_vista:0,sin_vista:0,fallidos:0,exact:0,street:0,frente:0});stats[v][k]++;};
  const examples=[];let done=0,failedInRow=0;
- for(const p of todo){
+ const concurrency=Math.min(8,Math.max(1,Number(val('--concurrency')??4)||4));let cursor=0;
+ async function handle(p){
   const place={lat:Number(p.lat),lng:Number(p.lng)};
   try{
    const pick=await lookUp(place,token);
@@ -102,11 +105,12 @@ async function main(){
    if(e?.fatal){console.error(e.message);process.exit(3);}
    bump(p.vertical_id,'fallidos');console.log(`  ! ${p.slug}: ${e?.message??e}`);
    if(++failedInRow>=20){console.error('20 fallos seguidos: se detiene (vuelva a correrlo, retoma donde quedó).');process.exit(3);}
-   continue;
+   return;
   }
   failedInRow=0;
   if(++done%200===0)console.log(`  … ${done}/${todo.length}`,JSON.stringify(stats));
  }
+ await Promise.all(Array.from({length:concurrency},async()=>{while(cursor<todo.length)await handle(todo[cursor++]);}));
  console.log(apply?'Guardado.':'Dry run: no se escribió nada. Use --apply.');
  console.log('Por sección:');for(const [v,s] of Object.entries(stats))console.log(`  ${v}: ${JSON.stringify(s)}`);
  console.log('Ejemplos:');for(const x of examples)console.log('  /lugar/'+x);

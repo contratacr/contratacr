@@ -34,7 +34,9 @@ import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} fro
  */
 // Owner, 2026-11-26: people pick these by photos and reviews, so they keep result cards; every other business section is
 // map and pins only on phones (the nearest one open now).
-const CARD_SECTIONS=new Set(['restaurantes','cafes','belleza']);
+// Owner 2026-11-27 (Yelp): every section has the card list. The «need it now» sections open on the map first, with the
+// list one swipe up; the rest open on the list.
+const MAP_FIRST_SECTIONS=new Set(['gasolineras','farmacias','parqueos','bancos','transporte']);
 export type PlaceSection='restaurantes'|'farmacias'|'supermercados'|'gasolineras'|'cafes'|'pulperias'|'ferreterias'|'hospedaje'|'salud'|
  'veterinarias'|'talleres'|'belleza'|'gimnasios'|'tours'|'bancos'|'parqueos'|'lavacar'|
  'atracciones'|'tiendas'|'centros-comerciales'|'mercados-y-carnicerias'|'tramites'|'educacion'|'transporte';
@@ -117,7 +119,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  return <div className="ccr-buscar-pagina flex min-h-screen flex-col bg-white" data-places-home={section}>
   <LandingNavbar forceCompactSearch mobileSearch/>
   <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden/>
-  <DirectoryQuickNav floating={{title:cafesTitle??DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??c.title[i],subtitle:'Costa Rica',back:t('Volver al inicio','Back to home'),...(CARD_SECTIONS.has(section)?{listToggle:{list:t('Ver lista','Show list'),map:t('Ver mapa','Show map')}}:{})}}/>
+  <DirectoryQuickNav floating={{title:cafesTitle??DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??c.title[i],subtitle:'Costa Rica',back:t('Volver al inicio','Back to home'),listToggle:{list:t('Ver lista','Show list'),map:t('Ver mapa','Show map')}}}/>
   {/* Title row: the same strip as /profesionales (accent bar · H1 · count · chips). Phones carry the title in the sheet. */}
   <div className="hidden bg-white lg:block">
    <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">
@@ -136,7 +138,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
    <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&!CARD_SECTIONS.has(section)} soloMapa={points.length>0&&!CARD_SECTIONS.has(section)} floatingFilters={<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&MAP_FIRST_SECTIONS.has(section)} floatingFilters={<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
