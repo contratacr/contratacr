@@ -1,6 +1,5 @@
 "use client";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
-import { useSiteFeatures } from "@/components/site-features";
 import { Link } from "@/i18n/navigation";
 import { Star } from "lucide-react";
 
@@ -94,7 +93,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
   const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
-  const directoryOn = useSiteFeatures().directorySections.length > 0;
+  // Owner 2026-11-26: contact buttons exactly as in production (WhatsApp and Llamar); «Reseñar» only inside Reseñas.
+  // The directory-on chip variants below stay but are off.
+  const directoryOn = false as boolean;
   // Qué ubicación se está buscando, para poner delante los lugares que sirven.
   const searchParams = useSearchParams();
   const searchProvince = searchParams.get("provincia");
