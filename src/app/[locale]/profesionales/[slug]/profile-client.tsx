@@ -31,7 +31,7 @@ import { VerificationInfo } from "@/components/ui/verification-info";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
-import { hayPantallaAnterior, rutaAnterior, volverHastaSalir } from "@/lib/volver-por-historial";
+import { hayPantallaAnterior, renombrarPantallaActual, rutaAnterior, volverHastaSalir } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
@@ -313,8 +313,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     params.delete("from");
     const cadena = params.toString();
     const destino = `${prefijo}${corta}${cadena ? `?${cadena}` : ""}${window.location.hash}`;
+    const previa = `${window.location.pathname}${window.location.search}`;
     if (destino !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
       window.history.replaceState(window.history.state, "", destino);
+      // Same screen, new address: the in-app screen trail must know it, or «Volver» thinks the ficha was opened directly.
+      renombrarPantallaActual(previa);
     }
   }, [professional?.slug]);
   // En la app la barra de arriba siempre toma el «volver» (y ya se sabe en el

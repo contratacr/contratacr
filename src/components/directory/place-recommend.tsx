@@ -16,7 +16,8 @@ export function PlaceRecommend({locale}:{locale:string}){
   window.dispatchEvent(new CustomEvent(RECOMMEND_EVENT,{detail:{rating:o.rating}}));
   // Re-enter the anchor even when it is already the hash, so the Reviews tab opens again.
   if(window.location.hash==='#escribir-resena')window.history.replaceState(null,'',window.location.pathname+window.location.search);
-  window.location.assign(window.location.pathname+window.location.search+'#escribir-resena');
+  // replace, not assign: an anchor inside the page must not add a history entry (back would stay on the page).
+  window.location.replace(window.location.pathname+window.location.search+'#escribir-resena');
  };
  return <section data-place-recommend aria-labelledby="place-recommend" className="space-y-2.5 rounded-2xl bg-[#f7fafc] p-4">
   <h2 id="place-recommend" className="text-[15px] font-bold text-[#162543]">{en?'Would you recommend this place?':'¿Recomienda este lugar?'}</h2>

@@ -114,6 +114,16 @@ export function anotarCambioDeRuta(documentoNuevo = false): void {
   } catch { /* sin almacenamiento */ }
 }
 
+/** The current screen changed its address in place (replaceState, e.g. the profile's short URL): rename it in the trail. */
+export function renombrarPantallaActual(anterior: string): void {
+  try {
+    const antes = claveDeRuta(anterior), ahora = claveDeRuta();
+    const pila = leerPila();
+    if (pila[pila.length - 1] === antes) { pila[pila.length - 1] = ahora; sessionStorage.setItem(CLAVE_PILA, JSON.stringify(pila)); }
+    if (sessionStorage.getItem(CLAVE_ACTUAL) === antes) sessionStorage.setItem(CLAVE_ACTUAL, ahora);
+  } catch { /* sin almacenamiento */ }
+}
+
 /** True when an in-app screen is behind the current one in this tab's history. */
 export function hayPantallaAnterior(): boolean {
   if (typeof window === "undefined") return false;

@@ -46,7 +46,12 @@ export function PlaceTabs({tabs,label,defaultTab,compact,variant='bar'}:{tabs:Pl
    // A link to an anchor that lives in another tab opens that tab first (also when the hash is already the same).
    const a=(e.target as HTMLElement|null)?.closest?.('a[href^="#"]') as HTMLAnchorElement|null;
    if(a){const id=decodeURIComponent((a.getAttribute('href')??'').slice(1));const tab=tabs.find(t=>t.id===id||t.anchors?.includes(id));
-    if(tab){setActive(tab.id);requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById(id)?.scrollIntoView({block:'start'})));}}
+    // Any anchor inside the page (tabs, menu sections) REPLACES the current entry: a pushed #fotos entry made the browser
+    // back button (and the iOS swipe) stay on the same page (owner 2026-11-27, «no me deja salirme del perfil»).
+    if(id&&(tab||document.getElementById(id))&&!e.defaultPrevented&&e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
+     e.preventDefault();if(window.location.hash!=='#'+id)window.location.replace('#'+id);else document.getElementById(id)?.scrollIntoView({block:'start'});}
+    if(tab){
+     setActive(tab.id);requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById(id)?.scrollIntoView({block:'start'})));}}
   };
   window.addEventListener('hashchange',onHash);document.addEventListener('click',onClick);
   return()=>{window.removeEventListener('hashchange',onHash);document.removeEventListener('click',onClick);};

@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useState,type ReactNode} from 'react';
+import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {ArrowLeft,Maximize2} from 'lucide-react';
 import {PlacesMap,type PlacesMapPoint} from '@/components/maps/places-map';
@@ -14,14 +14,16 @@ const RING='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
  */
 export function PlaceMapDialog({points,locale,label,zoom,apps}:{points:PlacesMapPoint[];locale:string;label:string;zoom:number;apps?:ReactNode}){
  const en=locale==='en',[open,setOpen]=useState(false);
- // The big map owns ONE history entry, marked in history.state, so the phone's back button closes it. Pushed only if the
- // current entry is not already ours (dev StrictMode / hot reload re-run effects; an extra entry trapped the back button).
- const ours=()=>typeof window!=='undefined'&&!!(history.state as {ccrPlaceMap?:boolean}|null)?.ccrPlaceMap;
- const close=useCallback(()=>{if(ours())history.back();else setOpen(false);},[]);
+ // The big map owns ONE history entry so the phone's back button closes it. It is pushed in the tap handler (not in an
+ // effect: dev StrictMode / hot reload re-ran it and left extra entries that trapped the back button) and remembered in a
+ // ref, not in history.state: Next's router rewrites the state of entries it did not create, which dropped the marker and
+ // left the entry behind when the map was closed with the arrow.
+ const pushed=useRef(false);
+ const openMap=useCallback(()=>{if(!pushed.current){history.pushState(history.state,'');pushed.current=true;}setOpen(true);},[]);
+ const close=useCallback(()=>{if(pushed.current){pushed.current=false;history.back();}else setOpen(false);},[]);
  useEffect(()=>{
   if(!open)return;
-  if(!ours())history.pushState({...(history.state??{}),ccrPlaceMap:true},'');
-  const onPop=()=>{if(!ours())setOpen(false);};
+  const onPop=()=>{pushed.current=false;setOpen(false);};
   const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape')close();};
   const prev=document.body.style.overflow;document.body.style.overflow='hidden';
   window.addEventListener('popstate',onPop);window.addEventListener('keydown',onKey);
@@ -32,7 +34,7 @@ export function PlaceMapDialog({points,locale,label,zoom,apps}:{points:PlacesMap
   <div className="relative" data-place-map-preview>
    <PlacesMap locale={locale} zoom={zoom} className="h-56 overflow-hidden sm:h-72" label={label} points={points}/>
    {/* The whole preview opens the big map (the small one does not pan inside the scrolling page). */}
-   <button type="button" onClick={()=>setOpen(true)} aria-label={openLabel} className={`absolute inset-0 z-10 cursor-zoom-in ${RING}`} data-place-map-open/>
+   <button type="button" onClick={openMap} aria-label={openLabel} className={`absolute inset-0 z-10 cursor-zoom-in ${RING}`} data-place-map-open/>
    <span aria-hidden="true" className="pointer-events-none absolute left-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] shadow-sm"><Maximize2 className="h-[18px] w-[18px]"/></span>
   </div>
   {open&&typeof document!=='undefined'&&createPortal(
