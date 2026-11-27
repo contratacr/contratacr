@@ -3130,7 +3130,8 @@
     },
     "homeCategories": {
       "title": "Categories",
-      "all": "See all categories"
+      "all": "See all categories",
+      "allShort": "See all"
     }
   },
   "saveStatus": {

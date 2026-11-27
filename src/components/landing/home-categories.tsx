@@ -11,7 +11,7 @@ const ORDER = ["restaurantes", "hospedaje", "farmacias", "supermercados", "parqu
 
 /**
  * Home, directory on (owner 2026-11-26): «Categorías» with real photos, like the production service cards — Profesionales
- * first, then the main business sections, and «Ver todas las categorías».
+ * first, then the main business sections, and "Ver todas" next to the title.
  */
 export async function HomeCategories() {
   const enabled = sitemapSections().map((s) => s.section as string);
@@ -26,7 +26,11 @@ export async function HomeCategories() {
   ];
   return (
     <section data-home-categories className="bg-white px-4 pb-6 pt-5">
-      <h2 className="mb-4 text-center text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-4xl">{t("title")}</h2>
+      {/* Same header as "Mejor calificados" (owner 2026-11-26): title on the left, the link to all categories on the right. */}
+      <div className="mx-auto mb-3 flex max-w-6xl items-center justify-between gap-3 sm:mb-5">
+        <h2 className="text-[22px] font-extrabold leading-tight text-[#1a2744] sm:text-3xl">{t("title")}</h2>
+        <Link href="/categorias" prefetch={false} aria-label={t("all")} className="flex shrink-0 items-center gap-0.5 text-[15px] font-bold text-[#0083b0]">{t("allShort")}<ChevronRight className="h-4 w-4" aria-hidden /></Link>
+      </div>
       <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {items.map((i) => (
           <li key={i.key}>
@@ -39,7 +43,6 @@ export async function HomeCategories() {
           </li>
         ))}
       </ul>
-      <Link href="/categorias" prefetch={false} className="mt-5 flex items-center justify-center gap-1 text-[15px] font-bold text-[#009FD9]">{t("all")}<ChevronRight className="h-4 w-4" aria-hidden /></Link>
     </section>
   );
 }
