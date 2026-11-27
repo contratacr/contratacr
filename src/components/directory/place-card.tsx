@@ -2,7 +2,7 @@ import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types'
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
 import {isHealthVertical,kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
-import {CalendarCheck,Globe,MapPin,Phone,Star} from 'lucide-react';
+import {CalendarCheck,Globe,MapPin,Navigation,Phone,Star} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {mapLinks} from '@/lib/directory/place-actions';
@@ -84,6 +84,8 @@ export function PlacePriceLine({price,en}:{price:PlaceSearchPrice;en:boolean}){
 
 const VERIFIED=new Set(['verified','license_verified']);
 // Quick action chip on result cards (Google Maps style): outline, icon + one word, 32px.
+/** Secondary card button: the white pill of production's «Contactar por llamada». */
+const CARD_SECONDARY='border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]';
 export const CHIP='inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eaf7fd] px-3 text-[12.5px] font-bold text-[#0083b0] transition-colors hover:bg-[#d9f0fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]';
 /** Maps-like status line shared by the card and the place page: «Abierto · cierra a las 21:00», «Cerrado · abre…». */
 export function PlaceStatusLine({status,className='',children,...rest}:{status:{label:string;detail:string|null;open:boolean};className?:string;children?:ReactNode}&Record<`data-${string}`,string|undefined>){
@@ -137,6 +139,10 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   // «Sitio web» last, only on lodging and education cards (card-extras.ts fills it for those sections only).
   ...(extra?.website?[{id:'website',label:t('Sitio web','Website'),href:extra.website,icon:<Globe className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}]:[]),
  ];
+ const byId=(id:string)=>actions.find(x=>x.id===id);
+ const contact=byId('whatsapp')?{...byId('whatsapp')!,label:t('Contactar por WhatsApp','Contact on WhatsApp')}:byId('call');
+ const second=byId('reserve')??(maps?{id:'maps',label:t('Cómo llegar','Directions'),href:maps.google,icon:<Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}:undefined);
+ const cardButtons=[contact,second].filter((x):x is NonNullable<typeof x>=>!!x);
  const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
   className={`${RESULT_CARD} relative flex flex-col gap-1 text-[#162543]`}>
@@ -160,9 +166,12 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
    {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
   </ul>}
   {item.price&&<PlacePriceLine price={item.price} en={en}/>}
-  <div className="scrollbar-none relative z-10 -mx-1 mt-2 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [touch-action:pan-x_pan-y]" data-place-quick-actions={actions.map(a=>a.id).join(' ')}>
-   {actions.map(a=><a key={a.id} href={a.href} data-place-action={a.id} className={`${CHIP} relative z-10`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
-  </div>
+  {/* Same buttons as the professional cards in production (owner 2026-11-26): full-width pills, one above the other,
+      at most two. First the way to contact (WhatsApp in its green, else Llamar in ContrataCR blue), then Reservar
+      or Cómo llegar in white. Reseñar, Waze and the website stay on the place page. */}
+  {cardButtons.length>0&&<div className="relative z-10 mt-2 grid grid-cols-1 gap-2" data-place-quick-actions={cardButtons.map(a=>a.id).join(' ')}>
+   {cardButtons.map((a,i)=><a key={a.id} href={a.href} data-place-action={a.id} className={`relative z-10 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] ${i>0?CARD_SECONDARY:a.id==='whatsapp'?'ccr-boton-whatsapp text-white':'bg-[#009FD9] text-white hover:bg-[#0089bb]'}`} {...(a.external?{target:'_blank',rel:'noopener noreferrer'}:{})}>{a.icon}{a.label}</a>)}
+  </div>}
   {/* Whole card → the place page (stretched low-z overlay); the name link is the focusable one. */}
   <a href={href} className="absolute inset-0 z-0" tabIndex={-1} aria-hidden="true"/>
  </article>;
