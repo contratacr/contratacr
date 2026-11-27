@@ -145,7 +145,7 @@ export function AdminPlaceCreate({locale,sections}:{locale:string;sections:reado
   </fieldset>
   <p className="rounded-xl bg-[#F7FAFC] p-3 text-sm text-slate-700">{t('photosNote')}</p>
   {notice&&<p role="status" data-admin-place-notice={notice.ok?'ok':'error'} className={`rounded-xl p-3 text-sm ${notice.ok?'bg-emerald-50 text-emerald-900':'bg-red-50 text-red-900'}`}>
-   {notice.text}{notice.slug&&<> <a data-admin-place-link href={`${prefix}/lugar/${notice.slug}`} className="font-semibold underline">{`${prefix}/lugar/${notice.slug}`}</a></>}</p>}
+   {notice.text}{notice.slug&&<> <a data-admin-place-link href={`${prefix}/negocios/${notice.slug}`} className="font-semibold underline">{`${prefix}/negocios/${notice.slug}`}</a></>}</p>}
   <button type="submit" disabled={busy||!vertical} className={`inline-flex min-h-11 items-center justify-center rounded-full bg-[#162543] px-6 text-sm font-semibold text-white disabled:opacity-50 ${ring}`}>{busy?t('saving'):t('submit')}</button>
  </form>;
 }

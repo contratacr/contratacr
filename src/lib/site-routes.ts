@@ -27,9 +27,10 @@ export const RUTAS_DEL_SITIO = new Set([
   "confirmar-pro",
   // Pro local: vista previa del espacio Pro (solo desarrollo; el middleware ya la reescribe a /es/pro-preview).
   "pro-preview", "contratacr-pro",
-  // Pro local (directorio multivertical, solo desarrollo): ficha de un lugar (/lugar/<slug>), secciones con búsqueda,
+  // Pro local (directorio multivertical, solo desarrollo): ficha de un lugar (/negocios/<slug>), secciones con búsqueda,
   // anuncios de vehículos e inmuebles. «Cómo ordenamos» (F0) explica la neutralidad del orden.
-  "lugar", "restaurantes", "farmacias", "supermercados", "gasolineras", "vehiculos", "inmuebles", "como-ordenamos",
+  // /negocios/<slug> es la ficha (2026-11-27); "lugar" queda reservado: /lugar/... redirige con 308 a /negocios/....
+  "negocios", "lugar", "restaurantes", "farmacias", "supermercados", "gasolineras", "vehiculos", "inmuebles", "como-ordenamos",
   // Secciones nuevas del directorio (aprobadas el 2026-11-17, solo desarrollo).
   "cafes", "pulperias", "ferreterias", "hospedaje", "salud", "veterinarias", "talleres", "belleza", "gimnasios", "tours", "bancos",
   // Parqueos y lavacar (2026-11-26, solo desarrollo): lugares que agrega el equipo de ContrataCR.

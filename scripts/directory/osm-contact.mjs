@@ -1,4 +1,4 @@
-// LOCAL PRO ONLY (2026-11-27, owner: more WhatsApp / Llamar buttons on /lugar/<slug>): OSM contact tags → the place's
+// LOCAL PRO ONLY (2026-11-27, owner: more WhatsApp / Llamar buttons on /negocios/<slug>): OSM contact tags → the place's
 // phone («+506XXXXXXXX» when Costa Rican) and attributes.whatsapp. Only values the mapper really wrote: a WhatsApp number is
 // taken from contact:whatsapp / whatsapp / phone:whatsapp (a number, a wa.me link) or from a mobile number whose own
 // value says «WhatsApp», or from whatsapp=yes next to a Costa Rican MOBILE number. A landline is never turned into a

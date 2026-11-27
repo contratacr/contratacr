@@ -143,7 +143,7 @@ export function MenuEditor({initial,locale,endpoint='/api/pro/menu',expectedActo
   <header className="space-y-1">
    <h1 id="menu-editor-title" className="text-2xl font-extrabold">{t('Menú','Menu')} · {menu.name}</h1>
    <p className="text-sm text-slate-700">{t('Los cambios publicados se ven en su ficha pública. Los borradores solo los ve usted.','Published changes appear on your public listing. Only you see drafts.')}
-    {menu.placeStatus==='published'&&<> <a className={`underline underline-offset-2 ${ring}`} href={(en?'/en':'')+`/lugar/${menu.slug}/menu`} target="_blank" rel="noopener">{t('Ver menú público','View public menu')}</a></>}</p>
+    {menu.placeStatus==='published'&&<> <a className={`underline underline-offset-2 ${ring}`} href={(en?'/en':'')+`/negocios/${menu.slug}/menu`} target="_blank" rel="noopener">{t('Ver menú público','View public menu')}</a></>}</p>
   </header>
   {status}
   {!canPublish&&<p data-menu-price-role role="note" className="rounded-xl bg-[#fff8eb] px-3 py-2 text-sm text-[#5c3b00]">{t('Puede editar el menú y guardar platos como borrador. Publicar platos y cambiar precios publicados lo hace un administrador o encargado de la empresa.','You can edit the menu and save dishes as drafts. Publishing dishes and changing published prices is done by a company administrator or manager.')}</p>}

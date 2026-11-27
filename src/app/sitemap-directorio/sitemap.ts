@@ -5,7 +5,7 @@ import { DIR_INDEX_IMPORTED } from "@/lib/directory/feature-flags";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 
 // Mapa del sitio del DIRECTORIO (2026-11-18): un archivo por sección, /sitemap-directorio/sitemap/<sección>.xml, con
-// las fichas /lugar/<slug> que se pueden indexar (misma regla que la ficha, feature-flags.ts placeIndexable):
+// las fichas /negocios/<slug> que se pueden indexar (misma regla que la ficha, feature-flags.ts placeIndexable):
 //  - reclamadas o verificadas: siempre;
 //  - importadas sin reclamar: solo con teléfono, horario o sitio web, y solo si DIR_INDEX_IMPORTED no es 'false'.
 // Cada sección queda muy por debajo del límite de 50 000 direcciones de Google (hoy la mayor, restaurantes, ≈1 000 ×2
@@ -47,7 +47,7 @@ export default async function sitemap(props: { id: Promise<string> }): Promise<M
     for (const f of [...principales, ...conHorario]) unicas.set(f.slug, f);
     const out: MetadataRoute.Sitemap = [];
     for (const f of [...unicas.values()].sort((a, b) => a.slug.localeCompare(b.slug))) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/lugar/${f.slug}`)}`, lastModified: f.updated_at ? new Date(f.updated_at) : undefined, changeFrequency: "weekly", priority: 0.5 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/negocios/${f.slug}`)}`, lastModified: f.updated_at ? new Date(f.updated_at) : undefined, changeFrequency: "weekly", priority: 0.5 });
     }
     return out;
   } catch (err) {

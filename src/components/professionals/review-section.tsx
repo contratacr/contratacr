@@ -176,7 +176,7 @@ export function ReviewSection({
 }
 
 /**
- * The pieces of the Reseñas tab, shared with the place page (/lugar, owner 2026-11-27: «la reseña debe de ser igual a la
+ * The pieces of the Reseñas tab, shared with the place page (/negocios, owner 2026-11-27: «la reseña debe de ser igual a la
  * de los profesionales»). Same markup as before; the professional profile renders exactly what it rendered.
  */
 export function ReviewsSummary({ reviewCount, ratingAvg, distribution, note, hooks = false }: { reviewCount: number; ratingAvg: number; distribution: number[] | null; note?: React.ReactNode; /** data-rating-summary (place page tests). */ hooks?: boolean }) {

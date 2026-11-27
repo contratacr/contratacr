@@ -24,7 +24,7 @@ export function directoryActiveTab(pathname: string | null | undefined, sections
   if (en("/asistente")) return "asistente";
   if (en("/listas") || en("/lista")) return "listas";
   if (en("/yo") || en("/notificaciones") || en("/mensajes") || en("/dashboard") || ruta === "/empleos/mis-empleos" || ruta === "/promociones/mis-promociones") return "yo";
-  if (ruta === "/" || ruta === "/buscar" || en("/buscar") || en("/lugar") || en("/lugares") || en("/servicios") || en("/profesionales") || esBusqueda) return "buscar";
+  if (ruta === "/" || ruta === "/buscar" || en("/buscar") || en("/negocios") || en("/lugares") || en("/servicios") || en("/profesionales") || esBusqueda) return "buscar";
   if (sections.some((section) => en(`/${section}`))) return "buscar";
   return null;
 }

@@ -2,7 +2,7 @@ import {formatMenuMoney} from '@/lib/directory/menu-price';
 import {MENU_DIETARY_LABELS,type PublicMenu,type PublicMenuItem} from '@/lib/directory/menu-schemas';
 
 /**
- * LOCAL PRO ONLY (multivertical P2). Public menu of a restaurant (/lugar/[slug]/menu once wired), data from
+ * LOCAL PRO ONLY (multivertical P2). Public menu of a restaurant (/negocios/[slug]/menu once wired), data from
  * dir_place_menu_public(slug). Not imported yet. Server component (no state), built for 390 px first:
  * - every price is the FINAL price (IVA 13 % + 10 % service when the place charges it) with its breakdown below;
  * - dietary tags are text chips (never colour only); «Agotado» badge; daily window («De 06:00 a 11:00»);
@@ -15,7 +15,7 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
  const en=locale==='en',lang=en?'en':'es',t=(es:string,english:string)=>en?english:es;
  const money=(minor:number)=>formatMenuMoney(minor,menu.currency,lang);
  const {pricing}=menu,service=pricing.serviceCharge&&pricing.serviceRateBps>0;
- const placeHref=(en?'/en':'')+'/lugar/'+menu.slug;
+ const placeHref=(en?'/en':'')+'/negocios/'+menu.slug;
  const updated=new Intl.DateTimeFormat(en?'en-US':'es-CR',{dateStyle:'long',timeZone:'America/Costa_Rica'}).format(new Date(menu.updatedAt));
  const priceNote=service
   ?t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}) y servicio (${pct(pricing.serviceRateBps)}).`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) and service (${pct(pricing.serviceRateBps)}) included.`)

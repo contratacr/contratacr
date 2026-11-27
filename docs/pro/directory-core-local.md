@@ -11,7 +11,7 @@ Estado (2026-11-16): SQL y bibliotecas listos y verificados en PGlite (memoria).
 | `scripts/directory/stage-import.mjs` | Convierte un archivo **local** (GeoJSON tipo OSM o JSON de Overpass) en cargas para `dir_import_stage`. Sin red ni base de datos. |
 | `scripts/directory/fixtures/osm-sample.geojson` | Datos sintéticos inventados para la prueba (no copiados de OSM). |
 | `src/lib/directory/types.ts`, `schemas.ts` | Tipos públicos y esquemas zod (mutaciones, reportes, atributos por vertical). |
-| `src/components/directory/place-page.tsx`, `place-report-form.tsx` | Ficha pública `/lugar/[slug]` y formulario de reporte/retiro (ES/EN, «usted»). Aún no importados. |
+| `src/components/directory/place-page.tsx`, `place-report-form.tsx` | Ficha pública `/negocios/[slug]` y formulario de reporte/retiro (ES/EN, «usted»). Aún no importados. |
 | `scripts/pro/verify-directory-core-db.mjs`, `verify-directory-import-db.mjs` | Pruebas PGlite. |
 
 ## Modelo (F1)

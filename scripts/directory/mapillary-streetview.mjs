@@ -113,6 +113,6 @@ async function main(){
  await Promise.all(Array.from({length:concurrency},async()=>{while(cursor<todo.length)await handle(todo[cursor++]);}));
  console.log(apply?'Guardado.':'Dry run: no se escribió nada. Use --apply.');
  console.log('Por sección:');for(const [v,s] of Object.entries(stats))console.log(`  ${v}: ${JSON.stringify(s)}`);
- console.log('Ejemplos:');for(const x of examples)console.log('  /lugar/'+x);
+ console.log('Ejemplos:');for(const x of examples)console.log('  /negocios/'+x);
 }
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href)await main();

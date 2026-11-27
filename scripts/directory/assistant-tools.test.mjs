@@ -85,7 +85,7 @@ test("places: neutral backend order kept, data quality and source/date cited (ES
 test("place details cite sources and update date", async () => {
   const r = await T.runDirectoryTool("directory_get_place", { slug: "farmacia-a" }, mockBackend(), "es", now);
   assert.match(r.answer, /OpenStreetMap \(ODbL 1\.0\) · actualizado el 10 nov 2026/);
-  assert.equal(r.href, "/lugar/farmacia-a");
+  assert.equal(r.href, "/negocios/farmacia-a");
   assert.equal(await T.runDirectoryTool("directory_get_place", { slug: "no-existe" }, mockBackend(), "es", now), null);
   assert.equal(await T.runDirectoryTool("directory_get_place", { slug: "../x" }, mockBackend(), "es", now), null, "invalid input");
 });

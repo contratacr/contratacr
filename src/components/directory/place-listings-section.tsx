@@ -2,7 +2,7 @@ import {BIZ} from './biz-ui';
 import {formatMoney,listingPath,type PublicListing} from '@/lib/directory/listing-public';
 
 /**
- * LOCAL PRO ONLY (multivertical V4/R1 + place page polish): «Anuncios de este negocio» block for /lugar/<slug> of a
+ * LOCAL PRO ONLY (multivertical V4/R1 + place page polish): «Anuncios de este negocio» block for /negocios/<slug> of a
  * dealer (vehicle_dealer) or real-estate agency (real_estate). Server-safe. The caller passes the public listings
  * whose place_slug is this place, already ordered by a neutral key (published_at desc). Reserved ones are labelled.
  */

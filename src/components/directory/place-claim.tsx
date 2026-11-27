@@ -6,7 +6,7 @@ import {claimBenefits} from '@/lib/directory/place-verticals';
 
 /**
  * LOCAL PRO ONLY (multivertical F3; e-mail first since the owner decision of 2026-11-17): «¿Es su negocio? Reclámelo
- * gratis» on /lugar/<slug> (only while unclaimed). Choices, in this order:
+ * gratis» on /negocios/<slug> (only while unclaimed). Choices, in this order:
  *  1. email_listed: a one-time code to the e-mail ALREADY on the place, shown masked (the claimant never types it);
  *  2. email_domain: a code to an address on the business website's domain (free mailboxes refused);
  *  3. staff review: cédula jurídica (Hacienda lookup) or documents (<ClaimReviewed/>, admin queue).

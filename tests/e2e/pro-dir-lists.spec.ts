@@ -23,12 +23,12 @@ test('saved lists: save from the place page, private by default, share link with
  let user:DisposableAccount|undefined,other:DisposableAccount|undefined;
  try{
   await context.setExtraHTTPHeaders(randomIp());
-  await gotoOK(page,`/lugar/${a}`);
+  await gotoOK(page,`/negocios/${a}`);
   await expect(page.locator('[data-save-login]')).toHaveAttribute('href',new RegExp(`/login\\?redirect=.*${a}`));
   expect((await postJson(context,'/api/listas',{actionId:uid(),action:'create',listId:uid(),name:'X'})).status).toBe(401);
   user=await createDisposableAccount({prefix:'dir-lists'});await login(context,user);
   const listName=`Sodas ${tag}`;
-  await gotoOK(page,`/lugar/${a}`);
+  await gotoOK(page,`/negocios/${a}`);
   // Phones (owner 2026-11-27): «Guardar» is an option of the bar's «…» sheet (MenuFicha); from lg it sits in the chip row.
   const phone=(page.viewportSize()?.width??1280)<1024;
   const menuItem=(name:string)=>page.locator('[data-menu-ficha]').filter({visible:true}).getByRole('menuitem',{name});

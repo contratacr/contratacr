@@ -36,11 +36,11 @@ test('publish: in-app notice with the claim link, push and e-mail once; a replay
  assert.equal(r.notified,true);
  const [row]=[...db.notifications.values()];
  assert.equal(row.type,'place_request_published');assert.equal(row.user_id,'u1');
- assert.equal(row.data.link,'/lugar/soda-dona-ana-abc123/reclamar');
+ assert.equal(row.data.link,'/negocios/soda-dona-ana-abc123/reclamar');
  assert.equal(row.message,'"Soda Doña Ana" ya está publicado en ContrataCR. Reclámelo para administrar su ficha.');
  assert.equal(pushes.length,1);
  assert.equal(box.length,1);assert.equal(box[0].to,'ana@example.com');assert.match(box[0].subject,/Soda Doña Ana ya está en ContrataCR/);
- assert.match(box[0].text,/\/lugar\/soda-dona-ana-abc123\/reclamar/);
+ assert.match(box[0].text,/\/negocios\/soda-dona-ana-abc123\/reclamar/);
  const again=await N.notifyPlaceRequestDecision(db,{placeId:'p1',decision:'publish'});
  assert.equal(again.notified,false);assert.equal(db.notifications.size,1);assert.equal(pushes.length,1);assert.equal(box.length,1);
 });

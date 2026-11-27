@@ -11,7 +11,7 @@ import {PROVINCES,getCantonsByProvince} from '@/lib/data/cr-geography';
 /**
  * «Empresa o local» at sign-up (owner 2026-11-27, directory on only): «Agregar o reclamar mi empresa».
  * 1. Search the directory by name (/api/negocio/buscar, every place section): a found business is claimed through
- *    the existing claim page (/lugar/<slug>/reclamar).
+ *    the existing claim page (/negocios/<slug>/reclamar).
  * 2. Not found: a short request (section, name, zone, contact) → POST /api/negocio/solicitud, a draft place that the
  *    team reviews in /admin/directorio «Lugares nuevos». Sending needs an account (create one or sign in, then back here).
  */
@@ -61,7 +61,7 @@ export function BusinessSignup({locale,signedIn,redirect}:{locale:string;signedI
     {hits.length>0
      ?<ul className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5e9ee]" data-business-results>
       {hits.map(h=><li key={h.slug}>
-       <a href={`${prefix}/lugar/${h.slug}/reclamar`} data-business-claim={h.slug} className={`flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-[#f7fafc] ${ring}`}>
+       <a href={`${prefix}/negocios/${h.slug}/reclamar`} data-business-claim={h.slug} className={`flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-[#f7fafc] ${ring}`}>
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eaf7fd] text-[#0083b0]"><Store aria-hidden className="h-5 w-5"/></span>
         <span className="min-w-0 flex-1">
          <span className="block truncate text-[15px] font-bold">{h.name}</span>

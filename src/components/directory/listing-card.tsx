@@ -53,7 +53,7 @@ export function ListingCard({item,locale,headingLevel=3}:{item:ListingSearchItem
   {facts.length>0&&<p className="text-sm text-slate-700">{facts.join(' · ')}</p>}
   {(area||distance)&&<p className="text-sm text-slate-700">{area}{area&&distance?' · ':''}{distance}<span className="sr-only">{t(' (ubicación aproximada)',' (approximate location)')}</span></p>}
   <p className="text-sm text-slate-600">{item.sellerKind==='business'
-   ?<>{item.placeSlug?<a className="underline underline-offset-2" href={`${en?'/en':''}/lugar/${item.placeSlug}`}>{item.placeName}</a>:t('Negocio','Business')}{item.sellerBusinessVerified?t(' · Negocio verificado',' · Verified business'):''}</>
+   ?<>{item.placeSlug?<a className="underline underline-offset-2" href={`${en?'/en':''}/negocios/${item.placeSlug}`}>{item.placeName}</a>:t('Negocio','Business')}{item.sellerBusinessVerified?t(' · Negocio verificado',' · Verified business'):''}</>
    :t('Particular','Private seller')}</p>
  </article>;
 }

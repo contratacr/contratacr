@@ -198,7 +198,7 @@ export async function runDirectoryTool(tool:DirectoryToolName,rawInput:unknown,b
   const a=place.address,addr=[a.line,a.locality,a.adminArea2,a.adminArea1].filter(Boolean).join(', ');
   const src=place.sources.length?place.sources.map(s=>`${s.name} (${s.license})`).join('; '):t('Información del negocio','Business information');
   const citation={label:src,date:crDay(place.updatedAt,en)};
-  return {tool,href:`${prefix(locale)}/lugar/${place.slug}`,ctaLabel:t('Ver ficha','View details'),citations:[citation],
+  return {tool,href:`${prefix(locale)}/negocios/${place.slug}`,ctaLabel:t('Ver ficha','View details'),citations:[citation],
    answer:`${place.name}${addr?` — ${addr}`:''}${place.phone?`\n${t('Teléfono','Phone')}: ${place.phone}`:''}\n${t('Fuente','Source')}: ${src} · ${t('actualizado el','updated on')} ${citation.date}.`};
  }
  const p=TOOL_INPUT.directory_compare_prices.safeParse(rawInput);if(!p.success)return null;

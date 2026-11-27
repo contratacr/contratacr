@@ -32,7 +32,7 @@ export async function AdminPhoneReport({locale}:{locale:string}){
    <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm">
     <thead><tr className="border-b border-slate-200"><th className="py-2 pr-3">{t('Lugar','Place')}</th><th className="py-2 pr-3">{t('Sección','Section')}</th><th className="py-2 pr-3">{t('Teléfono','Phone')}</th><th className="py-2">{t('Motivo','Reason')}</th></tr></thead>
     <tbody>{flagged.map(({r,c})=><tr key={r.slug} data-admin-phone-row={r.slug} className="border-b border-slate-100 align-top">
-     <td className="py-2 pr-3"><a className="font-semibold underline underline-offset-2" href={`${prefix}/lugar/${r.slug}`}>{r.name}</a></td>
+     <td className="py-2 pr-3"><a className="font-semibold underline underline-offset-2" href={`${prefix}/negocios/${r.slug}`}>{r.name}</a></td>
      <td className="py-2 pr-3">{r.vertical_id}</td>
      <td className="py-2 pr-3 whitespace-nowrap">{r.phone}</td>
      <td className="py-2">{c.reason==='foreign'?t('Otro país','Another country'):t('Formato inválido u obsoleto','Invalid or obsolete format')}</td>

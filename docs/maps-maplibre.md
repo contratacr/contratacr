@@ -13,7 +13,7 @@ Estado: solo local (rama Pro). Nada de esto está desplegado.
 |---|---|---|
 | Mapa de resultados de servicios (`/buscar`, `/servicios/…`) | `src/components/maps/search-map-panel.tsx` | MapLibre + OpenFreeMap |
 | Zonas de trabajo del profesional (registro y perfil) | `src/components/maps/workplaces-picker.tsx` | MapLibre; buscador de dirección y nombre del punto con Google |
-| Mapa de un lugar (`/lugar/<slug>`) | `src/components/maps/places-map.tsx` desde `place-page.tsx` | MapLibre |
+| Mapa de un lugar (`/negocios/<slug>`) | `src/components/maps/places-map.tsx` desde `place-page.tsx` | MapLibre |
 | Mapa de sucursales (`/marca/<slug>`) | `places-map.tsx` | MapLibre |
 | «Ver en el mapa» en las listas del directorio | `src/components/maps/results-map-toggle.tsx` | MapLibre, se descarga al abrirlo |
 | Autocompletado de dirección (inicio, filtros de búsqueda, buscador del selector de zonas) | `landing-hero.tsx`, `search-filters.tsx`, `workplaces-picker.tsx` | Google, se carga al enfocar el campo |

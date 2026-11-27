@@ -24,7 +24,7 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   await claimByEmail(context,slug);
   const rv=await db.rpc('dir_review_submit',{p_actor:uid(),p_input:{actionId:uid(),reviewId:uid(),slug,revision:0,rating:3.5,comment:t('Buena comida, pero la espera fue larga.','Good food, but the wait was long.'),authorName:'Mariana Solís'}});
   expect(rv.error).toBeNull();reviewId=(rv.data as {reviewId:string}).reviewId;
-  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
+  await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'reviews');
   const editor=page.locator(`[data-owner-reply-editor="${reviewId}"]`);await expect(page.locator(`[data-owner-reply-editor="${reviewId}"][data-ready]`)).toBeVisible({timeout:45000});
   await expect(page.locator('[data-place-review-manager]')).toBeVisible();await expect(page.locator('[data-place-review-form]')).toHaveCount(0);
   await editor.getByRole('button',{name:t('Responder como la empresa','Reply as the business')}).click();
@@ -72,7 +72,7 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   // A visitor without an account reports the review to the moderators.
   const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
   try{
-   await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
+   await gotoOK(g,`${prefix}/negocios/${slug}`);await openPlaceTab(g,'reviews');
    /* Hydrated (the professional profile's write card). */await expect(g.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
    const flag=g.locator(`[data-review-flag="${reviewId}"]`);
    await flag.getByText(t('Reportar reseña','Report review')).click();
@@ -82,7 +82,7 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   }finally{await guest.close();}
   expect((await db.from('dir_review_flags').select('reason,status,reporter_id').eq('review_id',reviewId)).data).toEqual([{reason:'fake',status:'open',reporter_id:null}]);
   // The business does not see «report» on its own place; the public page never shows manager ids.
-  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
+  await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'reviews');
   await expect(page.locator('[data-review-flag]')).toHaveCount(0);
   const html=await page.locator('[data-place-reviews]').innerHTML();for(const id of [f.owner.id,...(member?[member.id]:[])])expect(html).not.toContain(id);
   expect(errors()).toEqual([]);

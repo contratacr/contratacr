@@ -6,7 +6,7 @@ import {PropertiesHome} from '@/components/directory/properties-home';
 import {searchSlots} from '@/components/directory/search-section';
 import {loadDirectorySearch,type SearchPageParams} from '@/lib/directory/search-server';
 
-// LOCAL PRO ONLY (R1 + F6, development only like /lugar): /inmuebles landing with the shared directory search.
+// LOCAL PRO ONLY (R1 + F6, development only like /negocios): /inmuebles landing with the shared directory search.
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{
  if(!DIR_ENABLED||!DIRECTORY_LISTINGS_ENABLED)return {};

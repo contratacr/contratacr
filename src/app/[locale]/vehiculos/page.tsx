@@ -7,7 +7,7 @@ import {VehiclesHome} from '@/components/directory/vehicles-home';
 import {searchSlots} from '@/components/directory/search-section';
 import {loadDirectorySearch,type SearchPageParams} from '@/lib/directory/search-server';
 
-// LOCAL PRO ONLY (V4 + F6, development only like /lugar): /vehiculos landing with the shared directory search.
+// LOCAL PRO ONLY (V4 + F6, development only like /negocios): /vehiculos landing with the shared directory search.
 // Make chips: only makes with at least one public listing (neutral alphabetical order).
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:{params:Promise<{locale:string}>}):Promise<Metadata>{

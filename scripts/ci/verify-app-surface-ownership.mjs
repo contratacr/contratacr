@@ -42,8 +42,8 @@ const pageRules = [
   // Post-security fixes: confirmation page of the site-form subscription (double opt-in).
   [/^\/\[locale\]\/confirmar-pro$/, "pro-round6d-site.spec.ts"],
   // Multivertical directory (local Pro): place page + public menu, sections with search, listings, how we rank (F0).
-  [/^\/\[locale\]\/lugar\/\[slug\]\/menu$/, "pro-dir-menu.spec.ts"],
-  [/^\/\[locale\]\/lugar(?:\/|$)/, "pro-dir-places.spec.ts"],
+  [/^\/\[locale\]\/negocios\/\[slug\]\/menu$/, "pro-dir-menu.spec.ts"],
+  [/^\/\[locale\]\/negocios(?:\/|$)/, "pro-dir-places.spec.ts"],
   // Place features round (2026-11-17): public events, brand pages, saved lists (mine + shared link).
   [/^\/\[locale\]\/eventos$/, "pro-dir-events.spec.ts"],
   [/^\/\[locale\]\/marca\/\[slug\]$/, "pro-dir-brands.spec.ts"],

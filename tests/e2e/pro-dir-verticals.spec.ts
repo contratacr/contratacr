@@ -85,7 +85,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await expect(page.locator(`[data-search-item="p:${cafe!.slug}"]`)).toBeVisible();
  await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(cafe!.name as string)}`);
  await expect(page.locator(`[data-search-item="p:${cafe!.slug}"]`)).toHaveCount(0);
- await gotoOK(page,`${prefix}/lugar/${cafe!.slug}`);
+ await gotoOK(page,`${prefix}/negocios/${cafe!.slug}`);
  // The breadcrumb is desktop-only (hidden below sm since 2026-11-21); its link still names the new section on every width.
  await expect(page.locator(`nav[aria-label="${en?'Breadcrumb':'Ruta de navegación'}"] a`,{hasText:en?'Cafés, bakeries and bars':'Cafés, panaderías y bares'})).toHaveAttribute('href',`${prefix}/cafes`);
 
@@ -94,13 +94,13 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await gotoOK(page,`${prefix}/bancos`);
  // 2026-11-19: the policy notes are not on the results screen or the place page; they live in the Terms (13.1).
  await expect(page.locator('[data-places-home="bancos"]')).not.toContainText(en?'does not compare rates':'no compara tasas');
- await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}`);await openPlaceTab(page,'reviews');
+ await gotoOK(page,`${prefix}/negocios/e2e-banco-${tag}`);await openPlaceTab(page,'reviews');
  await expect(page.locator('[data-place-map-only]')).toHaveCount(0);
  await expect(page.locator('[data-place-reviews]')).toBeVisible();// service reviews (2026-11-17)
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'not about rates, fees, financial products':'No tratan sobre tasas, comisiones, productos financieros');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);
  await openPlaceTab(page,'info'); await expect(page.locator('[data-place-claim-link]')).toBeVisible();// the business can still claim and fix its listing
- await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}/reclamar`);// 2026-11-19: the claim flow and its benefits have their own page
+ await gotoOK(page,`${prefix}/negocios/e2e-banco-${tag}/reclamar`);// 2026-11-19: the claim flow and its benefits have their own page
  await expect(page.locator('[data-place-claim]')).toBeVisible();
  await expect(page.locator('[data-claim-benefits]')).not.toContainText(en?'prices':'precios');
  await expect(page.locator('[data-claim-benefits]')).not.toContainText(en?'menu':'menú');
@@ -112,14 +112,14 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await seedPlace(db,{slug:`e2e-clinica-${tag}`,vertical:'health',name:`E2E Clínica ${tag}`,adminArea1:'Heredia',attributes:{kind:'clinic',publicService:true}});
  if(!(await healthEnabled(page))){
   expect((await page.request.get(`${origin}${prefix}/salud`,{maxRedirects:0})).status(),'health listing while DIR_HEALTH_ENABLED is off').toBe(404);
-  expect((await page.request.get(`${origin}${prefix}/lugar/e2e-clinica-${tag}`,{maxRedirects:0})).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
+  expect((await page.request.get(`${origin}${prefix}/negocios/e2e-clinica-${tag}`,{maxRedirects:0})).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
  }else{
  await gotoOK(page,`${prefix}/salud?q=${encodeURIComponent(`E2E Clínica ${tag}`)}`);
  const card=page.locator(`[data-search-item="p:e2e-clinica-${tag}"]`);
  await expect(card.locator('[data-health-permit="unverified"]')).toHaveText(en?'Permit not verified by ContrataCR':'Habilitación sin verificar por ContrataCR');
  await expect(card.locator('[data-public-service]')).toBeVisible();
  await expect(page.locator('[data-places-home="salud"]')).not.toContainText(en?'medical or veterinary advice':'no da consejo médico');
- await gotoOK(page,`${prefix}/lugar/e2e-clinica-${tag}`);
+ await gotoOK(page,`${prefix}/negocios/e2e-clinica-${tag}`);
  await openPlaceTab(page,'info');
  await expect(page.locator('[data-health-permit="unverified"]')).toContainText(en?'Permit not verified by ContrataCR.':'Habilitación sin verificar por ContrataCR.');
  await openPlaceTab(page,'reviews');await expect(page.locator('[data-place-review-note]')).toContainText(en?'attention and service':'la atención y el servicio');
@@ -127,7 +127,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  }
  // Lodging: no ICT declaratoria claimed.
  await seedPlace(db,{slug:`e2e-hotel-${tag}`,vertical:'lodging',name:`E2E Hotel ${tag}`,adminArea1:'Heredia',attributes:{kind:'hotel'}});
- await gotoOK(page,`${prefix}/lugar/e2e-hotel-${tag}`);
+ await gotoOK(page,`${prefix}/negocios/e2e-hotel-${tag}`);
  await expect(page.locator('[data-place-tourism-note]')).toHaveCount(0);
  await expectNoHorizontalOverflow(page);
  // Where those notes went: the Terms, section 13.1 «Directorio de lugares y negocios», with the ranking page one tap away.

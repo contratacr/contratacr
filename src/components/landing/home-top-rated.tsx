@@ -21,7 +21,7 @@ export async function HomeTopRated() {
   ]);
   const items = [
     ...pros.filter((p) => p.reviewCount > 0).map((p) => ({ key: `p:${p.id}`, href: `/profesionales/${p.slug}`, name: p.fullName, photo: p.avatarUrl ?? null, avg: p.ratingAvg, count: p.reviewCount, sub: [getCategoryLabel(p.categoryId, locale), p.cantonName || p.provinceName].filter(Boolean).join(" · ") })),
-    ...places.flat().map((p) => ({ key: `l:${p.slug}`, href: `/lugar/${p.slug}`, name: p.name, photo: p.photo, avg: p.average ?? 0, count: p.count, sub: [(DIRECTORY_SECTION_LABELS[p.section] as Record<string, string> | undefined)?.[locale] ?? "", p.area].filter(Boolean).join(" · ") })),
+    ...places.flat().map((p) => ({ key: `l:${p.slug}`, href: `/negocios/${p.slug}`, name: p.name, photo: p.photo, avg: p.average ?? 0, count: p.count, sub: [(DIRECTORY_SECTION_LABELS[p.section] as Record<string, string> | undefined)?.[locale] ?? "", p.area].filter(Boolean).join(" · ") })),
   ]
     // Rating weighted by how many reviews back it (a 5.0 with one review must not beat a 4.7 with eighty): the average
     // pulled toward 4.0 as if it had five extra reviews; ties go to more reviews.

@@ -5,7 +5,7 @@ import {sendLaunchEmail} from './launch-email';
 
 // «Agregar mi empresa» (2026-11-27): when the team publishes or rejects a requested place (/admin/directorio «Lugares
 // nuevos»), the person who asked hears it: an in-app notification (types place_request_published / _rejected,
-// migration 545; the published one links to /lugar/<slug>/reclamar) and an e-mail through the directory e-mail
+// migration 545; the published one links to /negocios/<slug>/reclamar) and an e-mail through the directory e-mail
 // adapter (launch-email.ts; mock outbox in local dev). Idempotent: the notification id and the e-mail key derive from
 // the place and the decision, so a replayed decision never notifies twice. Never throws.
 type AdminDb=ReturnType<typeof import('@/lib/supabase/admin').createAdminClient>;
@@ -18,7 +18,7 @@ async function derivedId(text:string){
  return `${x.slice(0,8)}-${x.slice(8,12)}-${x.slice(12,16)}-${x.slice(16,20)}-${x.slice(20)}`;
 }
 
-export const placeRequestClaimLink=(slug:string)=>`/lugar/${encodeURIComponent(slug)}/reclamar`;
+export const placeRequestClaimLink=(slug:string)=>`/negocios/${encodeURIComponent(slug)}/reclamar`;
 
 export async function notifyPlaceRequestDecision(db:AdminDb,input:{placeId:string;decision:PlaceRequestDecision}){
  try{

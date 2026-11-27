@@ -46,7 +46,7 @@ test('brands: OSM brand import + name match, brand page, split/merge, claim with
    await expect(page).toHaveURL(/provincia=Heredia/);
    await expect(page.locator('[data-brand-branch]')).toHaveCount(1);
    await expect(page.locator('[data-brand-map]')).toHaveAttribute('data-brand-map','1');
-   await gotoOK(page,`${prefix}/lugar/${slugs[0]}`);
+   await gotoOK(page,`${prefix}/negocios/${slugs[0]}`);
    await openPlaceTab(page,'info');
    await expect(page.locator(`[data-place-brand="${b.slug}"]`)).toContainText(en?'Branch of':'Sucursal de');
   }
@@ -93,7 +93,7 @@ test('brands: OSM brand import + name match, brand page, split/merge, claim with
    await expect(page.locator('[data-brand-claimed]')).toBeVisible();
    await expect(page.locator('[data-brand-website]')).toHaveAttribute('href','https://cadena.example.test');
    await expect(page.locator('main')).toContainText(language==='en'?'Neighbourhood supermarkets.':'Supermercados de barrio.');
-   await gotoOK(page,`${prefix}/lugar/${slugs[1]}`);
+   await gotoOK(page,`${prefix}/negocios/${slugs[1]}`);
    await openPlaceTab(page,'info');
    await expect(page.locator('[data-place-brand-about]')).toContainText(language==='en'?'Neighbourhood supermarkets.':'Supermercados de barrio.');// 2026-11-19: «Acerca de <marca>» section
   }

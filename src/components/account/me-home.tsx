@@ -88,7 +88,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
    <ul className="space-y-3">{cards.map(p=><li key={p.slug} data-experience-card={p.slug} className="relative rounded-2xl border border-[#d7e1ea] p-4">
     <button type="button" aria-label={`${t('Descartar','Dismiss')}: ${p.name}`} onClick={()=>{dismissExperience(p.slug);setDismissed(readDismissed().concat(p.slug));}} className={`absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 ${ring}`}><X aria-hidden="true" className="h-4 w-4"/></button>
     <div className="flex items-center gap-3 pr-8"><Thumb name={p.name} image={p.image}/><div className="min-w-0"><p className="truncate font-bold">{p.name}</p><p className="text-sm text-slate-700">{t('¿Recomienda este negocio?','Do you recommend this business?')}</p></div></div>
-    <div className="mt-3 flex gap-2">{([['yes',t('Sí','Yes')],['no','No'],['maybe',t('Tal vez','Maybe')]] as const).map(([k,label])=><a key={k} href={`${prefix}/lugar/${p.slug}?recomienda=${k}#resenas`} onClick={()=>exp(p.slug,k)} className={`flex min-h-11 flex-1 items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-sm font-bold ${ring}`}>{label}</a>)}</div></li>)}</ul></section>}
+    <div className="mt-3 flex gap-2">{([['yes',t('Sí','Yes')],['no','No'],['maybe',t('Tal vez','Maybe')]] as const).map(([k,label])=><a key={k} href={`${prefix}/negocios/${p.slug}?recomienda=${k}#resenas`} onClick={()=>exp(p.slug,k)} className={`flex min-h-11 flex-1 items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-sm font-bold ${ring}`}>{label}</a>)}</div></li>)}</ul></section>}
 
   <section data-me-impact aria-labelledby="me-impact"><h2 id="me-impact" className={h2}>{t('Impacto','Impact')}</h2>
    <div role="tablist" className="flex border-b border-[#e3eaf1]">{(['reviews','photos'] as const).map(k=><button key={k} role="tab" type="button" aria-selected={impact===k} onClick={()=>setImpact(k)} className={`flex-1 border-b-2 py-3 text-sm font-bold ${ring} ${impact===k?'border-[#009FD9]':'border-transparent text-slate-600'}`}>{k==='reviews'?t('Reseñas','Reviews'):t('Fotos','Photos')}</button>)}</div>
@@ -98,7 +98,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
 
   {recent.length>0&&<section data-me-recent aria-labelledby="me-recent"><h2 id="me-recent" className={h2}>{t('Vistos recientemente','Recently viewed')}</h2>
    <ul className="divide-y divide-[#eef2f6]">{recent.slice(0,5).map(p=><li key={p.slug} className="flex items-center gap-3 py-3"><Thumb name={p.name} image={p.image}/>
-    <a href={`${prefix}/lugar/${p.slug}`} className={`min-w-0 flex-1 ${ring}`}><span className="block truncate font-bold">{p.name}</span>{p.area&&<span className="block truncate text-sm text-slate-600">{p.area}</span>}</a>
+    <a href={`${prefix}/negocios/${p.slug}`} className={`min-w-0 flex-1 ${ring}`}><span className="block truncate font-bold">{p.name}</span>{p.area&&<span className="block truncate text-sm text-slate-600">{p.area}</span>}</a>
     <SaveToList slug={p.slug} locale={locale} signedIn loginHref={null} name={p.name} area={p.area} image={p.image} variant="icon"/></li>)}</ul></section>}
 
   <section data-me-contrib aria-labelledby="me-contrib"><h2 id="me-contrib" className={h2}>{t('Contribuciones','Contributions')}</h2>

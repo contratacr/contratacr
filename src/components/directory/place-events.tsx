@@ -15,7 +15,7 @@ export function EventCard({event,en,place}:{event:PlaceEvent;en:boolean;place?:{
  return <article data-event={event.id} className="space-y-1 rounded-2xl border border-[#d7e1ea] bg-white p-4 text-[#162543]">
   <p className="text-sm font-semibold text-[#0b4f6c]"><time dateTime={event.startsAt}>{eventWhen(event,en)}</time></p>
   <h3 className="break-words text-lg font-bold">{event.title}</h3>
-  {place&&<p className="text-sm"><a className={`font-semibold underline underline-offset-2 ${ring}`} href={`${en?'/en':''}/lugar/${place.slug}`}>{place.name}</a>{place.area?` · ${place.area}`:''}</p>}
+  {place&&<p className="text-sm"><a className={`font-semibold underline underline-offset-2 ${ring}`} href={`${en?'/en':''}/negocios/${place.slug}`}>{place.name}</a>{place.area?` · ${place.area}`:''}</p>}
   {event.priceText&&<p className="text-sm" data-event-price>{event.priceText}</p>}
   {event.description&&<p className="whitespace-pre-line text-sm text-slate-700">{event.description}</p>}
  </article>;

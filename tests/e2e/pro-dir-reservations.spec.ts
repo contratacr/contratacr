@@ -9,7 +9,7 @@ import {crDay,featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): table reservations + same-day waitlist of a CLAIMED restaurant that
 // opted in. Owner (edition restaurantes) turns them on through /api/pro/table-reservations (CAS → 409); a visitor without
-// an account books a table and joins the waitlist on /lugar/<slug> (ES/EN UI); capacity is enforced; the owner confirms on
+// an account books a table and joins the waitlist on /negocios/<slug> (ES/EN UI); capacity is enforced; the owner confirms on
 // the bookings screen (/dashboard/pro/reservas-mesa) and notifies «your table is ready» — notices only reach the MOCK
 // sender (recorded with sender 'mock'); a company member can manage bookings, read_only cannot; an unclaimed place has
 // no form. Also captures the place page with reservation + Q&A + «Pedir» and the owner bookings screen (es/en, 1440+390).
@@ -53,7 +53,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
   try{
    for(const language of ['es','en'] as const){
     const en=language==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
-    await gotoOK(g,`${prefix}/lugar/${slug}`);
+    await gotoOK(g,`${prefix}/negocios/${slug}`);
     await openPlaceTab(g,'info');
     const box=g.locator('[data-place-reservations][data-ready]');await expect(box).toBeVisible({timeout:45000});
     await expect(box.getByRole('heading',{name:t('Reservar mesa','Book a table')})).toBeVisible();
@@ -77,7 +77,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
    const noContact=await postJson(guest,`/api/lugar/${slug}/reservas`,{kind:'booking',actionId:uid(),reservationId:uid(),day,time:'12:00',partySize:2,name:'Sin Contacto'});
    expect([noContact.status,noContact.body?.reason]).toEqual([400,'contact_required']);
    // Same-day waitlist through the UI.
-   await gotoOK(g,`/lugar/${slug}`);
+   await gotoOK(g,`/negocios/${slug}`);
    await openPlaceTab(g,'info');
    const box=g.locator('[data-place-reservations][data-ready]');await expect(box).toBeVisible({timeout:45000});
    await box.locator('[data-reservation-mode="waitlist"]').click();
@@ -90,7 +90,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
    await expect(g.locator('[data-reservation-status="waiting"][data-ready]')).toBeVisible({timeout:45000});
    await expect(g.locator('[data-reservation-position]')).toHaveText('1');
    // A place that did not opt in shows no form.
-   await gotoOK(g,`/lugar/soda-sin-reservas-${tag}`);await expect(g.locator('[data-place-reservations]')).toHaveCount(0);
+   await gotoOK(g,`/negocios/soda-sin-reservas-${tag}`);await expect(g.locator('[data-place-reservations]')).toHaveCount(0);
    expect(gErrors()).toEqual([]);
   }finally{await guest.close();}
 
@@ -140,7 +140,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
   // Place page capture (reservation + «Pedir»), ES and EN, as a signed-in visitor would see it.
   for(const language of ['es','en'] as const){
    const prefix=language==='en'?'/en':'/es';
-   await gotoOK(page,`${prefix}/lugar/${slug}`);
+   await gotoOK(page,`${prefix}/negocios/${slug}`);
    await openPlaceTab(page,'info');
    await expect(page.locator('html')).toHaveAttribute('lang',language);
    await expect(page.locator('[data-place-reservations][data-ready]')).toBeVisible({timeout:45000});

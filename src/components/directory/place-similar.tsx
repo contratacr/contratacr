@@ -31,7 +31,7 @@ export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:
     // No photo: a brand gradient (one of three, by name) with the initial — never a stock photo repeated on every card.
     const shade=SHADES[[...item.name].reduce((a,c)=>a+c.charCodeAt(0),0)%SHADES.length]!;
     return <li key={item.slug} className="w-[72%] max-w-[260px] shrink-0 snap-start">
-     <a href={`${en?'/en':''}/lugar/${item.slug}`} data-similar-place={item.slug} className="group block h-full overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+     <a href={`${en?'/en':''}/negocios/${item.slug}`} data-similar-place={item.slug} className="group block h-full overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
       <span className="relative block aspect-[16/10] overflow-hidden bg-[#dfe8ef]">
        {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
        {photo?<img src={placePhotoSrc(photo,800)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"/>

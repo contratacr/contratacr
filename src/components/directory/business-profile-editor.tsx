@@ -54,7 +54,7 @@ export function BusinessProfileEditor({locale,expectedActor,places,placeId}:{loc
   {places.length>1&&<nav aria-label={t('Empresas','Companies')}><ul className="flex flex-wrap gap-2">{places.map(p=><li key={p.id}><a aria-current={p.id===placeId?'page':undefined} className={p.id===placeId?primary:secondary} href={`${prefix}/dashboard/negocio/perfil?lugar=${p.slug}`}>{p.name}</a></li>)}</ul></nav>}
   {note('load')}
   {!data?<p role="status">{t('Cargando…','Loading…')}</p>:<>
-   <p className="text-sm text-[#52627a]"><a className="font-semibold text-[#162543] underline" href={`${prefix}/lugar/${data.slug}`}>{t('Ver ficha pública de ','Open the public page of ')}{data.name}</a></p>
+   <p className="text-sm text-[#52627a]"><a className="font-semibold text-[#162543] underline" href={`${prefix}/negocios/${data.slug}`}>{t('Ver ficha pública de ','Open the public page of ')}{data.name}</a></p>
    <section aria-labelledby="bp-contact" className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <h2 id="bp-contact" className="text-lg font-bold">{t('Contacto','Contact')}</h2>
     <form className="grid gap-3 sm:grid-cols-2" onSubmit={onContact} data-business-contact-form>

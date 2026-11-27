@@ -7,7 +7,7 @@ import {PLACE_SECTIONS} from '@/lib/directory/place-verticals';
 // «Agregar o reclamar mi empresa» (sign-up, owner 2026-11-27): GET ?q=<name> → up to 8 published places whose name
 // contains every word (dir_places.name_normalized, same normalisation as dir_normalize). A plain name lookup on purpose:
 // the ranked dir_search across every section is too slow for multi-word names to answer while the person types.
-// Public data only (name, section, zone); the claim itself happens on /lugar/<slug>/reclamar.
+// Public data only (name, section, zone); the claim itself happens on /negocios/<slug>/reclamar.
 const norm=(v:string)=>v.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 export async function GET(req:Request){
  const off=dirEnabledOnly();if(off)return off;

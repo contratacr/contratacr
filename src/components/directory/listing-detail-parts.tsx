@@ -69,7 +69,7 @@ export function LocationLine({listing,locale,approximateNote}:{listing:PublicLis
 
 export function SellerBlock({listing,locale}:{listing:PublicListing;locale:string}){
  const t=tr(locale),business=listing.sellerKind==='business';
- const href=listing.placeSlug?rutaConIdioma(locale,`/lugar/${listing.placeSlug}`):null;
+ const href=listing.placeSlug?rutaConIdioma(locale,`/negocios/${listing.placeSlug}`):null;
  return <section aria-labelledby="listing-seller" data-listing-seller={listing.sellerKind} className="space-y-2 rounded-2xl border border-[#d7e1ea] p-5">
   <h2 id="listing-seller" className="text-lg font-bold">{t('Quién vende','Seller')}</h2>
   <p className="flex items-center gap-2 font-semibold">{business?<Store aria-hidden className="size-5"/>:<User aria-hidden className="size-5"/>}

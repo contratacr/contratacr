@@ -6,7 +6,7 @@ import { r2Thumb } from "@/lib/r2-image-url";
 
 /**
  * Hero of the professional profile while the directory is on (2026-11-26 redesign, owner «rediseña los perfiles …
- * fíjese cómo lo hace Yelp … un rediseño completo»; same language as the place page /lugar/<slug>):
+ * fíjese cómo lo hace Yelp … un rediseño completo»; same language as the place page /negocios/<slug>):
  * - ONE photo only (owner 2026-11-26, like production): the round avatar, no cover band; the casos de éxito
  *   have their own tab;
  * - the round avatar (same 72/88 px box as the account panel, so the

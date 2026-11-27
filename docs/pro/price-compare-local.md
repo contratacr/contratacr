@@ -1,6 +1,6 @@
 # Comparador de precios de supermercados y farmacias (P3) + herramientas del asistente (A1/A2) — LOCAL
 
-Estado (2026-11-17): SQL aplicado a la base local (orden del manifiesto), página `/precios` y `/en/precios` (solo desarrollo, como `/lugar`), herramientas del asistente conectadas a `/api/ai-assistant` (solo desarrollo). Nada publicado; **ningún dato real importado**.
+Estado (2026-11-17): SQL aplicado a la base local (orden del manifiesto), página `/precios` y `/en/precios` (solo desarrollo, como `/negocios`), herramientas del asistente conectadas a `/api/ai-assistant` (solo desarrollo). Nada publicado; **ningún dato real importado**.
 
 ## Fuente oficial (MEIC): qué hay y qué no
 
@@ -27,7 +27,7 @@ UTF-8, coma o punto y coma, encabezado obligatorio: `codigo_producto, gtin, prod
 node scripts/directory/import-meic-prices.mjs --meta <meta.json> --catalog <catalogo.json> --places <comercios.json> --out <dir>
 ```
 
-El catálogo (GTIN con dígito verificador, unidad coherente con la presentación, medicamentos solo con `rxRequired:false`) y la correspondencia comercio → ficha `/lugar` los cura el dueño. Filas: `recorded` (observación `official_meic` enlazada), `unmatched_place`, `unknown_item`, `rx_refused`, `duplicate`, `invalid`. **Una fila de medicamento con receta o de producto desconocido nunca guarda precio** (restricción en la tabla). Mismo archivo = misma acción (idempotente); otro intento con el mismo sha256 → `price_import_duplicate` (409).
+El catálogo (GTIN con dígito verificador, unidad coherente con la presentación, medicamentos solo con `rxRequired:false`) y la correspondencia comercio → ficha `/negocios` los cura el dueño. Filas: `recorded` (observación `official_meic` enlazada), `unmatched_place`, `unknown_item`, `rx_refused`, `duplicate`, `invalid`. **Una fila de medicamento con receta o de producto desconocido nunca guarda precio** (restricción en la tabla). Mismo archivo = misma acción (idempotente); otro intento con el mismo sha256 → `price_import_duplicate` (409).
 
 ## Reglas del comparador
 

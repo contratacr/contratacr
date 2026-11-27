@@ -15,7 +15,7 @@ export const DIR_CLAIM_SMS_ENABLED=process.env.DIR_CLAIM_SMS_ENABLED==='true';
 // Launch flag (owner, 2026-11-18): the HEALTH section («Salud»: clinics, practices, labs, opticians) can stay OFF at
 // launch until the lawyer reviews it. Server variable DIR_HEALTH_ENABLED ('true' | 'false', never NEXT_PUBLIC_). Unset:
 // ON in local development, OFF in any production build. When OFF: /salud and /en/salud answer 404, a health place page
-// (/lugar/<slug>) answers 404 (noindex), the search/facets APIs refuse the section and drop health places from every
+// (/negocios/<slug>) answers 404 (noindex), the search/facets APIs refuse the section and drop health places from every
 // other result list or facet (all-places search, assistant), so nothing in lists, search, sitemap or navigation points to
 // it. Data and SQL stay untouched. Documented in docs/pro/required-env.md.
 export const DIR_HEALTH_ENABLED=process.env.DIR_HEALTH_ENABLED==='true'||(process.env.DIR_HEALTH_ENABLED!=='false'&&process.env.NODE_ENV==='development');
@@ -29,7 +29,7 @@ export function withoutDisabledFacetValues<T extends {value:string|number}>(valu
  return DIR_HEALTH_ENABLED||!values?values:values.filter(v=>v.value!=='health');
 }
 
-// Launch flag (2026-11-18): the whole public DIRECTORY (the 15 place sections, /lugar, /marca, /eventos, /precios, lists,
+// Launch flag (2026-11-18): the whole public DIRECTORY (the 15 place sections, /negocios, /marca, /eventos, /precios, lists,
 // table reservations, claims, reviews, Q&A, reports, the admin directory queue and their /api/* routes). Server variable
 // DIR_ENABLED ('true' | 'false', never NEXT_PUBLIC_). Unset: ON in local development, OFF in any production build, so a
 // production deploy shows the directory only with DIR_ENABLED=true. Section flags above (health, listings, SMS) still

@@ -38,7 +38,7 @@ test('sign-up: Profesional asks independiente or empresa; empresa finds and clai
  const hit=page.locator(`[data-business-claim="${slug}"]`);
  // Typed again until the page is hydrated (a value typed before hydration is not searched).
  await expect(async()=>{await page.locator('[data-business-search]').fill(`Soda Alta ${tag}`);await expect(hit).toBeVisible({timeout:4000});}).toPass({timeout:45000});
- await expect(hit).toHaveAttribute('href',`/lugar/${slug}/reclamar`);
+ await expect(hit).toHaveAttribute('href',`/negocios/${slug}/reclamar`);
  await shot('empresa-busqueda');
  // Not found, signed out: an account is needed first (the form would be lost on the way), and the API refuses.
  await page.locator('[data-business-search]').fill(`Nada ${tag} zzz`);
@@ -70,7 +70,7 @@ test('sign-up: Profesional asks independiente or empresa; empresa finds and clai
   expect(row).toMatchObject({status:'draft',admin_area_1:'Heredia'});
   const queue=await placeRequestQueue(db as never);
   expect('items' in queue&&queue.items?.find(i=>i.placeId===row.id)).toMatchObject({name:`Soda Nueva ${tag}`,requesterEmail:user.email});
-  expect((await page.request.get(`/lugar/${row.slug}`)).status()).toBe(404);
+  expect((await page.request.get(`/negocios/${row.slug}`)).status()).toBe(404);
   // Bad data is refused with the field.
   const bad=await postJson(context,'/api/negocio/solicitud',{actionId:uid(),place:{vertical:'restaurant',name:`Soda ${tag}`,website:'sitio'}});
   expect(bad.status).toBe(400);expect(bad.body?.reason).toBe('invalid_website');

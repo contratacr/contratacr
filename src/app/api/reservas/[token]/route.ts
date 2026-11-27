@@ -6,7 +6,7 @@ import {reservationAccessHash} from '@/lib/directory/reservation-access';
 import {sendReservationNoticeMock} from '@/lib/directory/reservation-notify';
 import {dirDbError,dirEnabledOnly,dirFail,dirOk} from '@/lib/directory/public-route';
 
-// LOCAL PRO ONLY (pending fixes round, 2026-11-17; development only like /lugar): the customer's private reservation link.
+// LOCAL PRO ONLY (pending fixes round, 2026-11-17; development only like /negocios): the customer's private reservation link.
 //  GET               → status, waitlist position and timeline (dir_reservation_by_access); unknown token → 404.
 //  POST {actionId, revision} → cancel until the start time (dir_reservation_customer_cancel: CAS 409, idempotent
 //                       actionId, immutable 'customer_cancel' event). The business is told through the MOCK sender only

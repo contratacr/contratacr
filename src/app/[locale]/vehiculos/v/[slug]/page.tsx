@@ -6,7 +6,7 @@ import {codeFromSegment,mapDeclaredFinancing,formatMoney,listingPath,mapPublicLi
 import {ListingClient} from '@/components/directory/listing-client';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 
-// LOCAL PRO ONLY (V4, development only like /lugar): /vehiculos/v/<slug>-<code>. The code is authoritative; a stale
+// LOCAL PRO ONLY (V4, development only like /negocios): /vehiculos/v/<slug>-<code>. The code is authoritative; a stale
 // slug redirects to the canonical one. dir_listing_public only returns public data (no ids, plate, VIN, exact point).
 async function load(segment:string){
  const code=codeFromSegment(segment);if(!code)return null;

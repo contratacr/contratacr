@@ -3,7 +3,7 @@ import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type ReservationConfig} from '@/lib/directory/place-features';
 
 /**
- * LOCAL PRO ONLY (place features round, 2026-11-17): «Reservar mesa» on /lugar/<slug> of a claimed restaurant/café whose
+ * LOCAL PRO ONLY (place features round, 2026-11-17): «Reservar mesa» on /negocios/<slug> of a claimed restaurant/café whose
  * owner turned reservations on. Date (within the owner's horizon) → available times (seats left, from the server) →
  * party size, name and a phone or e-mail. The same-day waitlist appears only when the owner opened it for today.
  * No deposits, cards or payments. The confirmation shows the reference; the business confirms or declines later and

@@ -31,7 +31,7 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  await make(closed,`Soda Horario ${tag} cerrada`,slot(360,420),'osm');// opens 6 h from now: closed right now
  await make(owner,`Soda Horario ${tag} dueño`,[{weekday:1,opens:'08:00',closes:'17:00'}],'owner');
 
- await gotoOK(page,`${prefix}/lugar/${open247}`);
+ await gotoOK(page,`${prefix}/negocios/${open247}`);
  await openPlaceTab(page,'info');
  const hours=page.locator('section[aria-labelledby="place-hours"]');
  await expect(hours.locator('[data-place-hours-source="osm"]')).toHaveText(t('Horario según OpenStreetMap.','Hours from OpenStreetMap.'));
@@ -43,11 +43,11 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  // Header open status (2026-11-19, Yelp model), computed from the same hours in Costa Rica time.
  await expect(page.locator('[data-place-open-status="open24"]')).toContainText(t('Abierto 24 horas','Open 24 hours'));
  await expectNoHorizontalOverflow(page);
- await gotoOK(page,`${prefix}/lugar/${openNow}`);
+ await gotoOK(page,`${prefix}/negocios/${openNow}`);
  await expect(page.locator('[data-place-open-status="open"]')).toContainText(t('Abierto ahora · cierra a las ','Open now · closes at '));
- await gotoOK(page,`${prefix}/lugar/${closed}`);
+ await gotoOK(page,`${prefix}/negocios/${closed}`);
  await expect(page.locator('[data-place-open-status="closed"]')).toContainText(en?/Closed · opens (today|tomorrow) at \d\d:\d\d/:/Cerrado · abre (hoy|mañana) a las \d\d:\d\d/);
- await gotoOK(page,`${prefix}/lugar/${owner}`);
+ await gotoOK(page,`${prefix}/negocios/${owner}`);
  await openPlaceTab(page,'info');
  await expect(page.locator('section[aria-labelledby="place-hours"]')).not.toContainText(t('Confirme el horario','Please confirm the hours'));// 2026-11-19: moved to the Terms (13.1)
  await expect(page.locator('[data-place-hours-source]')).toHaveCount(0);

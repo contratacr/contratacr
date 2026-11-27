@@ -30,7 +30,7 @@ import {joinPlaceParts} from '@/lib/directory/place-address';
 import {PlaceSocialLinks,SOCIAL_ICONS} from './place-social-links';
 
 /**
- * Canonical page of a place, /lugar/<slug> (owner 2026-11-26: «que se vea como el perfil del profesional de
+ * Canonical page of a place, /negocios/<slug> (owner 2026-11-26: «que se vea como el perfil del profesional de
  * producción y solo agregue lo que un negocio necesita»). It reuses the CLASSIC professional profile
  * (profile-client.tsx with the directory off, i.e. production) piece by piece:
  * - identity card: same container, round avatar (first approved photo, else the section tile; never a stock photo),
@@ -251,7 +251,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {published&&<section aria-labelledby={claimable?'place-claim-title':undefined} data-place-info-end className="space-y-3">
    {claimable&&<h2 id="place-claim-title" className={H2}>{t('¿Es su empresa?','Is this your business?')}</h2>}
    <ul className="space-y-2">
-    {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/lugar/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa gratis','Claim this business for free'))}</a></li>}
+    {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/negocios/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa gratis','Claim this business for free'))}</a></li>}
     <li><a href="#reportar" data-place-suggest className={ROW}>{rowBody(<PenLine className="h-5 w-5"/>,t('Sugerir un cambio','Suggest an edit'))}</a></li>
    </ul>
    {/* The report form (#reportar): hidden until «Sugerir un cambio» or the «…» menu opens it. */}
@@ -318,7 +318,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   </nav>
 
   {/* The search's «Recientes» lists the businesses opened, like the profiles (owner 2026-11-26). */}
-  <RecordRecentVisit surface="negocios" visita={{id:`lugar:${place.slug}`,titulo:place.name,subtitulo:[vertical,place.address.adminArea2].filter(Boolean).join(' · '),imagen:photos[0]?.url,iniciales:place.name.slice(0,2).toUpperCase(),href:`${en?'/en':''}/lugar/${place.slug}`}}/>
+  <RecordRecentVisit surface="negocios" visita={{id:`lugar:${place.slug}`,titulo:place.name,subtitulo:[vertical,place.address.adminArea2].filter(Boolean).join(' · '),imagen:photos[0]?.url,iniciales:place.name.slice(0,2).toUpperCase(),href:`${en?'/en':''}/negocios/${place.slug}`}}/>
 
   {/* Same two columns as the professional profile: identity card + tab card | sticky contact card (from lg).
       Phones have no side card: its actions are in the card's icon row and the bottom bar. */}

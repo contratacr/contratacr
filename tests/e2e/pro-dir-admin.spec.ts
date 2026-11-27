@@ -111,7 +111,7 @@ for(const language of ['es','en'] as const)test(`M1: admin directory queue end t
   const pCard=page.locator(`[data-admin-dir-item="${obs.id}"]`);await expect(pCard).toBeVisible({timeout:30000});
   await pCard.getByRole('button',{name:t('Publicar precio','Publish price')}).click();
   await expect(page.locator('[data-admin-dir-notice="ok"]')).toBeVisible();
-  await gotoOK(page,`${prefix}/lugar/super-precio-${tag}`);
+  await gotoOK(page,`${prefix}/negocios/super-precio-${tag}`);
   await expect(page.locator(`[data-price-item="${item}"]`)).toContainText(t('Reportado por usuarios · sin confirmar','Reported by users · unconfirmed'));
   await gotoOK(page,`${prefix}/admin/directorio`);await expect(queue).toBeVisible({timeout:60000});
 
@@ -126,7 +126,7 @@ for(const language of ['es','en'] as const)test(`M1: admin directory queue end t
   expect((await db.from('dir_reports').select('status').eq('id',reportId).single()).data?.status).toBe('accepted');
 
   // pharmacy permit → public
-  expect((await page.request.get(`${prefix}/lugar/farmacia-permiso-${tag}`)).status()).toBe(404);
+  expect((await page.request.get(`${prefix}/negocios/farmacia-permiso-${tag}`)).status()).toBe(404);
   await page.locator('[data-admin-dir-tab="pharmacies"]').click();
   await page.getByLabel(t('Buscar farmacia por nombre o localidad','Search pharmacy by name or locality')).fill(`Permiso ${tag}`);
   await page.getByRole('button',{name:t('Buscar','Search'),exact:true}).click();
@@ -145,7 +145,7 @@ for(const language of ['es','en'] as const)test(`M1: admin directory queue end t
   const log=(await db.from('dir_moderation_log').select('kind,decision,reason').eq('actor_id',admin.id).order('id')).data!;
   expect(log.map(l=>`${l.kind}:${l.decision}`)).toEqual(['claim:reject','claim:approve','review:hide','price:publish','report:fix','permit:verify_permit']);
   expect(log.filter(l=>!['approve','publish'].includes(l.decision)).every(l=>(l.reason??'').length>=3)).toBe(true);
-  await gotoOK(page,`${prefix}/lugar/farmacia-permiso-${tag}`);
+  await gotoOK(page,`${prefix}/negocios/farmacia-permiso-${tag}`);
   await expect(page.locator('[data-place-verification="license_verified"]')).toBeVisible();
   expect(await visibleHtml(page)).not.toContain('PRIVATE_EXIF_CLAIM');
   expect(errors()).toEqual([]);

@@ -1,7 +1,7 @@
 import type {PublicPlace} from './types';
 import {checkPlacePhone} from './phone';
 
-// SEO (2026-11-18): schema.org LocalBusiness (or its closest subtype) for /lugar/<slug>. Only fields the directory really
+// SEO (2026-11-18): schema.org LocalBusiness (or its closest subtype) for /negocios/<slug>. Only fields the directory really
 // has: name, address, coordinates, a valid Costa Rican phone, the business's own website, opening hours, photos and the
 // rating of ContrataCR reviews (only when there is at least one). Nothing is invented (no price range, no cuisine).
 const TYPES:Record<string,string>={

@@ -359,7 +359,7 @@ function OfferRow({o,idx,best,unit,t,en,prefix}:{o:PriceOffer;idx:number;best:bo
     <div className="flex items-start justify-between gap-3">
      <div className="min-w-0">
       {best&&<span className="mb-1 inline-flex rounded-full bg-[#009FD9] px-2 py-0.5 text-[11px] font-bold text-white" data-price-best-label>{t('Mejor precio','Best price')}</span>}
-      <a href={`${prefix}/lugar/${o.place.slug}`} className={`block text-[15px] font-bold leading-snug text-[#162543] hover:underline ${ring}`}>{!ob.stale?<span className="sr-only">{idx+1}. </span>:null}{o.place.name}</a>
+      <a href={`${prefix}/negocios/${o.place.slug}`} className={`block text-[15px] font-bold leading-snug text-[#162543] hover:underline ${ring}`}>{!ob.stale?<span className="sr-only">{idx+1}. </span>:null}{o.place.name}</a>
       {where&&<p className="mt-0.5 flex items-center gap-1 text-[13px] text-[#526277]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden/><span className="truncate">{where}</span></p>}
      </div>
      <div className="shrink-0 text-right">

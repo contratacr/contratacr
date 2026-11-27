@@ -1,6 +1,6 @@
 # Contactos del directorio (WhatsApp, Llamar, redes) - 2026-11-27
 
-Objetivo: que más lugares muestren WhatsApp y Llamar en /lugar/[slug], solo con datos reales de OpenStreetMap (OSM). No se consulta ningún sitio web.
+Objetivo: que más lugares muestren WhatsApp y Llamar en /negocios/[slug], solo con datos reales de OpenStreetMap (OSM). No se consulta ningún sitio web.
 
 ## Qué se encontró en el extracto OSM (43 059 lugares importados)
 - Teléfono (phone, contact:phone, mobile): unos 4 030 lugares. La importación original guardaba 3 870 (rechazaba formatos como "(506) 2442-2422" o números solo en mobile).

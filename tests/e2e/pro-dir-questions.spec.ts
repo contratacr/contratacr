@@ -24,18 +24,18 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   asker=await createDisposableAccount({prefix:'dir-qa-asker'});neighbour=await createDisposableAccount({prefix:'dir-qa-neighbour'});
   // Anonymous: empty state and a sign-in link; the API refuses writes.
   const anon=await browser.newContext({baseURL:origin,extraHTTPHeaders:randomIp()});const a=await anon.newPage();
-  await gotoOK(a,`${prefix}/lugar/${slug}`);await openPlaceTab(a,'questions');
+  await gotoOK(a,`${prefix}/negocios/${slug}`);await openPlaceTab(a,'questions');
   await expect(a.locator('[data-qa-empty]')).toContainText(t('Todavía no hay preguntas.','No questions yet.'));
   await expect(a.getByRole('link',{name:t('Inicie sesión para preguntar o responder','Sign in to ask or answer')})).toBeVisible();
   const anonPost=await postJson(anon,`/api/lugar/${slug}/preguntas`,{type:'question',actionId:uid(),questionId:uid(),body:'¿Abren los domingos?'});
   expect([anonPost.status,anonPost.body?.reason]).toEqual([401,'login']);
-  await gotoOK(a,`${prefix}/lugar/banco-preguntas-${tag}`);await openPlaceTab(a,'questions');await expect(a.locator('[data-place-questions]')).toBeVisible();// every place page
+  await gotoOK(a,`${prefix}/negocios/banco-preguntas-${tag}`);await openPlaceTab(a,'questions');await expect(a.locator('[data-place-questions]')).toBeVisible();// every place page
   await anon.close();
 
   // The asker (own context) asks through the UI.
   const ac=await browser.newContext({baseURL:origin,extraHTTPHeaders:randomIp()});const ap=await ac.newPage();
   await login(ac,asker);
-  await gotoOK(ap,`${prefix}/lugar/${slug}`);await openPlaceTab(ap,'questions');
+  await gotoOK(ap,`${prefix}/negocios/${slug}`);await openPlaceTab(ap,'questions');
   await expect(ap.locator('[data-place-questions][data-ready]')).toBeVisible({timeout:45000});
   const question=t('¿Tienen leche de almendras?','Do you have almond milk?');
   await ap.locator('#qa-ask').fill(question);await ap.locator('[data-qa-ask-submit]').click();
@@ -48,7 +48,7 @@ for(const language of ['es','en'] as const)test(`Q&A: ask, business answer first
   expect([own.status,own.body?.reason]).toEqual([403,'qa_own_question']);
 
   // The business answers through the UI (owner context): marked and first.
-  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'questions');
+  await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'questions');
   await expect(page.locator('[data-place-questions][data-ready]')).toBeVisible({timeout:45000});
   await expect(page.locator('[data-qa-ask]')).toHaveCount(0);// managers answer, they do not ask
   await page.locator(`[data-qa-answer-open="${questionId}"]`).click();

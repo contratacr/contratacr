@@ -107,7 +107,7 @@ const DAYS_ES=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sába
 export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSearchItem;locale:string;headingLevel?:2|3;rank?:number;extra?:CardExtra|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const H=headingLevel===2?'h2':'h3';
- const href=`${en?'/en':''}/lugar/${item.slug}`;
+ const href=`${en?'/en':''}/negocios/${item.slug}`;
  const area=[item.address.adminArea3,item.address.adminArea2,item.address.adminArea1].filter(Boolean).join(', ');
  const distance=formatDistance(item.distanceKm,en);
  const level=item.verificationLevel as VerificationLevel;

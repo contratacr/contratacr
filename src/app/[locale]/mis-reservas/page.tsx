@@ -9,7 +9,7 @@ import {RESERVATION_STATUS_LABELS,type CustomerReservation} from '@/lib/director
 import {reservationAccessToken,reservationLink} from '@/lib/directory/reservation-access';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 
-// LOCAL PRO ONLY (pending fixes round, 2026-11-17; development only like /lugar): «Mis reservas» of the signed-in
+// LOCAL PRO ONLY (pending fixes round, 2026-11-17; development only like /negocios): «Mis reservas» of the signed-in
 // customer (dir_reservation_mine, latest 50). Each row links to its private page /reserva/<token>; the server derives
 // the token from the reservation and the id never reaches the browser. Guests (no account) keep only their link; here
 // they are told so and offered to sign in.

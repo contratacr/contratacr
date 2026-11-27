@@ -342,6 +342,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(destino, 308);
   }
 
+  // /lugar/<slug>[/menu|/reclamar] → /negocios/<slug>… (2026-11-27, owner: «son
+  // negocios»). 308 permanente con los parámetros; el navegador conserva el #.
+  // Solo con el directorio encendido: apagado, /lugar y /negocios siguen en 404.
+  const fichaVieja = DIR_ENABLED ? /^(?:\/(es|en))?\/lugar(\/.+)$/i.exec(pathname) : null;
+  if (fichaVieja) {
+    const destino = new URL(rutaConIdioma(fichaVieja[1]?.toLowerCase(), `/negocios${fichaVieja[2]}`), request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino, 308);
+  }
+
   // /proyectos → /solicitudes y /publicar-proyecto → /publicar-solicitud
   // (16-nov-2026): la sección se llama Solicitudes. 308 permanente por lo mismo
   // que /ofertas: enlaces compartidos, correos y avisos guardados con la

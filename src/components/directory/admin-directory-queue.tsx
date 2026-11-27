@@ -125,7 +125,7 @@ function Reason({id,t,optional=false}:{id:string;t:T;optional?:boolean}){
 }
 const reasonOf=(form:HTMLFormElement|null)=>String(new FormData(form??undefined).get('reason')??'').trim();
 function PlaceLink({slug,name,en}:{slug:unknown;name:unknown;en:boolean}){
- return <a href={`${en?'/en':''}/lugar/${s(slug)}`} target="_blank" rel="noopener noreferrer" className={`font-semibold underline underline-offset-2 ${ring}`}>{s(name)}</a>;
+ return <a href={`${en?'/en':''}/negocios/${s(slug)}`} target="_blank" rel="noopener noreferrer" className={`font-semibold underline underline-offset-2 ${ring}`}>{s(name)}</a>;
 }
 function Actions({children}:{children:ReactNode}){return <div className="flex flex-wrap gap-2">{children}</div>;}
 

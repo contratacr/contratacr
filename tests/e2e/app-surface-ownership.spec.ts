@@ -66,8 +66,8 @@ const pageRules: OwnershipRule[] = [
   // Post-security fixes: confirmation page of the site-form subscription (double opt-in).
   { match: /^\/\[locale\]\/confirmar-pro$/, owner: "pro-round6d-site.spec.ts" },
   // Multivertical directory (local Pro): place page + public menu, sections with search, listings, how we rank (F0).
-  { match: /^\/\[locale\]\/lugar\/\[slug\]\/menu$/, owner: "pro-dir-menu.spec.ts" },
-  { match: /^\/\[locale\]\/lugar(?:\/|$)/, owner: "pro-dir-places.spec.ts" },
+  { match: /^\/\[locale\]\/negocios\/\[slug\]\/menu$/, owner: "pro-dir-menu.spec.ts" },
+  { match: /^\/\[locale\]\/negocios(?:\/|$)/, owner: "pro-dir-places.spec.ts" },
   // Place features round (2026-11-17): public events, brand pages, saved lists (mine + shared link).
   { match: /^\/\[locale\]\/eventos$/, owner: "pro-dir-events.spec.ts" },
   { match: /^\/\[locale\]\/marca\/\[slug\]$/, owner: "pro-dir-brands.spec.ts" },

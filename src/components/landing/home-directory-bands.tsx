@@ -45,7 +45,7 @@ export async function HomeFeaturedPlaces() {
             const area = [p.address.adminArea3, p.address.adminArea2].filter(Boolean).join(", ");
             return (
               <li key={p.key}>
-                <Link href={`/lugar/${p.slug}`} className="flex h-full flex-col gap-1 rounded-2xl border border-[#e5e9ee] bg-white p-3 shadow-sm transition-colors hover:border-[#009FD9] sm:p-4">
+                <Link href={`/negocios/${p.slug}`} className="flex h-full flex-col gap-1 rounded-2xl border border-[#e5e9ee] bg-white p-3 shadow-sm transition-colors hover:border-[#009FD9] sm:p-4">
                   <span className="text-[15px] font-extrabold leading-snug text-[#1A2744] break-words">{p.name}</span>
                   <span className="text-[12px] font-semibold text-[#5b6b82]">{l === "en" ? p.vertical.nameEn : p.vertical.nameEs}</span>
                   {area && <span className="flex items-center gap-1 text-[13px] text-[#5b6b82]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />{area}</span>}

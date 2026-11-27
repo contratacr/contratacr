@@ -46,7 +46,7 @@ export function SavedListsManager({locale,initial,origin}:{locale:string;initial
      <button type="button" className={`${btn} border border-slate-300`} onClick={()=>setEditing(null)}>{t('Cancelar','Cancel')}</button></form>
      :<h2 className="text-lg font-bold">{l.name} <span className="text-sm font-normal text-slate-700">({l.count})</span></h2>}
     {l.places.length>0&&<ul className="space-y-1">{l.places.map(p=><li key={p.slug} className="flex flex-wrap items-center justify-between gap-2">
-     <span className="min-w-0"><a className={`underline underline-offset-2 ${ring}`} href={`${prefix}/lugar/${p.slug}`}>{p.name}</a>{p.area?<span className="text-sm text-slate-700"> · {p.area}</span>:null}</span>
+     <span className="min-w-0"><a className={`underline underline-offset-2 ${ring}`} href={`${prefix}/negocios/${p.slug}`}>{p.name}</a>{p.area?<span className="text-sm text-slate-700"> · {p.area}</span>:null}</span>
      <button type="button" disabled={busy} className={`${btn} border border-slate-300`} onClick={()=>mutate('rm:'+l.listId+p.slug,{action:'remove',listId:l.listId,revision:l.revision,slug:p.slug},t('Lugar quitado.','Place removed.'))}>{t('Quitar','Remove')}<span className="sr-only"> {p.name}</span></button></li>)}</ul>}
     <div className="space-y-2 rounded-xl bg-slate-50 p-3">
      <p className="text-sm font-semibold">{share?t('Compartida: cualquiera con el enlace puede verla (sin su nombre).','Shared: anyone with the link can see it (without your name).'):t('Privada: solo usted la ve.','Private: only you can see it.')}</p>

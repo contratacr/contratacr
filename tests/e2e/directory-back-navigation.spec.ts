@@ -7,7 +7,7 @@ import {gotoOK,isMobileProject} from './helpers';
 // portada si la ficha se abrió directo), los anclajes no crean entradas y la flecha del navegador también sale.
 
 const SECTION='/restaurantes';
-const onPlace=/\/lugar\/[^/?#]+/;
+const onPlace=/\/negocios\/[^/?#]+/;
 
 // Counts history.pushState calls made by the page (Next's own navigations included) from the moment it loads.
 async function watchHistory(page:Page){
@@ -46,12 +46,12 @@ async function openSection(page:Page){
  if(res.status()>=400){test.skip(true,'restaurantes no está activa en este entorno');return null;}
  await gotoOK(page,SECTION);
  await hydrated(page);
- const card=page.locator('a[href*="/lugar/"]').filter({visible:true}).first();
+ const card=page.locator('a[href*="/negocios/"]').filter({visible:true}).first();
  if(!(await card.count())){test.skip(true,'sin lugares');return null;}
  return card;
 }
 async function tapCard(page:Page){
- const card=page.locator('a[href*="/lugar/"]').filter({visible:true}).first();
+ const card=page.locator('a[href*="/negocios/"]').filter({visible:true}).first();
  await card.click();
  await page.waitForURL(onPlace,{timeout:45_000});
  await expect(back(page)).toBeVisible({timeout:20_000});

@@ -135,7 +135,7 @@ export function AppHome({ topPlaces }: { topPlaces: TopPlace[] }) {
             <ul className="scrollbar-none -mx-4 mt-4 flex gap-3 overflow-x-auto px-4 pb-1" data-home-top-cards>
               {topPlaces.map((p, i) => (
                 <li key={p.slug} className="relative w-[148px] shrink-0">
-                  <Link href={`/lugar/${p.slug}`} data-home-top-card={p.slug} className="block overflow-hidden rounded-2xl bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
+                  <Link href={`/negocios/${p.slug}`} data-home-top-card={p.slug} className="block overflow-hidden rounded-2xl bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]">
                     <span className="relative block h-[148px] bg-[#EBF5FB]">
                       {p.photo
                         // eslint-disable-next-line @next/next/no-img-element

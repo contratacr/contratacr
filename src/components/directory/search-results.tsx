@@ -23,7 +23,7 @@ export function SearchResults({result,locale,basePath,params,title}:{result:Dire
    {reserved&&<p className="text-sm text-slate-600">{t('Los anuncios "Reservado" siguen visibles por si la negociación no se concreta.','"Reserved" listings stay visible in case the deal does not go through.')}</p>}
   </header>
   {/* Optional map of this page of results (MapLibre + OpenFreeMap, downloaded only when opened). */}
-  <ResultsMapToggle locale={locale} points={result.items.flatMap(i=>i.kind==='place'&&i.location?[{id:i.slug,lat:i.location.lat,lng:i.location.lng,label:i.name,href:`${en?'/en':''}/lugar/${i.slug}`}]:[])}/>
+  <ResultsMapToggle locale={locale} points={result.items.flatMap(i=>i.kind==='place'&&i.location?[{id:i.slug,lat:i.location.lat,lng:i.location.lng,label:i.name,href:`${en?'/en':''}/negocios/${i.slug}`}]:[])}/>
   {result.items.length===0
    ?<p role="status" className="rounded-2xl border border-dashed border-slate-300 p-6 text-center">{t('No encontramos resultados con estos filtros. Pruebe con menos filtros u otra zona.','No results with these filters. Try fewer filters or another area.')}</p>
    :<ol className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-label={t('Resultados','Results')}>

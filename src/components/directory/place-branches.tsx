@@ -22,7 +22,7 @@ export function nearestBranches(branches:BrandBranch[],slug:string,here:{lat:num
  return (here?others.sort((a,b)=>(a.distanceKm??1e9)-(b.distanceKm??1e9)):others).slice(0,n);
 }
 export function BranchCard({branch,locale,rank,distanceKm,extra}:{branch:BrandBranch;locale:string;rank?:number;distanceKm?:number|null;extra?:CardExtra|null}){
- const en=locale==='en',href=`${en?'/en':''}/lugar/${branch.slug}`;
+ const en=locale==='en',href=`${en?'/en':''}/negocios/${branch.slug}`;
  const directions=branch.lat!=null&&branch.lng!=null?directionsLinks(branch.lat,branch.lng):null;
  const distance=formatDistance(distanceKm??null,en);
  const section=placeSectionById(branch.vertical),tag=section?(en?section.nameEn:section.nameEs):null;

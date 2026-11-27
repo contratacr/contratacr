@@ -41,7 +41,7 @@ test('Listings flag OFF: every vehicle/property listing surface answers 404',asy
  expect((await context.request.post(origin+'/api/pro/dir-listing-photos',{headers:{Origin:origin},data:{}})).status()).toBe(404);
  // Dealers and agencies are still places: their page works, without a listings block or a link to /vehiculos.
  const slug=`agencia-lugar-${tag}`;await seedPlace(db,{slug,vertical:'vehicle_dealer',name:`Agencia Lugar ${tag}`});
- await gotoOK(page,`/lugar/${slug}`);
+ await gotoOK(page,`/negocios/${slug}`);
  await expect(page.getByRole('heading',{level:1})).toHaveText(`Agencia Lugar ${tag}`);
  await expect(page.locator('a[href="/vehiculos"]')).toHaveCount(0);
  await expect(page.locator('#place-listings, [data-place-listings]')).toHaveCount(0);

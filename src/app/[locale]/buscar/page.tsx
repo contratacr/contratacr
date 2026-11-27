@@ -368,7 +368,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       mapData.push({
         id: `biz-${item.slug}`, proId: `biz-${item.slug}`, slug: item.slug, fullName: item.name,
         ratingAvg: 0, reviewCount: 0, lat: item.location.lat, lng: item.location.lng,
-        kind: "business", href: rutaConIdioma(locale, `/lugar/${item.slug}`),
+        kind: "business", href: rutaConIdioma(locale, `/negocios/${item.slug}`),
       });
     }
   }

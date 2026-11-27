@@ -5,7 +5,7 @@ import {placeVerticalIcon} from './place-photo-placeholder';
 /**
  * Shared page system (2026-11-19, owner request «revise cómo lo hace Yelp»): Yelp's MODEL — header with photos, rating
  * and open status, an action bar, two columns with a sticky contact card, a rating summary with 5→1 bars — in the
- * ContrataCR look (navy #162543 / cyan #009FD9, Inter, rounded cards). Used by /lugar, /marca, place result cards and
+ * ContrataCR look (navy #162543 / cyan #009FD9, Inter, rounded cards). Used by /negocios, /marca, place result cards and
  * the professional profile. Server-safe (no hooks).
  */
 export const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';

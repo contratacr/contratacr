@@ -4,7 +4,7 @@ import {PlacesSectionHome} from '@/components/directory/places-section-home';
 import {loadDirectorySearch,type SearchPageParams} from '@/lib/directory/search-server';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 
-// LOCAL PRO ONLY (multivertical F6, development only like /lugar): section page /supermercados. dir_search with the section
+// LOCAL PRO ONLY (multivertical F6, development only like /negocios): section page /supermercados. dir_search with the section
 // fixed by the page; plain GET filters; order never depends on payment (/como-ordenamos).
 export const dynamic='force-dynamic';
 export async function generateMetadata({params,searchParams}:{params:Promise<{locale:string}>;searchParams:Promise<Record<string,string|string[]|undefined>>}):Promise<Metadata>{

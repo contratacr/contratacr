@@ -37,7 +37,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   const {placeId}=await seedPlace(db,{slug,vertical:'restaurant',name});
   await claimByEmail(context,slug);await context.setExtraHTTPHeaders(randomIp());
   // Owner: «Agregar fotos» → published at once.
-  await gotoOK(page,`/lugar/${slug}`);
+  await gotoOK(page,`/negocios/${slug}`);
   // 2026-11-27 (owner): no photos → no avatar at all (never a section tile or a stock photo).
   await expect(page.locator('[data-place-header] [data-place-avatar]')).toHaveCount(0);await expect(page.locator('[data-place-photo-strip]')).toHaveCount(0);
   await upload(page,{name:'terraza.jpg',buffer:await jpeg('#2a9d8f')},'Terraza al atardecer');
@@ -54,7 +54,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   const c=await browser.newContext({baseURL:origin,extraHTTPHeaders:randomIp()});
   try{
    await login(c,customer);const p=await c.newPage();
-   await gotoOK(p,`/lugar/${slug}`);
+   await gotoOK(p,`/negocios/${slug}`);
    await upload(p,{name:'casado.jpg',buffer:await jpeg('#e76f51')});
    await expect(p.locator('[data-place-photo-pending]')).toContainText('pendiente de revisión');
    // Same image again → duplicate.
@@ -67,7 +67,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
   const anon=await browser.newContext({baseURL:origin});const a=await anon.newPage();const aErrors=collectPageErrors(a);
   try{
    expect((await a.request.get(`/api/fotos-lugar/${userRow.id}?s=320`)).status()).toBe(404);
-   await gotoOK(a,`/lugar/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);await expect(a.locator('[data-place-strip-thumb]')).toHaveCount(1);
+   await gotoOK(a,`/negocios/${slug}`);await expect(a.locator('[data-place-photo-thumb]')).toHaveCount(1);await expect(a.locator('[data-place-strip-thumb]')).toHaveCount(1);
 
    // Staff approve (the admin queue lists it as pending) → visible.
    const queue=(await db.rpc('dir_admin_photo_queue',{p_filter:'pending',p_limit:200})).data as {id:string;slug:string}[];
@@ -79,7 +79,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
 
    for(const language of ['es','en'] as const){
     const prefix=language==='en'?'/en':'';
-    await gotoOK(a,`${prefix}/lugar/${slug}`);await openPlaceTab(a,'photos');
+    await gotoOK(a,`${prefix}/negocios/${slug}`);await openPlaceTab(a,'photos');
     const thumbs=a.locator('[data-place-photo-thumb]');await expect(thumbs).toHaveCount(2);
     await expect(a.locator('[data-hero-tile]')).toHaveCount(0);
     const alts=await a.locator('[data-place-gallery] img').evaluateAll(n=>n.map(i=>(i as HTMLImageElement).alt));

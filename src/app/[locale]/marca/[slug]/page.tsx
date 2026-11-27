@@ -20,7 +20,7 @@ import {PlaceTabs} from '@/components/directory/place-tabs';
 import {ProfileIdentityName} from '@/components/professionals/profile-identity-name';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 
-// LOCAL PRO ONLY (place features round, development only like /lugar): /marca/<slug> — every public branch of a chain
+// LOCAL PRO ONLY (place features round, development only like /negocios): /marca/<slug> — every public branch of a chain
 // (brands built from OpenStreetMap brand/brand:wikidata and normalized names; staff merge/split them). Branches ordered
 // by province then name, aggregate rating weighted by review count, a map of every branch (MapLibre + OpenFreeMap,
 // loaded on scroll; each marker links to its branch) and a list with links. A merged brand redirects to the brand it was merged into. Claiming a brand is
@@ -53,7 +53,7 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
  const province=wanted&&provinces.includes(wanted)?wanted:null;
  const shown=province?b.branches.filter(x=>x.province===province):b.branches;
  const extras=await placeCardExtras(shown.slice(0,40).map(x=>x.slug));
- const pts=shown.flatMap((x,n)=>x.lat!=null&&x.lng!=null?[{id:x.slug,lat:x.lat,lng:x.lng,label:`${n+1}. ${x.name}${x.area?` · ${x.area}`:''}`,href:`${prefix}/lugar/${x.slug}`,rank:n+1,name:x.name,sub:x.area||undefined,rating:x.rating,ratingCount:x.ratingCount}]:[]);
+ const pts=shown.flatMap((x,n)=>x.lat!=null&&x.lng!=null?[{id:x.slug,lat:x.lat,lng:x.lng,label:`${n+1}. ${x.name}${x.area?` · ${x.area}`:''}`,href:`${prefix}/negocios/${x.slug}`,rank:n+1,name:x.name,sub:x.area||undefined,rating:x.rating,ratingCount:x.ratingCount}]:[]);
  const sections=[...new Set(b.branches.map(x=>x.vertical))].map(v=>placeSectionById(v)).filter(Boolean).map(s=>en?s!.nameEn:s!.nameEs);
  const desc=en?b.descriptionEn:b.descriptionEs,base=`${prefix}/marca/${b.slug}`;
  const firstVertical=b.branches[0]?.vertical??'grocery';

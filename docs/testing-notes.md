@@ -23,7 +23,7 @@ Dispositivos y anchos:
 
 Banderas apagadas (producción debe verse idéntica):
 - [ ] Con directorio apagado: portada, navbar, barra inferior, menú, `/servicios`, perfil profesional, `/registro` iguales a producción.
-- [ ] Con directorio apagado `/categorias`, `/lugar/...`, `/registro/empresa`, `/herramientas` no existen (404 o redirección).
+- [ ] Con directorio apagado `/categorias`, `/negocios/...`, `/registro/empresa`, `/herramientas` no existen (404 o redirección).
 - [ ] Con Pro apagado no aparece nada de Herramientas/Pro en menú ni enlaces.
 
 Texto:
@@ -124,7 +124,7 @@ Casos límite:
 - [ ] Muchas sucursales: lista no ensancha el teléfono.
 - [ ] Secciones sin reseñas (Trámites, Centros comerciales, Educación escuelas/colegios, Transporte terminales/aeropuertos): sin Reseñar ni estrellas ni "Mejor calificados".
 
-## 6. Ficha de negocio `/lugar/<slug>` (pronto `/negocios`)
+## 6. Ficha de negocio `/negocios/<slug>`
 
 Estado actual (rediseño de producción-profesional, más reciente prevalece):
 - [ ] Tarjeta de identidad como el perfil profesional: hero con fotos (teléfono: deslizar "1 / N", "Ver las N fotos"; desde sm mosaico); sin fotos: foto de sección con licencia libre difuminada bajo velo azul marino (nunca icono). Sin avatar si no hay foto real.
@@ -159,7 +159,8 @@ Casos límite:
 - [ ] Secciones sin reseñas (Trámites, Educación, Transporte, Centros comerciales): sin pestaña Reseñas, sin calificación, la API responde 403 `reviews_off`; caja de reclamar promete solo responder preguntas.
 - [ ] Reservas activas, muchas sucursales (no ensanchar el teléfono), nombre y dirección largos (envolver).
 - [ ] Lugar creado por el equipo, lugar importado sin horario.
-- [ ] Reclamar: `/lugar/<slug>/reclamar` funciona sin sesión → login → vuelve.
+- [ ] Reclamar: `/negocios/<slug>/reclamar` funciona sin sesión → login → vuelve.
+- [ ] Dirección de la ficha (2026-11-27): `/negocios/<slug>` (y `/menu`, `/reclamar`; en inglés `/en/negocios/...`). Las direcciones viejas `/lugar/...` y `/en/lugar/...` redirigen con 308 a `/negocios/...` conservando parámetros y `#`; con el directorio apagado ambas responden 404. Tarjetas, sitemap, canonical, JSON-LD, compartir y avisos usan `/negocios/`.
 - [ ] Bandera apagada: ruta no disponible.
 
 ## 7. Perfil profesional
@@ -218,9 +219,9 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 ## 10. Registro
 
 - [ ] `/registro` con directorio encendido: la tarjeta Profesional pregunta «Profesional independiente» (formulario actual) o «Empresa o local».
-- [ ] `/registro/empresa`: buscar por nombre un lugar publicado (`/api/negocio/buscar`); reclamar por `/lugar/<slug>/reclamar`; si no está: formulario de solicitud (cuenta primero) que crea un lugar en BORRADOR (no público, fuente owner).
+- [ ] `/registro/empresa`: buscar por nombre un lugar publicado (`/api/negocio/buscar`); reclamar por `/negocios/<slug>/reclamar`; si no está: formulario de solicitud (cuenta primero) que crea un lugar en BORRADOR (no público, fuente owner).
 - [ ] `/admin/directorio` pestaña «Lugares nuevos»: Publicar / Rechazar; historial con etiquetas «Lugar agregado / creado» para lugares del equipo.
-- [ ] Al Publicar, quien pidió el lugar recibe la notificación «Su negocio ya está en ContrataCR» (abre `/lugar/<slug>/reclamar`) y un correo con «Reclamar mi negocio» (local: buzón simulado); al Rechazar, «Solicitud de negocio no aprobada» sin enlace. Repetir la decisión no avisa dos veces (migración 545).
+- [ ] Al Publicar, quien pidió el lugar recibe la notificación «Su negocio ya está en ContrataCR» (abre `/negocios/<slug>/reclamar`) y un correo con «Reclamar mi negocio» (local: buzón simulado); al Rechazar, «Solicitud de negocio no aprobada» sin enlace. Repetir la decisión no avisa dos veces (migración 545).
 - [ ] Bandera apagada: `/registro` enlaza directo a `/registro/profesional` y `/registro/empresa` no existe.
 - [ ] Con directorio encendido, `/onboarding` (Google/Apple) y la bienvenida de la app («¿Cómo quiere empezar?») también preguntan «Profesional independiente» (→ `/registro/profesional`) o «Empresa o local» (onboarding: cuenta de cliente y luego `/registro/empresa`; app: `/registro/empresa`), con «Volver». Bandera apagada: «Ofrezco servicios» va directo como antes.
 - [ ] Casos: nombre con varias palabras (búsqueda simple, la ranqueada daba timeout), nombre ya reclamado, enviar dos veces.
@@ -270,7 +271,6 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Hechos 2026-11-27: regla de caché de Cloudflare y regla de ciclo de vida del bucket.
 - [ ] Confirmar la decisión de portada: `d70c4261d` dejó test con la portada de producción; después se reintrodujeron bloques de directorio (hero, categorías, mapa de provincias). Definir cuál queda y reescribir la sección 1.
 - [ ] Nada de directorio/Pro/Yelp a `main` ni a producción sin visto bueno de Isaac (en `main` fueron revertidos 2026-11-19).
-- [ ] Renombrar `/lugar` a `/negocios` (con redirecciones) cuando se decida.
 - [ ] Marca: se queda ContrataCR; después ContrataLatam / Contrata<país>.
 
 ## Retirado (no esperar verlo)

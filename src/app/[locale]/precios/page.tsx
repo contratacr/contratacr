@@ -6,7 +6,7 @@ import {parsePriceQuery,type PriceQuery} from '@/lib/directory/price-compare';
 import {comparePrices,nationalFuelPrices,priceHistory,priceOverview,searchPriceItems} from '@/lib/directory/price-compare-server';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 
-// LOCAL PRO ONLY (multivertical P3, development only like /lugar and the section pages): /precios and /en/precios.
+// LOCAL PRO ONLY (multivertical P3, development only like /negocios and the section pages): /precios and /en/precios.
 // Plain GET: ?q= searches the catalogue (name, brand, barcode), ?producto= compares one product across stores,
 // ?categoria= lists one catalogue category, ?provincia= and ?tipo=supermercados|farmacias filter, ?precioMin=/?precioMax=
 // (₡, whole colones) limit the price of each offer (2026-11-17), ?orden=unit_price|price|place sorts. Never payment.

@@ -4,11 +4,11 @@ import {local,origin} from './pro-round2-fixture';
 import {regressionAdminClient} from './seed';
 import {hideSeededPlaces,openPlaceTab,trackPlace} from './pro-dir-fixture';
 
-// Multivertical F1/F2 (LOCAL Pro): canonical place page /lugar/<slug>. Draft → 404; published → page with hours,
+// Multivertical F1/F2 (LOCAL Pro): canonical place page /negocios/<slug>. Draft → 404; published → page with hours,
 // verification label and OSM attribution; pharmacy without license_verified → public with a neutral «permit not verified»
 // note (owner decision 2026-11-17); public report (idempotent
 // reportId) and removal request accepted → 404. Loopback only; seed data is synthetic.
-// DRAFT: not run yet (written while the full regression was running). Owner of /[locale]/lugar and
+// DRAFT: not run yet (written while the full regression was running). Owner of /[locale]/negocios and
 // /api/lugar/[slug]/reporte in verify-app-surface-ownership.mjs.
 test.afterEach(()=>hideSeededPlaces());
 
@@ -21,10 +21,13 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  const errors=collectPageErrors(page);
  let rev=(await mutate({action:'create',placeId,revision:0,source:{id:'osm',ref:'node/e2e'+label},verificationLevel:'imported',
   place:{slug,vertical:'restaurant',name:'Soda E2E '+label,adminArea1:'San José',locality:'San José',addressLine:'Avenida Central',lat:9.933,lng:-84.08,phone:'+506 2200 0001'}})).revision;
- expect((await page.request.get(origin+prefix+'/lugar/'+slug)).status()).toBe(404);// draft
+ expect((await page.request.get(origin+prefix+'/negocios/'+slug)).status()).toBe(404);// draft
  rev=(await mutate({action:'hours',placeId,revision:rev,hours:[{weekday:1,opens:'08:00',closes:'17:00'}]})).revision;
  rev=(await mutate({action:'status',placeId,revision:rev,status:'published'})).revision;
- await gotoOK(page,prefix+'/lugar/'+slug);await openPlaceTab(page,'info');
+ // 2026-11-27: the old address /lugar/<slug> answers a permanent 308 to /negocios/<slug>, keeping the query.
+ const old=await page.request.get(origin+prefix+'/lugar/'+slug+'?ref=e2e',{maxRedirects:0});
+ expect(old.status()).toBe(308);expect(new URL(old.headers()['location'],origin).pathname+new URL(old.headers()['location'],origin).search).toBe(prefix+'/negocios/'+slug+'?ref=e2e');
+ await gotoOK(page,prefix+'/negocios/'+slug);await openPlaceTab(page,'info');
  await expect(page.getByRole('heading',{level:1})).toHaveText('Soda E2E '+label);
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);// 2026-11-27: no «No reclamado» label; the claim box at the end invites the owner
  await expect(page.locator('[data-place-claim-link]')).toBeVisible();
@@ -52,11 +55,11 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  // pharmacy: published but not license_verified → public, with a neutral note (owner decision 2026-11-17)
  const ph=await mutate({action:'create',placeId:pharmacyId,revision:0,place:{slug:'farmacia-e2e-'+label,vertical:'pharmacy',name:'Farmacia E2E '+label}});
  await mutate({action:'status',placeId:pharmacyId,revision:ph.revision,status:'published'});
- await gotoOK(page,prefix+'/lugar/farmacia-e2e-'+label);
+ await gotoOK(page,prefix+'/negocios/farmacia-e2e-'+label);
  await openPlaceTab(page,'info');
  await expect(page.locator('[data-pharmacy-license="unverified"]')).toContainText(t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.'));
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);
- await gotoOK(page,prefix+'/lugar/'+slug);await openPlaceTab(page,'info');
+ await gotoOK(page,prefix+'/negocios/'+slug);await openPlaceTab(page,'info');
  // report through the real form; a second identical POST with the same reportId is accepted once
  // «Sugerir un cambio» in the side card opens the report form (#reportar).
  await page.waitForLoadState('networkidle');await page.locator('[data-place-suggest]').click();
@@ -68,12 +71,12 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  const reports=(await db.from('dir_reports').select('id,kind').eq('place_id',placeId).throwOnError()).data!;expect(reports).toHaveLength(1);
  const bad=await page.request.post(origin+'/api/lugar/'+slug+'/reporte',{headers:{Origin:origin},data:{reportId:crypto.randomUUID(),kind:'spam',message:'x'}});expect(bad.status()).toBe(400);
  const resolved=await db.rpc('dir_report_resolve',{p_actor:staff,p_input:{actionId:crypto.randomUUID(),reportId:reports[0].id,decision:'accept',revision:rev}});expect(resolved.error).toBeNull();
- expect((await page.request.get(origin+prefix+'/lugar/'+slug)).status()).toBe(404);
+ expect((await page.request.get(origin+prefix+'/negocios/'+slug)).status()).toBe(404);
  expect(errors()).toEqual([]);
 });
 
 // Owner 2026-11-27: «al refrescar el navbar se mueve» and «también deberían de salir los iconos de las redes sociales».
-// (1) On a phone the bar of /lugar is «← Sección ···» from the FIRST paint: the server HTML (JavaScript off) already has
+// (1) On a phone the bar of /negocios is «← Sección ···» from the FIRST paint: the server HTML (JavaScript off) already has
 // the back arrow, the centred title and the «…», at the same pixels as after hydration, and never the logo or the ☰.
 // (2) Social links stored in attributes.social (and a «website» that is really a Facebook page) show as icon links, then
 // Waze and Google Maps (owner 2026-11-27, «arriba en lugar de poner waze y maps poner los iconos de redes sociales»):
@@ -92,7 +95,7 @@ test('place header pixel-stable from first paint; social icons from real data on
  const phone={viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3};
  const cold=await browser.newContext({...phone,javaScriptEnabled:false});
  try{
-  const first=await cold.newPage();await first.goto(origin+'/lugar/'+slug,{waitUntil:'load'});await first.evaluate(()=>document.fonts.ready);
+  const first=await cold.newPage();await first.goto(origin+'/negocios/'+slug,{waitUntil:'load'});await first.evaluate(()=>document.fonts.ready);
   const ssr=await box(first);
   expect(ssr.back,'server paints the back arrow').not.toBeNull();expect(ssr.menu,'server paints the «…»').not.toBeNull();
   expect(ssr.burger).toBeNull();expect(ssr.logo).toBeNull();
@@ -102,7 +105,7 @@ test('place header pixel-stable from first paint; social icons from real data on
    const p=await warm.newPage();
    await p.addInitScript(()=>{(window as unknown as {__ls:number[]}).__ls=[];new PerformanceObserver(l=>{for(const e of l.getEntries() as unknown as {value:number;sources:{currentRect:DOMRectReadOnly;previousRect:DOMRectReadOnly}[]}[])
     if(e.sources.some(s=>s.previousRect.top<70||s.currentRect.top<70))(window as unknown as {__ls:number[]}).__ls.push(e.value);}).observe({type:'layout-shift',buffered:true});});
-   await p.goto(origin+'/lugar/'+slug,{waitUntil:'load'});await p.reload({waitUntil:'load'});
+   await p.goto(origin+'/negocios/'+slug,{waitUntil:'load'});await p.reload({waitUntil:'load'});
    await expect(p.locator('header[data-testid="landing-navbar"][data-hydrated="true"]')).toHaveCount(1,{timeout:45000});await p.waitForTimeout(500);
    expect(await box(p),'header boxes after hydration = first paint').toEqual(ssr);
    expect(await p.evaluate(()=>(window as unknown as {__ls:number[]}).__ls.reduce((a,b)=>a+b,0)),'header CLS').toBe(0);
@@ -124,7 +127,7 @@ test('place header pixel-stable from first paint; social icons from real data on
   }finally{await warm.close();}
  }finally{await cold.close();}
  // Computers: the same row in the identity card.
- await page.setViewportSize({width:1280,height:900});await gotoOK(page,'/lugar/'+slug);
+ await page.setViewportSize({width:1280,height:900});await gotoOK(page,'/negocios/'+slug);
  await expect(page.locator('[data-place-header] [data-place-social] a')).toHaveCount(5);
  await expect(page.locator('[data-place-header] [data-place-social]')).toBeVisible();
  expect(errors()).toEqual([]);

@@ -9,7 +9,7 @@ import type {PublicEventsPage} from '@/lib/directory/place-features';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 import {PRO_ENABLED} from '@/lib/pro/enabled';
 
-// LOCAL PRO ONLY (place features round, development only like /lugar): /eventos and /en/eventos. Events published by
+// LOCAL PRO ONLY (place features round, development only like /negocios): /eventos and /en/eventos. Events published by
 // claimed places (staff can hide them in /admin/directorio). Plain GET filters: ?desde=YYYY-MM-DD (from that day,
 // default today in Costa Rica), ?provincia=<province>, ?seccion=<vertical id>, ?pagina=N (30 per page). Order = start
 // date/time then id — never payment or popularity.

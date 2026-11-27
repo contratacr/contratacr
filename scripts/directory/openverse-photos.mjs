@@ -105,6 +105,6 @@ async function main(){
   }
  }
  console.log(apply?'Aplicado (todo queda PENDIENTE de moderación):':'Dry run (nada guardado):',JSON.stringify(stat));console.log('  candidatas por sección:',JSON.stringify(bySection));
- if(apply)console.log('  ejemplos:',examples.map(s=>`/lugar/${s}`).join(' '));
+ if(apply)console.log('  ejemplos:',examples.map(s=>`/negocios/${s}`).join(' '));
 }
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href)await main();

@@ -77,7 +77,7 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  const res=await page.goto(`${prefix}/${section}`,{waitUntil:'domcontentloaded'});
  if(!res||res.status()>=400){test.skip(true,`${section} no está activa en este entorno`);return;}
  await gotoOK(page,`${prefix}/${section}`);
- const link=page.locator('a[href*="/lugar/"]').first();
+ const link=page.locator('a[href*="/negocios/"]').first();
  if(!(await link.count())){test.skip(true,`sin lugares en ${section}`);return;}
  const href=(await link.getAttribute('href'))!;
  await gotoOK(page,href);
@@ -124,7 +124,7 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
  const prefix=locale==='en'?'/en':'';
  const res=await page.goto(`${prefix}/restaurantes`,{waitUntil:'domcontentloaded'});
  if(!res||res.status()>=400){test.skip(true,'restaurantes no está activa en este entorno');return;}
- const link=page.locator('a[href*="/lugar/"]').first();
+ const link=page.locator('a[href*="/negocios/"]').first();
  if(!(await link.count())){test.skip(true,'sin lugares');return;}
  await gotoOK(page,(await link.getAttribute('href'))!);
  const en=locale==='en';

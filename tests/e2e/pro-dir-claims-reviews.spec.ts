@@ -26,10 +26,10 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   await page.locator('[data-place-claim]').screenshot({path:`${shotsDir}/${name}-${language}-${width}-${info.project.name}.png`});}};
  // Anonymous: the place page carries only the compact claim link (2026-11-19, Yelp model); the claim page explains
  // what claiming gives and invites to sign in; the API refuses.
- await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'info');
+ await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'info');
  await expect(page.locator('[data-claim-benefits]')).toHaveCount(0);
- await expect(page.locator('[data-place-claim-link] a')).toHaveAttribute('href',`${prefix}/lugar/${slug}/reclamar`);
- await gotoOK(page,`${prefix}/lugar/${slug}/reclamar`);
+ await expect(page.locator('[data-place-claim-link] a')).toHaveAttribute('href',`${prefix}/negocios/${slug}/reclamar`);
+ await gotoOK(page,`${prefix}/negocios/${slug}/reclamar`);
  await expect(page.getByRole('heading',{name:t('¿Es su negocio? Reclámelo gratis','Is this your business? Claim it for free')})).toBeVisible();
  const benefits=page.locator('[data-claim-benefits]');
  await expect(benefits.getByRole('heading',{name:t('¿Qué gana al reclamar su negocio?','What do you get by claiming your business?')})).toBeVisible();
@@ -50,7 +50,7 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   const smsOff=await postJson(context,`/api/lugar/${slug}/reclamo`,{actionId:uid(),claimId:uid(),method:'phone_listed'});
   expect(smsOff.status).toBe(400);expect(smsOff.body?.reason).toBe('claim_sms_disabled');
   expect((await postJson(context,`/api/lugar/${slug}/reclamo`,{actionId:uid(),claimId:uid(),method:'email_listed',email:'otra@gmail.com'})).status).toBe(400);
-  await gotoOK(page,`${prefix}/lugar/${slug}/reclamar`);
+  await gotoOK(page,`${prefix}/negocios/${slug}/reclamar`);
   await expect(page.locator('[data-place-claim][data-ready]')).toBeVisible({timeout:45000});
   // Order: (a) code to the listed e-mail, (b) website-domain e-mail, then documents / cédula jurídica. No SMS choice.
   const choices=page.locator('[data-claim-choices] > li');
@@ -88,11 +88,11 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   await expect(page.locator('[data-place-claim-done]')).toBeVisible();
   const row=(await db.from('dir_places').select('claim_status,verification_level').eq('slug',slug).single()).data!;
   expect(row).toEqual({claim_status:'claimed',verification_level:'claimed'});
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/negocios/${slug}`);
   await expect(page.locator('[data-place-verification="claimed"]')).toBeVisible();
   await expect(page.locator('[data-place-claim]')).toHaveCount(0);
   await expect(page.locator('[data-place-claim-link]')).toHaveCount(0);
-  await page.goto(`${origin}${prefix}/lugar/${slug}/reclamar`);await expect(page).toHaveURL(new RegExp(`/lugar/${slug}$`));// claimed: back to the place
+  await page.goto(`${origin}${prefix}/negocios/${slug}/reclamar`);await expect(page).toHaveURL(new RegExp(`/negocios/${slug}$`));// claimed: back to the place
   // The owner cannot review their own place.
   const own=await postJson(context,`/api/lugar/${slug}/resenas`,{actionId:uid(),rating:5,comment:'Excelente lugar'});
   expect(own.status).toBe(403);expect(own.body?.reason).toBe('review_own_place');
@@ -110,7 +110,7 @@ test('F3: without e-mail nor website only staff review is offered',async({page,c
  const user=await createDisposableAccount({prefix:'dir-claim-none'});
  try{
   await login(context,user);
-  await gotoOK(page,`/lugar/${slug}/reclamar`);
+  await gotoOK(page,`/negocios/${slug}/reclamar`);
   await expect(page.locator('[data-place-claim][data-ready]')).toBeVisible({timeout:45000});
   await expect(page.locator('[data-claim-choices]')).toHaveCount(0);
   await expect(page.locator('[data-claim-reviewed]')).toContainText('Reclame con la cédula jurídica o con documentos');
@@ -127,7 +127,7 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  const user=await createDisposableAccount({prefix:'dir-review'});
  try{
   await login(context,user);
-  await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
+  await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'reviews');
   // 2026-11-27: the professional profile's own Reseñas pieces (empty state, write card, review cards).
   await expect(page.getByText(t('Aún no hay reseñas. Deje la primera.','No reviews yet. Be the first to leave one.'))).toBeVisible();
   const form=page.locator('[data-place-review-form][data-ready]');
@@ -145,7 +145,7 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  // Guest: refused until this device contacted the business through ContrataCR.
  const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
  try{
-  await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
+  await gotoOK(g,`${prefix}/negocios/${slug}`);await openPlaceTab(g,'reviews');
   const gform=g.locator('[data-place-review-form][data-ready]');
   await gform.getByRole('button',{name:t('5 estrellas','5 stars'),exact:true}).click({timeout:45000});
   await gform.locator('textarea').fill(t('Buen servicio.','Good service.'));
@@ -180,7 +180,7 @@ for(const language of ['es','en'] as const)test(`P1: prices with source and date
  expect((await obs({itemSlug:`acetaminofen-${tag}`,placeSlug:pharmacySlug,price:950})).error).toBeNull();
  const rx=await obs({itemSlug:`amoxicilina-${tag}`,placeSlug:pharmacySlug,price:3200});
  expect(rx.error?.code).toBeTruthy();// Decreto 36868-S: prescription medicines never get observations
- await gotoOK(page,`${prefix}/lugar/${superSlug}`);await openPlaceTab(page,'offer');
+ await gotoOK(page,`${prefix}/negocios/${superSlug}`);await openPlaceTab(page,'offer');
  const prices=page.locator('[data-place-prices]');
  await expect(prices.getByRole('heading',{name:t('Precios','Prices')})).toBeVisible();
  const rice=prices.locator(`[data-price-item="arroz-${tag}"]`);
@@ -188,7 +188,7 @@ for(const language of ['es','en'] as const)test(`P1: prices with source and date
  await expect(rice.locator('[data-price-stale]')).toHaveCount(0);
  await expect(prices.locator(`[data-price-item="frijol-${tag}"] [data-price-stale]`)).toHaveText(t('desactualizado','out of date'));
  await expectNoHorizontalOverflow(page);
- await gotoOK(page,`${prefix}/lugar/${pharmacySlug}`);await openPlaceTab(page,'offer');
+ await gotoOK(page,`${prefix}/negocios/${pharmacySlug}`);await openPlaceTab(page,'offer');
  await expect(page.locator(`[data-price-item="acetaminofen-${tag}"]`)).toBeVisible();
  const text=await visibleHtml(page);expect(text).not.toContain(`Amoxicilina E2E ${tag}`);
  await expect(page.locator(`[data-price-item="amoxicilina-${tag}"]`)).toHaveCount(0);

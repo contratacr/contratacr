@@ -25,7 +25,7 @@ const BTN='relative z-10 inline-flex h-10 shrink-0 items-center justify-center g
 
 export function PlaceResultRow({item,extra,rank,locale}:{item:PlaceSearchItem;extra:CardExtra|null;rank:number;locale:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
- const href=`${en?'/en':''}/lugar/${item.slug}`;
+ const href=`${en?'/en':''}/negocios/${item.slug}`;
  const photos=(extra?.photos??[]).slice(0,4);
  const rated=item.rating.count>0&&item.rating.average!=null;
  const avg=rated?Number(item.rating.average):0;

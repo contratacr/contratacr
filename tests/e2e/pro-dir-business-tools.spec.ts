@@ -76,7 +76,7 @@ for(const language of ['es','en'] as const)test(`Mi negocio without Pro: profile
   // Reply to a review from the public page (now /api/negocio/respuestas; no Pro)
   const rv=await db.rpc('dir_review_submit',{p_actor:uid(),p_input:{actionId:uid(),reviewId:uid(),slug,revision:0,rating:4,comment:t('Buen casado y buena atención en general.','Good casado and good service overall.'),authorName:'Ana'}});
   expect(rv.error).toBeNull();const reviewId=(rv.data as {reviewId:string}).reviewId;
-  await gotoOK(page,`${prefix}/lugar/${slug}`);
+  await gotoOK(page,`${prefix}/negocios/${slug}`);
   await openPlaceTab(page,'info');
   // «Administrar esta ficha»: only for the owner/managers of this place (a stranger does not see it, checked below).
   await expect(page.locator('[data-place-manage-link]')).toHaveAttribute('href',`${prefix}/dashboard/negocio`);
@@ -98,7 +98,7 @@ for(const language of ['es','en'] as const)test(`Mi negocio without Pro: profile
   // Strangers and Pro company members with the «member» role are refused.
   other=await createDisposableAccount({prefix:'dir-biz-other'});const oc=await browser.newContext({baseURL:origin});await login(oc,other);
   const foreign=await oc.request.get(`/api/negocio/perfil?placeId=${placeId}`);expect(foreign.status()).toBe(403);
-  {const op=await oc.newPage();await gotoOK(op,`${prefix}/lugar/${slug}`);await expect(op.locator('[data-place-manage]')).toHaveCount(0);await op.close();}
+  {const op=await oc.newPage();await gotoOK(op,`${prefix}/negocios/${slug}`);await expect(op.locator('[data-place-manage]')).toHaveCount(0);await op.close();}
   const foreignWrite=await postJson(oc,'/api/negocio/lugar',{op:'order',input:{actionId:uid(),placeId,revision:0,channel:'phone',value:'2222 3333'}});expect(foreignWrite.status).toBe(403);
   const hub=await oc.request.get('/api/negocio');expect((await hub.json()).places).toEqual([]);await oc.close();
   member=await createDisposableAccount({prefix:'dir-biz-member'});

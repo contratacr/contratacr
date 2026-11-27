@@ -84,7 +84,7 @@ export function ReservationStatus({token,locale,initial}:{token:string;locale:st
    <h2 id="reservation-history" className="text-lg font-bold">{t('Historial','History')}</h2>
    <ol className="space-y-1 text-sm" data-reservation-timeline>{r.timeline.map((e,i)=><li key={i} className="flex flex-wrap gap-x-2"><span className="font-semibold">{(ACTION[e.action]??[e.action,e.action])[en?1:0]}</span><time dateTime={e.at} className="text-slate-700">{ready?at(e.at):''}</time></li>)}</ol>
   </section>
-  <p className="text-sm"><a href={`${prefix}/lugar/${r.placeSlug}`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Ver el lugar','View the place')}</a>
+  <p className="text-sm"><a href={`${prefix}/negocios/${r.placeSlug}`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Ver el lugar','View the place')}</a>
    {' · '}<a href={`${prefix}/mis-reservas`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Mis reservas','My reservations')}</a></p>
   <p className="text-xs text-slate-700">{t('Este enlace es privado: quien lo tenga puede ver y cancelar esta reserva. No lo comparta.','This link is private: anyone who has it can view and cancel this reservation. Do not share it.')}</p>
  </section>;

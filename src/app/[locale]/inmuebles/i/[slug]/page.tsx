@@ -6,7 +6,7 @@ import {codeFromSegment,formatMoney,listingPath,mapPublicListing,PROPERTY_TYPE_L
 import {ListingClient} from '@/components/directory/listing-client';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 
-// LOCAL PRO ONLY (R1, development only like /lugar): /inmuebles/i/<slug>-<code>. Public coordinates are always fuzzed by SQL.
+// LOCAL PRO ONLY (R1, development only like /negocios): /inmuebles/i/<slug>-<code>. Public coordinates are always fuzzed by SQL.
 async function load(segment:string){
  const code=codeFromSegment(segment);if(!code)return null;
  const result=await createAdminClient().rpc('dir_listing_public',{p_code:code});

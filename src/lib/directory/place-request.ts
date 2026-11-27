@@ -4,7 +4,7 @@ import {buildPlaceCreateInput} from './admin-place-create';
 // «Empresa o local» at sign-up (owner 2026-11-27, directory on): a business that is not in the directory asks to be added.
 // POST /api/negocio/solicitud → dir_place_mutate create with source `owner` and the person as actor: the place stays a
 // DRAFT (not public) and appears in /admin/directorio «Lugares nuevos»; staff publish or reject it with the status action.
-// Once published, the person claims it from its page (/lugar/<slug>/reclamar). No new tables: the requester is the actor
+// Once published, the person claims it from its page (/negocios/<slug>/reclamar). No new tables: the requester is the actor
 // of the create action (dir_place_actions / dir_place_history).
 
 export const placeRequestSchema=z.object({

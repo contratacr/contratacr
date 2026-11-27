@@ -80,7 +80,7 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
     await expectNoHorizontalOverflow(p);
     await featureShots(p,`eventos-${language}`,info);
     await gotoOK(p,`${prefix}/eventos?provincia=Lim%C3%B3n`);await expect(p.locator('[data-event]').filter({hasText:tag})).toHaveCount(0);
-    await gotoOK(p,`${prefix}/lugar/${slug}`);
+    await gotoOK(p,`${prefix}/negocios/${slug}`);
     await openPlaceTab(p,'info');
     await expect(p.locator('[data-place-events]')).toContainText(title);
     await expect(p.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688776655');
@@ -88,8 +88,8 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
     await expect(p.locator('[data-place-order-note]')).toHaveCount(0);// 2026-11-19: the «Pedir» explanation lives in the Terms (13.1)
     // Health place pages exist only with DIR_HEALTH_ENABLED (off by default in a production build): read the server's
     // own flag from /salud instead of a manual env var; off → the clinic page must answer 404, on → no «Pedir» button.
-    if(healthOn){await gotoOK(p,`${prefix}/lugar/${clinic}`);await expect(p.locator('[data-place-action="order"]')).toHaveCount(0);}
-    else expect((await p.request.get(`${origin}${prefix}/lugar/${clinic}`)).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
+    if(healthOn){await gotoOK(p,`${prefix}/negocios/${clinic}`);await expect(p.locator('[data-place-action="order"]')).toHaveCount(0);}
+    else expect((await p.request.get(`${origin}${prefix}/negocios/${clinic}`)).status(),'health place while DIR_HEALTH_ENABLED is off').toBe(404);
    }
    // Staff: the new events are in the queue; hiding one removes it from /eventos (logged with the reason).
    const queue=(await db.rpc('dir_admin_event_queue',{p_filter:'new',p_limit:200})).data as {id:string;title:string;revision:number}[];

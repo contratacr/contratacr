@@ -55,7 +55,7 @@ test('instagram import (sandbox): place owner connects, imports 3, repeat skippe
   const {placeId}=await seedPlace(db,{slug,vertical:'restaurant',name:`Soda Instagram ${tag}`});
   await claimByEmail(context,slug);
   await warm(page);
-  await gotoOK(page,`/lugar/${slug}`);
+  await gotoOK(page,`/negocios/${slug}`);
   // Phones: «Agregar fotos» lives in the «…» sheet of the place page, which opens the panel with this window event
   // (place-ficha-menu.tsx PHOTO_OPEN); the event is used directly so this spec does not depend on that menu's layout.
   const open=page.locator('[data-place-photo-panel] [data-instagram-import-open]');

@@ -125,7 +125,7 @@ function PlaceCard({ p, en, rank }: { p: FeedPlace; en: boolean; rank: number })
   const where = km ?? p.area ?? label;
   return (
     <li className={p.photo ? "w-[220px] shrink-0 snap-start" : "w-[200px] shrink-0 snap-start"}>
-      <Link href={`/lugar/${p.slug}`} prefetch={false} data-home-feed-place className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
+      <Link href={`/negocios/${p.slug}`} prefetch={false} data-home-feed-place className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
         {/* With a photo, the photo; without one (owner 2026-11-26) a text card: its position, the name large, stars and area. */}
         {p.photo ? (
           <>

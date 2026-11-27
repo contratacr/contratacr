@@ -578,7 +578,7 @@ let encabezadoYaHidratado = false;
 // Search sheet (owner 2026-11-26): the most used places first; the rest are one tap away in Categorías.
 const SEARCH_PLACE_ORDER = ["restaurantes", "farmacias", "hospedaje", "atracciones", "supermercados", "talleres", "gasolineras", "parqueos", "tiendas", "cafes"];
 
-/** Section bar known by the server (detail screens such as /lugar): the first paint already shows «← Título ···». */
+/** Section bar known by the server (detail screens such as /negocios): the first paint already shows «← Título ···». */
 export type SeccionInicialDeBarra = { title: string; menu?: boolean; centrado?: boolean };
 
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate, seccionInicial }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean; seccionInicial?: SeccionInicialDeBarra } = {}) {

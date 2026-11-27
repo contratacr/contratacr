@@ -234,6 +234,6 @@ async function main(){
    if(created.length)await bucket.remove(created).catch(()=>{});
   }
  }
- console.log('Aplicadas:',stats.aplicadas,'· fallidas:',stats.fallidas);console.log('  por sección:',JSON.stringify(appliedBySection));console.log('  ejemplos:',examples.map(s=>`/lugar/${s}`).join(' '));
+ console.log('Aplicadas:',stats.aplicadas,'· fallidas:',stats.fallidas);console.log('  por sección:',JSON.stringify(appliedBySection));console.log('  ejemplos:',examples.map(s=>`/negocios/${s}`).join(' '));
 }
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href)await main();

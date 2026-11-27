@@ -118,7 +118,7 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
   await expectNoHorizontalOverflow(page);
   if(info.project.name==='chromium-desktop'){await gotoOK(page,`${prefix}/farmacias?product=${seed.otc}&sort=price_asc`);await shot(page,`farmacias-producto-${language}`,1440);await shot(page,`farmacias-producto-${language}`,390);}
   // The place page of the unverified pharmacy: public, neutral note; prescription prices never.
-  await gotoOK(page,`${prefix}/lugar/${seed.places.sinPermiso}`);
+  await gotoOK(page,`${prefix}/negocios/${seed.places.sinPermiso}`);
   await openPlaceTab(page,'info');
   await expect(page.locator('[data-pharmacy-license="unverified"]')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(seed.rxName);

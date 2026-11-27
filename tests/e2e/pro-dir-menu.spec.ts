@@ -6,9 +6,9 @@ import {openPlaceTab, chooseEdition,claimByEmail,hideSeededPlaces,label,seedPlac
 
 // Multivertical P2 (LOCAL Pro): restaurant menu of a CLAIMED place. Owner (edition restaurantes) claims the place
 // with the mock code, creates a section and a dish through /api/pro/menu, the draft stays hidden on
-// /lugar/<slug>/menu until published, then shows the final price with its breakdown; the editor page renders;
+// /negocios/<slug>/menu until published, then shows the final price with its breakdown; the editor page renders;
 // a stale revision answers 409; an account that does not manage the place is refused. Owner of /api/pro/menu,
-// /[locale]/dashboard/pro/menu and /[locale]/lugar/[slug]/menu.
+// /[locale]/dashboard/pro/menu and /[locale]/negocios/[slug]/menu.
 test.afterEach(()=>hideSeededPlaces());
 
 // PRO_ENABLED off (E2E_PRO_OFF=1): Pro menu editor (/api/pro/menu, edition gate) answers 404 by design; the free owner tools are covered by pro-dir-business-tools.
@@ -29,17 +29,17 @@ test('P2: menu editor, drafts hidden until published, final price public',async(
   const s=await post({action:'section_create',sectionId,section:{nameEs:'Platos fuertes',nameEn:'Main dishes'}});expect(s.status,JSON.stringify(s.body)).toBe(200);
   const i=await post({action:'item_create',itemId,sectionId,item:{nameEs:'Casado con pollo',nameEn:'Chicken casado',priceMinor:450000}});expect(i.status,JSON.stringify(i.body)).toBe(200);
   // Draft: not public.
-  await gotoOK(page,`/lugar/${slug}/menu`);
+  await gotoOK(page,`/negocios/${slug}/menu`);
   await expect(page.locator('[data-menu-item]')).toHaveCount(0);
   const pub=await post({action:'items_publish',itemIds:[itemId]});expect(pub.status,JSON.stringify(pub.body)).toBe(200);
   for(const prefix of ['','/en']){
-   await gotoOK(page,`${prefix}/lugar/${slug}/menu`);
+   await gotoOK(page,`${prefix}/negocios/${slug}/menu`);
    const item=page.locator('[data-menu-item]');await expect(item).toHaveCount(1);
    await expect(item).toContainText(prefix?'Chicken casado':'Casado con pollo');
    await expect(item.locator('[data-menu-total]')).toBeVisible();await expect(item.locator('[data-menu-breakdown]')).toBeVisible();
    await expect(page.locator('[data-menu-price-note]')).toBeVisible();
    await expectNoHorizontalOverflow(page);
-   await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'offer');
+   await gotoOK(page,`${prefix}/negocios/${slug}`);await openPlaceTab(page,'offer');
    await expect(page.locator('[data-place-menu-link]')).toHaveText(prefix?'See the menu':'Ver el menú');
   }
   // Stale revision → 409 (another tab changed the section).

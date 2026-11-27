@@ -42,7 +42,7 @@ import {proMoney} from '@/lib/pro/money';
 import {placeStreetViews} from '@/lib/directory/street-view-server';
 import {PlaceStreetView} from '@/components/directory/place-street-view';
 
-// LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /lugar/<slug>.
+// LOCAL PRO ONLY (multivertical F1–F5/P1/P2/V4, development only like /sitio): canonical page of a place, /negocios/<slug>.
 // Only published (or permanently closed) places; every pharmacy since the owner decision of 2026-11-17 (its permit
 // status is shown on the page; the per-vertical requires_license gate stays in SQL).
 // Extra blocks: claim (while unclaimed), prices (public_price_current: source, date, stale greyed; never Rx),
@@ -88,7 +88,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string;s
  if(!DIR_ENABLED)return {};
  const {locale,slug}=await params,place=await load(slug),en=locale==='en';
  if(!place)return {title:en?'Place not available':'Lugar no disponible',robots:{index:false,follow:false}};
- const path='/lugar/'+slug,area=[place.address.locality,place.address.adminArea1].filter(Boolean).join(', ');
+ const path='/negocios/'+slug,area=[place.address.locality,place.address.adminArea1].filter(Boolean).join(', ');
  const vertical=en?place.vertical.nameEn:place.vertical.nameEs,description=`${vertical}${area?' · '+area:''}`;
  // Indexing rule (feature-flags.ts placeIndexable, DIR_INDEX_IMPORTED): claimed/verified places are indexed; imported
  // unclaimed ones only with a phone, opening hours or a website. Permanently closed places stay out of the index.
@@ -120,10 +120,10 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const orderLink=order.error?null:order.data as OrderLink|null,placeBrand=brand.error?null:brand.data as PlaceBrand|null;
  const reservationConfig=reservation&&!reservation.error?reservation.data as ReservationConfig|null:null;
  const unclaimed=claim.data?.claim_status==='unclaimed'&&place.status==='published';
- // Claim (2026-11-19, Yelp model): a compact link in the side card (after the tabs on phones); the flow and its benefits live in /lugar/<slug>/reclamar.
+ // Claim (2026-11-19, Yelp model): a compact link in the side card (after the tabs on phones); the flow and its benefits live in /negocios/<slug>/reclamar.
  const menuData=menu&&!menu.error?menu.data as PublicMenu|null:null;
  const placeListings=(listings?.data??[]).map(r=>mapPublicListing(r as Record<string,unknown>)).filter((l):l is PublicListing=>!!l);
- const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/lugar/${slug}`)}`;
+ const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/negocios/${slug}`)}`;
  const manage=user?await replyTargets(db,user.id,slug):null;
  const reportPrices=place.status==='published'&&vertical in PRICE_REPORT_KINDS;
  // Managers (or their Pro team with listing.publish, see replyTargets) answer questions as the business instead of asking.
@@ -167,7 +167,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). The shell paints the same bar
  // on the server (header pixel-stable on reload, 2026-11-27); SectionHeaderTitle keeps the back and «…» wiring.
  const barTitle=en?place.vertical.nameEn:place.vertical.nameEs;
- return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
+ return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/negocios/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
   orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
@@ -181,7 +181,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    offer:hasOffer?<>
     {menuData&&menuData.sections.length>0&&<section aria-labelledby="place-menu-title" className="space-y-3">
      <h2 id="place-menu-title" className={BIZ.h2}>{en?'Menu':'Menú'}</h2>
-     <p><a data-place-menu-link className={BIZ.secondary} href={`${prefix}/lugar/${slug}/menu`}>{en?'See the menu':'Ver el menú'}</a></p></section>}
+     <p><a data-place-menu-link className={BIZ.secondary} href={`${prefix}/negocios/${slug}/menu`}>{en?'See the menu':'Ver el menú'}</a></p></section>}
     {hasPrices&&<PlacePrices prices={prices.data as PublicPriceCurrent} locale={locale}/>}
     {reportPrices&&<PlacePriceReport slug={slug} locale={locale} loginHref={loginHref} today={crTodayISO()}/>}
     {placeListings.length>0&&<PlaceListingsSection listings={placeListings} locale={locale} total={listings?.count??undefined}/>}

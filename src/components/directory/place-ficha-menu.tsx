@@ -35,7 +35,7 @@ export function PlaceFichaMenu({slug,name,locale,signedIn,loginHref,isManager}:{
  const opciones:OpcionFicha[]=[
   {id:'guardar',icono:<Bookmark className={`h-4 w-4 ${saved?'fill-current text-[#0089bb]':''}`}/>,texto:saved?t('Guardado','Saved'):t('Guardar','Save'),onSelect:()=>signedIn?window.dispatchEvent(new Event(SAVE_OPEN)):toLogin()},
   {id:'compartir',icono:<CaraCompartir dedo={<Share2 className="h-4 w-4"/>} raton={<Link2 className="h-4 w-4"/>}/>,texto:<CaraCompartir dedo={tMenu('share')} raton={tMenu('copyLink')}/>,etiqueta:tMenu('share'),
-   onSelect:()=>void compartir(`${en?'/en':''}/lugar/${slug}`,name)},
+   onSelect:()=>void compartir(`${en?'/en':''}/negocios/${slug}`,name)},
   {id:'fotos',icono:<ImagePlus className="h-4 w-4"/>,texto:t('Agregar fotos','Add photos'),onSelect:()=>signedIn?window.dispatchEvent(new Event(PHOTO_OPEN)):toLogin()},
   {id:'sugerir',icono:<PenLine className="h-4 w-4"/>,texto:t('Sugerir un cambio','Suggest an edit'),onSelect:openReport},
   {id:'reportar',icono:<Flag className="h-4 w-4"/>,texto:tMenu('report'),peligro:true,onSelect:openReport},

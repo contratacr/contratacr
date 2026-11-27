@@ -98,7 +98,7 @@ export function resolvePlaceAction(id:PlaceActionId,p:PlaceActionInput):PlaceAct
    return {id,label:t('Cómo llegar','Get directions'),short:t('Cómo llegar','Directions'),type:'directions',href:maps.google,external:true,maps:{google:maps.google,waze:maps.waze,apple:maps.apple}};
   }
   case 'hours':return p.hasHours?{id,label:t('Ver horario','See hours'),short:t('Horario','Hours'),type:'link',href:'#horario'}:null;
-  case 'menu':return p.hasMenu?{id,label:t('Ver el menú','See the menu'),short:t('Menú','Menu'),type:'link',href:`${prefix}/lugar/${p.slug}/menu`}:null;
+  case 'menu':return p.hasMenu?{id,label:t('Ver el menú','See the menu'),short:t('Menú','Menu'),type:'link',href:`${prefix}/negocios/${p.slug}/menu`}:null;
   case 'prices':return p.hasPrices?{id,label:t('Ver precios','See prices'),short:t('Precios','Prices'),type:'link',href:'#precios'}:null;
   case 'website':{
    if(!p.website||!/^https?:\/\//i.test(p.website))return null;

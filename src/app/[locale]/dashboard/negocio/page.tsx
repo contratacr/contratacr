@@ -32,7 +32,7 @@ export default async function BusinessHubRoute({params}:{params:Promise<{locale:
      {dining&&<li><a className={chip} href={`${base}/menu?lugar=${p.slug}`}>{t('Menú','Menu')}</a></li>}
      {dining&&<li><a className={chip} href={`${base}/reservas`}>{t('Reservas de mesa','Table reservations')}</a></li>}
      {p.vertical!=='banking'&&<li><a className={chip} href={`${base}/lugar`}>{t('Eventos y "Pedir"','Events and "Order"')}</a></li>}
-     <li><a data-business-public className={chip} href={`${prefix}/lugar/${p.slug}`}>{t('Ver ficha: responder reseñas y preguntas','Open page: reply to reviews and questions')}</a></li>
+     <li><a data-business-public className={chip} href={`${prefix}/negocios/${p.slug}`}>{t('Ver ficha: responder reseñas y preguntas','Open page: reply to reviews and questions')}</a></li>
     </ul>
    </li>;})}</ul>}
  </main>;
