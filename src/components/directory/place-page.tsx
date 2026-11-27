@@ -50,11 +50,12 @@ const CHIP_ROW='scrollbar-none -mx-4 flex gap-2 overflow-x-auto overscroll-x-con
 /** The professional profile's secondary white pill (professional-schedule.tsx secondaryContactBase), one step smaller. */
 export const PAGE_CHIP='inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 /** Contact buttons of the card on phones: the professional profile's bar buttons (48 px, 16 px semibold). */
-const CONTACT_BASE='inline-flex h-12 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-base font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
-const CONTACT_WA=`${CONTACT_BASE} ccr-boton-whatsapp text-white`;
-const CONTACT_PRIMARY=`${CONTACT_BASE} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
-const CONTACT_SECONDARY=`${CONTACT_BASE} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
-/** Section heading inside the tabs: the professional profile's (BIZ.h2). */
+// Bottom bar buttons: the same as the professional profile's bar (professional-schedule.tsx: green WhatsApp, white
+// bordered second button, 48 px, text-base semibold, two equal halves).
+const BAR_BTN='inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
+const BAR_WA=`${BAR_BTN} ccr-boton-whatsapp text-white`;
+const BAR_PRIMARY=`${BAR_BTN} bg-[#009FD9] text-white hover:bg-[#0089bb]`;
+const BAR_SECONDARY=`${BAR_BTN} border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
 const H2=BIZ.h2;
 
 
@@ -257,12 +258,14 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
  // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom
  // (the same AccionesAlPie strip as the professional profile): WhatsApp, Llamar and Cómo llegar, only those that exist.
- const barActions=[wa,call,go].filter((x):x is PlaceAction=>!!x);
+ // Two buttons like the professional profile: WhatsApp and Llamar; Cómo llegar fills in when one is missing (Waze and
+ // Maps chips stay in the card).
+ const barActions=[wa,call,go].filter((x):x is PlaceAction=>!!x).slice(0,2);
  const barLabel=(x:PlaceAction)=>x===wa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.id==='directions'?t('Cómo llegar','Directions'):x.short;
  const contactBar=published&&barActions.length>0&&<AccionesAlPie className="lg:hidden max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-sm:shadow-[0_-8px_24px_rgba(22,37,67,0.08)] sm:mt-4">
-  <div className="flex justify-center gap-2 [&>*]:flex-none" data-place-contact-buttons={barActions.map(x=>x.id).join(' ')}>
-   {barActions.map((x,i)=>{const isWa=x===wa;return <ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(isWa?CONTACT_WA:i===0?CONTACT_PRIMARY:CONTACT_SECONDARY,'h-11 w-auto gap-1 whitespace-nowrap px-2.5 text-[14px] max-[380px]:px-2 max-[380px]:text-[13px]')}>
-    {isWa?<WhatsAppLogo className="h-[18px] w-[18px] shrink-0"/>:actionIcon(x.id,'h-[18px] w-[18px] shrink-0')}<span>{barLabel(x)}</span></ActionButton>;})}
+  <div className="flex w-full gap-2" data-place-contact-buttons={barActions.map(x=>x.id).join(' ')}>
+   {barActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={x===wa?BAR_WA:i===0?BAR_PRIMARY:BAR_SECONDARY}>
+    {x===wa?<WhatsAppLogo className="h-5 w-5 shrink-0"/>:actionIcon(x.id,'h-5 w-5 shrink-0')}<span className="truncate">{barLabel(x)}</span></ActionButton>)}
   </div>
  </AccionesAlPie>;
  const extras=<PlaceChipRail className={CHIP_ROW} data-place-quick-actions={[reserve?.id,goChip?'waze maps':null,orderAction?.id,site?.id].filter(Boolean).join(' ')}>
