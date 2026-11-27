@@ -2242,7 +2242,10 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   body.ccr-con-barra-accion .ccr-app-footer,
   /* Business pages never show the footer on phones, like the professional profile (owner 2026-11-27), even when the
      place has no button for the bottom bar. */
-  body:has([data-place-page]) .ccr-app-footer {
+  body:has([data-place-page]) .ccr-app-footer,
+  /* Nor the claim and menu pages of a business (owner 2026-11-27). */
+  body:has([data-place-claim-page]) .ccr-app-footer,
+  body:has([data-place-menu]) .ccr-app-footer {
     display: none;
   }
 }

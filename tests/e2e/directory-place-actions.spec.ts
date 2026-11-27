@@ -84,9 +84,9 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  const mobile=isMobileProject(info);
  const chips=page.locator('[data-place-actions-bar]');
  await expect(page.locator('[data-place-page]')).toBeVisible();
- // 2026-11-27 (owner): a round avatar only with a real photo; no section tile or placeholder without one.
- expect(await page.locator('[data-place-header] [data-place-avatar]').count()).toBeLessThanOrEqual(1);
- await expect(page.locator('[data-place-header] [data-place-avatar="section"]')).toHaveCount(0);
+ // 2026-11-27 (owner, «cuando hay foto la foto, si no el ícono mejorado»): exactly one round avatar — the first real photo,
+ // else the section's improved icon; no placeholder.
+ await expect(page.locator('[data-place-header] [data-place-avatar]')).toHaveCount(1);
  await expect(page.locator('[data-place-photo-placeholder]')).toHaveCount(0);
  // The card keeps its actions; «Reseñar» lives only inside Reseñas (owner 2026-11-26), not in the card; no fixed bottom bar.
  await expect(chips).toBeVisible();

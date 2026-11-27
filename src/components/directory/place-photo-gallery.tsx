@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore} from 'react';
 const noSubscribe=()=>()=>{};
-import {Camera,ChevronLeft,ChevronRight,Flag,X} from 'lucide-react';
+import {Camera,ChevronLeft,ChevronRight,Flag,Maximize2,X} from 'lucide-react';
 import {PHOTO_FLAG_REASONS,photoAlt,photoReasonText,placePhotoId,placePhotoSrc} from '@/lib/directory/place-photos';
 
 /**
@@ -18,7 +18,11 @@ const FLAG_TEXT:Record<string,[string,string]>={not_this_place:['No es de este l
  *  `hero` (2026-11-26 redesign): fills the place hero (absolute, the parent sets the height). Phones: one photo per
  *  screen width, swiped sideways, with a «1 / N» counter; from sm: the Yelp-like mosaic (one large + up to four). The
  *  same buttons serve both layouts (each photo is rendered once). */
-export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'|'strip'|'hero'}){
+/** `cases` (owner 2026-11-27, «mostrarlas como en profesionales cuando hay fotos»): the production professional profile's
+ *  «Casos de éxito» cards (case-showcase.tsx): photos in groups of three, each group one rounded card whose cover fills
+ *  the width (16:10) with the «ampliar» mark, the other photos peeking as small squares on the cover, the caption under
+ *  it in full; one card per row on phones, two from sm. Every photo is its own button and opens the same lightbox. */
+export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:GalleryPhoto[];placeName:string;en:boolean;variant?:'grid'|'mosaic'|'strip'|'hero'|'cases'}){
  const t=(es:string,english:string)=>en?english:es;
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [open,setOpen]=useState<number|null>(null);const opener=useRef<HTMLButtonElement|null>(null);const dialog=useRef<HTMLDivElement>(null);
@@ -78,7 +82,26 @@ export function PlacePhotoGallery({photos,placeName,en,variant='grid'}:{photos:G
    <button type="button" data-place-photos-all onClick={e=>{opener.current=e.currentTarget;setOpen(0);}}
     className={`absolute bottom-3 right-3 inline-flex min-h-11 items-center rounded-full bg-white/95 px-4 text-sm font-bold text-[#162543] shadow-md backdrop-blur hover:bg-white ${ring}`}>
     {photos.length===1?t('Ver la foto','See the photo'):t(`Ver las ${photos.length} fotos`,`See all ${photos.length} photos`)}</button>
-  </div>:
+  </div>:variant==='cases'?<ul className="grid grid-cols-1 gap-5 sm:grid-cols-2" data-place-gallery={photos.length} data-place-photo-cases data-ready={ready||undefined}>
+   {Array.from({length:Math.ceil(photos.length/3)},(_,g)=>g*3).map(start=>{const group=photos.slice(start,start+3),cover=group[0]!;
+    const label=(i:number)=>t(`Ver foto ${i+1} de ${photos.length}: ${alt(i)}`,`View photo ${i+1} of ${photos.length}: ${alt(i)}`);
+    return <li key={cover.url} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
+     <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#eef3f8]">
+      <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(start);}} data-place-photo-thumb={start} aria-label={label(start)} className={`group block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-[#009FD9]`}>
+       {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route or validated https seed URL */}
+       <img src={placePhotoSrc(cover.url,800)} alt={alt(start)} loading={start===0?'eager':'lazy'} decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"/>
+       <span aria-hidden="true" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-[#08111f]/55 text-white backdrop-blur-sm transition-colors group-hover:bg-[#08111f]/75">
+        <Maximize2 className="h-[18px] w-[18px]" strokeWidth={2.4}/></span>
+      </button>
+      {group.length>1&&<div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+       {group.slice(1).map((p,k)=><button key={p.url} type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(start+1+k);}} data-place-photo-thumb={start+1+k} aria-label={label(start+1+k)} className={`relative h-10 w-10 overflow-hidden rounded-lg border border-white/70 bg-white/20 shadow-sm backdrop-blur-sm ${ring}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route or validated https seed URL */}
+        <img src={placePhotoSrc(p.url,320)} alt={alt(start+1+k)} loading="lazy" decoding="async" className="h-full w-full object-cover"/></button>)}
+      </div>}
+     </div>
+     {cover.caption&&<p className="p-4 text-[14px] leading-relaxed text-[#374151] [overflow-wrap:anywhere]">{cover.caption}</p>}
+    </li>;})}
+  </ul>:
   <ul className={`grid gap-2 ${photos.length===1?'grid-cols-1 sm:max-w-md':photos.length===2?'grid-cols-2 sm:max-w-2xl':'grid-cols-2 sm:grid-cols-4'}`} data-place-gallery={photos.length} data-ready={ready||undefined}>
    {photos.slice(0,photos.length>5?5:photos.length).map((p,i)=><li key={p.url} className={i===0&&photos.length>2?'col-span-2 row-span-2':''}>
     <button type="button" onClick={e=>{opener.current=e.currentTarget;setOpen(i);}} data-place-photo-thumb={i}

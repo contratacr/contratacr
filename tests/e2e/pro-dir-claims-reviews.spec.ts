@@ -38,7 +38,8 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
  await expect(benefits).toContainText(t('Publicar su menú con precios finales.','Publish your menu with final prices.'));
  await expect(benefits).toContainText(t('Recibir reservas de mesa','Take table reservations'));
  await expect(benefits).toContainText(t('Responder las reseñas','Reply to your customers'));
- await expect(page.locator('[data-claim-neutrality]')).toHaveText(t('No puede pagar para salir primero ni borrar reseñas.','You cannot pay to appear first or to remove reviews.'));
+ // Owner 2026-11-27 («Esto quítalo»): no «No puede pagar para salir primero ni borrar reseñas» line on the claim page.
+ await expect(page.locator('[data-claim-neutrality]')).toHaveCount(0);
  await expect(page.getByRole('link',{name:t('Inicie sesión para reclamar','Sign in to claim')})).toBeVisible();
  expect((await postJson(page,`/api/lugar/${slug}/reclamo`,{actionId:uid(),claimId:uid(),method:'email_listed'})).status).toBe(401);
  // Let the anonymous page finish hydrating before the signed-in navigation (WebKit reports an aborted chunk load as a page error).

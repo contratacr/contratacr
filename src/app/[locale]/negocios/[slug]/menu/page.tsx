@@ -3,6 +3,7 @@ import {notFound} from 'next/navigation';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {PlaceMenu} from '@/components/directory/place-menu';
 import {DirectoryShell} from '@/components/directory/directory-shell';
+import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import type {PublicMenu} from '@/lib/directory/menu-schemas';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
@@ -28,5 +29,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string;s
 export default async function PlaceMenuRoute({params}:{params:Promise<{locale:string;slug:string}>}){
  if(!DIR_ENABLED)notFound();
  const {locale,slug}=await params,menu=await load(slug);if(!menu)notFound();
- return <DirectoryShell><PlaceMenu menu={menu} locale={locale}/></DirectoryShell>;
+ // Phones (owner 2026-11-27): «← Menú» bar like the place page, painted by the server; the arrow goes back to the listing.
+ const barTitle=locale==='en'?'Menu':'Menú';
+ return <DirectoryShell section={{title:barTitle,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref={`/negocios/${slug}`} tambienEnLaWeb centrado/><PlaceMenu menu={menu} locale={locale}/></DirectoryShell>;
 }

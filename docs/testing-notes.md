@@ -145,6 +145,10 @@ Estado actual (rediseño de producción-profesional, más reciente prevalece):
 - [ ] Teléfono con reservas: Reservar encabeza la barra inferior y no se repite como chip en la tarjeta de identidad (desde lg el chip sí aparece) (`6ac114902`).
 - [ ] Redes sociales: `attributes.social` solo acepta el dominio propio de cada red; un "sitio web" que es realmente Facebook/Instagram se muestra como red.
 - [ ] Sin pie de página del sitio en teléfonos.
+- [ ] Avatar sin foto real (2026-11-27, prevalece sobre «sin avatar»): círculo celeste #EBF5FB con el ícono de la sección en azul de marca, el estilo mejorado de producción y del tamaño del avatar del perfil (`PlaceSectionAvatar`, `src/components/directory/place-section-avatar.tsx`, ícono de `DIRECTORY_SECTION_ICONS`); con foto real, la foto. Siempre exactamente un avatar.
+- [ ] Fotos con 2 o más: la pestaña Fotos las muestra como los «Casos de éxito» del perfil profesional de producción (tarjetas redondeadas de a tres fotos: portada 16:10 con marca de ampliar, las otras asomadas en miniatura, leyenda completa debajo; una por fila en teléfono, dos desde sm); cada foto abre la vista grande. Con una sola foto: el avatar y la cuadrícula de siempre.
+- [ ] Reclamar `/negocios/<slug>/reclamar` (2026-11-27): sin la línea «No puede pagar para salir primero ni borrar reseñas»; en teléfono sin pie del sitio y con la barra «← Reclamar negocio» del encabezado (pintada por el servidor, sin salto) que vuelve a la ficha; el enlace «Volver a la ficha» solo queda desde lg. Avatar de la tarjeta = ícono mejorado de la sección.
+- [ ] Menú `/negocios/<slug>/menu` (2026-11-27): en teléfono sin pie del sitio y con la barra «← Menú» que vuelve a la ficha; el enlace «← <negocio>» solo queda desde lg.
 
 Quitado:
 - [ ] «No reclamado» (los no reclamados solo tienen la caja de reclamar al final).

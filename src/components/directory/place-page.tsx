@@ -10,6 +10,7 @@ import {kindLabel,placeSectionById,reviewsOn} from '@/lib/directory/place-vertic
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
 import {PlaceMapDialog} from './place-map-dialog';
 import {PlacePhotoGallery} from './place-photo-gallery';
+import {PlaceSectionAvatar} from './place-section-avatar';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
@@ -33,7 +34,7 @@ import {PlaceSocialLinks,SOCIAL_ICONS} from './place-social-links';
  * Canonical page of a place, /negocios/<slug> (owner 2026-11-26: «que se vea como el perfil del profesional de
  * producción y solo agregue lo que un negocio necesita»). It reuses the CLASSIC professional profile
  * (profile-client.tsx with the directory off, i.e. production) piece by piece:
- * - identity card: same container, round avatar (first approved photo, else the section tile; never a stock photo),
+ * - identity card: same container, round avatar (first approved photo, else the section's improved icon, PlaceSectionAvatar; never a stock photo),
  *   ProfileIdentityName with the verified seal, «★ 4.6 125 reseñas · ₡₡», «Restaurante · Escazú» and, new for a
  *   business, today's open status. On phones the card ends with the two contact buttons of the profile (WhatsApp first
  *   when the place has one, else Llamar, then Cómo llegar) and a row of the business extras (Reservar, Reseñar, Pedir,
@@ -267,7 +268,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   ...(!reviews?[]:[{id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={H2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>}]),
   ...(photos.length>0?[{id:'photos',label:`${t('Fotos','Photos')} (${photos.length})`,anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-32 space-y-4">
    <h2 id="place-photos" className={H2}>{t('Fotos','Photos')} <span className="font-semibold text-[#94a3b8]">{photos.length}</span></h2>
-   <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
+   {/* 2+ photos: shown like the production professional's «Casos de éxito» (owner 2026-11-27); one photo keeps the grid. */}
+   <PlacePhotoGallery en={en} placeName={place.name} photos={photos} variant={photos.length>1?'cases':'grid'}/></section>}]:[]),
   // «Ubicación» then «Información» (owner 2026-11-27); old #mas/#contacto links land in «Información».
   {id:'location',label:t('Ubicación','Location'),anchors:['ubicacion','mapa'],content:locationTab},
   {id:'info',label:t('Información','Information'),anchors:['informacion','sugerir-cambio','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas','reportar'],content:infoTab},
@@ -278,14 +280,14 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // ── Identity card (the classic professional profile card) ──
  const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex text-[#14b2ec]"><VerifiedSeal className="h-5 w-5 sm:h-6 sm:w-6" label={verification}/></span>:null;
  const hasPhotos=photos.length>0;
- // Owner 2026-11-27, «si no tiene foto no es necesario ese logo»: the round avatar only with a real photo; without one the
- // name block starts at the left edge and takes the whole width.
+ // Owner 2026-11-27, «cuando hay foto la foto, si no el ícono mejorado»: the first real photo, else the section's improved
+ // icon (PlaceSectionAvatar, production style); never a stock photo or street view.
  const avatarClass=`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`;
  const avatar=hasPhotos
   ?<a href="#fotos" data-place-avatar="photo" aria-label={t(`Ver las fotos de ${place.name}`,`See photos of ${place.name}`)} className={cn(avatarClass,ring,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>
    {/* eslint-disable-next-line @next/next/no-img-element -- approved place photo (R2), painted by the server like the professional avatar */}
    <img src={placePhotoSrc(photos[0]!.url,320)} alt={photos[0]!.caption??place.name} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover"/></a>
-  :null;
+  :<PlaceSectionAvatar verticalId={place.vertical.id} className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1"/>;
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
  // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom
  // (the same AccionesAlPie strip as the professional profile): WhatsApp, Llamar and Cómo llegar, only those that exist.
@@ -329,7 +331,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     <header data-place-header data-place-hero className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
      <div className="flex min-w-0 flex-col items-start gap-2 text-left min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-3 sm:contents sm:gap-0">
       {avatar}
-      <div className={cn('w-full min-w-0 sm:row-start-1 sm:w-auto sm:self-center',hasPhotos?'sm:col-start-2':'sm:col-span-2 sm:col-start-1')}>
+      <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto sm:self-center">
        <ProfileIdentityName testId="place-name" name={place.name} badge={nameBadge}/>
        {reviews&&(rated
         ?<p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-[#68778d] sm:mt-2 sm:text-[13px]" data-rating-line={place.rating.count}>

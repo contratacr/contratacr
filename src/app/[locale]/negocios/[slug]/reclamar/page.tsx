@@ -7,8 +7,10 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
+import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
 import {PlaceClaim} from '@/components/directory/place-claim';
-import {BIZ,HeroTile,ring} from '@/components/directory/biz-ui';
+import {BIZ,ring} from '@/components/directory/biz-ui';
+import {PlaceSectionAvatar} from '@/components/directory/place-section-avatar';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import {DIR_CLAIM_SMS_ENABLED,DIR_HEALTH_ENABLED,DIR_ENABLED} from '@/lib/directory/feature-flags';
 import type {ClaimOptions} from '@/lib/directory/claim-schemas';
@@ -44,10 +46,13 @@ export default async function PlaceClaimRoute({params}:{params:Promise<{locale:s
  const choices={emailListed:o?.emailListed??null,websiteHost:o?.websiteHost??null,sms:DIR_CLAIM_SMS_ENABLED&&!!o?.smsEnabled&&!!o?.phoneListed};
  const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/negocios/${slug}/reclamar`)}`;
  const area=[place.address.locality??place.address.adminArea2,place.address.adminArea1].filter(Boolean).join(', ');
- return <DirectoryShell><main id="contenido" data-place-claim-page={slug} className="mx-auto max-w-3xl space-y-6 px-4 pb-12 pt-4 text-[#162543] sm:px-6 lg:pt-8">
-  <a href={back} className={`inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#007fae] hover:underline ${ring}`}><ChevronLeft aria-hidden="true" className="h-4 w-4"/>{t('Volver a la ficha','Back to the listing')}</a>
+ // Phones (owner 2026-11-27): the same «← Reclamar negocio» bar as the place page, painted by the server (no jump on
+ // hydrate); the arrow goes back to the listing. The in-page back link stays only from lg, where the bar does not exist.
+ const barTitle=t('Reclamar negocio','Claim business');
+ return <DirectoryShell section={{title:barTitle,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref={`/negocios/${slug}`} tambienEnLaWeb centrado/><main id="contenido" data-place-claim-page={slug} className="mx-auto max-w-3xl space-y-6 px-4 pb-12 pt-4 text-[#162543] sm:px-6 lg:pt-8">
+  <a href={back} data-place-claim-back className={`min-h-11 items-center gap-1 text-sm font-semibold text-[#007fae] hover:underline max-lg:hidden lg:inline-flex ${ring}`}><ChevronLeft aria-hidden="true" className="h-4 w-4"/>{t('Volver a la ficha','Back to the listing')}</a>
   <header className={cn(BIZ.card,'flex items-center gap-3 p-4 sm:gap-5 sm:p-6')}>
-   <span className={cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full')}><HeroTile verticalId={place.vertical.id} className="h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/></span>
+   <PlaceSectionAvatar verticalId={place.vertical.id}/>
    <div className="min-w-0 flex-1"><ProfileIdentityName name={t(`Reclamar "${place.name}"`,`Claim "${place.name}"`)}/>
     {area&&<p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/>{area}</p>}</div>
   </header>

@@ -21,7 +21,8 @@ export function PlaceMenu({menu,locale}:{menu:PublicMenu;locale:string}){
   ?t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}) y servicio (${pct(pricing.serviceRateBps)}).`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) and service (${pct(pricing.serviceRateBps)}) included.`)
   :t(`Precios finales: incluyen IVA (${pct(pricing.ivaRateBps)}). Esta empresa indica que no cobra servicio.`,`Final prices: IVA (${pct(pricing.ivaRateBps)}) included. This business states it does not charge service.`);
  return <main id="contenido" data-place-menu={menu.slug} className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-[#162543] sm:py-12">
-  <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="text-sm">
+  {/* Phones use the «← Menú» bar of the header; the link back to the listing stays from lg (owner 2026-11-27). */}
+  <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="text-sm max-lg:hidden">
    <a className={`underline underline-offset-2 ${ring}`} href={placeHref}>← {menu.name}</a>
   </nav>
   <header className="space-y-2">
