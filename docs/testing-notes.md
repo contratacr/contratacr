@@ -70,8 +70,8 @@ Comportamiento actual:
 - [ ] Pastilla de búsqueda sin sombra; lupa oscura simple.
 - [ ] Hoja de búsqueda: "Profesionales" y "Lugares/Negocios", seis de cada uno y enlace "Ver todos los servicios" / "Ver todos los negocios" que abren las dos pestañas de Categorías; ambas visibles sin scroll.
 - [ ] Vacío: chips de Profesionales y luego de Empresas; al escribir, sugerencias agrupadas (Profesionales / Empresas, "Ver en el mapa").
-- [ ] "Recientes": solo perfiles y negocios abiertos (no búsquedas escritas); la ficha de un lugar registra la visita.
-- [ ] Sin nada que buscar y sin lugar: se enfoca el primer campo en vez de buscar.
+- [ ] "Recientes": solo perfiles y negocios abiertos (no búsquedas escritas); la ficha de un lugar registra la visita Con la bandera apagada vuelven las búsquedas escritas, como en producción (2026-11-27).
+- [ ] Sin nada que buscar y sin lugar: se enfoca el primer campo en vez de buscar (solo con directorio; con la bandera apagada busca todos los profesionales como en producción, 2026-11-27).
 - [ ] Al abrir la hoja se oculta la fila del encabezado (teclado de iPhone no deja ver la tarjeta flotante).
 - [ ] Filtros: solo idiomas y aseguradoras con profesionales publicados; "otro idioma/aseguradora" libre.
 - [ ] Tarjeta de lugar en la búsqueda: solo el nombre buscado, con marca corta si cubre país/provincia.
@@ -114,6 +114,7 @@ Dispositivos/límites:
 - [ ] Mapa estilo Yelp: tarjeta flotante con menú de marca, buscador con la sección, botón lista/mapa que sigue la hoja; el mapa acerca/aleja al subir/bajar la hoja; barra más alta sobre el mapa y más delgada sobre la lista; "Buscar en esta zona" compacto.
 - [ ] Resultados infinitos: se cargan 20 más al deslizar (esqueleto mientras carga); los pines de lo cargado se suman al mapa sin mover la cámara; nuevo filtro reinicia.
 - [ ] Orden: "Mejor calificados" por defecto (el chip muestra el orden actual), "Más cercanos" pide ubicación, precio ordena donde hay precios. Secciones sin reseñas: "Más relevantes" por defecto.
+- [ ] Hojas de los chips de resultados en el teléfono (Ordenar, Precio, Filtros): se abren completas sobre la pantalla (2026-11-27: antes quedaban debajo del borde por el transform de la hoja de resultados y solo se veía el fondo oscuro).
 - [ ] Chips: hoja de Ordenar, interruptores y menú de tipo; activos en azul de marca con check; hojas de chips abren desde un portal y siguen clicables; en teléfono sin botón "Filtros" ni chip de provincia (`0bc09b683`): el rango de precio y la provincia solo se aplican desde la dirección (`?priceMax=`, `?province=`) o, en computadora, desde «Filtros».
 - [ ] Tarjeta de resultado: posición antes del nombre ("1. Soda …"), sin insignia; foto bajo el nombre; línea de estado tipo Maps; una fila de acciones (a lo más dos botones) con iconos de color de marca; marcador para guardar (sin sesión: login y vuelve).
 - [ ] Orden de acciones: Reservar (si existe), Reseñar, WhatsApp, Llamar, Waze, Maps; profesionales: WhatsApp, Reseñar, Llamar. "Sitio web" solo en tarjetas de Hospedaje y Educación.

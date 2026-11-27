@@ -2385,7 +2385,7 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 }
 @media (prefers-reduced-motion: reduce) {
   .ccr-menu-completo, .ccr-menu-completo .ccr-menu-cuerpo, .ccr-menu-fondo { transition-duration: 0.01s !important; transition-delay: 0s !important; }
-  .ccr-menu-completo * { animation: none !important; opacity: 1 !important; }
+  .ccr-menu-completo[data-menu-cortina] * { animation: none !important; opacity: 1 !important; }
 }
 
 /* Submenú de «Ayuda y soporte» del menú completo: un nivel debajo, sin íconos. */

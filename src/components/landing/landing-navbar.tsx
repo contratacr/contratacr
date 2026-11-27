@@ -1383,7 +1383,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // Nothing to look for and no place (owner 2026-11-26): do not search; put the cursor in the first field so its
     // suggestions open. With a place typed it still searches, like Yelp (the best of that area).
     const sinLugar = !overrides.coords && !overrides.location && !navLocation.trim();
-    if (!svc && !overrides.directorySection && !overrides.categoria && sinLugar) {
+    // Directory on only (test); production (flags off) keeps searching all professionals.
+    if (directoryOn && !svc && !overrides.directorySection && !overrides.categoria && sinLugar) {
       const campo = nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input");
       campo?.focus();
       setSearchFocused(true);
@@ -2525,8 +2526,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {/* UNA sola lista de recientes: las búsquedas y los perfiles
                       abiertos, intercalados por fecha. Dos apartados («Recientes» y
                       «Vistos recientemente») partían la pantalla en dos y se veía mal. */}
-                  {/* Owner 2026-11-26: «Recientes» shows only what the person opened (profiles and businesses), not typed searches. */}
-                  {searchFocused && !searchQuery.trim() && visitasRecientes.length > 0 && (
+                  {/* Owner 2026-11-26 (directory on only): «Recientes» shows only what the person opened (profiles and
+                      businesses), not typed searches. Production (flags off) keeps the typed searches in the list. */}
+                  {searchFocused && !searchQuery.trim() && ((!directoryOn && busquedasRecientes.length > 0) || visitasRecientes.length > 0) && (
                     // Sin línea al final: separaba los recientes de la lista de
                     // provincias que iba debajo, y esa lista ya no está aquí
                     // —ahora sale con el cursor en Ubicación—, así que la línea
@@ -2551,6 +2553,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </button>
                       </div>
                       {[
+                        ...(directoryOn ? [] : busquedasRecientes).map((busqueda) => ({ clave: `b:${busqueda.termino}`, at: busqueda.at, busqueda, visita: null as RecentVisit | null })),
                         ...visitasRecientes.map((visita) => ({ clave: `v:${visita.id}`, at: visita.at ?? 0, busqueda: null as BusquedaReciente | null, visita })),
                       ]
                         .sort((primero, segundo) => segundo.at - primero.at)
