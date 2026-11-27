@@ -98,7 +98,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  ];
  const clear=activeFilters>0?{href:hrefWith(basePath,{q:values.q}),label:t('Limpiar filtros','Clear filters')}:undefined;
  const total=facets?.total??null,where=values.canton??values.province;
- const count=total==null?null:`${fmt(total,en)} ${t(total===1?'opción':'opciones',total===1?'option':'options')} ${where?t(`en ${where}`,`in ${where}`):t('en Costa Rica','in Costa Rica')}`;
+ const count=total==null?null:`${fmt(total,en)} ${t(total===1?'negocio':'negocios',total===1?'business':'businesses')} ${where?t(`en ${where}`,`in ${where}`):t('en Costa Rica','in Costa Rica')}`;
  const items=page.ok?page.result.items:[];
  const plainValues=Object.fromEntries(Object.entries(values).filter(([k,v])=>k!=='cursor'&&typeof v==='string'&&v)) as Record<string,string>;
  const places=items.flatMap(it=>it.kind==='place'?[it]:[]);
