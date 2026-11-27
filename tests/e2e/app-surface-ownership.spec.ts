@@ -52,6 +52,8 @@ const pageRules: OwnershipRule[] = [
   { match: /^\/\[locale\]\/notificaciones$/, owner: "notifications-guides-regression.spec.ts" },
   { match: /^\/\[locale\]\/mensajes$/, owner: "direct-chat.spec.ts", parked: true },
   // Role choice, onboarding hand-off, profile completion and the recovery link are driven on the real pages.
+  // Sign-up «Empresa o local» (directory on, 2026-11-27): add or claim the business.
+  { match: /^\/\[locale\]\/registro\/empresa$/, owner: "pro-dir-business-signup.spec.ts" },
   { match: /^\/\[locale\]\/(?:registro|reset-password|onboarding|completar-perfil)$/, owner: "auth-screens.spec.ts" },
   { match: /^\/\[locale\]\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/, owner: "auth-support.spec.ts" },
   { match: /^\/\[locale\]\/eliminar-cuenta$/, owner: "account-lifecycle.spec.ts" },
@@ -95,6 +97,7 @@ const handlerRules: OwnershipRule[] = [
   // Owner/user place photos (upload, moderation and private serving) and "Mi negocio" without Pro (/api/negocio/*).
   { match: /^\/api\/(?:fotos-lugar\/\[id\]|lugar\/\[slug\]\/fotos)$/, owner: "pro-dir-photos.spec.ts" },
   { match: /^\/api\/negocio(?:\/(?:lugar|menu|perfil|reservas|respuestas))?$/, owner: "pro-dir-business-tools.spec.ts" },
+  { match: /^\/api\/negocio\/(?:buscar|solicitud)$/, owner: "pro-dir-business-signup.spec.ts" },
   { match: /^\/api\/directorio\/(?:search|facets)$/, owner: "pro-dir-search.spec.ts" },
   // M1: staff queue (+ private claim documents), claim documents upload, user price reports, review flags, owner replies.
   { match: /^\/api\/admin\/directorio(?:\/documento)?$/, owner: "pro-dir-admin.spec.ts" },

@@ -2090,7 +2090,15 @@
     "continue": "Continuar",
     "reassurance": "Es gratis y toma menos de 2 minutos.",
     "welcome": "Le damos la bienvenida a ContrataCR",
-    "clientRole": "Cliente"
+    "clientRole": "Cliente",
+    "back": "Volver",
+    "proKindTitle": "¿Cómo ofrece sus servicios?",
+    "independentTitle": "Profesional independiente",
+    "independentRole": "Con su nombre",
+    "businessTitle": "Empresa o local",
+    "businessRole": "Agregar o reclamar mi empresa",
+    "proKindNote": "Puede tener las dos cosas con la misma cuenta.",
+    "businessPageTitle": "Agregar o reclamar mi empresa | ContrataCR"
   },
   "onboarding": {
     "greetingGeneric": "Hola",

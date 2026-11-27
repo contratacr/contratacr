@@ -13,8 +13,8 @@ import {PLACE_SECTIONS} from '@/lib/directory/place-verticals';
  * changed it first the server answers 409 and the list reloads. ES/EN by page locale.
  */
 type Row=Record<string,unknown>;
-type Tab=Exclude<StaffQueue,'log'>|'log'|'questions'|'events'|'brands'|'brand_claims'|'photos';
-const TABS:[Tab,string,string][]=[['claims','Reclamos','Claims'],['reviews','Reseñas','Reviews'],['photos','Fotos','Photos'],['questions','Preguntas','Questions'],['events','Eventos','Events'],['brands','Marcas','Brands'],['brand_claims','Reclamos de marca','Brand claims'],['prices','Precios','Prices'],['reports','Reportes de lugares','Place reports'],['pharmacies','Farmacias','Pharmacies'],['log','Historial','History']];
+type Tab=Exclude<StaffQueue,'log'>|'log'|'questions'|'events'|'brands'|'brand_claims'|'photos'|'place_requests';
+const TABS:[Tab,string,string][]=[['claims','Reclamos','Claims'],['place_requests','Lugares nuevos','New places'],['reviews','Reseñas','Reviews'],['photos','Fotos','Photos'],['questions','Preguntas','Questions'],['events','Eventos','Events'],['brands','Marcas','Brands'],['brand_claims','Reclamos de marca','Brand claims'],['prices','Precios','Prices'],['reports','Reportes de lugares','Place reports'],['pharmacies','Farmacias','Pharmacies'],['log','Historial','History']];
 const METHOD:Record<string,[string,string]>={hacienda_juridica:['Cédula jurídica (Hacienda)','Corporate ID (Hacienda)'],document_review:['Documentos','Documents']};
 const REPORT_KIND:Record<string,[string,string]>={wrong_info:['Información incorrecta','Wrong information'],closed:['Cerró','Closed'],duplicate:['Duplicado','Duplicate'],removal_request:['Pide el retiro','Removal request'],abuse:['Abuso','Abuse'],other:['Otro','Other']};
 const VERTICALS:[string,string,string][]=[['restaurant','Restaurante','Restaurant'],['fuel','Gasolinera','Fuel station'],['pharmacy','Farmacia','Pharmacy'],['grocery','Supermercado','Supermarket'],['vehicle_dealer','Agencia de vehículos','Vehicle dealer'],['real_estate','Inmobiliaria','Real estate agency'],
@@ -95,6 +95,7 @@ export function AdminDirectoryQueue({locale}:{locale:string}){
      {tab==='reviews'&&<ReviewCard row={row} en={en} t={t} date={date} busy={busy} decide={decide}/>}
      {tab==='prices'&&<PriceCard row={row} t={t} date={date} money={money} busy={busy} decide={decide}/>}
      {tab==='reports'&&<ReportCard row={row} en={en} t={t} pick={pick} date={date} busy={busy} decide={decide}/>}
+     {tab==='place_requests'&&<PlaceRequestCard row={row} en={en} t={t} date={date} busy={busy} decide={decide}/>}
      {tab==='pharmacies'&&<PharmacyCard row={row} t={t} busy={busy} decide={decide}/>}
      {tab==='photos'&&<PhotoCard row={row} en={en} t={t} date={date} busy={busy} decide={decide}/>}
      {tab==='questions'&&<QaCard row={row} en={en} t={t} date={date} busy={busy} decide={decide}/>}
@@ -212,6 +213,30 @@ function ReportCard({row,en,t,pick,date,busy,decide}:{row:Row;en:boolean;t:T;pic
   <Reason id={'r-'+id} t={t}/>
   <Actions><button type="submit" disabled={!!busy} className={`${btn} bg-[#162543] text-white`}>{t('Aplicar decisión','Apply decision')}</button></Actions>
  </form>;
+}
+
+// 2026-11-27: a place someone asked to add at sign-up («Empresa o local»). Publicar makes it public (then they claim it
+// from its page); Rechazar retires the draft. Both are the ordinary status action (dir_place_mutate), kept in its history.
+function PlaceRequestCard({row,en,t,date,busy,decide}:{row:Row;en:boolean;t:T;date:(iso:unknown)=>string;busy:string|null;decide:Decide}){
+ const id=s(row.placeId),section=VERTICALS.find(v=>v[0]===s(row.vertical));
+ const send=(decision:'publish'|'reject')=>decide(id+decision,{kind:'place_request',placeId:id,revision:Number(row.revision),decision});
+ return <div className="space-y-2" data-admin-place-request={id}>
+  <p className="flex flex-wrap items-center gap-2"><span className="font-semibold">{s(row.name)}</span>
+   <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs">{section?section[en?2:1]:s(row.vertical)}</span>
+   <span className="text-xs text-slate-600">{date(row.at)}</span></p>
+  <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
+   {row.area?<><dt className="text-slate-600">{t('Zona','Area')}</dt><dd>{s(row.area)}</dd></>:null}
+   {row.address?<><dt className="text-slate-600">{t('Dirección','Address')}</dt><dd>{s(row.address)}</dd></>:null}
+   {row.phone?<><dt className="text-slate-600">{t('Teléfono','Phone')}</dt><dd>{s(row.phone)}</dd></>:null}
+   {row.whatsapp?<><dt className="text-slate-600">WhatsApp</dt><dd>{s(row.whatsapp)}</dd></>:null}
+   {row.website?<><dt className="text-slate-600">{t('Sitio web','Website')}</dt><dd className="break-all">{s(row.website)}</dd></>:null}
+   <dt className="text-slate-600">{t('Lo pidió','Requested by')}</dt><dd className="break-all">{[row.requesterName,row.requesterEmail].filter(Boolean).map(s).join(' · ')||t('Cuenta sin nombre','Unnamed account')}</dd>
+  </dl>
+  <div className="flex flex-wrap gap-2">
+   <button type="button" disabled={!!busy} onClick={()=>void send('publish')} data-admin-place-request-publish className={`${btn} bg-[#162543] text-white`}>{t('Publicar','Publish')}</button>
+   <button type="button" disabled={!!busy} onClick={()=>void send('reject')} data-admin-place-request-reject className={`${btn} border border-slate-300`}>{t('Rechazar','Reject')}</button>
+  </div>
+ </div>;
 }
 
 function PharmacyCard({row,t,busy,decide}:{row:Row;t:T;busy:string|null;decide:Decide}){

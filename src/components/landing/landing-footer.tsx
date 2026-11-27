@@ -79,7 +79,7 @@ const DIRECTORY_COLUMNS = [
     headingKey: "dir.offerTitle",
     links: [
       { key: "pros.register", href: "/registro/profesional" },
-      { key: "dir.company", href: "/negocios-y-profesionales" },
+      { key: "dir.company", href: "/registro/empresa" },
       { key: "pros.projects", href: "/solicitudes" },
       ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),
       ...(PRO_UI_ENABLED ? [{ key: "pros.pro", href: "/contratacr-pro" }, { key: "dir.tools", href: "/herramientas" }] : []),

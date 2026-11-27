@@ -9,6 +9,7 @@ import {photoDbError} from '@/lib/directory/place-photos-server';
 import {FEATURE_STAFF_QUEUES,FEATURE_STAFF_RPC,featureStaffDecisionSchema} from '@/lib/directory/place-features';
 import {DIR_ENABLED,DIR_HEALTH_ENABLED} from '@/lib/directory/feature-flags';
 import {buildPlaceCreateInput} from '@/lib/directory/admin-place-create';
+import {placeRequestDecisionSchema,placeRequestQueue} from '@/lib/directory/place-request';
 
 // LOCAL PRO ONLY (multivertical M1, development only): staff queue of the public directory. Administrators with a
 // verified MFA session only (getApiAdmin, checked on EVERY request; never trusted from the browser).
@@ -22,6 +23,8 @@ export async function GET(req:Request){
  if(!DIR_ENABLED)return new Response(null,{status:404});
  const admin=await getApiAdmin();if(!admin)return dirFail(403,'forbidden','Se requiere acceso administrativo verificado.');
  const sp=new URL(req.url).searchParams;
+ // 2026-11-27: places that people asked to add at sign-up («Empresa o local»), still drafts → place-request.ts.
+ if(sp.get('queue')==='place_requests'){const r=await placeRequestQueue(createAdminClient());return 'error' in r&&r.error?dirDbError(r.error):dirOk({items:'items' in r?r.items:[]});}
  // Launch round (2026-11-18): place photos (pending approval / reported / recent) → dir_admin_photo_queue.
  if(sp.get('queue')==='photos'){
   const filter=z.enum(['pending','flagged','recent']).catch('pending').parse(sp.get('filter')??'pending');
@@ -82,6 +85,13 @@ export async function POST(req:Request){
   if(!built.ok)return dirFail(400,'invalid_'+built.field.replace(/[^a-zA-Z0-9]/g,'').slice(0,30),'Revise los datos.');
   if(!DIR_HEALTH_ENABLED&&built.input.place.vertical==='health')return dirFail(400,'invalid_vertical','Revise los datos.');
   const r=await createAdminClient().rpc('dir_admin_place_create',{p_actor:admin.id,p_input:JSON.parse(JSON.stringify(built.input))});
+  return r.error?dirDbError(r.error):dirOk(r.data);
+ }
+ // 2026-11-27: publish or reject a requested place (draft → published / removed) with the ordinary status action.
+ if(rawKind==='place_request'){
+  const f=placeRequestDecisionSchema.safeParse(raw);if(!f.success)return dirFail(400,'invalid','Revise los datos.');
+  const r=await createAdminClient().rpc('dir_place_mutate',{p_actor:admin.id,p_input:{action:'status',actionId:f.data.actionId,placeId:f.data.placeId,revision:f.data.revision,
+   source:{id:'contratacr'},status:f.data.decision==='publish'?'published':'removed'}});
   return r.error?dirDbError(r.error):dirOk(r.data);
  }
  if(rawKind==='photo'){

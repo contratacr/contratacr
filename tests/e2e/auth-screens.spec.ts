@@ -26,7 +26,15 @@ test.describe("@account screens through the real pages", () => {
     await expectHealthyPage(page);
 
     await gotoOK(page, "/registro");
-    await page.getByRole("link", { name: /Ofrezco servicios/ }).first().click();
+    // With the directory on (2026-11-27) «Ofrezco servicios» first asks independiente or empresa; production goes straight on.
+    const proCard = page.locator('a[href*="/registro/profesional"], [data-register-pro]').filter({ hasText: /Ofrezco servicios/ }).first();
+    const asksKind = (await proCard.getAttribute("data-register-pro")) !== null;
+    await proCard.click();
+    if (asksKind) {
+      const independiente = page.locator("[data-register-pro-kind-option=independiente]");
+      await expect(independiente).toBeVisible();
+      await independiente.click();
+    }
     await page.waitForURL(/\/registro\/profesional/, { waitUntil: "domcontentloaded" });
     await expectHealthyPage(page);
   });

@@ -2090,7 +2090,15 @@
     "continue": "Continue",
     "reassurance": "It's free and takes under 2 minutes.",
     "welcome": "Welcome to ContrataCR",
-    "clientRole": "Client"
+    "clientRole": "Client",
+    "back": "Back",
+    "proKindTitle": "How do you offer your services?",
+    "independentTitle": "Independent professional",
+    "independentRole": "Under your own name",
+    "businessTitle": "Business or premises",
+    "businessRole": "Add or claim my business",
+    "proKindNote": "You can have both with the same account.",
+    "businessPageTitle": "Add or claim my business | ContrataCR"
   },
   "onboarding": {
     "greetingGeneric": "Welcome",

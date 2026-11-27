@@ -28,6 +28,8 @@ const pageRules = [
   [/^\/\[locale\]\/notificaciones$/, "notifications-guides-regression.spec.ts"],
   [/^\/\[locale\]\/mensajes$/, "direct-chat.spec.ts", true],
   // Role choice, onboarding hand-off, profile completion and the recovery link are driven on the real pages.
+  // Sign-up «Empresa o local» (directory on, 2026-11-27): add or claim the business.
+  [/^\/\[locale\]\/registro\/empresa$/, "pro-dir-business-signup.spec.ts"],
   [/^\/\[locale\]\/(?:registro|reset-password|onboarding|completar-perfil)$/, "auth-screens.spec.ts"],
   [/^\/\[locale\]\/(?:login|registro|olvide-contrasena|reset-password|onboarding|completar-perfil)(?:\/|$)/, "auth-support.spec.ts"],
   [/^\/\[locale\]\/eliminar-cuenta$/, "account-lifecycle.spec.ts"],
@@ -71,6 +73,7 @@ const handlerRules = [
   // Owner/user place photos (upload, moderation and private serving) and "Mi negocio" without Pro (/api/negocio/*).
   [/^\/api\/(?:fotos-lugar\/\[id\]|lugar\/\[slug\]\/fotos)$/, "pro-dir-photos.spec.ts"],
   [/^\/api\/negocio(?:\/(?:lugar|menu|perfil|reservas|respuestas))?$/, "pro-dir-business-tools.spec.ts"],
+  [/^\/api\/negocio\/(?:buscar|solicitud)$/, "pro-dir-business-signup.spec.ts"],
   [/^\/api\/directorio\/(?:search|facets)$/, "pro-dir-search.spec.ts"],
   // M1: staff queue (+ private claim documents), claim documents upload, user price reports, review flags, owner replies.
   [/^\/api\/admin\/directorio(?:\/documento)?$/, "pro-dir-admin.spec.ts"],

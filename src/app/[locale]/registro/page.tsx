@@ -3,11 +3,13 @@
 import { useTranslations } from "next-intl";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useSearchParams } from "next/navigation";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, ChevronLeft, HardHat, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
+import { useSiteFeatures } from "@/components/site-features";
 
 export default function RegisterPage() {
   const t = useTranslations("registerChoice");
@@ -17,6 +19,10 @@ export default function RegisterPage() {
   // A logged-in user with an existing account must never see the "choose account
   // type" screen — send them to their panel. Genuinely-new visitors see the chooser.
   const { checking } = useRedirectIfRegistered();
+  // Directory on (2026-11-27): «Profesional» asks one more thing, independent professional or business with premises
+  // («Empresa o local» → add or claim the place). With the directory off (production) the card is the same link as always.
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
+  const [proStep, setProStep] = useState(() => searchParams.get("paso") === "profesional");
 
   if (checking) {
     return (
@@ -25,6 +31,63 @@ export default function RegisterPage() {
       </div>
     );
   }
+
+  if (directoryOn && proStep) {
+    return (
+      <div className="ccr-account-page min-h-dvh flex flex-col bg-white" data-register-pro-kind>
+        <Navbar mobileSearch={false} />
+        <main className="flex-1 ccr-centrado-seguro px-4 py-12 lg:py-20">
+          <div className="w-full max-w-2xl">
+            <div className="ccr-entrada text-center mb-8 lg:mb-12">
+              <button type="button" onClick={() => setProStep(false)} className="mb-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
+                <ChevronLeft className="h-4 w-4" aria-hidden />{t("back")}
+              </button>
+              <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("proKindTitle")}</h1>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              {([
+                { href: `/registro/profesional${redirectSuffix}`, Icon: HardHat, title: t("independentTitle"), role: t("independentRole"), mosaic: "ccr-mosaico-pro", id: "independiente" },
+                { href: `/registro/empresa${redirectSuffix}`, Icon: Store, title: t("businessTitle"), role: t("businessRole"), mosaic: "ccr-mosaico-cliente", id: "empresa" },
+              ] as const).map(({ href, Icon, title, role, mosaic, id }, n) => (
+                <Link key={id} href={href} data-register-pro-kind-option={id}
+                  className={`ccr-entrada ccr-tarjeta-rol group ${n ? "[animation-delay:160ms]" : "[animation-delay:80ms]"} focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#009FD9]/35`}>
+                  <span className={`ccr-tarjeta-rol-mosaico ${mosaic}`} aria-hidden>
+                    <Icon className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
+                  </span>
+                  <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                    {title}
+                    <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
+                  </span>
+                  <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{role}</span>
+                </Link>
+              ))}
+            </div>
+            <p className="ccr-entrada [animation-delay:240ms] mx-auto mt-6 max-w-md text-center text-[13px] leading-relaxed text-[#8a94a6] sm:text-sm">
+              {t("proKindNote")}
+            </p>
+          </div>
+        </main>
+        <FooterSoloWeb soloEscritorio />
+      </div>
+    );
+  }
+
+  // The «Profesional» card: a link to its form (production) or, with the directory on, the button to the next question.
+  const proCard = (
+    <>
+      <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
+        <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
+      </span>
+      {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
+          iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
+      <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+        {t("proTitle")}
+        <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
+      </span>
+      <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("proRole")}</span>
+    </>
+  );
+  const proCardClass = "ccr-entrada ccr-tarjeta-rol group [animation-delay:80ms] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#009FD9]/35";
 
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
@@ -52,21 +115,11 @@ export default function RegisterPage() {
               debajo. Se leía torcido: si las dos puertas hacen falta, no se
               pueden dibujar con distinto peso.) */}
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
-            <Link
-              href={`/registro/profesional${redirectSuffix}`}
-              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:80ms] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#009FD9]/35"
-            >
-              <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
-                <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
-              </span>
-              {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
-                  iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
-              <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
-                {t("proTitle")}
-                <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
-              </span>
-              <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("proRole")}</span>
-            </Link>
+            {directoryOn ? (
+              <button type="button" onClick={() => setProStep(true)} data-register-pro className={proCardClass}>{proCard}</button>
+            ) : (
+              <Link href={`/registro/profesional${redirectSuffix}`} className={proCardClass}>{proCard}</Link>
+            )}
 
             <Link
               href={`/registro/cliente${redirectSuffix}`}
