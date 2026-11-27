@@ -88943,7 +88943,7 @@
       "file": "tests/e2e/pro-dir-photos.spec.ts",
       "cases": [
         {
-          "line": 31,
+          "line": 30,
           "title": "'place photos: owner publishes, customer pending → staff approves → visible; gallery + lightbox'"
         }
       ]
