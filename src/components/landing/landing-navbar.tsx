@@ -1368,6 +1368,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     } = {},
   ) {
     const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
+    // Nothing to look for and no place (owner 2026-11-26): do not search; put the cursor in the first field so its
+    // suggestions open. With a place typed it still searches, like Yelp (the best of that area).
+    const sinLugar = !overrides.coords && !overrides.location && !navLocation.trim();
+    if (!svc && !overrides.directorySection && !overrides.categoria && sinLugar) {
+      const campo = nativeSearchOpen ? nativeSearchInputRef.current : compactSvcRef.current?.querySelector("input");
+      campo?.focus();
+      setSearchFocused(true);
+      return;
+    }
     if (nativeSearchOpen) irSinParpadeo();
     const params = new URLSearchParams();
     const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;

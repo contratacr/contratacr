@@ -603,6 +603,11 @@ export function LandingHero() {
     | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number }
     | { kind: "nearMe"; lat: number; lng: number };
   function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
+    // Nothing to look for and no place (owner 2026-11-26): put the cursor in "¿Qué necesita?" instead of searching.
+    if (!serviceOverride && !service.trim() && !locationOverride && !location.trim() && !nearMeRef.current && !pickedAddrRef.current) {
+      enfocarVisible(servicioInputRef, servicioMobileRef);
+      return;
+    }
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best service
     // suggestion. Otherwise we infer the service from the typed text or send q.
