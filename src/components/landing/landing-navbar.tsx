@@ -1575,7 +1575,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   useEffect(() => {
     if (!nativeSearchOpen) return;
     setBusquedasRecientes(leerBusquedasRecientesConFecha());
-    setVisitasRecientes(readRecentVisits("profesionales"));
+    setVisitasRecientes([...readRecentVisits("profesionales"), ...readRecentVisits("negocios")]);
   }, [nativeSearchOpen]);
 
   // Al abrir el buscador, el cursor entra en el primer campo (Servicio). Se
@@ -2512,7 +2512,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {/* UNA sola lista de recientes: las búsquedas y los perfiles
                       abiertos, intercalados por fecha. Dos apartados («Recientes» y
                       «Vistos recientemente») partían la pantalla en dos y se veía mal. */}
-                  {searchFocused && !searchQuery.trim() && (busquedasRecientes.length > 0 || visitasRecientes.length > 0) && (
+                  {/* Owner 2026-11-26: «Recientes» shows only what the person opened (profiles and businesses), not typed searches. */}
+                  {searchFocused && !searchQuery.trim() && visitasRecientes.length > 0 && (
                     // Sin línea al final: separaba los recientes de la lista de
                     // provincias que iba debajo, y esa lista ya no está aquí
                     // —ahora sale con el cursor en Ubicación—, así que la línea
@@ -2527,6 +2528,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           onClick={() => {
                             olvidarBusquedasRecientes();
                             clearRecentVisits("profesionales");
+                            clearRecentVisits("negocios");
                             setBusquedasRecientes([]);
                             setVisitasRecientes([]);
                           }}
@@ -2536,7 +2538,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         </button>
                       </div>
                       {[
-                        ...busquedasRecientes.map((busqueda) => ({ clave: `b:${busqueda.termino}`, at: busqueda.at, busqueda, visita: null as RecentVisit | null })),
                         ...visitasRecientes.map((visita) => ({ clave: `v:${visita.id}`, at: visita.at ?? 0, busqueda: null as BusquedaReciente | null, visita })),
                       ]
                         .sort((primero, segundo) => segundo.at - primero.at)
@@ -2614,7 +2615,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               aria-label={locale === "en" ? `Remove ${reciente.visita!.titulo}` : `Quitar ${reciente.visita!.titulo}`}
                               onClick={() => {
                                 const id = reciente.visita!.id;
-                                removeRecentVisit("profesionales", id);
+                                removeRecentVisit(id.startsWith("lugar:") ? "negocios" : "profesionales", id);
                                 setVisitasRecientes((previas) => previas.filter((item) => item.id !== id));
                               }}
                               className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"

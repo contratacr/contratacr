@@ -1,5 +1,6 @@
 import {createElement,type ReactNode} from 'react';
 import {cn} from '@/lib/utils';
+import {RecordRecentVisit} from '@/components/mobile/record-recent-visit';
 import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,ExternalLink,FileText,Fuel,Globe,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
@@ -268,6 +269,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     <li>{sectionHref?<a className={`hover:underline ${ring}`} href={sectionHref}>{vertical}</a>:vertical}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="min-w-0 truncate text-[#162543]">{place.name}</li></ol>
   </nav>
 
+  {/* The search's «Recientes» lists the businesses opened, like the profiles (owner 2026-11-26). */}
+  <RecordRecentVisit surface="negocios" visita={{id:`lugar:${place.slug}`,titulo:place.name,subtitulo:[vertical,place.address.adminArea2].filter(Boolean).join(' · '),imagen:photos[0]?.url,iniciales:place.name.slice(0,2).toUpperCase(),href:`${en?'/en':''}/lugar/${place.slug}`}}/>
   {/* ── HERO: real photos (or the blurred section photo) with the identity on a navy veil ── */}
   <header data-place-header data-place-hero className={`relative isolate -mx-4 overflow-hidden bg-[#162543] sm:-mx-6 lg:mx-0 lg:rounded-3xl ${hasPhotos?'h-[340px] sm:h-[400px] lg:h-[440px]':'min-h-[250px] sm:min-h-[300px] lg:min-h-[320px]'}`}>
    {hasPhotos?<PlacePhotoGallery variant="hero" en={en} placeName={place.name} photos={photos}/>
