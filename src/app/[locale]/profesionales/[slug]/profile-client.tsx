@@ -62,7 +62,6 @@ import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { useSiteFeatures } from "@/components/site-features";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
@@ -323,7 +322,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const appNativa = useNativeApp();
   // Directorio encendido (test): la ficha toma el aspecto de las tarjetas de resultados (Isaac, 26-nov-2026). Con el
   // directorio apagado (producción) todo queda igual.
-  const directoryOn = useSiteFeatures().directorySections.length > 0;
+  // Owner 2026-11-26: the professional profile stays exactly as in production, also with the directory on.
+  // The redesign branches below are kept but off; switch this back to the directory flag to bring them back.
+  const directoryOn = false as boolean;
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(() => appNativa && searchParams.get("preview") !== "1");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
