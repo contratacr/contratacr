@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, isMobileProject, loginAs, expectNoHorizontalOverflow } from "./helpers";
+import { gotoOK, isMobileProject, loginAs, expectNoHorizontalOverflow, waitForInteractivePage } from "./helpers";
 import { E2E_USERS } from "./seed";
 
 // La franja de acciones pegada al fondo es UNA sola pantalla repetida: soporte,
@@ -96,6 +96,8 @@ test.describe("@seeded franjas de acciones al pie", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     for (const [nombre, ruta] of [["publicar empleo", "/empleos/publicar"], ["publicar promoción", "/promociones/publicar"]] as const) {
       await gotoOK(page, ruta);
+      // The strip hides the footer from an effect (useBarraAccionFija): measure once the form has hydrated.
+      await waitForInteractivePage(page);
       // Si la página se ensancha (en el CI la franja de empleo medía 397 px en
       // una pantalla de 390), el desborde dice qué se sale antes que la franja.
       await expectNoHorizontalOverflow(page);
@@ -235,6 +237,8 @@ test.describe("@seeded separación entre botones", () => {
     test.skip(isMobileProject(testInfo), "En el teléfono la ventana solo lleva el botón de publicar.");
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/empleos");
+    // «Publicar empleo» opens the window from React state: a click before hydration does nothing (probe: data-hydrated=false).
+    await waitForInteractivePage(page);
     await page.getByRole("button", { name: /Publicar empleo/i }).filter({ visible: true }).first().click();
     const franja = page.locator("[role='dialog'] .ccr-barra-accion").filter({ visible: true }).first();
     await expect(franja).toBeVisible();

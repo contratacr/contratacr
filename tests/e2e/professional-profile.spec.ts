@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, loginAs } from "./helpers";
+import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, loginAs, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, E2E_USERS, type RegressionSeedState } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
@@ -140,6 +140,8 @@ test.describe("@seeded professional profile", () => {
       account = await createDisposableAccount({ prefix: "profile-review-inline" });
       await loginAs(page, account.email, account.password);
       await gotoOK(page, `/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
+      // The stars and tabs are React state: wait for hydration before the first click.
+      await waitForInteractivePage(page);
 
       await expect(page.getByText("¿Ya trabajó con este profesional?")).toBeVisible();
       await expect(page.getByRole("button", { name: "Escribir reseña" })).toHaveCount(0);
@@ -177,6 +179,8 @@ test.describe("@seeded professional profile", () => {
     });
     try {
       await gotoOK(page, `/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
+      // A click before hydration is lost; the held refresh is what this test is about.
+      await waitForInteractivePage(page);
       const services = page.getByRole("tab", { name: "Servicios", exact: true });
       await expect(page.getByRole("tab", { name: "Reseñas", exact: true })).toHaveAttribute("aria-selected", "true");
       await services.click();

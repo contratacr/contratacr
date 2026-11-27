@@ -85890,47 +85890,47 @@
           "title": "true"
         },
         {
-          "line": 145,
+          "line": 147,
           "title": "\"en la pantalla más angosta los botones tampoco tocan el filo\""
         },
         {
-          "line": 146,
+          "line": 148,
           "title": "true"
         },
         {
-          "line": 160,
+          "line": 162,
           "title": "\"la franja no depende de la hoja de estilos: sobrevive sin ninguna clase de Tailwind\""
         },
         {
-          "line": 161,
+          "line": 163,
           "title": "true"
         },
         {
-          "line": 196,
+          "line": 198,
           "title": "\"una ficha sin forma de contactar no dibuja la franja vacía\""
         },
         {
-          "line": 197,
+          "line": 199,
           "title": "true"
         },
         {
-          "line": 209,
+          "line": 211,
           "title": "true"
         },
         {
-          "line": 234,
+          "line": 236,
           "title": "\"Cancelar y Publicar empleo quedan a 12 px, sin clases de Tailwind\""
         },
         {
-          "line": 235,
+          "line": 237,
           "title": "isMobileProject(testInfo)"
         },
         {
-          "line": 257,
+          "line": 261,
           "title": "\"en la ficha, lo último queda por encima de la franja\""
         },
         {
-          "line": 258,
+          "line": 262,
           "title": "!isMobileProject(testInfo)"
         }
       ]
@@ -94253,19 +94253,19 @@
           "title": "!seed"
         },
         {
-          "line": 168,
+          "line": 170,
           "title": "\"a late profile refresh preserves the section chosen after opening reviews\""
         },
         {
-          "line": 169,
+          "line": 171,
           "title": "!seed"
         },
         {
-          "line": 194,
+          "line": 198,
           "title": "\"reviews are the second profile section and do not label review provenance\""
         },
         {
-          "line": 217,
+          "line": 221,
           "title": "\"no puedo guardarme a mí mismo aunque pulse apenas abre\""
         }
       ]
