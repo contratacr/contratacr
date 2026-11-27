@@ -34,6 +34,14 @@ const INTERNAL_LEGAL_LINKS = [
   { text: "Cómo ordenamos los resultados", href: "/como-ordenamos" },
   { text: "How we rank results", href: "/como-ordenamos" },
 ] as const;
+// ODbL: the Terms' «Origen de los datos» credits OpenStreetMap with links to its copyright page and the licence (2026-11-27,
+// the place pages no longer carry a footer credit; the map keeps its own attribution control).
+const EXTERNAL_LEGAL_LINKS = [
+  { text: "© colaboradores de OpenStreetMap", href: "https://www.openstreetmap.org/copyright" },
+  { text: "© OpenStreetMap contributors", href: "https://www.openstreetmap.org/copyright" },
+  { text: "licencia ODbL", href: "https://opendatacommons.org/licenses/odbl/" },
+  { text: "ODbL licence", href: "https://opendatacommons.org/licenses/odbl/" },
+] as const;
 
 // Render a run of text: **bold** segments + legal contact/internal links.
 function renderInline(text: string, keyBase: string): React.ReactNode[] {
@@ -49,6 +57,7 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
 function linkifyLegalText(text: string, keyBase: string): React.ReactNode[] {
   const matches = [
     ...INTERNAL_LEGAL_LINKS.map((link) => ({ ...link, type: "internal" as const })),
+    ...EXTERNAL_LEGAL_LINKS.map((link) => ({ ...link, type: "external" as const })),
     { text: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}`, type: "email" as const },
   ]
     .map((link) => ({ ...link, index: text.indexOf(link.text) }))
@@ -67,7 +76,7 @@ function linkifyLegalText(text: string, keyBase: string): React.ReactNode[] {
       match.type === "internal" ? (
         <Link key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</Link>
       ) : (
-        <a key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline">{label}</a>
+        <a key={`${keyBase}-l${index}`} href={match.href} className="text-[#009FD9] hover:underline" {...(match.type === "external" ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{label}</a>
       ),
     );
     cursor = match.index + match.text.length;

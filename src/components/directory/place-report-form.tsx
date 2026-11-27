@@ -16,7 +16,8 @@ const LABELS:Record<ReportKind,[string,string]>={
  abuse:['Contenido abusivo','Abusive content'],
  other:['Otro','Other'],
 };
-export function PlaceReportForm({slug,locale}:{slug:string;locale:string}){
+/** `bare` (2026-11-27): no visible link while closed; «Sugerir un cambio» and the «…» menu open it through #reportar. */
+export function PlaceReportForm({slug,locale,bare=false}:{slug:string;locale:string;bare?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const reportId=useRef<string|null>(null),[state,setState]=useState<'idle'|'sending'|'sent'|'error'|'limit'>('idle');
  const box=useRef<HTMLDetailsElement>(null);
@@ -34,7 +35,7 @@ export function PlaceReportForm({slug,locale}:{slug:string;locale:string}){
  }
  if(state==='sent')return <section id="reportar" aria-live="polite" data-place-report="sent" className="rounded-2xl bg-emerald-50 p-5 text-emerald-900">
   {t('Gracias. Revisaremos su reporte. Si pidió el retiro, le escribiremos al correo indicado.','Thank you. We will review your report. If you requested removal, we will write to the e-mail you provided.')}</section>;
- return <details ref={box} id="reportar" className="group scroll-mt-24 px-1 text-[#162543] open:rounded-2xl open:border open:border-[#e5e9ee] open:bg-white open:px-4 open:py-2" data-place-report={state}>
+ return <details ref={box} id="reportar" className={`${bare?'[&:not([open])]:hidden ':''}group scroll-mt-24 px-1 text-[#162543] open:rounded-2xl open:border open:border-[#e5e9ee] open:bg-white open:px-4 open:py-2`} data-place-report={state}>
   {/* A small grey link until it is opened (2026-11-26): the form is rarely needed and the card weighed on the page. */}
   <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-[13.5px] font-semibold text-[#52627a] hover:text-[#162543] hover:underline group-open:text-[#162543] group-open:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] [&::-webkit-details-marker]:hidden"><Flag aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
   <form onSubmit={submit} className="mt-2 space-y-3 pb-2">

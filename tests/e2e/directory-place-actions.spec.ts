@@ -135,16 +135,17 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
  await expect(page.locator('[data-place-tab="contact"]')).toHaveCount(0);
  await expect(page.locator('[data-place-tab]').first()).toHaveAttribute('aria-selected','true');
  await expect(page.locator('[data-place-tab="more"]')).toHaveCount(0);
- // «¿Ya visitó este lugar?» (owner 2026-11-26, like the professional profile): five stars; a tap opens the form with that rating.
+ // «¿Ya visitó este lugar?» (2026-11-27: the professional profile's own write card): a tap on the third star rates 3.0 and
+ // opens the comment.
  const reviewsTab=page.locator('[data-place-tab="reviews"]');
  await expect(async()=>{await reviewsTab.click({timeout:2000});await expect(reviewsTab).toHaveAttribute('aria-selected','true',{timeout:1000});}).toPass({timeout:30000});
- const prompt=page.locator('[data-place-review-open][data-ready]');
+ const prompt=page.locator('[data-place-review-form][data-ready]');
  await expect(prompt).toContainText(en?'Have you been here?':'¿Ya visitó este lugar?');
- await expect(prompt.locator('[data-place-review-star]')).toHaveCount(5);
+ await expect(prompt.getByRole('button',{name:en?/^[1-5] stars$/:/^[1-5] estrellas$/})).toHaveCount(5);
  await expect(async()=>{
-  if(await prompt.count())await prompt.locator('[data-place-review-star="3"]').click({timeout:1500});
-  await expect(page.locator('[data-place-review-form]')).toBeVisible({timeout:1500});
-  await expect(page.locator('[data-place-review-form] input[name="rating"]')).toHaveValue('3',{timeout:1500});
+  await prompt.getByRole('button',{name:en?'3 stars':'3 estrellas',exact:true}).click({timeout:1500});
+  await expect(prompt.locator('textarea')).toBeVisible({timeout:1500});
+  await expect(prompt).toContainText('3.0',{timeout:1500});
  }).toPass({timeout:15000});
  // Phones (owner 2026-11-27, «las opciones dentro de … deberían ser iguales al perfil profesional»): the bar's «…» opens the
  // shared MenuFicha sheet with Guardar · Compartir · Agregar fotos · Sugerir un cambio · Reportar (red).

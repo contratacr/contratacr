@@ -73,9 +73,9 @@ for(const language of ['es','en'] as const)test(`M1: owner reply with edit histo
   const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
   try{
    await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
-   /* Hydrated (the review form now opens from «Escribir reseña»). */await expect(g.locator('[data-place-review-open][data-ready]')).toBeVisible({timeout:45000});
+   /* Hydrated (the professional profile's write card). */await expect(g.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
    const flag=g.locator(`[data-review-flag="${reviewId}"]`);
-   await flag.getByText(t('Reportar esta reseña','Report this review')).click();
+   await flag.getByText(t('Reportar reseña','Report review')).click();
    await flag.getByLabel(t('Motivo','Reason'),{exact:true}).selectOption('fake');
    await flag.getByRole('button',{name:t('Enviar reporte','Send report')}).click();
    await expect(g.locator('[data-review-flag-sent]')).toBeVisible();

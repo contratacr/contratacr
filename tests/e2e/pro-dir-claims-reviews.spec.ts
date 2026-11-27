@@ -128,13 +128,14 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  try{
   await login(context,user);
   await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'reviews');
-  await expect(page.getByText(t('Todavía no hay reseñas.','No reviews yet.'))).toBeVisible();
-  /* 2026-11-26: «¿Ya visitó este lugar?» — a tap on the fourth star opens the form with 4 stars. */await page.locator('[data-place-review-open][data-ready] [data-place-review-star="4"]').click({timeout:45000});
-  await expect(page.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
-  await expect(page.locator('[data-place-review-form] input[name="rating"]')).toHaveValue('4');
-  await page.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Muy buena comida y atención rápida.','Great food and quick service.'));
-  await page.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
-  await expect(page.locator('[data-place-review-sent]')).toBeVisible();
+  // 2026-11-27: the professional profile's own Reseñas pieces (empty state, write card, review cards).
+  await expect(page.getByText(t('Aún no hay reseñas. Deje la primera.','No reviews yet. Be the first to leave one.'))).toBeVisible();
+  const form=page.locator('[data-place-review-form][data-ready]');
+  await form.getByRole('button',{name:t('4 estrellas','4 stars'),exact:true}).click({timeout:45000});
+  await expect(form).toContainText('4.0');
+  await form.locator('textarea').fill(t('Muy buena comida y atención rápida.','Great food and quick service.'));
+  await form.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
+  await expect(form).toContainText(t('¡Gracias por su reseña!','Thanks for your review!'));
   await page.reload();await openPlaceTab(page,'reviews');
   await expect(page.locator('[data-place-review]')).toHaveCount(1);
   await expect(page.locator('[data-rating-summary]')).toContainText('4.0');// one decimal with a point in both languages, like the professional profile
@@ -145,18 +146,18 @@ for(const language of ['es','en'] as const)test(`F5: reviews with account, and g
  const guest=await browser.newContext({baseURL:origin});const g=await guest.newPage();
  try{
   await gotoOK(g,`${prefix}/lugar/${slug}`);await openPlaceTab(g,'reviews');
-  await g.locator('[data-place-review-open][data-ready] [data-place-review-star="5"]').click({timeout:45000});
-  await expect(g.locator('[data-place-review-form][data-ready]')).toBeVisible({timeout:45000});
-  await g.getByLabel(t('Su nombre','Your name')).fill('Lucía Mora');
-  await g.getByLabel(t('Comentario (máximo 300 caracteres)','Comment (up to 300 characters)')).fill(t('Buen servicio.','Good service.'));
-  await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
-  await expect(g.locator('[data-place-review-error]')).toContainText(t('contacte primero a la empresa','first contact the business'));
+  const gform=g.locator('[data-place-review-form][data-ready]');
+  await gform.getByRole('button',{name:t('5 estrellas','5 stars'),exact:true}).click({timeout:45000});
+  await gform.locator('textarea').fill(t('Buen servicio.','Good service.'));
+  await gform.locator('input[autocomplete="name"]').fill('Lucía Mora');
+  await gform.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
+  await expect(gform).toContainText(t('contacte primero a la empresa','first contact the business'));
   const contact=await postJson(g,`/api/lugar/${slug}/contacto`,{channel:'call'});expect(contact.status).toBe(200);
-  await g.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
-  await expect(g.locator('[data-place-review-sent]')).toBeVisible();
+  await gform.getByRole('button',{name:t('Enviar reseña','Submit review')}).click();
+  await expect(gform).toContainText(t('¡Gracias por su reseña!','Thanks for your review!'));
   await g.reload();await openPlaceTab(g,'reviews');
   await expect(g.locator('[data-place-review]')).toHaveCount(2);
-  await expect(g.locator('[data-place-reviews]')).toContainText(t('sin cuenta, contactó a la empresa','no account, contacted the business'));
+  await expect(g.locator('[data-place-reviews]')).toContainText(t('Sin cuenta, contactó a la empresa','No account, contacted the business'));
  }finally{await guest.close();}
  expect(errors()).toEqual([]);
 });

@@ -7,7 +7,6 @@ import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
 import {PAGE_CHIP,PlacePage} from '@/components/directory/place-page';
-import {PlaceClaimLink} from '@/components/directory/place-claim-link';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {PlaceBranches,nearestBranches} from '@/components/directory/place-branches';
 import {PlacePrices} from '@/components/directory/place-prices';
@@ -162,7 +161,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // on the server (header pixel-stable on reload, 2026-11-27); SectionHeaderTitle keeps the back and «…» wiring.
  const barTitle=en?place.vertical.nameEn:place.vertical.nameEs;
  return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{
@@ -181,11 +180,10 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    </>:null,
    events:upcoming.length?<PlaceEvents events={upcoming} locale={locale}/>:null,
    questions:qa?<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>:null,
-   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
-   claim:unclaimed?<PlaceClaimLink slug={slug} locale={locale}/>:null,
+   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
    similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null}))}
-    title={loc?(en?'Similar places nearby':'Lugares similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}
+    title={loc?(en?'Similar businesses nearby':'Negocios similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}
     moreHref={!DIRECTORY_LISTINGS_ENABLED&&(place.vertical.pathEs==='vehiculos'||place.vertical.pathEs==='inmuebles')?null:`${en?'/en':''}/${place.vertical.pathEs}`}/>:null,
   }}/></DirectoryShell>;
 }

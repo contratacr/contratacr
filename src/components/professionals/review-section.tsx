@@ -116,36 +116,10 @@ export function ReviewSection({
   const distribution = directory && reviews.length > 0 && reviews.length === reviewCount
     ? [1, 2, 3, 4, 5].map((s) => reviews.filter((r) => Math.round(r.rating) === s).length)
     : null;
-  const maxBand = Math.max(1, ...(distribution ?? []));
   return (
     <>
       {directory ? (
-        <div className="mb-6 space-y-4">
-          <h2 className="text-xl font-extrabold tracking-tight text-[#162543]">{t("reviewsHeading", { count: reviewCount })}</h2>
-          {reviewCount > 0 && (
-            <div className="grid gap-5 rounded-2xl bg-gradient-to-br from-[#f3f9fc] to-white p-5 ring-1 ring-[#e5eef4] sm:grid-cols-[170px_1fr] sm:items-center sm:gap-8 sm:p-6">
-              <div className="flex items-center gap-4 sm:block sm:space-y-2">
-                <p className="text-[52px] font-extrabold leading-none tracking-tight text-[#162543]">{ratingAvg.toFixed(1)}</p>
-                <div className="space-y-1"><StarRating rating={ratingAvg} size="md" />
-                  <p className="text-sm font-medium text-[#526277]">{t("reviewCountLabel", { count: reviewCount })}</p></div>
-              </div>
-              {distribution && (
-                <ul className="space-y-2" aria-label={t("ratingsByStars")}>
-                  {[5, 4, 3, 2, 1].map((st) => {
-                    const n = distribution[st - 1] ?? 0;
-                    return (
-                      <li key={st} className="grid grid-cols-[64px_1fr_28px] items-center gap-3 text-[13px]">
-                        <span className="whitespace-nowrap font-semibold text-[#334155]">{t("starsCount", { count: st })}</span>
-                        <span className="h-2 overflow-hidden rounded-full bg-[#e3eaf0]" aria-hidden="true"><span className="block h-full rounded-full bg-[#f5a623]" style={{ width: `${(n / maxBand) * 100}%` }} /></span>
-                        <span className="text-right tabular-nums text-[#526277]">{n}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
+        <ReviewsSummary reviewCount={reviewCount} ratingAvg={ratingAvg} distribution={distribution} />
       ) : (
       <div className="mb-4 flex items-center justify-between">
         <div>
@@ -179,40 +153,101 @@ export function ReviewSection({
           const clientName = nombreCorto(review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName);
           const jobTitle = localizedReviewJobTitle(review.jobTitle, locale);
           return (
-            <div key={review.id} className={directory ? "flex gap-3 rounded-2xl border border-[#e8edf2] bg-white p-4 sm:p-5" : "flex gap-3"}>
-              <Avatar className={directory ? "h-11 w-11 shrink-0" : "h-9 w-9 shrink-0"}>
-                <AvatarImage src={review.clientAvatarUrl} />
-                <AvatarFallback>{getInitials(clientName)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                {/* Nombre en UNA línea y la fecha junto a las estrellas: la fecha en
-                    su propia columna apretaba el nombre y lo partía en dos. */}
-                <span className="block truncate text-sm font-medium text-[#162543]">{clientName}</span>
-                <div className="my-1 flex items-center gap-2">
-                  <StarRating rating={review.rating} size="sm" />
-                  {/* "editada" is intentionally NOT shown publicly (item 4). */}
-                  <span className="text-xs text-[#68778d]">· {formatRelativeTime(review.createdAt, locale)}</span>
-                </div>
-                {jobTitle && (
-                  <p className="text-xs text-[#68778d] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
-                )}
-                <p className="text-sm text-[#374151] leading-relaxed mt-1">
-                  {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
-                </p>
-                <button type="button" className="mt-2 min-h-10 text-xs text-slate-600 underline" onClick={()=>setReportedReview(review.id)}>{tModeration("reportReview")}</button>
-              </div>
-            </div>
+            <ReviewCard
+              key={review.id}
+              directory={directory}
+              name={clientName}
+              avatarUrl={review.clientAvatarUrl}
+              rating={review.rating}
+              createdAt={review.createdAt}
+              subtitle={jobTitle ? t("reviewOf", { title: jobTitle }) : null}
+              comment={locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}
+              report={<button type="button" className="mt-2 min-h-10 text-xs text-slate-600 underline" onClick={()=>setReportedReview(review.id)}>{tModeration("reportReview")}</button>}
+            />
           );
         })}
 
-        {reviews.length === 0 && (
-          // El MISMO vacío del resto del app. El círculo naranja de antes era
-          // el único de su color en toda la ficha y se leía como un aviso.
-          <PanelEmptyState plano tamano="compacto" icon={Star} title={t("noReviews")} className="min-h-[10rem]" />
-        )}
+        {reviews.length === 0 && <ReviewsEmpty />}
       </div>
 
       {reportedReview&&<ReportProfileModal professionalName={professionalName} professionalSlug={professionalId} targetType="review" targetId={reportedReview} titulo={tModeration("reportReview")} onClose={()=>setReportedReview(null)}/>}
     </>
   );
+}
+
+/**
+ * The pieces of the Reseñas tab, shared with the place page (/lugar, owner 2026-11-27: «la reseña debe de ser igual a la
+ * de los profesionales»). Same markup as before; the professional profile renders exactly what it rendered.
+ */
+export function ReviewsSummary({ reviewCount, ratingAvg, distribution, note, hooks = false }: { reviewCount: number; ratingAvg: number; distribution: number[] | null; note?: React.ReactNode; /** data-rating-summary (place page tests). */ hooks?: boolean }) {
+  const t = useTranslations("profile");
+  const maxBand = Math.max(1, ...(distribution ?? []));
+  return (
+    <div className="mb-6 space-y-4">
+      <h2 className="text-xl font-extrabold tracking-tight text-[#162543]">{t("reviewsHeading", { count: reviewCount })}</h2>
+      {note}
+      {reviewCount > 0 && (
+        <div data-rating-summary={hooks ? reviewCount : undefined} className="grid gap-5 rounded-2xl bg-gradient-to-br from-[#f3f9fc] to-white p-5 ring-1 ring-[#e5eef4] sm:grid-cols-[170px_1fr] sm:items-center sm:gap-8 sm:p-6">
+          <div className="flex items-center gap-4 sm:block sm:space-y-2">
+            <p className="text-[52px] font-extrabold leading-none tracking-tight text-[#162543]">{ratingAvg.toFixed(1)}</p>
+            <div className="space-y-1"><StarRating rating={ratingAvg} size="md" />
+              <p className="text-sm font-medium text-[#526277]">{t("reviewCountLabel", { count: reviewCount })}</p></div>
+          </div>
+          {distribution && (
+            <ul className="space-y-2" aria-label={t("ratingsByStars")}>
+              {[5, 4, 3, 2, 1].map((st) => {
+                const n = distribution[st - 1] ?? 0;
+                return (
+                  <li key={st} className="grid grid-cols-[64px_1fr_28px] items-center gap-3 text-[13px]">
+                    <span className="whitespace-nowrap font-semibold text-[#334155]">{t("starsCount", { count: st })}</span>
+                    <span className="h-2 overflow-hidden rounded-full bg-[#e3eaf0]" aria-hidden="true"><span className="block h-full rounded-full bg-[#f5a623]" style={{ width: `${(n / maxBand) * 100}%` }} /></span>
+                    <span className="text-right tabular-nums text-[#526277]">{n}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ReviewCard({ directory, name, avatarUrl, rating, createdAt, subtitle, comment, report, children, wrap = false }: {
+  directory: boolean; name: string; avatarUrl?: string | null; rating: number; createdAt: string; subtitle?: React.ReactNode;
+  comment: string; report?: React.ReactNode; children?: React.ReactNode;
+  /** Place page (owner 2026-11-27, «los textos nunca se deben cortar»): the name wraps instead of being cut. The
+   *  professional profile keeps its one-line name, unchanged. */
+  wrap?: boolean;
+}) {
+  const locale = useLocale();
+  return (
+    <div className={directory ? "flex gap-3 rounded-2xl border border-[#e8edf2] bg-white p-4 sm:p-5" : "flex gap-3"}>
+      <Avatar className={directory ? "h-11 w-11 shrink-0" : "h-9 w-9 shrink-0"}>
+        <AvatarImage src={avatarUrl ?? undefined} />
+        <AvatarFallback>{getInitials(name)}</AvatarFallback>
+      </Avatar>
+      <div className={wrap ? "min-w-0 flex-1" : "flex-1"}>
+        {/* Nombre en UNA línea y la fecha junto a las estrellas: la fecha en
+            su propia columna apretaba el nombre y lo partía en dos. */}
+        <span className={wrap ? "block break-words text-sm font-medium text-[#162543]" : "block truncate text-sm font-medium text-[#162543]"}>{name}</span>
+        <div className="my-1 flex items-center gap-2">
+          <StarRating rating={rating} size="sm" />
+          {/* "editada" is intentionally NOT shown publicly (item 4). */}
+          <span className="text-xs text-[#68778d]" suppressHydrationWarning>· {formatRelativeTime(createdAt, locale)}</span>
+        </div>
+        {subtitle && <p className="text-xs text-[#68778d] mt-0.5">{subtitle}</p>}
+        <p className={wrap ? "break-words text-sm text-[#374151] leading-relaxed mt-1" : "text-sm text-[#374151] leading-relaxed mt-1"}>{comment}</p>
+        {children}
+        {report}
+      </div>
+    </div>
+  );
+}
+
+export function ReviewsEmpty() {
+  const t = useTranslations("profile");
+  // El MISMO vacío del resto del app. El círculo naranja de antes era
+  // el único de su color en toda la ficha y se leía como un aviso.
+  return <PanelEmptyState plano tamano="compacto" icon={Star} title={t("noReviews")} className="min-h-[10rem]" />;
 }

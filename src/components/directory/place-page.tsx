@@ -2,13 +2,13 @@ import {createElement,type ReactNode} from 'react';
 import {cn} from '@/lib/utils';
 import {RecordRecentVisit} from '@/components/mobile/record-recent-visit';
 import {AccionesAlPie} from '@/components/ui/acciones-al-pie';
-import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,ExternalLink,FileText,Fuel,Globe,Phone,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
+import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Globe,Phone,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
 import {DIRECTORY_LISTINGS_ENABLED} from '@/lib/directory/feature-flags';
 import {kindLabel,placeSectionById,reviewsOn} from '@/lib/directory/place-verticals';
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
-import {PlacesMap} from '@/components/maps/places-map';
+import {PlaceMapDialog} from './place-map-dialog';
 import {PlacePhotoGallery} from './place-photo-gallery';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
@@ -25,7 +25,8 @@ import {PlaceChipRail} from './place-chip-rail';
 import {WhatsAppLogo} from '@/components/ui/whatsapp-logo';
 import {GoogleMapsIcon,WazeIcon} from '@/components/ui/nav-app-icons';
 import {placeSocialLinks,socialOfUrl} from '@/lib/directory/place-social';
-import {PlaceSocialLinks} from './place-social-links';
+import {joinPlaceParts} from '@/lib/directory/place-address';
+import {PlaceSocialLinks,SOCIAL_ICONS} from './place-social-links';
 
 /**
  * Canonical page of a place, /lugar/<slug> (owner 2026-11-26: «que se vea como el perfil del profesional de
@@ -43,8 +44,6 @@ import {PlaceSocialLinks} from './place-social-links';
  * hours from OSM keep «Horario según OpenStreetMap.»; nothing is shown that the data does not contain. The footer keeps
  * the data credit (© OpenStreetMap, ODbL) and «Reportar un problema o pedir el retiro» (Ley 10.946 notice channel).
  */
-/** Source labels are stored bilingual («Español / English»); show only the page language. */
-const bilingual=(text:string,en:boolean)=>{const parts=text.split(' / ');return parts.length===2?parts[en?1:0]!.trim():text;};
 const AMENITY_ICONS:Record<string,LucideIcon>={ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Landmark,Leaf,CircleParking,PawPrint,Percent,Pill,ShoppingBag,Siren,Smartphone,Store,Truck,Waves,Wifi,Wind,Wrench,Zap};
 const iconOf=(name:string)=>AMENITY_ICONS[name]??Check;
 /** Extras row of the identity card (Reservar, Reseñar, Pedir, Sitio web, Guardar…): slides sideways on phones, wraps from lg. */
@@ -66,7 +65,6 @@ export type PlacePageSlots={
  /** Reservations form, after location, hours and amenities (the «Reservar» chip jumps to it). */reservation?:ReactNode;
  /** Menu link, prices, price report, dealer/agency listings («Menú» / «Precios» tab). */offer?:ReactNode;
  events?:ReactNode;questions?:ReactNode;reviews?:ReactNode;
- /** Compact «¿Es su empresa?» row (only while unclaimed). */claim?:ReactNode;
  /** «Otras sucursales» of the same brand. */branches?:ReactNode;
  /** «Lugares similares cerca» (same section, nearest first), after the tabs. */similar?:ReactNode;
 };
@@ -78,9 +76,9 @@ function offerTabLabel(vertical:string,en:boolean):string{
  if(vertical==='vehicle_dealer'||vertical==='real_estate')return en?'Listings':'Anuncios';
  return en?'Prices':'Precios';
 }
-export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer}:{viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
+export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer,claimable=false}:{/** Unclaimed: «Reclamar esta empresa» row at the end of «Información». */claimable?:boolean;viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
- const area=[place.address.adminArea3,place.address.adminArea2,place.address.adminArea1].filter(Boolean).join(', ');
+ const area=joinPlaceParts([place.address.adminArea3,place.address.adminArea2,place.address.adminArea1]);
  const days=en?WEEKDAYS.en:WEEKDAYS.es,vertical=en?place.vertical.nameEn:place.vertical.nameEs;
  // Section pages use the Spanish segment in both languages (/restaurantes, /en/restaurantes), like the rest of the site.
  // Dealers and agencies share the path of the classified listings, which are OFF (feature-flags.ts): no link then.
@@ -96,9 +94,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const cuisines=placeCuisines(place.attributes),priceLevel=placePriceLevel(place.attributes);
  const photos=place.media.filter(m=>m.kind==='photo').map(m=>({url:m.url,caption:(en?m.altEn:m.altEs)??null}));
  const brandAbout=brand?(en?brand.descriptionEn:brand.descriptionEs):null;
- const address=place.address.line?`${place.address.line}${place.address.locality?`, ${place.address.locality}`:''}`:null;
+ const address=place.address.line?joinPlaceParts([place.address.line,place.address.locality]):null;
  // «Calle 34, Santo Tomás, Santo Domingo, Heredia»: the street line and the areas, each once (the card's grey address line).
- const fullAddress=[place.address.line,place.address.locality,place.address.adminArea3,place.address.adminArea2,place.address.adminArea1].filter((x,i,a):x is string=>!!x&&a.findIndex(y=>y?.toLowerCase()===x.toLowerCase())===i).join(', ')||null;
+ const fullAddress=joinPlaceParts([place.address.line,place.address.locality,place.address.adminArea3,place.address.adminArea2,place.address.adminArea1])||null;
  // The owner's «Pedir» link wins; otherwise the WhatsApp number the team recorded (attributes.whatsapp, 2026-11-26).
  const teamWa=typeof place.attributes?.whatsapp==='string'&&place.attributes.whatsapp?{channel:'whatsapp' as const,value:place.attributes.whatsapp}:null;
  const order=(orderLink??teamWa)&&place.status==='published'?(orderLink??teamWa):null;
@@ -148,10 +146,11 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
 
  // Under the map: Google Maps and Waze as two equal buttons (owner 2026-11-27: «quita Apple Maps… que Google Maps y Waze
  // salgan del mismo tamaño»).
- const MAP_APP='inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
+ // Single line, never cut: «Google Maps» becomes «Maps» below 360 px.
+ const MAP_APP='inline-flex h-11 w-full min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-3 text-[14px] font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
  const dirLinks=directions&&<div data-place-directions aria-label={t('Abrir en una aplicación de mapas','Open in a maps app')} role="group" className="grid grid-cols-2 gap-2">
-  <a className={MAP_APP} href={directions.google} data-directions-app="google" rel="noopener noreferrer" target="_blank"><GoogleMapsIcon className="h-[18px] w-[18px] shrink-0"/>Google Maps</a>
-  <a className={MAP_APP} href={directions.waze} data-directions-app="waze" rel="noopener noreferrer" target="_blank"><WazeIcon className="h-[18px] w-[18px] shrink-0"/>Waze</a></div>;
+  <a className={MAP_APP} href={directions.google} data-directions-app="google" rel="noopener noreferrer" target="_blank"><GoogleMapsIcon className="h-4 w-4 shrink-0"/><span><span className="max-[359px]:hidden">Google </span>Maps</span></a>
+  <a className={MAP_APP} href={directions.waze} data-directions-app="waze" rel="noopener noreferrer" target="_blank"><WazeIcon className="h-4 w-4 shrink-0"/>Waze</a></div>;
 
 
  // Right column from lg only (the professional profile's contact column: same card, sticky): the place's actions and
@@ -191,16 +190,13 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const locationTab=<section id="ubicacion" aria-labelledby="place-location" data-place-location className="scroll-mt-32 space-y-4">
   <h2 id="place-location" className={H2}>{t('Ubicación','Location')}</h2>
   <div className="overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
-   {place.location&&<PlacesMap locale={locale} zoom={place.location.precision==='exact'?15:13} className="h-56 overflow-hidden sm:h-72"
+   {place.location&&<PlaceMapDialog locale={locale} zoom={place.location.precision==='exact'?15:13} apps={dirLinks}
     label={t(`Mapa con la ubicación de ${place.name}`,`Map showing where ${place.name} is`)}
     points={[{id:place.slug,lat:place.location.lat,lng:place.location.lng,label:place.name}]}/>}
    <div className="space-y-3 p-4">
-    {(address||area)&&<div className="flex items-start gap-3">
-     <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf7fd] text-[#0083b0]"><MapPin className="h-[18px] w-[18px]"/></span>
-     <div className="min-w-0">{address&&<p className="font-bold leading-snug text-[#162543]">{address}</p>}
-      {area&&<p className="text-sm text-[#526277]">{area}</p>}
-      {place.location&&place.location.precision!=='exact'&&<p className="text-[13px] text-slate-600">{t('Ubicación aproximada.','Approximate location.')}</p>}</div>
-    </div>}
+    {/* Plain address, each name once (owner 2026-11-27: no pin bubble, never «San José, San José»). */}
+    {fullAddress&&<div data-place-address><p className="text-[15px] font-semibold leading-snug text-[#162543]">{fullAddress}</p>
+     {place.location&&place.location.precision!=='exact'&&<p className="text-[13px] text-slate-600">{t('Ubicación aproximada.','Approximate location.')}</p>}</div>}
     {dirLinks}
    </div>
   </div>
@@ -208,26 +204,39 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // «Información» (like the professional profile's, owner 2026-11-27: contact lives in the card icons and the bottom bar,
  // not in a tab): about, hours (today highlighted), amenities, reservations, brand, events, branches.
  // «Contacto» inside «Información» (owner 2026-11-27): only what exists — phone with its number, WhatsApp, website, social links.
- const rowClass=`flex min-h-14 items-center gap-3 px-4 font-semibold text-[#162543] hover:bg-[#f7fafc] ${ring}`;
+ // One list style for the whole «Información» tab (owner 2026-11-27, the production «Mi panel» rows): separate rounded-2xl
+ // bordered rows ~58 px high, brand outline icon, navy label, light chevron; 8 px between rows.
+ const ROW=`flex min-h-[58px] w-full items-center gap-3 rounded-2xl border border-[#e5e9ee] bg-white px-4 py-2.5 text-left transition-colors hover:bg-[#f7fafc] ${ring}`;
+ // One line per row (owner 2026-11-27, like «Mi panel»): label (+ small badge) on the left, the value on the right; the
+ // value only drops below when it truly does not fit, and is never cut.
+ const rowBody=(icon:ReactNode,label:string,value?:ReactNode,badge?:string)=><>
+  <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#0083b0]">{icon}</span>
+  <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
+   <span className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-[#162543]">{label}{badge&&<span className="rounded-full bg-[#eaf7fd] px-2 py-0.5 text-[11px] font-bold text-[#0083b0]">{badge}</span>}</span>
+   {value&&<span className="text-right text-[14px] leading-snug text-[#526277] [overflow-wrap:anywhere]">{value}</span>}</span>
+  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[#c3cdd8]"/></>;
+ const shortUrl=(u:string)=>u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
+ // «Contacto» inside «Información»: one row per channel that exists — phone, WhatsApp, website, each social network.
  const hasContact=!!(call||wa||website||social.length);
- const contactRows=published&&hasContact&&<section id="contacto" aria-labelledby="place-contact" data-place-contact-block className="scroll-mt-32 space-y-4">
+ const contactRows=published&&hasContact&&<section id="contacto" aria-labelledby="place-contact" data-place-contact-block className="scroll-mt-32 space-y-3">
   <h2 id="place-contact" className={H2}>{t('Contacto','Contact')}</h2>
-  {(call||wa||website)&&<ul className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white text-[15px]">
-   {call&&<li><ActionButton action={call} slug={place.slug} locale={locale} className={rowClass}><Phone aria-hidden="true" className="h-5 w-5 text-[#0083b0]"/><span className="flex-1">{t('Teléfono','Phone')}</span>{phone?.kind==='cr'&&<span className="whitespace-nowrap tabular-nums text-[#526277]">{phone.display}</span>}</ActionButton></li>}
-   {wa&&<li><ActionButton action={wa} slug={place.slug} locale={locale} className={rowClass}><WhatsAppLogo className="h-5 w-5 shrink-0 text-[#25D366]"/><span className="flex-1">WhatsApp</span><ExternalLink aria-hidden="true" className="h-4 w-4 text-slate-400"/></ActionButton></li>}
-   {website&&<li><a className={rowClass} href={website} rel="noopener noreferrer nofollow" target="_blank"><Globe aria-hidden="true" className="h-5 w-5 text-[#0083b0]"/><span className="flex-1">{t('Sitio web de la empresa','Business website')}</span><ExternalLink aria-hidden="true" className="h-4 w-4 text-slate-400"/></a></li>}
-  </ul>}
-  {social.length>0&&<PlaceSocialLinks links={social} placeName={place.name} en={en}/>}
+  <ul className="space-y-2">
+   {call&&<li><ActionButton action={call} slug={place.slug} locale={locale} className={ROW}>{rowBody(<Phone className="h-5 w-5"/>,t('Teléfono','Phone'),phone?.kind==='cr'?phone.display:undefined)}</ActionButton></li>}
+   {wa&&<li><ActionButton action={wa} slug={place.slug} locale={locale} className={ROW}>{rowBody(<WhatsAppLogo className="h-5 w-5"/>,'WhatsApp')}</ActionButton></li>}
+   {website&&<li><a className={ROW} href={website} rel="noopener noreferrer nofollow" target="_blank" data-place-row="website">{rowBody(<Globe className="h-5 w-5"/>,t('Sitio web','Website'),shortUrl(website))}</a></li>}
+   {social.map(l=>{const Icon=SOCIAL_ICONS[l.network];return <li key={l.network}><a className={ROW} href={l.url} target="_blank" rel="noopener noreferrer" data-place-row={l.network}
+    aria-label={t(`${l.label} de ${place.name}`,`${l.label} of ${place.name}`)}>{rowBody(<Icon className="h-5 w-5"/>,l.label,shortUrl(l.url))}</a></li>;})}
+  </ul>
  </section>;
- const infoTab=<>
+ const infoTab=<div className="space-y-6">
   {slots.top&&<div className="space-y-4">{slots.top}</div>}
   {about}
   {contactRows}
   {hoursTable&&<section id="horario" aria-label={t('Horario','Opening hours')} className="scroll-mt-32">{hoursTable}</section>}
-  {amenities.length>0&&<section id="comodidades" aria-labelledby="place-amenities" data-place-amenities={amenities.length} className="scroll-mt-32 space-y-4">
+  {amenities.length>0&&<section id="comodidades" aria-labelledby="place-amenities" data-place-amenities={amenities.length} className="scroll-mt-32 space-y-3">
    <h2 id="place-amenities" className={H2}>{t('Comodidades y más','Amenities and more')}</h2>
-   <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2">{amenities.map(a=><li key={a.key} data-place-amenity={a.key} className="flex min-h-12 items-center gap-3 border-b border-[#f1f4f7] text-[15px] font-medium text-[#1f2a3d]">
-    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#eaf7fd] text-[#0083b0]">{createElement(iconOf(a.icon),{'aria-hidden':true,className:'h-[18px] w-[18px]'})}</span>{en?a.en:a.es}</li>)}</ul>
+   <ul className="grid gap-2 sm:grid-cols-2">{amenities.map(a=><li key={a.key} data-place-amenity={a.key} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5e9ee] bg-white px-4 py-2.5">
+    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#0083b0]">{createElement(iconOf(a.icon),{className:'h-5 w-5'})}</span><span className="text-[15px] font-semibold text-[#162543]">{en?a.en:a.es}</span></li>)}</ul>
   </section>}
   {slots.reservation}
   {brand&&brandAbout&&<section id="acerca" aria-labelledby="place-about" data-place-brand-about={brand.slug} className="scroll-mt-32 space-y-3">
@@ -236,24 +245,29 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   </section>}
   {slots.events}
   {slots.branches}
-  {/* Owner 2026-11-27: «¿Es su empresa?» and «Sugerir un cambio» live only here, at the end of «Información». */}
-  {(slots.claim||published)&&<div className="space-y-2" data-place-info-end>
-   {slots.claim}
-   <a href="#reportar" data-place-suggest className={`inline-flex min-h-11 items-center gap-2 text-[13.5px] ${BIZ.link}`}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a>
-  </div>}
- </>;
+  {/* Owner 2026-11-27: «¿Es su empresa?» and «Sugerir un cambio» live only here, at the end of «Información», as rows. */}
+  {published&&<section aria-labelledby={claimable?'place-claim-title':undefined} data-place-info-end className="space-y-3">
+   {claimable&&<h2 id="place-claim-title" className={H2}>{t('¿Es su empresa?','Is this your business?')}</h2>}
+   <ul className="space-y-2">
+    {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/lugar/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa','Claim this business'),undefined,t('Gratis','Free'))}</a></li>}
+    <li><a href="#reportar" data-place-suggest className={ROW}>{rowBody(<PenLine className="h-5 w-5"/>,t('Sugerir un cambio','Suggest an edit'))}</a></li>
+   </ul>
+   {/* The report form (#reportar): hidden until «Sugerir un cambio» or the «…» menu opens it. */}
+   <PlaceReportForm slug={place.slug} locale={locale} bare/>
+  </section>}
+ </div>;
 
  // ── Tabs (only the ones with content), in the approved order: Menú/Precios · Reseñas · Fotos · Ubicación · Información ──
  const offerLabel=offerTabLabel(place.vertical.id,en);
  const tabs:PlaceTab[]=[
   ...(slots.offer?[{id:'offer',label:offerLabel,anchors:['precios'],content:<div className="space-y-6">{slots.offer}</div>}]:[]),
-  ...(!reviews?[]:[{id:'reviews',label:place.rating.count>0?`${t('Reseñas','Reviews')} (${place.rating.count})`:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={H2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>}]),
+  ...(!reviews?[]:[{id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={H2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>}]),
   ...(photos.length>0?[{id:'photos',label:`${t('Fotos','Photos')} (${photos.length})`,anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-32 space-y-4">
    <h2 id="place-photos" className={H2}>{t('Fotos','Photos')} <span className="font-semibold text-[#94a3b8]">{photos.length}</span></h2>
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
   // «Ubicación» then «Información» (owner 2026-11-27); old #mas/#contacto links land in «Información».
   {id:'location',label:t('Ubicación','Location'),anchors:['ubicacion','mapa'],content:locationTab},
-  {id:'info',label:t('Información','Information'),anchors:['informacion','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas'],content:infoTab},
+  {id:'info',label:t('Información','Information'),anchors:['informacion','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas','reportar'],content:infoTab},
  ];
  // Like the professional profile, the page opens on its first tab: Menú/Precios when there is one, else Reseñas, else Información.
  const defaultTab=tabs[0]!.id;
@@ -297,7 +311,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  return <main id="contenido" data-place-page={place.slug} className="mx-auto max-w-7xl px-4 pb-8 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
   <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="mb-4 hidden text-sm text-[#526277] sm:block">
    <ol className="flex flex-wrap items-center gap-1"><li><a className={`hover:underline ${ring}`} href={en?'/en':'/'}>{t('Inicio','Home')}</a></li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li>
-    <li>{sectionHref?<a className={`hover:underline ${ring}`} href={sectionHref}>{vertical}</a>:vertical}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="min-w-0 truncate text-[#162543]">{place.name}</li></ol>
+    <li>{sectionHref?<a className={`hover:underline ${ring}`} href={sectionHref}>{vertical}</a>:vertical}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="min-w-0 break-words text-[#162543]">{place.name}</li></ol>
   </nav>
 
   {/* The search's «Recientes» lists the businesses opened, like the profiles (owner 2026-11-26). */}
@@ -360,13 +374,9 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    </aside>
   </div>
 
-  {slots.similar&&<div className="mt-12 border-t border-[#eef2f6] pt-8">{slots.similar}</div>}
-
-  <footer className="mt-8 flex flex-col gap-1 text-sm text-slate-600 lg:mt-10 lg:border-t lg:border-[#e8edf2] lg:pt-6">
-   {/* Data credit (owner 2026-11-26): one small line. The OSM licence (ODbL) asks for a visible credit where its data is
-       shown; the full detail lives in the Terms. Places without an external source show nothing. */}
-   {place.sources.length>0&&<p data-place-sources className="text-[11.5px] text-slate-400">{t('Datos','Data')}: {place.sources.map((s,i)=><span key={s.name} data-place-source={s.name}>{i?', ':''}{s.url?<a className={`hover:underline ${ring}`} href={s.url} rel="noopener noreferrer" target="_blank">{bilingual(s.attribution,en)}</a>:bilingual(s.attribution,en)}</span>)}</p>}
-   <PlaceReportForm slug={place.slug} locale={locale}/>
-  </footer>
+  {/* Owner 2026-11-27: no separator line above «Negocios similares cerca», and no footer lines (data credit, report link):
+      the OSM/ODbL credit lives in the map's own attribution control and in the Terms («Origen de los datos»); «Reportar»
+      is in the «…» menu and the report form opens at the end of «Información». */}
+  {slots.similar&&<div className="mt-10">{slots.similar}</div>}
  </main>;
 }

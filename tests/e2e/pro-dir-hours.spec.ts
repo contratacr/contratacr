@@ -38,7 +38,8 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  await expect(hours.locator('dd').first()).toHaveText(t('24 horas','24 hours'));
  const site=page.locator('[data-place-side-card] [data-place-action="website"][href="http://www.example.com"]');await expect(site).toHaveAttribute('href','http://www.example.com');
  const rel=(await site.getAttribute('rel'))!.split(' ');for(const r of ['nofollow','ugc','noopener'])expect(rel).toContain(r);
- await expect(page.locator('[data-place-source="OpenStreetMap"]')).toBeVisible();
+ // 2026-11-27: no footer data credit on the page (the map's attribution control and the Terms carry the OSM/ODbL credit).
+ await expect(page.locator('[data-place-sources]')).toHaveCount(0);
  // Header open status (2026-11-19, Yelp model), computed from the same hours in Costa Rica time.
  await expect(page.locator('[data-place-open-status="open24"]')).toContainText(t('Abierto 24 horas','Open 24 hours'));
  await expectNoHorizontalOverflow(page);

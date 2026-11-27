@@ -4,7 +4,7 @@ import {FacebookIcon,InstagramIcon,LinkedInIcon,TikTokIcon,XIcon,YouTubeIcon} fr
 import {BrandGlyph,SOCIAL} from '@/components/professionals/workplace-directions';
 import type {PlaceSocialLink,PlaceSocialNetwork} from '@/lib/directory/place-social';
 
-const ICONS:Record<PlaceSocialNetwork,(p:{className?:string})=>React.JSX.Element>={facebook:FacebookIcon,instagram:InstagramIcon,tiktok:TikTokIcon,x:XIcon,youtube:YouTubeIcon,linkedin:LinkedInIcon};
+export const SOCIAL_ICONS:Record<PlaceSocialNetwork,(p:{className?:string})=>React.JSX.Element>={facebook:FacebookIcon,instagram:InstagramIcon,tiktok:TikTokIcon,x:XIcon,youtube:YouTubeIcon,linkedin:LinkedInIcon};
 const RING='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 
 /**
@@ -19,7 +19,7 @@ export function PlaceSocialLinks({links,placeName,en,className,directions,websit
  if(!links.length&&!directions&&!website)return null;
  return <div data-place-social role="group" aria-label={en?'Social media and maps':'Redes sociales y mapas'} className={cn('flex flex-wrap items-center gap-2',className)}>
   {website&&<a href={website} target="_blank" rel="noopener noreferrer nofollow" data-place-action="website" aria-label={en?`Website of ${placeName}`:`Sitio web de ${placeName}`} title={en?'Website':'Sitio web'} className={cn(SOCIAL,RING)}><Globe aria-hidden="true" className="h-4 w-4"/></a>}
-  {links.map(({network,url,label})=>{const Icon=ICONS[network];
+  {links.map(({network,url,label})=>{const Icon=SOCIAL_ICONS[network];
    return <a key={network} href={url} target="_blank" rel="noopener noreferrer" data-place-social-link={network}
     aria-label={en?`${label} of ${placeName}`:`${label} de ${placeName}`} title={label} className={cn(SOCIAL,RING)}>
     <Icon className="h-4 w-4"/></a>;})}

@@ -29,8 +29,9 @@ export function PlaceFichaMenu({slug,name,locale,signedIn,loginHref,isManager}:{
   return()=>{window.removeEventListener('ccr:section-menu',onMenu);window.removeEventListener(PLACE_SAVED_EVENT,onSaved);};
  },[slug]);
  const toLogin=()=>window.location.assign(loginHref??'/login');
- const openReport=()=>{const box=document.getElementById('reportar');if(box instanceof HTMLDetailsElement)box.open=true;
-  box?.scrollIntoView({block:'start'});(box?.querySelector('summary') as HTMLElement|null)?.focus({preventScroll:true});};
+ // The report form sits at the end of «Información»: going to #reportar opens that tab (PlaceTabs) and the form.
+ const openReport=()=>{if(window.location.hash==='#reportar')history.replaceState(null,'',window.location.pathname+window.location.search);
+  window.location.hash='reportar';};
  const opciones:OpcionFicha[]=[
   {id:'guardar',icono:<Bookmark className={`h-4 w-4 ${saved?'fill-current text-[#0089bb]':''}`}/>,texto:saved?t('Guardado','Saved'):t('Guardar','Save'),onSelect:()=>signedIn?window.dispatchEvent(new Event(SAVE_OPEN)):toLogin()},
   {id:'compartir',icono:<CaraCompartir dedo={<Share2 className="h-4 w-4"/>} raton={<Link2 className="h-4 w-4"/>}/>,texto:<CaraCompartir dedo={tMenu('share')} raton={tMenu('copyLink')}/>,etiqueta:tMenu('share'),

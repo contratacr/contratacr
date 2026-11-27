@@ -28,7 +28,8 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.getByRole('heading',{level:1})).toHaveText('Soda E2E '+label);
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);// 2026-11-27: no «No reclamado» label; the claim box at the end invites the owner
  await expect(page.locator('[data-place-claim-link]')).toBeVisible();
- await expect(page.locator('[data-place-source="OpenStreetMap"]')).toContainText('OpenStreetMap');
+ // 2026-11-27: no footer data credit on the page (the map's attribution control and the Terms carry the OSM/ODbL credit).
+ await expect(page.locator('[data-place-sources]')).toHaveCount(0);
  await expect(page.locator('section[aria-labelledby="place-hours"] dt',{hasText:t('Lunes','Monday')})).toBeVisible();
  // 2026-11-19 (Yelp biz-page model): rating line, open status, action bar, side card with «Llamar» and the compact
  // claim link, the section-colour hero instead of an empty photo box, and the phones' fixed action bar.

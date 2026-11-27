@@ -26,6 +26,16 @@ interface LeaveReviewModalProps {
    * cuenta dejaron CERO reseñas.
    */
   pedirNombre?: boolean;
+  /**
+   * Otro destino para la reseña (la ficha de un lugar, 27-nov-2026: «la reseña debe de ser igual a la de los
+   * profesionales»): la MISMA caja, pero envía con esta función (devuelve el mensaje de error, o null si se publicó) y
+   * no consulta ni guarda nada de /api/reviews. Sin esta prop todo queda como estaba.
+   */
+  enviar?: (datos: { rating: number; comment: string; nombre?: string }) => Promise<string | null>;
+  /** Pregunta de la caja incrustada cuando no es un profesional («¿Ya visitó este lugar?»). */
+  pregunta?: string;
+  /** Campos extra antes de enviar (fotos de la reseña de un lugar). */
+  extra?: React.ReactNode;
 }
 
 const PENDING_REVIEW_KEY_PREFIX = "contratacr:pending-profile-review:";
@@ -73,6 +83,9 @@ export function LeaveReviewModal({
   embedded = false,
   initialReview = null,
   pedirNombre = false,
+  enviar,
+  pregunta,
+  extra,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
   const query = projectId
@@ -120,7 +133,7 @@ export function LeaveReviewModal({
   // Con el nombre por delante, nada que precargar: la reseña es nueva siempre.
 
   useEffect(() => {
-    if (!isAuthenticated || initialReview) return;
+    if (!isAuthenticated || initialReview || enviar) return;
     let active = true;
     // Tras recargar, lo guardado en la sesión se pinta antes de la consulta.
     const guardada = reseñasPropias.has(query) ? undefined : leerReseñaPropia(query);
@@ -154,10 +167,10 @@ export function LeaveReviewModal({
       }
     })();
     return () => { active = false; };
-  }, [initialReview, isAuthenticated, query]);
+  }, [initialReview, isAuthenticated, query, enviar]);
 
   useEffect(() => {
-    if (isAuthenticated || typeof window === "undefined") return;
+    if (isAuthenticated || enviar || typeof window === "undefined") return;
     try {
       const raw = window.sessionStorage.getItem(pendingReviewKey);
       if (!raw) return;
@@ -169,10 +182,10 @@ export function LeaveReviewModal({
     } catch {
       // Ignore malformed local drafts.
     }
-  }, [isAuthenticated, pendingReviewKey]);
+  }, [isAuthenticated, pendingReviewKey, enviar]);
 
   useEffect(() => {
-    if (!isAuthenticated || typeof window === "undefined") return;
+    if (!isAuthenticated || enviar || typeof window === "undefined") return;
     let cancelled = false;
 
     async function submitPendingReview() {
@@ -226,7 +239,7 @@ export function LeaveReviewModal({
 
     void submitPendingReview();
     return () => { cancelled = true; };
-  }, [contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t]);
+  }, [contactId, embedded, isAuthenticated, onClose, onSuccess, pendingReviewKey, professionalId, projectId, t, enviar]);
 
   const requestClose = useCallback(() => {
     const detail = { proceed: onClose, handled: false };
@@ -260,6 +273,26 @@ export function LeaveReviewModal({
     }
     if (!comment.trim()) {
       setError(t("errComment"));
+      return;
+    }
+    if (enviar) {
+      if (pedirNombre && nombre.trim().length < 2) {
+        setError(t("errName"));
+        return;
+      }
+      setError(null);
+      setLoading(true);
+      try {
+        const fallo = await enviar({ rating, comment: comment.trim(), ...(pedirNombre ? { nombre: nombre.trim() } : {}) });
+        if (fallo) { setError(fallo); return; }
+        setSavedReview({ rating, comment: comment.trim() });
+        setSuccess(true);
+        window.setTimeout(() => { onSuccess?.(); if (!embedded) onClose(); }, 1200);
+      } catch {
+        setError(t("errConnection"));
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     if (pedirNombre) {
@@ -359,7 +392,7 @@ export function LeaveReviewModal({
       {embedded && (
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold text-[#162543]">
-            {isEditing ? t("titleEdit") : t("embeddedPrompt")}
+            {isEditing ? t("titleEdit") : pregunta ?? t("embeddedPrompt")}
           </p>
         </div>
       )}
@@ -420,6 +453,7 @@ export function LeaveReviewModal({
           <p className="mt-1.5 text-xs text-[#68778d]">{t("nameHelp")}</p>
         </div>
       )}
+      {extra && (!embedded || rating > 0 || isEditing) && extra}
       {(!embedded || rating > 0 || isEditing) && error && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
           <AlertCircle className="h-4 w-4 shrink-0" />
