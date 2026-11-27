@@ -14,9 +14,14 @@ export function ScrollRow({ children, title, prevLabel, nextLabel }: { children:
     if (!el) return;
     const sync = () => setEdge({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
     sync();
+    // Measured again whenever the row or its cards change size: measured only once, a row painted before its cards
+    // (hidden while the page settles, fonts or photos still loading) read as "fits" and the arrows never came back.
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
     el.addEventListener("scroll", sync, { passive: true });
     window.addEventListener("resize", sync);
-    return () => { el.removeEventListener("scroll", sync); window.removeEventListener("resize", sync); };
+    return () => { ro.disconnect(); el.removeEventListener("scroll", sync); window.removeEventListener("resize", sync); };
   }, []);
   const move = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.8, behavior: "smooth" });
   const btn = "grid h-8 w-8 place-items-center rounded-full border border-[#dfe5ec] bg-white text-[#162543] transition active:scale-95 disabled:cursor-default disabled:opacity-35 sm:h-9 sm:w-9 sm:enabled:hover:bg-[#f3f6f9]";
