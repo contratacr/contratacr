@@ -3,11 +3,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
-import { categoryImageUrl } from "@/lib/data/category-images";
 import { sectionPhoto } from "@/lib/directory/section-photos";
+import { getCategoryGroupLabel } from "@/lib/data/categories";
+import { serviceGroupPhoto } from "@/lib/data/service-group-photos";
 
-// Professionals + 11 sections = 12 tiles (an even grid on phones and computers), the most used first (owner 2026-11-26).
-const ORDER = ["restaurantes", "hospedaje", "farmacias", "supermercados", "parqueos", "lavacar", "gasolineras", "talleres", "cafes", "belleza", "veterinarias"];
+// Owner 2026-11-26: a service group and a business section in turn, 6 + 6 = 12 tiles (an even grid on phones and
+// computers), with the SAME photos as the Servicios and Negocios tabs of /categorias. "Ver todas" opens Categorías.
+const SERVICES = ["hogar", "limpieza", "construccion_ingenieria", "belleza", "salud", "automotriz"];
+const ORDER = ["restaurantes", "hospedaje", "farmacias", "supermercados", "gasolineras", "talleres", "cafes", "parqueos", "lavacar", "belleza", "veterinarias"];
 
 /**
  * Home, directory on (owner 2026-11-26): «Categorías» with real photos, like the production service cards — Profesionales
@@ -18,12 +21,10 @@ export async function HomeCategories() {
   if (!enabled.length) return null;
   const locale = await getLocale();
   const t = await getTranslations("landing.homeCategories");
-  const tp = await getTranslations("categoriesPage");
   const label = (id: string) => (DIRECTORY_SECTION_LABELS[id] as Record<string, string> | undefined)?.[locale] ?? DIRECTORY_SECTION_LABELS[id]?.es ?? id;
-  const items = [
-    { key: "pros", href: "/categorias", label: tp("prosTile"), photo: categoryImageUrl("electricidad")!.replace("w=1100", "w=700") },
-    ...ORDER.filter((id) => enabled.includes(id) && sectionPhoto(id)).map((id) => ({ key: id, href: `/${id}`, label: label(id), photo: sectionPhoto(id)! })),
-  ];
+  const services = SERVICES.filter((id) => serviceGroupPhoto(id)).map((id) => ({ key: `s-${id}`, href: `/profesionales?grupo=${id}`, label: getCategoryGroupLabel(id, locale), photo: serviceGroupPhoto(id)! }));
+  const places = ORDER.filter((id) => enabled.includes(id) && sectionPhoto(id)).slice(0, services.length).map((id) => ({ key: id, href: `/${id}`, label: label(id), photo: sectionPhoto(id)! }));
+  const items = services.flatMap((svc, i) => (places[i] ? [svc, places[i]] : [svc]));
   return (
     <section data-home-categories className="bg-white px-4 pb-6 pt-5">
       {/* Same header as "Mejor calificados" (owner 2026-11-26): title on the left, the link to all categories on the right. */}

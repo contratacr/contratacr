@@ -1,7 +1,7 @@
 "use client";
 import { SectionBrand } from "@/components/layout/section-brand";
 
-import { categoryImageUrl } from "@/lib/data/category-images";
+import { serviceGroupPhoto } from "@/lib/data/service-group-photos";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Carril } from "@/components/ui/carril";
 import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
@@ -405,7 +405,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
               {/* Owner 2026-11-26: the service groups look like the business tiles (photo, name, count). */}
               <ul data-services-tiles className={cn("mx-4 mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3", conPestanas && vista !== "servicios" && "hidden")}>
                 {mobileGroups.map((group) => {
-                  const foto = group.ids.map((id) => categoryImageUrl(id)).find(Boolean);
+                  const foto = serviceGroupPhoto(group.key, 500, group.ids);
                   const IconoGrupo = group.Icon;
                   return (
                     <li key={group.key}>
@@ -417,7 +417,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                       >
                         {foto
                           // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo
-                          ? <img src={foto.replace("w=1100", "w=500")} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                          ? <img src={foto} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
                           : <span className="grid h-24 w-full place-items-center bg-[#eef8fc] text-[#009FD9] sm:h-28"><IconoGrupo className="h-10 w-10" aria-hidden /></span>}
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
                           <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0] [overflow-wrap:anywhere]">{group.label}</span>
