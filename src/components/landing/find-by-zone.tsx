@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { DIRECTORY_SECTION_ICONS } from "@/lib/directory/directory-groups";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
@@ -31,6 +31,15 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
   const [geoError, setGeoError] = useState<string | null>(null);
   // Directory on (owner 2026-11-26): the panel shows professionals or companies of the province.
   const [kind, setKind] = useState<"pros" | "companies">("pros");
+  // Directory on: keeps the selected province name visible in the scrollable row under the map.
+  const provinceRow = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = provinceRow.current;
+    const pill = row?.querySelector<HTMLElement>(`[data-province="${activeId}"]`);
+    if (!row || !pill || row.scrollWidth <= row.clientWidth) return;
+    const left = pill.offsetLeft - (row.clientWidth - pill.offsetWidth) / 2;
+    row.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [activeId]);
 
   const province = getProvinceById(activeId)!;
   const hasCoverage = (id: string) => coverage.countryWide || (coverage.byProvince[id]?.length ?? 0) > 0;
@@ -83,6 +92,7 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
           {/* Owner 2026-11-26: a title that says what to do; «Cerca de mí» lives in the search at the top. */}
           <h2 className="mb-4 text-center text-[22px] font-extrabold leading-tight text-[#1a2744] sm:mb-6 sm:text-3xl">{t("headingDirectory")}</h2>
           <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[1.3fr_1fr] lg:gap-12">
+            <div className="min-w-0">
             <svg viewBox={CR_MAP_VIEWBOX} className="mx-auto h-auto w-full max-w-[560px] drop-shadow-[0_18px_40px_rgba(16,39,68,0.12)]" role="group" aria-label={t("mapAria")}>
               {PROVINCES.map((p) => (
                 <path key={p.id} d={CR_PROVINCE_PATHS[p.id]} fill={fill(p.id)} stroke="#ffffff" strokeWidth={2}
@@ -98,6 +108,21 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
                 </path>
               ))}
             </svg>
+            {/* Province names under the map (2026-11-27): Heredia and Cartago are small targets on a phone map. */}
+            <div ref={provinceRow} data-zone-province-row className="relative -mx-4 mt-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {/* w-max + mx-auto: centred when the seven names fit, scrollable when they do not. */}
+              <div className="mx-auto flex w-max gap-1.5">
+              {PROVINCES.map((p) => (
+                <button key={p.id} type="button" data-province={p.id} onClick={() => setActiveId(p.id)} aria-pressed={p.id === activeId}
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors ${p.id === activeId
+                    ? "border-[#009FD9] bg-[#009FD9] text-white"
+                    : "border-[#d7e1ea] bg-white text-[#334155] hover:border-[#9fd3ea]"}`}>
+                  {p.name}
+                </button>
+              ))}
+              </div>
+            </div>
+            </div>
             <div className="text-center" data-zone-card>
               <div className="flex items-center justify-center gap-2">
                 <MapPin className="h-5 w-5 shrink-0 text-[#009FD9]" aria-hidden />
