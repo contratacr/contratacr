@@ -1,7 +1,8 @@
 "use client";
 import { SectionBrand } from "@/components/layout/section-brand";
 
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { categoryImageUrl } from "@/lib/data/category-images";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Carril } from "@/components/ui/carril";
 import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
@@ -30,12 +31,13 @@ import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, 
 import { rutaDeBusqueda } from "@/lib/buscar-url";
 import { SERVICE_MENU_HIDE, groupPlaces } from "@/lib/directory/directory-groups";
 import { DirectoryQuickNav } from "@/components/landing/directory-nav";
-import { categoryImageUrl } from "@/lib/data/category-images";
 import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 import { useSiteFeatures } from "@/components/site-features";
 import { PlaceTiles, useVisiblePlaceSections } from "@/components/directory/place-tiles";
 
-export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal = null }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null>; prosTotal?: number | null }) {
+const sinSuscripcion = () => () => {};
+
+export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalogoInicial: string | null; placeTotals?: Record<string, number | null>; prosTotal?: number | null }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
   // pre-renderiza en una capa de módulos donde el registro de servicios está
   // vacío: pintaba el catálogo fijo y, al hidratar, los diez grupos cambiaban de
@@ -201,9 +203,24 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               </div>
             </form>
   );
-  // Owner, 2026-11-26: on phones Categorías shows the business tiles plus a Profesionales tile that opens the service groups.
-  const [vistaMovil, setVistaMovil] = useState<"empresas" | "profesionales">("empresas");
+  // Owner, 2026-11-26: Categorías has two tabs, "Servicios" (open by default) and "Negocios", on phones and computers.
+  // `?vista=negocios` opens the Negocios tab (used by the home "Negocios" buttons).
+  const [vistaElegida, setVista] = useState<"servicios" | "negocios" | null>(null);
+  const vistaDeLaUrl = useSyncExternalStore(sinSuscripcion, () => new URLSearchParams(window.location.search).get("vista"), () => null);
+  const vista = vistaElegida ?? (vistaDeLaUrl === "negocios" ? "negocios" : "servicios");
   const conPestanas = placeSectionsShown.length > 0;
+  const pestanas = (clase?: string) => conPestanas && (
+    <div role="tablist" aria-label={locale === "en" ? "What are you looking for?" : "¿Qué busca?"} data-categorias-tabs className={cn("grid grid-cols-2 gap-1 rounded-full bg-[#eef2f6] p-1", clase)}>
+      {(["servicios", "negocios"] as const).map((v) => (
+        <button key={v} type="button" role="tab" aria-selected={vista === v} data-categorias-tab={v}
+          onClick={() => { setVista(v); window.scrollTo({ top: 0 }); }}
+          className={cn("h-10 rounded-full text-[15px] font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#009FD9]",
+            vista === v ? "bg-white text-[#162543] shadow-sm" : "text-[#526277] hover:text-[#162543]")}>
+          {v === "servicios" ? prosTitle : placesTitle}
+        </button>
+      ))}
+    </div>
+  );
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <div className="hidden lg:block">
@@ -341,52 +358,39 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
             </section>
           ) : (
             <>
-              {conPestanas && vistaMovil === "empresas" && (
+              {pestanas("mx-4 mt-4")}
+              {conPestanas && vista === "negocios" && (
                 <section data-testid="services-places" className="mx-4 mt-4">
-                  {/* Owner, 2026-11-26: the business tiles without a title, plus one tile for Profesionales (all services). */}
-                  <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} leading={
-                    <li>
-                      <button type="button" data-services-pros-tile onClick={() => { setVistaMovil("profesionales"); window.scrollTo({ top: 0 }); }}
-                        className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white text-left shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
-                        {/* eslint-disable-next-line @next/next/no-img-element -- remote CDN photo */}
-                        <img src={categoryImageUrl("electricidad")!.replace("w=1100", "w=500")} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                  <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} />
+                </section>
+              )}
+              {!conPestanas && <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>}
+              {/* Owner 2026-11-26: the service groups look like the business tiles (photo, name, count). */}
+              <ul data-services-tiles className={cn("mx-4 mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3", conPestanas && vista !== "servicios" && "hidden")}>
+                {mobileGroups.map((group) => {
+                  const foto = group.ids.map((id) => categoryImageUrl(id)).find(Boolean);
+                  const IconoGrupo = group.Icon;
+                  return (
+                    <li key={group.key}>
+                      <button
+                        type="button"
+                        data-testid="services-mobile-group-option"
+                        onClick={() => selectGroup(group.key, true)}
+                        className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white text-left shadow-sm transition-colors hover:border-[#009FD9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]"
+                      >
+                        {foto
+                          // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo
+                          ? <img src={foto.replace("w=1100", "w=500")} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                          : <span className="grid h-24 w-full place-items-center bg-[#eef8fc] text-[#009FD9] sm:h-28"><IconoGrupo className="h-10 w-10" aria-hidden /></span>}
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5 p-3">
-                          <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0]">{tp("prosTile")}</span>
-                          {typeof prosTotal === "number" && prosTotal > 0
-                            ? <span data-pros-tile-count={prosTotal} className="text-xs font-semibold text-[#0083b0]">{tp("prosTileCount", { count: prosTotal })}</span>
-                            : <span className="line-clamp-2 text-xs leading-snug text-[#64748b]">{tp("prosTileAll")}</span>}
+                          <span className="text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0] [overflow-wrap:anywhere]">{group.label}</span>
+                          <span className="text-xs font-semibold text-[#0083b0]">{tp("servicesCount", { count: group.visibleIds.length })}</span>
                         </span>
                       </button>
                     </li>
-                  } />
-                </section>
-              )}
-              {conPestanas && vistaMovil === "profesionales" && (
-                <button type="button" data-services-back-to-tiles onClick={() => setVistaMovil("empresas")} className="mx-4 mt-4 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#0083b0]">
-                  <ArrowLeft className="h-4 w-4" aria-hidden />{tp("backToCategories")}
-                </button>
-              )}
-              {!conPestanas && <h2 className="mx-4 mt-6 text-[15px] font-bold text-[#526277]">{prosTitle}</h2>}
-              <section className={cn("mx-4 mt-4 overflow-hidden rounded border border-[#d7e1ea] bg-white", conPestanas && vistaMovil !== "profesionales" && "hidden")}>
-                {mobileGroups.map((group) => {
-                  const IconoGrupo = group.Icon;
-                  return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    data-testid="services-mobile-group-option"
-                    onClick={() => selectGroup(group.key, true)}
-                    className="flex min-h-[62px] w-full items-center justify-between gap-3 border-b border-[#d7e1ea] bg-white px-4 py-3 text-left last:border-b-0"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
-                      <IconoGrupo className="h-[18px] w-[18px]" />
-                    </span>
-                    <span className="min-w-0 flex-1 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{group.label}</span>
-                    <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
-                  </button>
                   );
                 })}
-              </section>
+              </ul>
             </>
           )}
         </section>
@@ -481,14 +485,14 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {}, prosTotal =
               </section>
             ) : (
               <>
-                {placeSectionsShown.length > 0 && (
-                  <section data-testid="services-places" aria-labelledby="ccr-servicios-empresas" className="border-b border-[#eef2f6] p-4">
-                    <h2 id="ccr-servicios-empresas" className="mb-3 text-lg font-extrabold leading-tight text-[#162543]">{placesTitle}</h2>
+                {pestanas("mx-4 mt-4 max-w-sm")}
+                {conPestanas && vista === "negocios" && (
+                  <section data-testid="services-places" aria-label={placesTitle} className="p-4">
                     <PlaceTiles sections={placeSectionsShown} totals={placeTotals} locale={locale} />
                   </section>
                 )}
-                <h2 className="px-4 pb-1 pt-4 text-lg font-extrabold leading-tight text-[#162543]">{prosTitle}</h2>
-                <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
+                {!conPestanas && <h2 className="px-4 pb-1 pt-4 text-lg font-extrabold leading-tight text-[#162543]">{prosTitle}</h2>}
+                <section data-categorias-servicios className={cn("grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]", conPestanas && "mt-3", conPestanas && vista !== "servicios" && "hidden")}>
                   {/* EN COMPUTADORA LA LISTA SE DESPLAZA POR DENTRO Y SE DESVANECE
                       ABAJO. Medía lo que midiera la columna de al lado y estaba
                       en `overflow-hidden`: con un grupo corto elegido (Creatividad,

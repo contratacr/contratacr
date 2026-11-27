@@ -116,7 +116,7 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
                 <button type="button" onClick={goToProvince} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(0,159,217,0.3)] hover:bg-[#0089bb]">
                   {t("viewProsShort")}<ArrowRight className="h-4 w-4" aria-hidden />
                 </button>
-                <button type="button" onClick={() => router.push("/categorias")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#eaf7fd] text-[15px] font-bold text-[#0083b0] hover:bg-[#dff1fa]">
+                <button type="button" onClick={() => router.push("/categorias?vista=negocios")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#eaf7fd] text-[15px] font-bold text-[#0083b0] hover:bg-[#dff1fa]">
                   {t("viewPlaces")}<ArrowRight className="h-4 w-4" aria-hidden />
                 </button>
               </div>

@@ -45,14 +45,16 @@ test("desktop navbar: Categorías is a link to the full page, with no dropdown a
   await link.click();
   await expect(page).toHaveURL(/\/categorias$/);
   await expect(page.getByTestId("services-mega-menu")).toHaveCount(0);
-  // The page lists the businesses as tiles on top, once each, and the professional groups below without place rows.
+  // Two tabs (owner 2026-11-26): "Servicios" is open first with the professional groups; "Negocios" shows the business tiles, once each.
+  await expect(page.getByTestId("services-group-option").first()).toBeVisible();
+  await page.locator("[data-categorias-tab=negocios]").filter({ visible: true }).click();
+  await expect(page.locator("[data-categorias-tab=negocios]").filter({ visible: true })).toHaveAttribute("aria-selected", "true");
   const tiles = page.locator("[data-place-tiles] [data-place-tile]");
   // The page renders a mobile and a desktop tree; only the one for this viewport is visible.
   await expect(tiles.filter({ visible: true }).first()).toBeVisible();
   for (const section of ALL_SECTIONS) expect(await page.locator(`[data-place-tile="${section}"]`).filter({ visible: true }).count(), section).toBeLessThanOrEqual(1);
   for (const tile of await tiles.all()) await expect(tile).toHaveAttribute("href", /^\/[a-z]+(?:-[a-z]+)*$/);
   await expect(page.locator("[data-nav-directory-section]")).toHaveCount(0);
-  await expect(page.getByTestId("services-group-option").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
