@@ -27,13 +27,13 @@ function routeWithoutLocale(pathname: string | null) {
 
 function readPendingPath(): NativeOnboardingPendingPath | null {
   const value = window.localStorage.getItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
-  return value === "/login" || value === "/registro/cliente" || value === "/registro/profesional"
+  return value === "/login" || value === "/registro/cliente" || value === "/registro/profesional" || value === "/registro/empresa"
     ? value
     : null;
 }
 
 function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath {
-  return path === "/login" || path === "/registro/cliente" || path === "/registro/profesional";
+  return path === "/login" || path === "/registro/cliente" || path === "/registro/profesional" || path === "/registro/empresa";
 }
 
 function hideNativeSplashAfterPaint() {
@@ -196,6 +196,7 @@ export function NativeFirstRunOnboarding() {
 
   const destinationFor = useCallback((role: Role) => {
     if (role === "client") return "/registro/cliente";
+    if (role === "business") return "/registro/empresa";
     return "/registro/profesional";
   }, []);
 

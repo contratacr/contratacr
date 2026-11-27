@@ -221,6 +221,7 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 - [ ] `/admin/directorio` pestaña «Lugares nuevos»: Publicar / Rechazar; historial con etiquetas «Lugar agregado / creado» para lugares del equipo.
 - [ ] Al Publicar, quien pidió el lugar recibe la notificación «Su negocio ya está en ContrataCR» (abre `/lugar/<slug>/reclamar`) y un correo con «Reclamar mi negocio» (local: buzón simulado); al Rechazar, «Solicitud de negocio no aprobada» sin enlace. Repetir la decisión no avisa dos veces (migración 545).
 - [ ] Bandera apagada: `/registro` enlaza directo a `/registro/profesional` y `/registro/empresa` no existe.
+- [ ] Con directorio encendido, `/onboarding` (Google/Apple) y la bienvenida de la app («¿Cómo quiere empezar?») también preguntan «Profesional independiente» (→ `/registro/profesional`) o «Empresa o local» (onboarding: cuenta de cliente y luego `/registro/empresa`; app: `/registro/empresa`), con «Volver». Bandera apagada: «Ofrezco servicios» va directo como antes.
 - [ ] Casos: nombre con varias palabras (búsqueda simple, la ranqueada daba timeout), nombre ya reclamado, enviar dos veces.
 - [ ] «Mi negocio» tiene límite por cuenta.
 

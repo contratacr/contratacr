@@ -9,6 +9,8 @@ export const NATIVE_ONBOARDING_EN_CAMINO_KEY = "ccr:native-first-run-en-camino:v
 export type NativeOnboardingPendingPath =
   | "/login"
   | "/registro/cliente"
-  | "/registro/profesional";
+  | "/registro/profesional"
+  // «Empresa o local» from the welcome (directory on, 2026-11-27).
+  | "/registro/empresa";
 
 export const NATIVE_ONBOARDING_EXTERNAL_LINK_EVENT = "contratacr:native-external-link";

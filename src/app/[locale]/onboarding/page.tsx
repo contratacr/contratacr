@@ -8,7 +8,8 @@ import { providerDisplayName } from "@/lib/auth/provider-display-name";
 import { useState, useEffect, useRef } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight, UserRound } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, UserRound, ChevronLeft, HardHat, Store } from "lucide-react";
+import { useSiteFeatures } from "@/components/site-features";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -23,7 +24,12 @@ export default function OnboardingPage() {
   const locale = useLocale();
   const tc = useTranslations("registerChoice");
   const router = useRouter();
-  const [selecting, setSelecting] = useState<"client" | "professional" | null>(null);
+  const [selecting, setSelecting] = useState<"client" | "professional" | "business" | null>(null);
+  // Directory on (2026-11-27): «Ofrezco servicios» asks one more thing, like /registro: «Profesional independiente»
+  // (the professional form, as before) or «Empresa o local» (client account first, then «Agregar o reclamar mi
+  // empresa» on /registro/empresa). Directory off: unchanged.
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
+  const [proStep, setProStep] = useState(false);
   // While we determine whether this is an EXISTING account, render a loader — never
   // the role cards — so an existing user logging in never sees the onboarding "flash".
   const [checkingExisting, setCheckingExisting] = useState(true);
@@ -107,10 +113,10 @@ export default function OnboardingPage() {
     return () => { cancelled = true; };
   }, [user, authLoading, locale, router]);
 
-  async function selectRole(role: "client" | "professional") {
+  async function selectRole(role: "client" | "professional", business = false) {
     if (!user || selecting) return;
     completing.current = true; // freeze the useEffect redirect above
-    setSelecting(role);
+    setSelecting(business ? "business" : role);
     const supabase = createClient();
 
     // Choosing "Ofrezco" is only an intent until the professional profile is
@@ -147,7 +153,9 @@ export default function OnboardingPage() {
 
     // Google and Apple verify identity, not a contact number. Both roles finish
     // the existing registration form before the account is marked complete.
-    window.location.assign(role === "professional" ? `${prefijoDeIdioma(locale)}/registro/profesional` : `${prefijoDeIdioma(locale)}/registro/cliente`);
+    window.location.assign(role === "professional" ? `${prefijoDeIdioma(locale)}/registro/profesional`
+      : business ? `${prefijoDeIdioma(locale)}/registro/cliente?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/registro/empresa`)}`
+      : `${prefijoDeIdioma(locale)}/registro/cliente`);
   }
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —
@@ -200,6 +208,34 @@ export default function OnboardingPage() {
             </p>
           </div>
 
+          {directoryOn && proStep ? (
+          <div data-onboarding-pro-kind>
+            <div className="mb-4 text-center">
+              <button type="button" onClick={() => setProStep(false)} disabled={!!selecting} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
+                <ChevronLeft className="h-4 w-4" aria-hidden />{tc("back")}
+              </button>
+              <h2 className="mt-1 text-xl font-bold text-[#162543]">{tc("proKindTitle")}</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              {([
+                { id: "independiente", Icon: HardHat, title: tc("independentTitle"), role: tc("independentRole"), mosaic: "ccr-mosaico-pro", busy: selecting === "professional" },
+                { id: "empresa", Icon: Store, title: tc("businessTitle"), role: tc("businessRole"), mosaic: "ccr-mosaico-cliente", busy: selecting === "business" },
+              ] as const).map(({ id, Icon, title, role, mosaic, busy }) => (
+                <button key={id} type="button" data-onboarding-pro-kind-option={id} onClick={() => (id === "empresa" ? selectRole("client", true) : selectRole("professional"))} disabled={!!selecting} className="ccr-tarjeta-rol group disabled:opacity-60">
+                  <span className={`ccr-tarjeta-rol-mosaico ${mosaic}`} aria-hidden>
+                    {busy ? <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#162543] border-t-transparent" /> : <Icon className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />}
+                  </span>
+                  <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                    {title}
+                    <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
+                  </span>
+                  <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{role}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mx-auto mt-6 max-w-md text-center text-[13px] leading-relaxed text-[#8a94a6] sm:text-sm">{tc("proKindNote")}</p>
+          </div>
+          ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
 
             {/* Client card */}
@@ -224,7 +260,7 @@ export default function OnboardingPage() {
 
             {/* Professional card */}
             <button
-              onClick={() => selectRole("professional")}
+              onClick={() => (directoryOn ? setProStep(true) : selectRole("professional"))}
               disabled={!!selecting}
               className="ccr-tarjeta-rol group disabled:opacity-60"
             >
@@ -243,6 +279,7 @@ export default function OnboardingPage() {
             </button>
 
           </div>
+          )}
         </div>
       </main>
 
