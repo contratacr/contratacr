@@ -30,9 +30,8 @@ export async function HomeTopRated() {
   if (!items.length) return null;
   return (
     <section data-home-top-rated className="bg-white pb-3 pt-6">
-      <h2 className="mb-3 px-4 text-center text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold text-[#1a2744] sm:text-4xl">{t("title")}</h2>
       {/* Bigger horizontal cards (owner 2026-11-26): photo on top, name, stars with the review count, section and area. */}
-      <ScrollRow prevLabel={t("prev")} nextLabel={t("next")}>
+      <ScrollRow title={<h2 className="pr-24 text-left text-[22px] font-extrabold text-[#1a2744] sm:text-3xl">{t("title")}</h2>} prevLabel={t("prev")} nextLabel={t("next")}>
         {items.map((i) => (
           <li key={i.key} className="w-[168px] shrink-0 snap-start sm:w-[190px]">
             <Link href={i.href} prefetch={false} data-home-top-rated-item className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
