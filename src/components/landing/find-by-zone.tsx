@@ -80,13 +80,14 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
     return (
       <section data-zone-simple className="bg-white px-4 pb-8 pt-5 sm:pb-14 sm:pt-7">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-3 flex items-center justify-between gap-3 sm:mb-6">
+          {/* Título centrado y "Buscar cerca de mí" debajo, también centrado (dueño 2026-11-26). */}
+          <div className="mb-4 flex flex-col items-center text-center sm:mb-6">
             <h2 className="text-[22px] font-extrabold leading-tight text-[#1a2744] sm:text-3xl">{t("headingDirectory")}</h2>
-            <button type="button" onClick={useMyLocation} disabled={geoLoading} className="flex shrink-0 items-center gap-1 text-[15px] font-bold text-[#0083b0] disabled:opacity-60">
+            <button type="button" onClick={useMyLocation} disabled={geoLoading} data-zone-near-me className="mt-2 flex items-center gap-1.5 text-[15px] font-bold text-[#0083b0] disabled:opacity-60">
               {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Navigation className="h-4 w-4" aria-hidden />}{t("nearMe")}
             </button>
+            {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
           </div>
-          {geoError && <p className="mb-2 text-[12px] text-[#b45309]">{geoError}</p>}
           <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[1.3fr_1fr] lg:gap-12">
             <svg viewBox={CR_MAP_VIEWBOX} className="mx-auto h-auto w-full max-w-[560px] drop-shadow-[0_18px_40px_rgba(16,39,68,0.12)]" role="group" aria-label={t("mapAria")}>
               {PROVINCES.map((p) => (
@@ -103,15 +104,15 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
                 </path>
               ))}
             </svg>
-            <div className="rounded-2xl border border-[#e5e9ee] bg-white p-4 shadow-[0_10px_30px_-18px_rgba(16,39,68,0.35)] sm:p-6" data-zone-card>
-              <div className="flex items-center gap-2.5">
+            <div className="text-center" data-zone-card>
+              <div className="flex items-center justify-center gap-2">
                 <MapPin className="h-5 w-5 shrink-0 text-[#009FD9]" aria-hidden />
                 <span className="text-[20px] font-extrabold leading-tight text-[#1a2744]" aria-live="polite">{province.name}</span>
               </div>
-              <p className="mt-1 pl-[30px] text-[13.5px] text-[#526277]">
+              <p className="mt-1 text-[13.5px] text-[#526277]">
                 {t("prosCount", { count: prosHere })} · {t("placesCount", { count: placesHere })}
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="mx-auto mt-4 grid max-w-sm grid-cols-2 gap-2.5">
                 <button type="button" onClick={goToProvince} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(0,159,217,0.3)] hover:bg-[#0089bb]">
                   {t("viewProsShort")}<ArrowRight className="h-4 w-4" aria-hidden />
                 </button>

@@ -85,7 +85,7 @@
     "searchProfessionals": "Buscar profesionales"
   },
   "header": {
-    "searchServicesAndPlaces": "Servicios y empresas",
+    "searchServicesAndPlaces": "Servicios, restaurantes y más",
     "searchServiceLabel": "Servicio",
     "searchServicesLabel": "Servicios",
     "tools": "Herramientas",
@@ -170,7 +170,7 @@
     "helpProTips": "Consejos para profesionales",
     "helpContact": "Escribir a soporte",
     "goToPanel": "Ir a mi panel",
-    "places": "Lugares",
+    "places": "Categorías",
     "more": "Más",
     "forBusiness": "Para empresas y profesionales",
     "promotions": "Promociones",
@@ -255,7 +255,7 @@
     }
   },
   "search": {
-    "seeBusinesses": "Ver empresas de {section}",
+    "seeBusinesses": "Ver todo en {section}",
     "title": {
       "default": "Todos los servicios",
       "withQuery": "Resultados para \"{q}\""
@@ -263,7 +263,7 @@
     "resultsIn": "{count, plural, one {# profesional} other {# profesionales}} en {location}",
     "thisArea": "esta área",
     "resultsInCR": "{count, plural, one {# profesional} other {# profesionales}} en Costa Rica",
-    "resultsBusinessesOnly": "Empresas en Costa Rica",
+    "resultsBusinessesOnly": "Resultados en Costa Rica",
     "list": "Lista",
     "map": "Mapa",
     "close": "Cerrar",
@@ -2499,13 +2499,13 @@
   "quickNav": {
     "label": "Accesos rápidos",
     "menu": "Abrir menú",
-    "professionals": "Profesionales",
+    "professionals": "Servicios",
     "more": "Más"
   },
   "categoriesPage": {
-    "placesTitle": "Empresas",
-    "prosTitle": "Profesionales y servicios",
-    "placesMatchTitle": "Empresas encontradas",
+    "placesTitle": "Categorías populares",
+    "prosTitle": "Más categorías",
+    "placesMatchTitle": "Resultados",
     "businessOne": "opción",
     "businessMany": "opciones",
     "eyebrow": "Servicios",
@@ -2941,7 +2941,7 @@
       "puertaServicio": "Contratar un servicio",
       "puertaLugar": "Explorar categorías",
       "intentServicio": "Contratar un servicio",
-      "intentLugar": "Ver empresas",
+      "intentLugar": "Explorar categorías",
       "botonBuscar": "Buscar",
       "botonPublicar": "Publicar solicitud",
       "titularDirectorio": "Profesionales, empresas|y *reseñas* en Costa Rica.",
@@ -2964,11 +2964,11 @@
     "inicio": {
       "lugaresTitulo": "Categorías populares",
       "lugaresSub": "Restaurantes, farmacias, plomería, mecánica y más, con horarios y datos de contacto.",
-      "verTodos": "Ver todas las empresas",
+      "verTodos": "Ver todas las categorías",
       "verCategorias": "Ver todas las categorías",
       "compararPrecios": "Comparar precios",
       "eventos": "Eventos",
-      "destacadosTitulo": "Empresas para empezar",
+      "destacadosTitulo": "Populares en Costa Rica",
       "destacadosVer": "Ver {seccion}",
       "promoTitulo": "Promociones",
       "promoTexto": "Ofertas de profesionales y de negocios de Costa Rica, en un solo lugar.",
@@ -3000,10 +3000,10 @@
       "disclaimer": "No prometemos cobertura en todo el país: le mostramos solo a los profesionales que realmente trabajan en su zona.",
       "viewCompanies": "Ver empresas cerca",
       "headingDirectory": "Explore por provincia",
-      "nearMe": "Cerca de mí",
+      "nearMe": "Buscar cerca de mí",
       "viewProsShort": "Profesionales",
-      "viewPlaces": "Lugares",
-      "placesCount": "{count, plural, one {# lugar} other {# lugares}}",
+      "viewPlaces": "Categorías",
+      "placesCount": "{count, plural, one {# opción} other {# opciones}}",
       "companiesCount": "{count, plural, one {# empresa} other {# empresas}}",
       "kindLabel": "Qué busca",
       "kindPros": "Profesionales",

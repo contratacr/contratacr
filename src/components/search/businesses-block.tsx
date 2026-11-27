@@ -44,7 +44,7 @@ export async function loadBusinessMix(q:string|undefined,sections:readonly strin
 export function BusinessMixNote({mix,locale}:{mix:BusinessMix;locale:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  return <p data-businesses-block={mix.section} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-4 pb-1.5 pt-3 text-[13px] text-[#526277] lg:px-0 lg:pt-0">
-  <span>{t('Incluye empresas de ','Includes businesses in ')}<strong className="font-bold text-[#162543]">{mix.label}</strong></span>
+  <span>{t('Incluye resultados de ','Includes results in ')}<strong className="font-bold text-[#162543]">{mix.label}</strong></span>
   {mix.total>mix.items.length&&<Link href={mix.href} className="inline-flex min-h-8 items-center gap-0.5 font-bold text-[#007fae] hover:underline">{t(`Ver las ${mix.total.toLocaleString('es-CR')}`,`See all ${mix.total.toLocaleString('en-US')}`)}<ChevronRight aria-hidden="true" className="h-4 w-4"/></Link>}
  </p>;
 }

@@ -7,7 +7,7 @@ for (const locationFirst of [false, true]) {
     await waitForInteractivePage(page);
     const mobile = (page.viewportSize()?.width ?? 1280) < 1024;
     if (mobile) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
-    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios y empresas)$/ }).filter({ visible: true }).first();
+    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios, restaurantes y más)$/ }).filter({ visible: true }).first();
     const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
     const before = page.url();
     const selectService = async () => {
@@ -67,7 +67,7 @@ for (const field of ["Servicio", "Ubicación"]) {
     await gotoOK(page, "/profesionales");
     await waitForInteractivePage(page);
     if ((page.viewportSize()?.width ?? 1280) < 1024) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
-    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios y empresas)$/ }).filter({ visible: true }).first();
+    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios, restaurantes y más)$/ }).filter({ visible: true }).first();
     const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
     const input = field === "Servicio" ? service : location;
     await input.fill(field === "Servicio" ? "Desarrollo web" : "Alajuela");
@@ -114,7 +114,7 @@ for (const field of ["Servicio", "Ubicación"]) {
     await waitForInteractivePage(page);
     const mobile = (page.viewportSize()?.width ?? 1280) < 1024;
     if (mobile) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
-    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios y empresas)$/ }).filter({ visible: true }).first();
+    const service = page.getByRole("combobox", { name: /^(Servicio|Servicios, restaurantes y más)$/ }).filter({ visible: true }).first();
     const location = page.getByRole("combobox", { name: "Ubicación", exact: true }).filter({ visible: true }).first();
     await service.fill(""); await location.fill("");
     await (field === "Servicio" ? service : location).press("Enter");
@@ -143,7 +143,7 @@ for (const changeService of [true, false]) test(`replacing the ${changeService ?
   await gotoOK(page, changeService ? "/profesionales?categoria=redes_internet&provincia=al" : "/profesionales/desarrollo-web/alajuela");
   await waitForInteractivePage(page);
   if ((page.viewportSize()?.width ?? 1280) < 1024) await page.evaluate(() => window.dispatchEvent(new CustomEvent("ccr:open-native-search")));
-  const field = page.getByRole("combobox", { name: changeService ? /^(Servicio|Servicios y empresas)$/ : /^Ubicación$/ }).filter({ visible: true }).first();
+  const field = page.getByRole("combobox", { name: changeService ? /^(Servicio|Servicios, restaurantes y más)$/ : /^Ubicación$/ }).filter({ visible: true }).first();
   await field.fill(changeService ? "Desarrollo web" : "Heredia");
   await page.getByRole("option").filter({ hasText: changeService ? /^Desarrollo web/ : /^Heredia/ }).filter({ visible: true }).first().click();
   await expect(page).toHaveURL(changeService ? /\/profesionales\/desarrollo-web\/alajuela/ : /\/profesionales\/desarrollo-web\/heredia/);
