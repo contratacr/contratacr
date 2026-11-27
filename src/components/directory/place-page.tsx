@@ -13,7 +13,7 @@ import {PlacePhotoGallery} from './place-photo-gallery';
 import {checkPlacePhone} from '@/lib/directory/phone';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
 import {placeAmenities,placeCuisines,placePriceLevel} from '@/lib/directory/place-amenities';
-import {BIZ,HeroTile,ratingNumber,reviewsLabel,ring} from './biz-ui';
+import {BIZ,ratingNumber,reviewsLabel,ring} from './biz-ui';
 import {ProfileIdentityName,profileIdentityAvatarClass} from '@/components/professionals/profile-identity-name';
 import {PlaceTabs,type PlaceTab} from './place-tabs';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
@@ -249,7 +249,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {published&&<section aria-labelledby={claimable?'place-claim-title':undefined} data-place-info-end className="space-y-3">
    {claimable&&<h2 id="place-claim-title" className={H2}>{t('¿Es su empresa?','Is this your business?')}</h2>}
    <ul className="space-y-2">
-    {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/lugar/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa','Claim this business'),undefined,t('Gratis','Free'))}</a></li>}
+    {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/lugar/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa gratis','Claim this business for free'))}</a></li>}
     <li><a href="#reportar" data-place-suggest className={ROW}>{rowBody(<PenLine className="h-5 w-5"/>,t('Sugerir un cambio','Suggest an edit'))}</a></li>
    </ul>
    {/* The report form (#reportar): hidden until «Sugerir un cambio» or the «…» menu opens it. */}
@@ -275,14 +275,14 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // ── Identity card (the classic professional profile card) ──
  const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex text-[#14b2ec]"><VerifiedSeal className="h-5 w-5 sm:h-6 sm:w-6" label={verification}/></span>:null;
  const hasPhotos=photos.length>0;
- const avatarInner=hasPhotos
-  // eslint-disable-next-line @next/next/no-img-element -- approved place photo (R2), painted by the server like the professional avatar
-  ?<img src={photos[0]!.url} alt={photos[0]!.caption??place.name} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover"/>
-  :<HeroTile verticalId={place.vertical.id} className="absolute inset-0 h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/>;
+ // Owner 2026-11-27, «si no tiene foto no es necesario ese logo»: the round avatar only with a real photo; without one the
+ // name block starts at the left edge and takes the whole width.
  const avatarClass=`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`;
  const avatar=hasPhotos
-  ?<a href="#fotos" data-place-avatar="photo" aria-label={t(`Ver las fotos de ${place.name}`,`See photos of ${place.name}`)} className={cn(avatarClass,ring,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>{avatarInner}</a>
-  :<span data-place-avatar="section" className={cn(avatarClass,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>{avatarInner}</span>;
+  ?<a href="#fotos" data-place-avatar="photo" aria-label={t(`Ver las fotos de ${place.name}`,`See photos of ${place.name}`)} className={cn(avatarClass,ring,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>
+   {/* eslint-disable-next-line @next/next/no-img-element -- approved place photo (R2), painted by the server like the professional avatar */}
+   <img src={photos[0]!.url} alt={photos[0]!.caption??place.name} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover"/></a>
+  :null;
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
  // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom
  // (the same AccionesAlPie strip as the professional profile): WhatsApp, Llamar and Cómo llegar, only those that exist.
@@ -326,7 +326,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     <header data-place-header data-place-hero className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
      <div className="flex min-w-0 flex-col items-start gap-2 text-left min-[360px]:flex-row min-[360px]:items-center min-[360px]:gap-3 sm:contents sm:gap-0">
       {avatar}
-      <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto sm:self-center">
+      <div className={cn('w-full min-w-0 sm:row-start-1 sm:w-auto sm:self-center',hasPhotos?'sm:col-start-2':'sm:col-span-2 sm:col-start-1')}>
        <ProfileIdentityName testId="place-name" name={place.name} badge={nameBadge}/>
        {reviews&&(rated
         ?<p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-[#68778d] sm:mt-2 sm:text-[13px]" data-rating-line={place.rating.count}>
@@ -355,9 +355,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
          bloqueContacto): a divider, the small grey «<name> · <address>» line, Reservar/Pedir when they exist, then the
          centred icon row (website, social links, Google Maps, Waze). Owner 2026-11-27. */}
      {published&&<div className="sm:col-span-2 sm:col-start-1" data-place-actions-bar>
-      <div className="mt-4 h-px w-full bg-[#e5e7eb]" aria-hidden="true"/>
-      {fullAddress&&<p data-place-address-line className="mt-1.5 text-[11px] leading-snug text-[#6b7280]"><span className="font-semibold text-[#374151]">{place.name} · </span>{fullAddress}</p>}
-      <div className="mt-3 flex flex-col gap-3">
+      {/* Only with a real street address: «<name> · San José» would repeat the line above (owner 2026-11-27). */}
+      {place.address.line&&fullAddress&&<><div className="mt-4 h-px w-full bg-[#e5e7eb]" aria-hidden="true"/>
+       <p data-place-address-line className="mt-1.5 text-[11px] leading-snug text-[#6b7280]"><span className="font-semibold text-[#374151]">{place.name} · </span>{fullAddress}</p></>}
+      <div className={cn('flex flex-col gap-3',place.address.line?'mt-3':'mt-4')}>
        {extras}
        <PlaceSocialLinks links={social} placeName={place.name} en={en} website={website&&published?website:null} className="justify-center"
         directions={goChip?.maps?{waze:goChip.maps.waze,google:goChip.maps.google}:null}/>
