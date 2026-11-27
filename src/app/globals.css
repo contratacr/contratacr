@@ -2596,6 +2596,11 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
   /* Map screens with the floating search card: hide the navbar from the FIRST paint (owner 2026-11-26). The class
      above is set after hydration, so on a refresh the main navbar flashed before the floating card took over. */
   body:has([data-quick-nav-floating]) [data-testid="landing-navbar"] { display: none; }
+  /* ...and size the map and sheet for it from that same first paint (2026-11-27, «mucho parpadeo» on /buscar): the
+     navbar's own style said 124px until hydration, then the floating card's effect set 0px and the map, the sheet and
+     every card jumped 124px up (CLS 0.15). !important also beats the navbar's inline 124px on resize. */
+  html:has([data-quick-nav-floating]) { --ccr-native-header-height: 0px !important; }
+  html:has([data-quick-nav-floating]) .ccr-search-results-layout { height: 100dvh !important; padding-top: 0 !important; }
   /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
   /* The menu opens the same way on every screen: full screen from the top (owner 2026-11-26). */
   html:has(.ccr-menu-completo.ccr-menu-abierto) [data-brand-chevron] { transform: rotate(180deg); }
