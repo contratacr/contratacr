@@ -2595,6 +2595,6 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
 @keyframes ccr-hero-progress { from { width: 0%; } to { width: 100%; } }
 @keyframes ccr-hero-zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
 @keyframes ccr-hero-text { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-/* Rotating search word: the new word rises into the centre; the old one keeps rising and fades out. */
-@keyframes ccr-word-in { from { opacity: 0; transform: translateY(70%); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes ccr-word-out { from { opacity: 1; transform: none; filter: none; } to { opacity: 0; transform: translateY(-70%); filter: blur(2px); } }
+/* Rotating search words, ticker style: in from below, out through the top. */
+@keyframes ccr-word-in { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+@keyframes ccr-word-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-100%); } }
