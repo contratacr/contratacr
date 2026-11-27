@@ -23,7 +23,20 @@ export function ScrollRow({ children, title, prevLabel, nextLabel }: { children:
     window.addEventListener("resize", sync);
     return () => { ro.disconnect(); el.removeEventListener("scroll", sync); window.removeEventListener("resize", sync); };
   }, []);
-  const move = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.8, behavior: "smooth" });
+  // Owner 2026-11-27: each arrow tap moves exactly one card, aligned to the row's left edge, and never past the last card
+  // (the target is clamped to the real scroll range, so the row never slides into empty space).
+  const move = (dir: 1 | -1) => {
+    const el = ref.current;
+    if (!el) return;
+    const items = Array.from(el.children) as HTMLElement[];
+    if (!items.length) return;
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    const max = el.scrollWidth - el.clientWidth;
+    const current = items.findIndex((it) => it.offsetLeft - pad >= el.scrollLeft - 2);
+    const from = current === -1 ? items.length - 1 : current;
+    const target = items[Math.min(items.length - 1, Math.max(0, from + dir))]!;
+    el.scrollTo({ left: Math.min(max, Math.max(0, target.offsetLeft - pad)), behavior: "smooth" });
+  };
   const btn = "grid h-8 w-8 place-items-center rounded-full border border-[#dfe5ec] bg-white text-[#162543] transition active:scale-95 disabled:cursor-default disabled:opacity-35 sm:h-9 sm:w-9 sm:enabled:hover:bg-[#f3f6f9]";
   const scrollable = !(edge.start && edge.end);
   return (
@@ -37,7 +50,7 @@ export function ScrollRow({ children, title, prevLabel, nextLabel }: { children:
           </div>
         )}
       </div>
-      <ul ref={ref} className="flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{children}</ul>
+      <ul ref={ref} className="relative flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{children}</ul>
     </div>
   );
 }
