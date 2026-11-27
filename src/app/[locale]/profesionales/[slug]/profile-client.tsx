@@ -1,4 +1,5 @@
 "use client";
+import { useSiteFeatures } from "@/components/site-features";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 import { serviceModalities } from "@/components/professionals/service-modalities";
@@ -325,6 +326,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Owner 2026-11-26: the professional profile stays exactly as in production, also with the directory on.
   // The redesign branches below are kept but off; switch this back to the directory flag to bring them back.
   const directoryOn = false as boolean;
+  const directorioEncendido = useSiteFeatures().directorySections.length > 0;
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(() => appNativa && searchParams.get("preview") !== "1");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
@@ -1473,7 +1475,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         reviews={professional.reviews}
                         isAuthenticated={isAuthenticated}
                         onReviewSubmitted={reloadProfessional}
-                        variant={directoryOn ? "directory" : "classic"}
+                        // Owner 2026-11-26: the reviews keep the summary with the rating bars while the directory is on.
+                        variant={directorioEncendido ? "directory" : "classic"}
                       />
                     </div>
                   )}</div>}
