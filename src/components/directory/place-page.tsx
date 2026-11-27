@@ -280,7 +280,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const contactBar=published&&barActions.length>0&&<AccionesAlPie className="lg:hidden max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-sm:shadow-[0_-8px_24px_rgba(22,37,67,0.08)] sm:mt-4">
   <div className="flex w-full gap-2" data-place-contact-buttons={barActions.map(x=>x.id).join(' ')}>
    {barActions.map((x,i)=><ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={x===wa?BAR_WA:i===0?BAR_PRIMARY:BAR_SECONDARY}>
-    {x===wa?<WhatsAppLogo className="h-5 w-5 shrink-0"/>:actionIcon(x.id,'h-5 w-5 shrink-0')}<span className="truncate">{barLabel(x)}</span></ActionButton>)}
+    {x===wa?<WhatsAppLogo className="h-5 w-5 shrink-0"/>:actionIcon(x.id,'h-5 w-5 shrink-0')}<span>{barLabel(x)}</span></ActionButton>)}
   </div>
  </AccionesAlPie>;
  // Phones: without Reservar/Pedir the chip row is empty (its tools live in the bar's «…»), so it is not drawn. The website

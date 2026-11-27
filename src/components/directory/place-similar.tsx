@@ -35,11 +35,11 @@ export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:
         :<span aria-hidden="true" className={`grid h-full w-full place-items-center ${shade}`}><span className="text-[44px] font-extrabold leading-none text-white/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.2)]">{[...item.name.trim()][0]?.toUpperCase()}</span></span>}
       </span>
       <span className="flex flex-col gap-1 p-3.5">
-       <span className="line-clamp-2 text-[15px] font-bold leading-snug text-[#111827] group-hover:text-[#0083b0]">{item.name}</span>
+       <span className="text-[15px] font-bold leading-snug text-[#111827] group-hover:text-[#0083b0]">{item.name}</span>
        {rated&&<span className="flex items-center gap-1 text-[12.5px]" aria-label={en?`${ratingNumber(item.rating.average!)} out of 5, ${reviewsLabel(item.rating.count,en)}`:`${ratingNumber(item.rating.average!)} de 5, ${reviewsLabel(item.rating.count,en)}`}>
         <Star aria-hidden="true" className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]"/><span className="font-bold text-[#162543]">{ratingNumber(item.rating.average!)}</span><span className="text-[#68778d]">{reviewsLabel(item.rating.count,en)}</span></span>}
-       {kind&&<span className="truncate text-[12.5px] font-semibold text-[#6b7280]">{kind}</span>}
-       {(area||distance)&&<span className="flex min-w-0 items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></span>}
+       {kind&&<span className="text-[12.5px] font-semibold text-[#6b7280]">{kind}</span>}
+       {(area||distance)&&<span className="flex min-w-0 items-center gap-1 text-[12.5px] text-[#68778d]"><MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0"/><span>{area}{area&&distance?' · ':''}{distance}</span></span>}
       </span>
      </a>
     </li>;})}
