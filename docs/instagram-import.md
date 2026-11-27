@@ -30,7 +30,7 @@ Estado (2026-11-27): hecho y probado de punta a punta **solo con el simulador lo
 | Rutas | `src/app/api/integrations/instagram/{connect,callback,connection,media,media/[id],import}` |
 | Hoja de importación | `src/components/integrations/instagram-import.tsx` |
 | Migración | `supabase/migrations/542_instagram_import.sql` (aplicada solo en local) |
-| Pruebas | `node --test scripts/integrations/instagram.test.mjs`, `tests/e2e/instagram-import.spec.ts` |
+| Pruebas | `node --test scripts/integrations/instagram.test.mjs`, `tests/e2e/pro-instagram-import.spec.ts` |
 
 **Banderas.**
 
@@ -68,3 +68,5 @@ Estado (2026-11-27): hecho y probado de punta a punta **solo con el simulador lo
 - **Carruseles.** De un carrusel se importa solo la portada (`media_url`). Las demás fotos del carrusel no se ofrecen.
 - **Variantes del navegador.** Las variantes que hace el navegador se validan tal como llegan. Igual que en las subidas normales, no se compara su contenido con la foto original de Instagram (ver `docs/storage-plan.md`).
 - **Cantidad de fotos.** Se listan las 50 publicaciones más recientes, sin paginar.
+- **Costo de la cuadrícula con Meta.** Cada miniatura pasa por `/api/integrations/instagram/media/<id>`, que vuelve a leer la lista (`me/media`) y descarga la foto completa. Con una cuenta real, abrir la cuadrícula puede hacer hasta unas 50 llamadas a la API y 50 descargas a través del Worker. Antes de activarlo conviene guardar la lista unos minutos o usar miniaturas más pequeñas.
+- **Tope de 10 fotos.** Lo aplica la pantalla. El servidor importa una foto por pedido, con un límite de 40 pedidos cada 10 minutos por cuenta, y en negocios se suma el tope de 20 fotos por persona al día.

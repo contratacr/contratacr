@@ -146,10 +146,11 @@ test('instagram import (sandbox): professional adds photos to a success case (up
   await dialog.locator('input[maxlength="80"]').fill('Remodelación de cocina '+tag);
   await dialog.getByRole('button',{name:/^Guardar$/i}).click();
   await expect(dialog).toBeHidden();
-  const pro=(await db.from('professionals').select('id,portfolio_items').eq('profile_id',f.owner.id).single()).data!;
   const log=(await db.from('instagram_media_imports').select('media_id,result_ref,target_kind').eq('user_id',f.owner.id).order('media_id')).data!;
   expect(log.map(r=>[r.media_id,r.target_kind])).toEqual([['sbx_1002','portfolio'],['sbx_1006','portfolio']]);
-  expect(JSON.stringify(pro.portfolio_items)).toContain(log[0]!.result_ref);
+  // The case saves itself right after the dialog closes (auto-save).
+  await expect.poll(async()=>JSON.stringify((await db.from('professionals').select('portfolio_items').eq('profile_id',f.owner.id).single()).data!.portfolio_items),{timeout:30000})
+   .toContain(log[0]!.result_ref);
   // Saved now → the server reports them as imported, and a repeat import is skipped.
   const list=await page.request.get('/api/integrations/instagram/media?target=portfolio');
   const items=(await list.json()).items as {id:string;imported:boolean}[];

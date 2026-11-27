@@ -25398,7 +25398,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 341,
+          "line": 343,
           "tag": "a",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "",
@@ -25406,7 +25406,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 347,
+          "line": 349,
           "tag": "form",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{e=>e.preventDefault()}",
@@ -25414,7 +25414,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 349,
+          "line": 351,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>act('approve')}",
@@ -25422,7 +25422,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 350,
+          "line": 352,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>act('reject')}",
@@ -25430,7 +25430,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 351,
+          "line": 353,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>act('remove')}",
@@ -25438,7 +25438,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 352,
+          "line": 354,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>act('dismiss')}",
@@ -25446,7 +25446,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 353,
+          "line": 355,
           "tag": "button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>act('restore')}",
@@ -87226,19 +87226,6 @@
       ]
     },
     {
-      "file": "tests/e2e/instagram-import.spec.ts",
-      "cases": [
-        {
-          "line": 51,
-          "title": "'instagram import (sandbox): place owner connects, imports 3, repeat skipped, disconnect'"
-        },
-        {
-          "line": 116,
-          "title": "'instagram import (sandbox): professional adds photos to a success case (up to its free slots)'"
-        }
-      ]
-    },
-    {
       "file": "tests/e2e/interaction-surfaces.spec.ts",
       "cases": [
         {
@@ -90432,6 +90419,19 @@
         {
           "line": 15,
           "title": "`Marketing insights pages [${language}]`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-instagram-import.spec.ts",
+      "cases": [
+        {
+          "line": 51,
+          "title": "'instagram import (sandbox): place owner connects, imports 3, repeat skipped, disconnect'"
+        },
+        {
+          "line": 116,
+          "title": "'instagram import (sandbox): professional adds photos to a success case (up to its free slots)'"
         }
       ]
     },
