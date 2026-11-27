@@ -1,5 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
+import {useDesvanecidoDeCarril} from '@/hooks/use-desvanecido-de-carril';
+import {FlechasDeCarril} from '@/components/ui/flechas-de-carril';
 
 /**
  * Tab bar and panels of a place page. Same look as the tab bar of the professional profile (profile-client.tsx): a
@@ -10,8 +12,10 @@ import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
  */
 export type PlaceTab={id:string;label:string;anchors?:string[];content:ReactNode};
 
-export function PlaceTabs({tabs,label,defaultTab,compact}:{tabs:PlaceTab[];label:string;defaultTab?:string;
- /** Compact title (name + rating) shown in the sticky bar once the hero ([data-place-hero]) has scrolled away. Decorative: aria-hidden. */compact?:ReactNode}){
+export function PlaceTabs({tabs,label,defaultTab,compact,variant='bar'}:{tabs:PlaceTab[];label:string;defaultTab?:string;
+ /** Compact title (name + rating) shown in the sticky bar once the hero ([data-place-hero]) has scrolled away. Decorative: aria-hidden. */compact?:ReactNode;
+ /** «card»: the classic professional profile tab card (profile-client.tsx with the directory off, production) — bordered
+  *  card, tabs text-sm semibold in #6b7280, the active one #009FD9 with a 2 px underline, panels padded inside the card. */variant?:'bar'|'card'}){
  const first=defaultTab&&tabs.some(t=>t.id===defaultTab)?defaultTab:tabs[0]?.id??'';
  const [active,setActive]=useState(first);
  const [past,setPast]=useState(false);
@@ -21,6 +25,7 @@ export function PlaceTabs({tabs,label,defaultTab,compact}:{tabs:PlaceTab[];label
   io.observe(hero);return()=>io.disconnect();
  },[compact]);
  const rail=useRef<HTMLDivElement>(null);
+ const {mascara}=useDesvanecidoDeCarril(rail);
  // The tab list is recreated on every render of the page; the listeners read it through a ref and are bound once.
  const tabsRef=useRef(tabs);
  useEffect(()=>{tabsRef.current=tabs;});
@@ -52,6 +57,23 @@ export function PlaceTabs({tabs,label,defaultTab,compact}:{tabs:PlaceTab[];label
   requestAnimationFrame(()=>document.getElementById(`place-tab-${next.id}`)?.focus());
  };
  if(!tabs.length)return null;
+ if(variant==='card')return <div data-place-tabs className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+  <div data-profile-tabs="" className="group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
+   <FlechasDeCarril carril={rail}/>
+   <div role="tablist" aria-label={label} ref={rail} style={mascara?{maskImage:mascara,WebkitMaskImage:mascara}:undefined} data-ccr-degradado={mascara?'':undefined} className="ccr-carril scrollbar-none flex overflow-x-auto scroll-smooth">
+    {tabs.map((tab,i)=><button key={tab.id} id={`place-tab-${tab.id}`} type="button" role="tab" data-place-tab={tab.id} aria-selected={active===tab.id}
+     aria-controls={`place-panel-${tab.id}`} tabIndex={active===tab.id?0:-1} onClick={()=>setActive(tab.id)} onKeyDown={e=>onKey(e,i)}
+     className="relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#009FD9]"
+     style={{color:active===tab.id?'#009FD9':'#6b7280'}}>
+     {tab.label}{active===tab.id&&<span aria-hidden="true" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[#009FD9]"/>}
+    </button>)}
+   </div>
+  </div>
+  <div className="p-6">
+   {tabs.map(tab=><div key={tab.id} id={`place-panel-${tab.id}`} role="tabpanel" aria-labelledby={`place-tab-${tab.id}`} hidden={active!==tab.id}
+    data-place-panel={tab.id} className="space-y-8">{tab.content}</div>)}
+  </div>
+ </div>;
  // 2026-11-26 redesign: no card around the tabs; a full-bleed sticky bar (phones and computers) with a brand underline,
  // and the panels sit on the page. Once the hero has scrolled away the bar also shows the place's name and rating.
  return <div data-place-tabs>

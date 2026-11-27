@@ -35,7 +35,8 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.locator('[data-place-open-status]')).toHaveCount(1);
   // 2026-11-26 (owner: card-like header): no tile without photos; ONE chip row (Llamar…, Guardar, Compartir) replaces the
  // phones' fixed bar; the side card keeps «Llamar» from lg and the claim link (after the tabs on phones).
- await expect(page.locator('[data-place-header] [data-hero-tile]')).toHaveCount(0);
+ // 2026-11-26 (identity card like the professional profile): without photos the round avatar is the section tile.
+ await expect(page.locator('[data-place-header] [data-place-avatar="section"]')).toHaveCount(1);
  // Phones: Guardar/Compartir/Agregar fotos live in the bar's «…» sheet (owner 2026-11-26); inline from lg.
  if(!info.project.name.includes('mobile'))await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
  await expect(page.locator('[data-place-actions-bar] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');

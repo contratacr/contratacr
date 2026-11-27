@@ -67,8 +67,8 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  const mobile=isMobileProject(info);
  const chips=page.locator('[data-place-actions-bar]');
  await expect(page.locator('[data-place-page]')).toBeVisible();
- // 2026-11-26 (owner): only real photos above the name — no section tile, no empty circle, no placeholder.
- await expect(page.locator('[data-place-header] [data-hero-tile]')).toHaveCount(0);
+ // 2026-11-26 (owner, identity card like the professional profile): one round avatar — the first photo, else the section tile; no placeholder.
+ await expect(page.locator('[data-place-header] [data-place-avatar]')).toHaveCount(1);
  await expect(page.locator('[data-place-photo-placeholder]')).toHaveCount(0);
  // One chip row like the result card (Reseñar always; Guardar/Compartir at the end); no fixed bottom bar.
  await expect(chips).toBeVisible();
@@ -108,9 +108,10 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
  if(!(await link.count())){test.skip(true,'sin lugares');return;}
  await gotoOK(page,(await link.getAttribute('href'))!);
  const en=locale==='en';
- // Pestañas: Información, Reseñas y Más siempre; sin desbordar.
- for(const id of ['info','reviews','more'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
- await expect(page.locator('[data-place-tab="more"]')).toHaveText(en?'More':'Más');
+ // Pestañas: Reseñas e Información siempre («Más» se unió a Información, 2026-11-26); sin desbordar.
+ for(const id of ['info','reviews'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
+ await expect(page.locator('[data-place-tab="info"]')).toHaveText(en?'Information':'Información');
+ await expect(page.locator('[data-place-tab="more"]')).toHaveCount(0);
  // «¿Ya visitó este lugar?» (owner 2026-11-26, like the professional profile): five stars; a tap opens the form with that rating.
  const reviewsTab=page.locator('[data-place-tab="reviews"]');
  await expect(async()=>{await reviewsTab.click({timeout:2000});await expect(reviewsTab).toHaveAttribute('aria-selected','true',{timeout:1000});}).toPass({timeout:30000});
