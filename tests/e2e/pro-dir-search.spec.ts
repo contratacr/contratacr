@@ -44,9 +44,11 @@ for(const language of ['es','en'] as const)test(`F6: section pages, filters and 
  await gotoOK(page,`${prefix}/farmacias?q=${encodeURIComponent('E2E farmacia sin permiso '+tag)}`);
  const unlicensed=page.locator(`[data-search-item="p:e2e-farmacia-sin-permiso-${tag}"]`);
  await expect(unlicensed).toBeVisible();
- await expect(unlicensed.locator('[data-pharmacy-license="unverified"]')).toHaveText(en?'License not verified by ContrataCR':'Permiso sin verificar por ContrataCR');
+ // Owner decision 2026-11-27: no permit chip on result cards; the permit lives only on the place page (Información).
+ await expect(unlicensed.locator('[data-pharmacy-license]')).toHaveCount(0);
  await gotoOK(page,`${prefix}/farmacias?q=${encodeURIComponent(names.farmacias!)}&province=Heredia`);
- await expect(page.locator(`[data-search-item="p:e2e-farmacias-${tag}"] [data-pharmacy-license="verified"]`)).toHaveText(en?'Operating license verified':'Permiso de funcionamiento verificado');
+ await expect(page.locator(`[data-search-item="p:e2e-farmacias-${tag}"]`)).toBeVisible();
+ await expect(page.locator(`[data-search-item="p:e2e-farmacias-${tag}"] [data-pharmacy-license]`)).toHaveCount(0);
  // Filters are a plain GET form: choosing another province empties the result.
  if(phone)await gotoOK(page,`${prefix}/restaurantes?q=${encodeURIComponent(names.restaurantes!)}&province=${encodeURIComponent('Limón')}`);
  else{

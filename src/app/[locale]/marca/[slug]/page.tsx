@@ -66,7 +66,7 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
     <div className="flex min-w-0 items-center gap-3 sm:gap-5">
      <span className={cn(BIZ.avatar,'relative grid shrink-0 place-items-center overflow-hidden rounded-full')}><HeroTile verticalId={firstVertical} className="h-full w-full" iconClass="h-8 w-8 sm:h-10 sm:w-10"/></span>
      <div className="min-w-0 flex-1">
-      <ProfileIdentityName testId="brand-name" name={b.name} badge={b.claimed?<VerifiedSeal className="h-4 w-4" label={t('Información administrada por la marca','Information managed by the brand')}/>:null}/>
+      <ProfileIdentityName testId="brand-name" name={b.name} badge={b.claimed?<VerifiedSeal className="h-4 w-4 text-[#009FD9]" label={t('Información administrada por la marca','Information managed by the brand')}/>:null}/>
       <div className="mt-1.5 sm:mt-2"><RatingLine average={b.rating.average} count={b.rating.count} en={en}/></div>
       {b.rating.count>0&&b.rating.average!=null&&<p data-brand-rating className="mt-1 text-[12.5px] text-[#68778d]">{t('Promedio de las reseñas de sus sucursales','Average of the reviews of its branches')}</p>}
       <ul className="mt-2 flex flex-wrap items-center gap-1.5">

@@ -1,7 +1,7 @@
 import {VERIFICATION_LABELS,type VerificationLevel} from '@/lib/directory/types';
 import type {PlaceSearchItem,PlaceSearchPrice,RankingReason} from '@/lib/directory/search-schemas';
 import {crDay,money,sourceLine} from '@/lib/directory/price-compare';
-import {isHealthVertical,kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
+import {kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
 import {CalendarCheck,Globe,MapPin,Navigation,Phone,Star} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {openStatus,openStatusText} from '@/lib/directory/open-status';
@@ -11,6 +11,7 @@ import {GoogleMapsIcon,WazeIcon} from '@/components/ui/nav-app-icons';
 import {CardDirections} from './card-directions';
 import {resolvePlaceAction} from '@/lib/directory/place-actions';
 import {PlaceSaveBookmark} from './place-save-bookmark';
+import {SectionIcon} from '@/lib/visuals/section-icon';
 import {VerifiedSeal} from '@/components/ui/verified-seal';
 import {RatingLine} from './biz-ui';
 import {RESULT_CARD,ResultPhotoStrip,resultChip} from '@/components/search/result-card-parts';
@@ -50,26 +51,6 @@ export function formatDistance(km:number|null,en:boolean){
  if(km==null)return null;
  const n=new Intl.NumberFormat(en?'en-US':'es-CR',{maximumFractionDigits:km<10?1:0}).format(km);
  return en?`${n} km away`:`a ${n} km`;
-}
-
-/**
- * Permit status of a pharmacy (owner decision 2026-11-17: every pharmacy is shown). Verified → badge; otherwise a
- * neutral note, never an alarm: ContrataCR simply has not checked the permit yet.
- */
-export function pharmacyLicence(level:string,en:boolean){
- return level==='license_verified'
-  ?{state:'verified' as const,text:en?'Operating license verified':'Permiso de funcionamiento verificado'}
-  :{state:'unverified' as const,text:en?'License not verified by ContrataCR':'Permiso sin verificar por ContrataCR'};
-}
-
-/**
- * Permit line of a health or vet place (2026-11-17 sections; same pattern as pharmacies, requires_license=false):
- * verified → badge; otherwise the neutral «Habilitación sin verificar por ContrataCR», never an alarm.
- */
-export function healthPermit(level:string,en:boolean){
- return level==='license_verified'
-  ?{state:'verified' as const,text:en?'Health permit verified by ContrataCR':'Habilitación verificada por ContrataCR'}
-  :{state:'unverified' as const,text:en?'Permit not verified by ContrataCR':'Habilitación sin verificar por ContrataCR'};
 }
 
 /** Price line of a card: amount + what it is + source and date (Ley 7472: source and date always visible). */
@@ -113,13 +94,12 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const distance=formatDistance(item.distanceKm,en);
  const level=item.verificationLevel as VerificationLevel;
  const brand=typeof item.attributes.brand==='string'?item.attributes.brand:typeof item.attributes.chain==='string'?item.attributes.chain:null;
- const kind=kindLabel(item.vertical.id,item.attributes.kind,en),health=isHealthVertical(item.vertical.id);
+ const kind=kindLabel(item.vertical.id,item.attributes.kind,en);
  const verified=VERIFIED.has(level);
  // Owner tools (reservations, WhatsApp order link) only count on claimed places, like the place page.
  const claimed=level==='claimed'||verified;
  const actionInput={slug:item.slug,name:item.name,verticalId:item.vertical.id,locale,phone:item.phone,location:item.location};
  const priceLevel=placePriceLevel(item.attributes);
- const permit=item.vertical.id==='pharmacy'?{...pharmacyLicence(item.verificationLevel,en),attr:'data-pharmacy-license'}:health?{...healthPermit(item.verificationLevel,en),attr:'data-health-permit'}:null;
  // No reviews at all for public offices, malls, schools and terminals (owner 2026-11-26): no rating, no «Reseñar».
  const reviews=reviewsOn(item.vertical.id,item.attributes.kind);
  const rated=reviews&&item.rating.count>0&&item.rating.average!=null;
@@ -146,16 +126,23 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
  const second=byId('reserve')??(maps?{id:'directions',label:t('Cómo llegar','Directions'),href:maps.google,icon:<Navigation className="h-4 w-4 shrink-0" aria-hidden="true"/>,external:true}:undefined);
  const cardButtons=[contact,second].filter((x):x is NonNullable<typeof x>=>!!x);
  const photos=(extra?.photos??[]).slice(0,4).map(u=>placePhotoSrc(u,320));
+ const noPhoto=photos.length===0&&!extra?.streetView;
  return <article data-search-item={item.key} data-ranking-reasons={item.ranking_reason.join(' ')}
   className={`${RESULT_CARD} relative flex flex-col gap-1 text-[#162543]`}>
   {/* Save, top right (out of the name row so it adds no height). */}
   <PlaceSaveBookmark slug={item.slug} name={item.name} locale={locale} className="!absolute right-2 top-2"/>
+  {/* No photo of its own (owner 2026-11-27): the improved icon of its section beside the name, same size on every card. */}
+  <div className={noPhoto?'flex min-w-0 items-start gap-3':'contents'}>
+   {noPhoto&&<SectionIcon vertical={item.vertical.id} size="lg" className="mt-0.5"/>}
+   <div className={noPhoto?'min-w-0 flex-1 space-y-1':'contents'}>
   <H className="min-w-0 pr-9 text-[15px] font-bold leading-[1.2] text-[#111827]">
    <a className="relative z-10 break-words transition-colors hover:text-[#009FD9] focus-visible:underline" href={href}>{rank!=null?`${rank}. `:''}{item.name}</a>
-   {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
+   {verified&&<VerifiedSeal className="ml-1 inline h-4 w-4 -translate-y-px align-middle text-[#009FD9]" label={VERIFICATION_LABELS[level][en?'en':'es']}/>}
    {priceLevel&&<span className="ml-1.5 text-[13px] font-bold text-[#009FD9]" aria-label={t(`Nivel de precio ${priceLevel.length} de 4`,`Price level ${priceLevel.length} of 4`)}>{priceLevel}</span>}
   </H>
   <p className="truncate text-[12.5px] font-semibold leading-snug text-[#6b7280]" data-place-tags>{tags.map((x,i)=>i===1&&kind?<span key={x} data-place-kind={String(item.attributes.kind)}>{i?' · ':''}{x}</span>:<span key={x}>{i?' · ':''}{x}</span>)}</p>
+   </div>
+  </div>
   {/* Photos the owner or the reviewers added go right under the name (owner 2026-11-26). */}
   {photos.length>0&&<ResultPhotoStrip className="mt-1" photos={photos}/>}
   {/* No photo of its own: the Mapillary «Vista de la calle», labelled and credited (never as the business's photo). */}
@@ -164,8 +151,8 @@ export function PlaceCard({item,locale,headingLevel=3,rank,extra}:{item:PlaceSea
   {statusText&&<PlaceStatusLine status={statusText} className="text-[12.5px]"/>}
   {(area||distance)&&<p className="flex min-w-0 items-center gap-1 text-[12.5px] font-medium text-[#68778d]"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true"/>
    <span className="truncate">{area}{area&&distance?' · ':''}{distance}</span></p>}
-  {(permit||item.attributes.publicService===true||level==='claimed')&&<ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
-   {permit&&<li {...{[permit.attr]:permit.state}} className={`${resultChip(permit.state==='verified'?'ok':'neutral')}`}>{permit.text}</li>}
+  {/* No permit chip on result cards (owner 2026-11-27): the pharmacy licence and health permit live only on the place page, in Información. */}
+  {(item.attributes.publicService===true||level==='claimed')&&<ul className="mt-0.5 flex flex-wrap items-center gap-1.5" aria-label={t('Datos del lugar','Place details')}>
    {item.attributes.publicService===true&&<li className={`${resultChip('neutral')}`} data-public-service>{t('Servicio público','Public service')}</li>}
    {level==='claimed'&&<li className={`${resultChip('brand')}`} data-place-claimed>{VERIFICATION_LABELS.claimed[en?'en':'es']}</li>}
   </ul>}

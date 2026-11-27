@@ -120,7 +120,9 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  }else{
  await gotoOK(page,`${prefix}/salud?q=${encodeURIComponent(`E2E Clínica ${tag}`)}`);
  const card=page.locator(`[data-search-item="p:e2e-clinica-${tag}"]`);
- await expect(card.locator('[data-health-permit="unverified"]')).toHaveText(en?'Permit not verified by ContrataCR':'Habilitación sin verificar por ContrataCR');
+ // Owner decision 2026-11-27: no permit chip on result cards; the permit lives only on the place page (Información).
+ await expect(card).toBeVisible();
+ await expect(card.locator('[data-health-permit]')).toHaveCount(0);
  await expect(card.locator('[data-public-service]')).toBeVisible();
  await expect(page.locator('[data-places-home="salud"]')).not.toContainText(en?'medical or veterinary advice':'no da consejo médico');
  await gotoOK(page,`${prefix}/negocios/e2e-clinica-${tag}`);

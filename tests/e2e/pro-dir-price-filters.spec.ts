@@ -29,7 +29,7 @@ async function applyPriceMax(page:import('playwright/test').Page,max:string,subm
 //   without a published menu stay listed (last) unless a range is set.
 // - /supermercados and /farmacias: a product (text) + ₡ range + price sorts on that product's current price, with source
 //   and date on each card; without a product the range is hidden behind a hint and refused in the URL.
-// - every pharmacy is listed: «Permiso sin verificar por ContrataCR» (neutral) or «Permiso de funcionamiento verificado».
+// - every pharmacy is listed; since 2026-11-27 (owner) the permit shows only on the place page, never as a card chip.
 // - /gasolineras: no price filter and no price sort (national ARESEP price).
 // Synthetic data only; places are hidden after each test (hideSeededPlaces) and price items retired (seed.cleanup).
 test.afterEach(()=>hideSeededPlaces());
@@ -115,8 +115,9 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
   await gotoOK(page,`${prefix}/farmacias?product=${seed.otc}&sort=price_asc`);
   expect((await keys(page)).slice(0,2)).toEqual([`p:${seed.places.sinPermiso}`,`p:${seed.places.farmacia}`]);
   const sin=page.locator(`[data-search-item="p:${seed.places.sinPermiso}"]`),con=page.locator(`[data-search-item="p:${seed.places.farmacia}"]`);
-  await expect(sin.locator('[data-pharmacy-license="unverified"]')).toHaveText(t('Permiso sin verificar por ContrataCR','License not verified by ContrataCR'));
-  await expect(con.locator('[data-pharmacy-license="verified"]')).toHaveText(t('Permiso de funcionamiento verificado','Operating license verified'));
+  // Owner decision 2026-11-27: no permit chip on result cards; the permit lives only on the place page (Información).
+  await expect(sin.locator('[data-pharmacy-license]')).toHaveCount(0);
+  await expect(con.locator('[data-pharmacy-license]')).toHaveCount(0);
   await expect(sin.locator('[data-place-price="product"]')).toHaveAttribute('data-price-amount','700');
   await expect(con.locator('[data-place-price="product"]')).toHaveAttribute('data-price-amount','850');
   await gotoOK(page,`${prefix}/farmacias?product=${seed.otc}&priceMin=800`);

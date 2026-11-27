@@ -278,7 +278,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const defaultTab=tabs[0]!.id;
 
  // ── Identity card (the classic professional profile card) ──
- const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex text-[#14b2ec]"><VerifiedSeal className="h-5 w-5 sm:h-6 sm:w-6" label={verification}/></span>:null;
+ const nameBadge=trusted?<span data-place-verification={place.verificationLevel} className="inline-flex text-[#009FD9]"><VerifiedSeal className="h-5 w-5 sm:h-6 sm:w-6" label={verification}/></span>:null;
  const hasPhotos=photos.length>0;
  // Owner 2026-11-27, «cuando hay foto la foto, si no el ícono mejorado»: the first real photo, else the section's improved
  // icon (PlaceSectionAvatar, production style); never a stock photo or street view.

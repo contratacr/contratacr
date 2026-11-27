@@ -38,14 +38,14 @@ export function CardDirections({ id, name, maps, en, className, withMap = true }
                   window.dispatchEvent(new CustomEvent("ccr:set-search-view", { detail: { view: "map" } }));
                   window.dispatchEvent(new CustomEvent("ccr:places-map-focus", { detail: { id } }));
                 }}>
-                  <MapPinned className="h-5 w-5 text-[#0083b0]" aria-hidden />{en ? "See on the map" : "Ver en el mapa"}
+                  <MapPinned className="h-5 w-5 text-[#162543]" aria-hidden />{en ? "See on the map" : "Ver en el mapa"}
                 </button>
               )}
               <a data-directions-app="waze" href={maps.waze} target="_blank" rel="noopener noreferrer" className={row} onClick={() => setOpen(false)}>
-                <WazeIcon className="h-5 w-5" />Waze
+                <WazeIcon className="h-5 w-5 text-[#162543]" />Waze
               </a>
               <a data-directions-app="google" href={maps.google} target="_blank" rel="noopener noreferrer" className={row} onClick={() => setOpen(false)}>
-                <GoogleMapsIcon className="h-5 w-5" />Google Maps
+                <GoogleMapsIcon className="h-5 w-5 text-[#162543]" />Google Maps
               </a>
             </div>
           </div>

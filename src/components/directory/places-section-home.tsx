@@ -16,7 +16,7 @@ import {InfiniteMore} from '@/components/search/infinite-more';
 import {morePlaces} from '@/app/actions/more-places';
 import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
-import {AMBIGUOUS_SECTIONS,DIRECTORY_SECTION_LABELS} from '@/lib/search/directory-search';
+import {DIRECTORY_SECTION_LABELS} from '@/lib/search/directory-search';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
 
 /**
@@ -133,16 +133,13 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
     </div>
    </div>
   </div>
-  {/* One experience (owner 2026-11-22): the section is a business filter of the same results; professionals of the same trade are one tap away. */}
-  {AMBIGUOUS_SECTIONS.has(section)&&<nav aria-label={t('Profesionales relacionados','Related professionals')} data-related-professionals="" className="hidden bg-white lg:block"><div className="mx-auto max-w-[1920px] px-4 pb-2 sm:px-6 lg:px-8">
-   <a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex h-8 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae] hover:bg-[#eaf7fd]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></div></nav>}
+  {/* No «Ver también profesionales de este rubro» link (owner 2026-11-27). */}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
     <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&MAP_FIRST_SECTIONS.has(section)} floatingFilters={<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
-      {AMBIGUOUS_SECTIONS.has(section)&&<p className="px-4 pb-1 pt-3 lg:hidden" data-related-professionals-mobile=""><a href={`${en?'/en':''}/profesionales?q=${encodeURIComponent(DIRECTORY_SECTION_LABELS[section]?.[en?'en':'es']??'')}`} className="inline-flex min-h-9 items-center rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#007fae]">{t('Ver también profesionales de este rubro','Also see professionals in this field')}</a></p>}
       {banner&&<div className="-mx-4 border-b border-[#eef2f6] px-4 py-3 lg:mx-0 lg:border-0 lg:p-0">{banner}</div>}
       {page.ok&&page.result.priceProduct&&<p className="py-2 text-[13px] text-[#526277] lg:py-0" data-price-product={page.result.priceProduct.slug}>{t('Precios de: ','Prices for: ')}
        <strong className="text-[#162543]">{page.result.priceProduct.name}{page.result.priceProduct.presentation?` (${page.result.priceProduct.presentation})`:''}</strong>{' · '}

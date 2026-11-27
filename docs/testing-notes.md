@@ -120,6 +120,11 @@ Dispositivos/límites:
 - [ ] Fila de acciones se desliza de lado sin pelear con el scroll de la lista; icono de Waze redondo.
 - [ ] Sin pantalla de fotos si no hay foto: la tarjeta no usa avatar inventado; sin foto el número de posición va grande.
 - [ ] Sin paginación manual; al cambiar filtros vuelve arriba.
+- [ ] Tarjetas de resultado sin foto propia (2026-11-27): ícono mejorado de su sección a la izquierda del nombre, mismo tamaño en todas; con foto, la foto. Los negocios similares de la ficha siguen como tarjetas de texto.
+- [ ] Tarjetas de resultado sin chip de permiso (2026-11-27): «Permiso de funcionamiento verificado» / «Permiso sin verificar» / «Habilitación…» solo en la ficha del negocio (Información).
+- [ ] Sin enlace «Ver también profesionales de este rubro» en ninguna sección (2026-11-27).
+- [ ] El sello de verificado es del mismo azul #009FD9 en tarjetas, ficha del negocio, marca y perfil profesional (2026-11-27).
+- [ ] Hoja «Cómo llegar»: los tres íconos (Ver en el mapa, Waze, Google Maps) en azul marino, mismo tamaño (2026-11-27).
 
 Quitado:
 - [ ] Sin insignia de rango, sin cita de reseña en la tarjeta, sin chip "24 horas", sin botón de lista en pantallas solo-mapa.
