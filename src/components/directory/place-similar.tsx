@@ -1,4 +1,5 @@
-import {MapPin,Star} from 'lucide-react';
+import {ArrowRight,MapPin,Star} from 'lucide-react';
+import {ScrollRow} from '@/components/landing/scroll-row';
 import type {PlaceSearchItem} from '@/lib/directory/search-schemas';
 import {kindLabel,reviewsOn} from '@/lib/directory/place-verticals';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
@@ -7,7 +8,8 @@ import {ratingNumber,reviewsLabel} from './biz-ui';
 
 /**
  * «Lugares similares cerca» (2026-11-26 redesign, Yelp «People also viewed» model): other published places of the same
- * section, nearest first (dir_search, sort=distance). Phones: a sideways rail of cards; from sm a grid. Each card is one
+ * section, nearest first (dir_search, sort=distance). A sideways rail with arrows on the title row (owner 2026-11-27, like
+ * «Mejor calificados»), ending in a «Ver más» card. Each card is one
  * link with the first approved photo (or the section photo, dimmed) and only real data: rating, kind, area, distance.
  * Own hooks (data-similar-*) so page-wide place hooks keep counting only the place itself.
  */
@@ -17,19 +19,15 @@ export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  if(!places.length)return null;
  void sectionPath;
- return <section aria-labelledby="place-similar" data-similar-places={places.length} className="space-y-4">
-  <div className="flex items-end justify-between gap-3">
-   <h2 id="place-similar" className="text-xl font-extrabold tracking-tight text-[#162543] sm:text-2xl">{title}</h2>
-   {moreHref&&<a href={moreHref} className="shrink-0 text-[13.5px] font-bold text-[#0083b0] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">{t('Ver más','See more')}</a>}
-  </div>
-  <ul className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+ return <section aria-labelledby="place-similar" data-similar-places={places.length} className="-mx-4 sm:-mx-4">
+  <ScrollRow title={<h2 id="place-similar" className="pr-24 text-xl font-extrabold tracking-tight text-[#162543] sm:text-2xl">{title}</h2>} prevLabel={t('Anteriores','Previous')} nextLabel={t('Siguientes','Next')}>
    {places.map(({item,photo})=>{
     const kind=kindLabel(item.vertical.id,item.attributes.kind,en);
     const area=item.address.adminArea2??item.address.adminArea1??null,distance=formatDistance(item.distanceKm,en);
     const rated=reviewsOn(item.vertical.id,item.attributes.kind)&&item.rating.count>0&&item.rating.average!=null;
     // No photo: a brand gradient (one of three, by name) with the initial — never a stock photo repeated on every card.
     const shade=SHADES[[...item.name].reduce((a,c)=>a+c.charCodeAt(0),0)%SHADES.length]!;
-    return <li key={item.slug} className="w-[72%] max-w-[260px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+    return <li key={item.slug} className="w-[72%] max-w-[260px] shrink-0 snap-start">
      <a href={`${en?'/en':''}/lugar/${item.slug}`} data-similar-place={item.slug} className="group block h-full overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
       <span className="relative block aspect-[16/10] overflow-hidden bg-[#dfe8ef]">
        {/* eslint-disable-next-line @next/next/no-img-element -- same-origin photo route */}
@@ -45,6 +43,11 @@ export function PlaceSimilar({places,locale,sectionPath,title,moreHref}:{places:
       </span>
      </a>
     </li>;})}
-  </ul>
+   {moreHref&&<li className="w-[40%] max-w-[160px] shrink-0 snap-start">
+    <a href={moreHref} className="flex h-full min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#c9dbe7] bg-[#f5fafd] p-4 text-center text-[14px] font-bold text-[#0083b0] hover:bg-[#eaf7fd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]">
+     <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-sm"><ArrowRight className="h-5 w-5"/></span>{t('Ver más','See more')}
+    </a>
+   </li>}
+  </ScrollRow>
  </section>;
 }

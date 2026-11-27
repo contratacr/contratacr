@@ -1,6 +1,7 @@
 import {createElement,type ReactNode} from 'react';
 import {cn} from '@/lib/utils';
 import {RecordRecentVisit} from '@/components/mobile/record-recent-visit';
+import {AccionesAlPie} from '@/components/ui/acciones-al-pie';
 import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,ExternalLink,FileText,Fuel,Globe,Phone,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
@@ -111,9 +112,8 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const wa=pick('whatsapp')??waOrder;
  const call=pick('call');
  const go=pick('directions');
- const contactActions=[wa,call,go].filter((x):x is PlaceAction=>!!x).slice(0,2);
- // With WhatsApp and Llamar in the two buttons, «Cómo llegar» moves to the extras row (it never disappears on phones).
- const goChip=go&&!contactActions.includes(go)?go:null;
+ // Waze and Maps chips stay in the header row; the bottom bar has the one-tap «Cómo llegar».
+ const goChip=go;
  const orderAction=order&&order.channel!=='whatsapp'?pick('order'):null;
  const site=pick('website');
  // Short description from typed data only (never invented): «<kind> en <zona>. Cocina: …».
@@ -255,10 +255,16 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   ?<a href="#fotos" data-place-avatar="photo" aria-label={t(`Ver las fotos de ${place.name}`,`See photos of ${place.name}`)} className={cn(avatarClass,ring,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>{avatarInner}</a>
   :<span data-place-avatar="section" className={cn(avatarClass,'sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1')}>{avatarInner}</span>;
  const kindLine=[kind??vertical,place.address.adminArea2??place.address.adminArea1??null].filter(Boolean);
- const contactButtons=contactActions.length>0&&<div className={`grid gap-2 lg:hidden ${contactActions.length>1?'grid-cols-2':'grid-cols-1'}`} data-place-contact-buttons={contactActions.map(x=>x.id).join(' ')}>
-  {contactActions.map((x,i)=>{const isWa=x===wa;return <ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={isWa?CONTACT_WA:i===0?CONTACT_PRIMARY:CONTACT_SECONDARY}>
-   {isWa?<WhatsAppLogo className="h-5 w-5 shrink-0"/>:actionIcon(x.id,'h-5 w-5 shrink-0')}<span className="truncate">{isWa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.short}</span></ActionButton>;})}
- </div>;
+ // Owner 2026-11-27, «como en prod con los perfiles»: on phones the contact buttons sit in the fixed bar at the bottom
+ // (the same AccionesAlPie strip as the professional profile): WhatsApp, Llamar and Cómo llegar, only those that exist.
+ const barActions=[wa,call,go].filter((x):x is PlaceAction=>!!x);
+ const barLabel=(x:PlaceAction)=>x===wa?'WhatsApp':x.id==='call'?t('Llamar','Call'):x.id==='directions'?t('Cómo llegar','Directions'):x.short;
+ const contactBar=published&&barActions.length>0&&<AccionesAlPie className="lg:hidden max-sm:px-4 max-sm:pt-2.5 max-sm:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] max-sm:shadow-[0_-8px_24px_rgba(22,37,67,0.08)] sm:mt-4">
+  <div className="flex justify-center gap-2 [&>*]:flex-none" data-place-contact-buttons={barActions.map(x=>x.id).join(' ')}>
+   {barActions.map((x,i)=>{const isWa=x===wa;return <ActionButton key={x.id} action={x} slug={place.slug} locale={locale} className={cn(isWa?CONTACT_WA:i===0?CONTACT_PRIMARY:CONTACT_SECONDARY,'h-11 w-auto gap-1 whitespace-nowrap px-2.5 text-[14px] max-[380px]:px-2 max-[380px]:text-[13px]')}>
+    {isWa?<WhatsAppLogo className="h-[18px] w-[18px] shrink-0"/>:actionIcon(x.id,'h-[18px] w-[18px] shrink-0')}<span>{barLabel(x)}</span></ActionButton>;})}
+  </div>
+ </AccionesAlPie>;
  const extras=<PlaceChipRail className={CHIP_ROW} data-place-quick-actions={[reserve?.id,goChip?'waze maps':null,orderAction?.id,site?.id].filter(Boolean).join(' ')}>
   {reserve&&<ActionButton action={reserve} slug={place.slug} locale={locale} className={PAGE_CHIP}><CalendarCheck aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reservar','Reserve')}</ActionButton>}
   {/* «Reseñar» lives only inside Reseñas (owner 2026-11-26), like the professional profile. */}
@@ -318,10 +324,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
       </div>
      </div>
      {published&&<div className="mt-4 flex flex-col gap-3 border-t border-[#eef2f6] pt-4 sm:col-span-2 sm:col-start-1" data-place-actions-bar>
-      {contactButtons}
       {extras}
      </div>}
     </header>
+    {contactBar}
 
     <PlaceTabs variant="card" tabs={tabs} label={t('Secciones de la empresa','Business sections')} defaultTab={defaultTab}/>
    </div>

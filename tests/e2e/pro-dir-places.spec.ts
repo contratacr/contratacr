@@ -40,7 +40,7 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.locator('[data-place-header] [data-place-avatar="section"]')).toHaveCount(1);
  // Phones: Guardar/Compartir/Agregar fotos live in the bar's «…» sheet (owner 2026-11-26); inline from lg.
  if(!info.project.name.includes('mobile'))await expect(page.locator('[data-place-actions-bar] [data-share-button]')).toBeVisible();
- await expect(page.locator('[data-place-actions-bar] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
+ await expect(page.locator('[data-place-contact-buttons] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-contact="call"]')).toHaveAttribute('href','tel:+50622000001');
  await expect(page.locator('[data-place-side-card] [data-place-claim-link]')).toBeVisible();
  await expect(page.locator('[data-place-mobile-bar]')).toHaveCount(0);
