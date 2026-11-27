@@ -155,7 +155,9 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // «Desde» slot of the contact card: the lowest current fuel price per litre of a gas station (price data only, never invented).
  const fuelPrices=vertical==='fuel'&&prices.data&&!prices.error?(prices.data as PublicPriceCurrent).items.filter(i=>i.current&&i.item.unitBase==='l').map(i=>i.current!):[];
  const priceNote=fuelPrices.length?`${en?'From':'Desde'} ${proMoney(Math.min(...fuelPrices.map(o=>o.price)),en)} /${en?'liter':'litro'}`:null;
- const hasOffer=!!(menuData&&menuData.sections.length>0)||!!(prices.data&&!prices.error)||reportPrices||placeListings.length>0;
+ // Owner 2026-11-27: no empty «Menú/Precios» tab — prices count only when at least one item has a price.
+ const hasPrices=!!(prices.data&&!prices.error&&(prices.data as PublicPriceCurrent).items?.some(i=>i.current||i.lastKnown));
+ const hasOffer=!!(menuData&&menuData.sections.length>0)||hasPrices||reportPrices||placeListings.length>0;
  return <DirectoryShell>{/* Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). */}<SectionHeaderTitle title={en?place.vertical.nameEn:place.vertical.nameEs} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
   orderLink={orderLink} brand={placeBrand} priceNote={priceNote} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
@@ -170,7 +172,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
     {menuData&&menuData.sections.length>0&&<section aria-labelledby="place-menu-title" className="space-y-3">
      <h2 id="place-menu-title" className={BIZ.h2}>{en?'Menu':'Menú'}</h2>
      <p><a data-place-menu-link className={BIZ.secondary} href={`${prefix}/lugar/${slug}/menu`}>{en?'See the menu':'Ver el menú'}</a></p></section>}
-    {prices.data&&!prices.error&&<PlacePrices prices={prices.data as PublicPriceCurrent} locale={locale}/>}
+    {hasPrices&&<PlacePrices prices={prices.data as PublicPriceCurrent} locale={locale}/>}
     {reportPrices&&<PlacePriceReport slug={slug} locale={locale} loginHref={loginHref} today={crTodayISO()}/>}
     {placeListings.length>0&&<PlaceListingsSection listings={placeListings} locale={locale} total={listings?.count??undefined}/>}
    </>:null,
