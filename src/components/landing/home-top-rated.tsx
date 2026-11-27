@@ -7,6 +7,7 @@ import { loadTopPlaces } from "@/components/directory/app-home-data";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
+import { CategoryIcon, SectionIcon } from "@/lib/visuals/section-icon";
 
 /**
  * Directory on (owner 2026-11-26): under the hero, instead of the brands strip, the best-rated accounts — professionals and
@@ -20,8 +21,8 @@ export async function HomeTopRated() {
     ...["restaurantes", "cafes", "farmacias", "supermercados", "belleza", "talleres"].map((s) => loadTopPlaces(s)),
   ]);
   const items = [
-    ...pros.filter((p) => p.reviewCount > 0).map((p) => ({ key: `p:${p.id}`, href: `/profesionales/${p.slug}`, name: p.fullName, photo: p.avatarUrl ?? null, avg: p.ratingAvg, count: p.reviewCount, sub: [getCategoryLabel(p.categoryId, locale), p.cantonName || p.provinceName].filter(Boolean).join(" · ") })),
-    ...places.flat().map((p) => ({ key: `l:${p.slug}`, href: `/negocios/${p.slug}`, name: p.name, photo: p.photo, avg: p.average ?? 0, count: p.count, sub: [(DIRECTORY_SECTION_LABELS[p.section] as Record<string, string> | undefined)?.[locale] ?? "", p.area].filter(Boolean).join(" · ") })),
+    ...pros.filter((p) => p.reviewCount > 0).map((p) => ({ key: `p:${p.id}`, href: `/profesionales/${p.slug}`, name: p.fullName, photo: p.avatarUrl ?? null, icon: <CategoryIcon id={p.categoryId} size="xl" />, avg: p.ratingAvg, count: p.reviewCount, sub: [getCategoryLabel(p.categoryId, locale), p.cantonName || p.provinceName].filter(Boolean).join(" · ") })),
+    ...places.flat().map((p) => ({ key: `l:${p.slug}`, href: `/negocios/${p.slug}`, name: p.name, photo: p.photo, icon: <SectionIcon id={p.section} size="xl" />, avg: p.average ?? 0, count: p.count, sub: [(DIRECTORY_SECTION_LABELS[p.section] as Record<string, string> | undefined)?.[locale] ?? "", p.area].filter(Boolean).join(" · ") })),
   ]
     // Rating weighted by how many reviews back it (a 5.0 with one review must not beat a 4.7 with eighty): the average
     // pulled toward 4.0 as if it had five extra reviews; ties go to more reviews.
@@ -35,11 +36,12 @@ export async function HomeTopRated() {
         {items.map((i) => (
           <li key={i.key} className="w-[168px] shrink-0 snap-start sm:w-[190px]">
             <Link href={i.href} prefetch={false} data-home-top-rated-item className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
-              <span className="grid aspect-square w-full place-items-center overflow-hidden bg-[#eef6fa] text-[30px] font-extrabold text-[#0083b0]">
+              {/* Without a photo (owner 2026-11-27): the improved icon of its section or service, never a letter. */}
+              <span className="grid aspect-square w-full place-items-center overflow-hidden bg-[#eef6fa]">
                 {i.photo
                   // eslint-disable-next-line @next/next/no-img-element -- remote photo
                   ? <img src={i.photo} alt="" className="h-full w-full object-cover" loading="lazy" />
-                  : i.name.slice(0, 1)}
+                  : i.icon}
               </span>
               <span className="flex flex-1 flex-col gap-0.5 p-2.5">
                 <span className="text-[14px] font-extrabold leading-snug text-[#162543]">{i.name}</span>

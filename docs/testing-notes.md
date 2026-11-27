@@ -58,6 +58,7 @@ Quitado:
 
 Casos límite:
 - [ ] Sin foto en una tarjeta de profesional o negocio: tarjeta compacta de texto, nunca una letra gigante.
+- [ ] "Mejor calificados" y el feed de la portada sin foto (2026-11-27): un negocio muestra el ícono mejorado de su sección y un profesional el de su servicio (`SectionIcon` / `CategoryIcon`), centrado sobre el fondo celeste; nunca una inicial. Con foto real, igual que antes.
 - [ ] Título largo de diapositiva en 360 px.
 - [ ] Producción (bandera apagada): portada sin cambios.
 

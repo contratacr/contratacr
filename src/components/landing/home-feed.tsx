@@ -6,6 +6,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { loadTopPlaces, type TopPlace, type FeedPlace } from "@/components/directory/app-home-data";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { FeedPhotoCarousel } from "@/components/landing/feed-photo-carousel";
+import { CategoryIcon } from "@/lib/visuals/section-icon";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 /**
@@ -83,13 +84,14 @@ function ProCard({ p, locale }: { p: ProfessionalCardData; locale: string }) {
   const avatar = p.avatarUrl
     // eslint-disable-next-line @next/next/no-img-element -- remote avatar
     ? <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
-    : <span className="grid h-full w-full place-items-center bg-[#eef6fa] text-[40px] font-extrabold text-[#0083b0]">{p.fullName.slice(0, 1)}</span>;
-  // No photo at all (owner 2026-11-26): a compact text card with a small initial, never a giant letter.
+    // Without a profile photo (owner 2026-11-27): the improved icon of the service, never a letter.
+    : <CategoryIcon id={p.categoryId} size="xl" className="h-full w-full" />;
+  // No photo at all (owner 2026-11-26): a compact text card with the service icon, never a giant letter.
   if (!photos.length && !p.avatarUrl) {
     return (
       <article>
         <Link href={`/profesionales/${p.slug}`} prefetch={false} data-home-feed-pro className="flex items-center gap-3.5 rounded-2xl border border-[#e5e9ee] bg-white p-4">
-          <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef6fa] text-[18px] font-extrabold text-[#0083b0]">{p.fullName.slice(0, 1)}</span>
+          <CategoryIcon id={p.categoryId} size="lg" className="h-12 w-12" />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="line-clamp-1 text-[16px] font-extrabold text-[#162543]">{p.fullName}</span>
             <span className="line-clamp-1 text-[13px] font-semibold text-[#526277]">{getCategoryLabel(p.categoryId, locale)}</span>
