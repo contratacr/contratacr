@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, LayoutList, Menu, Map as MapIcon, type LucideIcon } from "lucide-react";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, LayoutList, ArrowLeft, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
 import { DIRECTORY_SECTION_LABELS, unifiedSearchPlaceholder } from "@/lib/search/directory-search";
@@ -216,13 +216,8 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
   const sections = QUICK_NAV_SECTIONS.filter((s) => directorySections.includes(s) && SECTIONS[s]);
   const navRef = useRef<HTMLElement>(null);
   const collapsed = useCollapseOnScroll();
-  // Floating card (like Yelp): taller while the map dominates, slimmer while the results list is up.
-  const [sheetList, setSheetList] = useState(false);
-  useEffect(() => {
-    const onSheet = (e: Event) => setSheetList(!!(e as CustomEvent<{ list?: boolean }>).detail?.list);
-    window.addEventListener("ccr:sheet-change", onSheet);
-    return () => window.removeEventListener("ccr:sheet-change", onSheet);
-  }, []);
+  // The floating card keeps one height (owner 2026-11-26), so it no longer follows the results sheet.
+  const router = useRouter();
   if (!sections.length) return null;
   const place = (s: string) => ({ key: s, href: `/${s}`, label: pick(SECTIONS[s], locale), icon: SECTIONS[s].icon, active: pathname === `/${s}` });
   const pros = { key: "pros", href: "/profesionales", label: t("professionals"), icon: Users, active: pathname === "/profesionales" };
@@ -259,11 +254,16 @@ export function DirectoryQuickNav({ className, spacer, floating }: { className?:
         ))}
       </ul>
       <div data-ccr-menu-row className={cn("order-first flex items-center gap-2 px-3 pb-1.5 pt-2 lg:hidden", floating && "rounded-[10px] border border-[#d7dde3] bg-white pl-2 pr-2 transition-[padding] duration-300", floating && "py-1")}>
-        {/* Search and map screens (owner 2026-11-26): the navbar menu (☰) on the left, like the rest of the app. */}
+        {/* Search and map screens (owner 2026-11-26): ← goes back to wherever the person was; straight in, to the home. */}
         {floating ? (
-          <button type="button" data-quick-nav-burger onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={t("menu")}
+          <button type="button" data-quick-nav-back aria-label={floating.back ?? "Volver"}
+            onClick={() => {
+              const desdeLaApp = typeof document !== "undefined" && !!document.referrer && new URL(document.referrer).origin === window.location.origin;
+              if (window.history.length > 1 && (desdeLaApp || window.history.state?.__NA || window.history.state?.__PRIVATE_NEXTJS_INTERNALS_TREE)) window.history.back();
+              else router.push("/");
+            }}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-[#162543]">
-            <Menu className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden />
+            <ArrowLeft className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden />
           </button>
         ) : (
           <button type="button" data-quick-nav-menu onClick={(e) => toggleBrandMenu(e.currentTarget)} aria-label={t("menu")}
