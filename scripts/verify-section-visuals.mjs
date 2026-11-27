@@ -9,9 +9,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
+// VISUALS_SRC_ROOT: scan another copy of src/ (mutation test of the guard on older files); the data checks use this repo.
+const srcRoot = process.env.VISUALS_SRC_ROOT ?? root;
 const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
-const files = walk(path.join(root, "src")).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => path.relative(root, f));
-const read = (f) => fs.readFileSync(path.join(root, f), "utf8");
+const files = walk(path.join(srcRoot, "src")).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => path.relative(srcRoot, f));
+const read = (f) => fs.readFileSync(path.join(srcRoot, f), "utf8");
 const problems = [];
 
 // 1. Unsplash URLs only in the data files. landing-hero.tsx: production's hero banners (campaign photos, not a section or
@@ -40,11 +42,36 @@ for (const f of files) {
   if (/lib\/directory\/section-photos|lib\/data\/service-group-photos/.test(s)) problems.push(`${f}: imports a removed photo map`);
 }
 
-// 3. Same label → same photo and same glyph.
+// 2b. A line that pairs a lucide glyph with a section, variant or service id is a per-screen icon list
+// (e.g. `place("lavacar", …, Droplets, …)`, `{ icon: Droplets, …, categoria: "plomeria" }`, `{key:'farmacias',icon:<Pill/>}`).
 const { createJiti } = await import(path.join(root, "node_modules/jiti/lib/jiti.mjs"));
 const jiti = createJiti(import.meta.url, { alias: { "@": path.join(root, "src") } });
 const v = await jiti.import(path.join(root, "src/lib/visuals/section-visuals.ts"));
 const c = await jiti.import(path.join(root, "src/lib/data/categories.ts"));
+{
+  const ids = new Set([...v.SECTION_VISUAL_IDS.map((id) => id.split(":")[0]), ...c.ALL_CATEGORIES.map((x) => x.id), ...c.CATEGORY_GROUPS.map((g) => g.id)]);
+  const PAIR_OK = new Set([...ICON_MAP_OK, ...DIRECT_OK]);
+  // Interface glyphs (search, arrows, edit…) next to an id are actions, not the id's icon.
+  const CHROME = new Set(["Search", "ChevronRight", "ChevronLeft", "ChevronDown", "ArrowRight", "ArrowLeft", "X", "Check", "Plus", "Pencil", "MapPin"]);
+  // Reviewed exceptions: the admin «Salud del sistema» tab (system health, not the section) and the idea cards of
+  // /solicitudes («Renueve su cocina»…), which illustrate the idea, not the service (docs/section-visuals.md).
+  const LINE_OK = [["src/components/admin/admin-shell-client.tsx", /ShieldCheck/], ["src/components/directory/projects-hub.tsx", /titulo:/]];
+  for (const f of files) {
+    if (PAIR_OK.has(f)) continue;
+    const s = read(f);
+    const imp = s.match(/import\s*\{([^}]*)\}\s*from\s*["']lucide-react["']/);
+    if (!imp) continue;
+    const glyphs = imp[1].split(",").map((x) => x.trim().replace(/^type\s+/, "").split(/\s+as\s+/).pop()).filter((x) => /^[A-Z]/.test(x) && x !== "LucideIcon");
+    if (!glyphs.length) continue;
+    const glyphRe = new RegExp(`(?:icon\\s*:\\s*<?|[(,]\\s*|<)(${glyphs.join("|")})\\b`);
+    s.split("\n").forEach((line, i) => {
+      const g = line.match(glyphRe);
+      if (!g || CHROME.has(g[1]) || LINE_OK.some(([file, re]) => file === f && re.test(line))) return;
+      const quoted = [...line.matchAll(/["'`]\/?([a-z][a-z0-9_-]+)["'`?]/g)].map((m) => m[1]).filter((q) => ids.has(q));
+      if (quoted.length) problems.push(`${f}:${i + 1}: glyph ${g[1]} paired with "${quoted[0]}"; use sectionIcon/categoryIcon`);
+    });
+  }
+}
 const { DIRECTORY_SECTION_LABELS } = await jiti.import(path.join(root, "src/lib/search/directory-search.ts"));
 const VARIANT_LABELS = { "cafes:cafeterias": "Cafeterías", "cafes:bares": "Bares", "cafes:postres": "Postres", "hospedaje:hoteles": "Hoteles", "hospedaje:por-dias": "Casas y apartamentos por días" };
 const norm = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
