@@ -219,6 +219,7 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 - [ ] `/registro` con directorio encendido: la tarjeta Profesional pregunta «Profesional independiente» (formulario actual) o «Empresa o local».
 - [ ] `/registro/empresa`: buscar por nombre un lugar publicado (`/api/negocio/buscar`); reclamar por `/lugar/<slug>/reclamar`; si no está: formulario de solicitud (cuenta primero) que crea un lugar en BORRADOR (no público, fuente owner).
 - [ ] `/admin/directorio` pestaña «Lugares nuevos»: Publicar / Rechazar; historial con etiquetas «Lugar agregado / creado» para lugares del equipo.
+- [ ] Al Publicar, quien pidió el lugar recibe la notificación «Su negocio ya está en ContrataCR» (abre `/lugar/<slug>/reclamar`) y un correo con «Reclamar mi negocio» (local: buzón simulado); al Rechazar, «Solicitud de negocio no aprobada» sin enlace. Repetir la decisión no avisa dos veces (migración 545).
 - [ ] Bandera apagada: `/registro` enlaza directo a `/registro/profesional` y `/registro/empresa` no existe.
 - [ ] Casos: nombre con varias palabras (búsqueda simple, la ranqueada daba timeout), nombre ya reclamado, enviar dos veces.
 - [ ] «Mi negocio» tiene límite por cuenta.

@@ -10,6 +10,7 @@ import {FEATURE_STAFF_QUEUES,FEATURE_STAFF_RPC,featureStaffDecisionSchema} from 
 import {DIR_ENABLED,DIR_HEALTH_ENABLED} from '@/lib/directory/feature-flags';
 import {buildPlaceCreateInput} from '@/lib/directory/admin-place-create';
 import {placeRequestDecisionSchema,placeRequestQueue} from '@/lib/directory/place-request';
+import {notifyPlaceRequestDecision} from '@/lib/directory/place-request-notice';
 
 // LOCAL PRO ONLY (multivertical M1, development only): staff queue of the public directory. Administrators with a
 // verified MFA session only (getApiAdmin, checked on EVERY request; never trusted from the browser).
@@ -92,7 +93,10 @@ export async function POST(req:Request){
   const f=placeRequestDecisionSchema.safeParse(raw);if(!f.success)return dirFail(400,'invalid','Revise los datos.');
   const r=await createAdminClient().rpc('dir_place_mutate',{p_actor:admin.id,p_input:{action:'status',actionId:f.data.actionId,placeId:f.data.placeId,revision:f.data.revision,
    source:{id:'contratacr'},status:f.data.decision==='publish'?'published':'removed'}});
-  return r.error?dirDbError(r.error):dirOk(r.data);
+  if(r.error)return dirDbError(r.error);
+  // The requester is told (in-app + e-mail; idempotent, never fails the decision).
+  await notifyPlaceRequestDecision(createAdminClient(),{placeId:f.data.placeId,decision:f.data.decision});
+  return dirOk(r.data);
  }
  if(rawKind==='photo'){
   const f=photoStaffDecisionSchema.safeParse(raw);

@@ -5,7 +5,7 @@
 import {escaparHtml} from '@/lib/email/escape';
 import {dispatchEmail,resolveEmailMode,type DispatchDeps,type ProviderResult} from '@/lib/email/provider';
 
-export type LaunchEmailKind='claim_code'|'reservation_received'|'reservation_confirmed'|'reservation_changed'|'reservation_declined'|'reservation_cancelled_business'|'waitlist_ready'|'waitlist_left_business';
+export type LaunchEmailKind='claim_code'|'reservation_received'|'reservation_confirmed'|'reservation_changed'|'reservation_declined'|'reservation_cancelled_business'|'waitlist_ready'|'waitlist_left_business'|'place_request_published'|'place_request_rejected';
 export type LaunchLocale='es'|'en';
 export type LaunchEmailData={placeName?:string;code?:string;reference?:string;day?:string;time?:string|null;partySize?:number;name?:string;link?:string};
 
@@ -40,6 +40,13 @@ export function renderLaunchEmail(kind:LaunchEmailKind,locale:LaunchLocale,d:Lau
   case 'waitlist_ready':return en
    ?{subject:`Your table at ${place} is ready`,title:'Your table is ready',lines:[`Your table at ${place} is ready. Please come to the entrance.`,`Reference: ${ref}.`],why:'You received this e-mail because you joined the waitlist on ContrataCR.'}
    :{subject:`Su mesa en ${place} está lista`,title:'Su mesa está lista',lines:[`Su mesa en ${place} está lista. Por favor acérquese a la entrada.`,`Referencia: ${ref}.`],why:'Recibe este correo porque se anotó en la lista de espera en ContrataCR.'};
+  // 2026-11-27: «Agregar mi empresa» decided by the team (place-request-notice.ts).
+  case 'place_request_published':return en
+   ?{subject:`${place} is now on ContrataCR`,title:'Your business is on ContrataCR',lines:[`${place} is now published on ContrataCR.`,'Claim it to manage its page: hours, photos, contact details and replies to reviews.'],why:'You received this e-mail because you asked ContrataCR to add this business.',button:'Claim my business'}
+   :{subject:`${place} ya está en ContrataCR`,title:'Su negocio ya está en ContrataCR',lines:[`${place} ya está publicado en ContrataCR.`,'Reclámelo para administrar su ficha: horario, fotos, datos de contacto y respuestas a reseñas.'],why:'Recibe este correo porque solicitó agregar este negocio a ContrataCR.',button:'Reclamar mi negocio'};
+  case 'place_request_rejected':return en
+   ?{subject:'Your business request was not approved',title:'Request not approved',lines:[`Your request to add ${place} to ContrataCR was not approved.`,'If you think this is a mistake, write to support from your account.'],why:'You received this e-mail because you asked ContrataCR to add this business.'}
+   :{subject:'Su solicitud de negocio no fue aprobada',title:'Solicitud no aprobada',lines:[`Su solicitud para agregar ${place} a ContrataCR no fue aprobada.`,'Si cree que es un error, escriba a soporte desde su cuenta.'],why:'Recibe este correo porque solicitó agregar este negocio a ContrataCR.'};
   case 'waitlist_left_business':return en
    ?{subject:`Left the waitlist: ${ref}`,title:'Someone left the waitlist',lines:[`${name} left today’s waitlist at ${place} (party of ${party}).`,`Reference: ${ref}.`],why:'You received this e-mail because you manage reservations for this business on ContrataCR.'}
    :{subject:`Salió de la lista de espera: ${ref}`,title:'Alguien salió de la lista de espera',lines:[`${name} salió de la lista de espera de hoy en ${place} (${party} personas).`,`Referencia: ${ref}.`],why:'Recibe este correo porque administra las reservas de este negocio en ContrataCR.'};

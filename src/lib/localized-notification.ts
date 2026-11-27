@@ -38,6 +38,9 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   // Empujones al profesional (9-oct-2026).
   "pide_resenas",
   "agrega_precio",
+  // «Agregar mi empresa» decided by the team (2026-11-27, place-request-notice.ts).
+  "place_request_published",
+  "place_request_rejected",
 ]);
 
 type NotificationCopyInput = {
@@ -63,6 +66,8 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   verification_appeal_received: { es: "Nueva apelación de verificación", en: "New verification appeal" },
   suggestion_approved: { es: "El servicio que sugirió ya está disponible", en: "The service you suggested is now available" },
   suggestion_rejected: { es: "Sugerencia rechazada", en: "Suggestion rejected" },
+  place_request_published: { es: "Su negocio ya está en ContrataCR", en: "Your business is on ContrataCR" },
+  place_request_rejected: { es: "Solicitud de negocio no aprobada", en: "Business request not approved" },
   direct_message: { es: "Nuevo mensaje", en: "New message" },
   verification_outreach: { es: "Terminemos su verificación", en: "Let's finish your verification" },
   counterparty_account_deleted: { es: "Cuenta eliminada", en: "Account deleted" },
@@ -335,6 +340,13 @@ function notificationCopy(notification: NotificationCopyInput, locale: string) {
     const provider = stringData(data, "provider_name") || legacy?.[1] || (en ? "A professional" : "Un profesional");
     const appeal = stringData(data, "appeal_message") || legacy?.[2] || "";
     return { title, message: en ? `${provider} appealed their review${appeal ? `: "${appeal}"` : "."}` : `${provider} apeló su revisión${appeal ? `: "${appeal}"` : "."}` };
+  }
+
+  if (notification.type === "place_request_published" || notification.type === "place_request_rejected") {
+    const place = stringData(data, "place_name") || quotedValue(normalizedMessage) || (en ? "your business" : "su negocio");
+    return { title, message: notification.type === "place_request_published"
+      ? (en ? `"${place}" is now published on ContrataCR. Claim it to manage its page.` : `"${place}" ya está publicado en ContrataCR. Reclámelo para administrar su ficha.`)
+      : (en ? `Your request to add "${place}" was not approved. If you think this is a mistake, write to support.` : `Su solicitud para agregar "${place}" no fue aprobada. Si cree que es un error, escriba a soporte.`) };
   }
 
   if (notification.type === "suggestion_approved" || notification.type === "suggestion_rejected") {
