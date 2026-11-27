@@ -7,8 +7,12 @@ import {mapillaryImageUrl,streetViewSrc,type StreetView} from './street-view';
  * scripts/directory/mapillary-streetview.mjs (dir_place_street_view, migration 543). Only 'found' rows of the given places;
  * the image itself is served by /api/vista-calle/<placeId>. Any error → no street views (the page shows no photo).
  */
+/** Owner 2026-11-27: «imágenes que no representan nada no ponerlas; fotos de los negocios o nada». Street views are off
+ *  everywhere (cards, similar businesses, the place page); the code and cached rows stay for a possible future use. */
+export const STREET_VIEW_ENABLED=false;
 export async function placeStreetViews(placeIds:string[],db=createAdminClient()):Promise<Map<string,StreetView>>{
  const out=new Map<string,StreetView>();
+ if(!STREET_VIEW_ENABLED)return out;
  const ids=[...new Set(placeIds)].slice(0,60);if(!ids.length)return out;
  try{
   const r=await db.from('dir_place_street_view').select('place_id,image_id,creator,captured_at').in('place_id',ids).eq('status','found');
