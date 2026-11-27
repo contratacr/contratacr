@@ -308,8 +308,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
         {kind?<span data-place-kind={String(place.attributes.kind)}>{kind}</span>:sectionHref?<a href={sectionHref} className={`hover:underline ${ring}`}>{vertical}</a>:<span>{vertical}</span>}
         {kindLine.slice(1).map(x=><span key={x}><span aria-hidden="true">· </span>{x}</span>)}
         {cuisines.length>0&&<span><span aria-hidden="true">· </span>{cuisines.slice(0,2).join(', ')}</span>}
-        {/* Imported / unverified listings: a quiet «No reclamado» (sources in Terms 13.1 and the footer line). */}
-        {!trusted&&<span data-place-verification={place.verificationLevel} className={BIZ.chip}>{verification}</span>}
+        {/* Owner 2026-11-27: no «No reclamado» label on the page; unclaimed places only show the quiet «¿Es su empresa?» box at the end. */}
        </p>
        {place.status==='closed_permanently'&&<p data-place-closed className="mt-2 inline-flex w-fit rounded-full bg-red-600 px-3 py-1 text-[12.5px] font-bold text-white">{t('Cerrado definitivamente','Permanently closed')}</p>}
        {statusText&&<p className="mt-1.5 text-[13px] font-semibold leading-snug sm:text-[14px]" data-place-open-status={status!.state} data-open={statusText.open?'open':'closed'}>

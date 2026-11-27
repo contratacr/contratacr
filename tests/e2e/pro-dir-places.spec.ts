@@ -26,7 +26,8 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  rev=(await mutate({action:'status',placeId,revision:rev,status:'published'})).revision;
  await gotoOK(page,prefix+'/lugar/'+slug);
  await expect(page.getByRole('heading',{level:1})).toHaveText('Soda E2E '+label);
- await expect(page.locator('[data-place-verification="imported"]')).toHaveText(t('No reclamado','Unclaimed'));// 2026-11-19: quiet badge; the data sources are explained in the Terms (13.1)
+ await expect(page.locator('[data-place-verification]')).toHaveCount(0);// 2026-11-27: no «No reclamado» label; the claim box at the end invites the owner
+ await expect(page.locator('[data-place-claim-link]')).toBeVisible();
  await expect(page.locator('[data-place-source="OpenStreetMap"]')).toContainText('OpenStreetMap');
  await expect(page.locator('section[aria-labelledby="place-hours"] dt',{hasText:t('Lunes','Monday')})).toBeVisible();
  // 2026-11-19 (Yelp biz-page model): rating line, open status, action bar, side card with «Llamar» and the compact
@@ -50,7 +51,7 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await mutate({action:'status',placeId:pharmacyId,revision:ph.revision,status:'published'});
  await gotoOK(page,prefix+'/lugar/farmacia-e2e-'+label);
  await expect(page.locator('[data-pharmacy-license="unverified"]')).toContainText(t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.'));
- await expect(page.locator('[data-place-verification="unverified"]')).toBeVisible();
+ await expect(page.locator('[data-place-verification]')).toHaveCount(0);
  await gotoOK(page,prefix+'/lugar/'+slug);
  // report through the real form; a second identical POST with the same reportId is accepted once
  // «Sugerir un cambio» in the side card opens the report form (#reportar).
