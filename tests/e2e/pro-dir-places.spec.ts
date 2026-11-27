@@ -112,7 +112,8 @@ test('place header pixel-stable from first paint; social icons from real data on
    await expect(card.locator('a')).toHaveCount(5);
    // Production professional profile order: website, social links, Google Maps, Waze; centred under «<name> · <address>».
    await expect(card.locator('a').nth(3)).toHaveAttribute('data-place-action','maps');await expect(card.locator('a').nth(4)).toHaveAttribute('data-place-action','waze');
-   await expect(p.locator('[data-place-address-line]')).toContainText('Soda Redes '+label+' · ');
+   // The seed has no street address: the «<name> · <address>» line is omitted (it would repeat the area, 2026-11-27).
+   await expect(p.locator('[data-place-address-line]')).toHaveCount(0);
    await expect(card.locator('[data-place-action="waze"]')).toHaveAttribute('aria-label','Abrir en Waze');
    await expect(card.locator('[data-place-action="maps"]')).toHaveAttribute('href',/^https:\/\/www\.google\.com\/maps\//);
    await expect(card.locator('[data-place-social-link]')).toHaveCount(3);
