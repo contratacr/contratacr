@@ -252,9 +252,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    {claimable&&<h2 id="place-claim-title" className={H2}>{t('¿Es su empresa?','Is this your business?')}</h2>}
    <ul className="space-y-2">
     {claimable&&<li data-place-claim-link><a className={ROW} href={`${prefix}/negocios/${place.slug}/reclamar`}>{rowBody(<Store className="h-5 w-5"/>,t('Reclamar esta empresa gratis','Claim this business for free'))}</a></li>}
-    <li><a href="#reportar" data-place-suggest className={ROW}>{rowBody(<PenLine className="h-5 w-5"/>,t('Sugerir un cambio','Suggest an edit'))}</a></li>
+    <li><a href="#sugerir-cambio" data-place-suggest className={ROW}>{rowBody(<PenLine className="h-5 w-5"/>,t('Sugerir un cambio','Suggest an edit'))}</a></li>
    </ul>
    {/* The report form (#reportar): hidden until «Sugerir un cambio» or the «…» menu opens it. */}
+   <span id="sugerir-cambio" className="block scroll-mt-24" aria-hidden="true"/>
    <PlaceReportForm slug={place.slug} locale={locale} bare/>
   </section>}
  </div>;
@@ -269,7 +270,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos}/></section>}]:[]),
   // «Ubicación» then «Información» (owner 2026-11-27); old #mas/#contacto links land in «Información».
   {id:'location',label:t('Ubicación','Location'),anchors:['ubicacion','mapa'],content:locationTab},
-  {id:'info',label:t('Información','Information'),anchors:['informacion','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas','reportar'],content:infoTab},
+  {id:'info',label:t('Información','Information'),anchors:['informacion','sugerir-cambio','contacto','horario','comodidades','acerca','eventos','sucursales','place-reservations','mas','reportar'],content:infoTab},
  ];
  // Like the professional profile, the page opens on its first tab: Menú/Precios when there is one, else Reseñas, else Información.
  const defaultTab=tabs[0]!.id;

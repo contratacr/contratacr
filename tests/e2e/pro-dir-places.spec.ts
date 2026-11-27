@@ -61,9 +61,13 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);
  await gotoOK(page,prefix+'/negocios/'+slug);await openPlaceTab(page,'info');
  // report through the real form; a second identical POST with the same reportId is accepted once
- // «Sugerir un cambio» in the side card opens the report form (#reportar).
+ // 2026-11-27: «Sugerir un cambio» opens the form in correction mode (data reasons only, no removal request);
+ // «Reportar» (the «…» menu, #reportar) opens «Reportar un problema o pedir el retiro» with every reason.
  await page.waitForLoadState('networkidle');await page.locator('[data-place-suggest]').click();
  await expect(page.locator('details[data-place-report]')).toHaveAttribute('open','');
+ await expect(page.getByLabel(t('¿Qué hay que cambiar?','What needs to change?')).locator('option[value="removal_request"]')).toHaveCount(0);
+ await page.evaluate(()=>window.location.replace('#reportar'));
+ await expect(page.getByLabel(t('Motivo','Reason'))).toBeVisible();
  await page.getByLabel(t('Motivo','Reason')).selectOption('removal_request');
  await page.getByLabel(t('Detalle','Details')).fill(t('Soy el dueño y pido retirar la ficha.','I own it and request removal.'));
  await page.getByRole('button',{name:t('Enviar reporte','Send report')}).click();

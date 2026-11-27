@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {Flag} from 'lucide-react';
+import {Flag,PenLine} from 'lucide-react';
 import {REPORT_KINDS,type ReportKind} from '@/lib/directory/types';
 
 /**
@@ -16,13 +16,16 @@ const LABELS:Record<ReportKind,[string,string]>={
  abuse:['Contenido abusivo','Abusive content'],
  other:['Otro','Other'],
 };
+const SUGGEST_KINDS:readonly ReportKind[]=['wrong_info','closed','duplicate','other'];
 /** `bare` (2026-11-27): no visible link while closed; «Sugerir un cambio» and the «…» menu open it through #reportar. */
 export function PlaceReportForm({slug,locale,bare=false}:{slug:string;locale:string;bare?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const reportId=useRef<string|null>(null),[state,setState]=useState<'idle'|'sending'|'sent'|'error'|'limit'>('idle');
  const box=useRef<HTMLDetailsElement>(null);
- // «Sugerir un cambio» (side card, 2026-11-19) links to #reportar: open the form and move focus to it.
- useEffect(()=>{const open=()=>{if(window.location.hash!=='#reportar'||!box.current)return;box.current.open=true;box.current.querySelector('summary')?.focus();};
+ // Two entries, one form (owner 2026-11-27): #sugerir-cambio is a data correction («Sugerir un cambio», only the data
+ // reasons); #reportar is «Reportar un problema o pedir el retiro» (every reason, incl. removal under Ley 10.946).
+ const [mode,setMode]=useState<'suggest'|'report'>('report');
+ useEffect(()=>{const open=()=>{const h=window.location.hash;if((h!=='#reportar'&&h!=='#sugerir-cambio')||!box.current)return;setMode(h==='#sugerir-cambio'?'suggest':'report');reportId.current=null;box.current.open=true;box.current.querySelector('summary')?.focus();};
   open();window.addEventListener('hashchange',open);return()=>window.removeEventListener('hashchange',open);},[]);
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(state==='sending')return;
@@ -34,14 +37,14 @@ export function PlaceReportForm({slug,locale,bare=false}:{slug:string;locale:str
   }catch{setState('error');}
  }
  if(state==='sent')return <section id="reportar" aria-live="polite" data-place-report="sent" className="rounded-2xl bg-emerald-50 p-5 text-emerald-900">
-  {t('Gracias. Revisaremos su reporte. Si pidió el retiro, le escribiremos al correo indicado.','Thank you. We will review your report. If you requested removal, we will write to the e-mail you provided.')}</section>;
+  {mode==='suggest'?t('Gracias. Revisaremos su sugerencia y actualizaremos la ficha si corresponde.','Thank you. We will review your suggestion and update the listing if appropriate.'):t('Gracias. Revisaremos su reporte. Si pidió el retiro, le escribiremos al correo indicado.','Thank you. We will review your report. If you requested removal, we will write to the e-mail you provided.')}</section>;
  return <details ref={box} id="reportar" className={`${bare?'[&:not([open])]:hidden ':''}group scroll-mt-24 px-1 text-[#162543] open:rounded-2xl open:border open:border-[#e5e9ee] open:bg-white open:px-4 open:py-2`} data-place-report={state}>
   {/* A small grey link until it is opened (2026-11-26): the form is rarely needed and the card weighed on the page. */}
-  <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-[13.5px] font-semibold text-[#52627a] hover:text-[#162543] hover:underline group-open:text-[#162543] group-open:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] [&::-webkit-details-marker]:hidden"><Flag aria-hidden="true" className="h-4 w-4 shrink-0"/>{t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
+  <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-[13.5px] font-semibold text-[#52627a] hover:text-[#162543] hover:underline group-open:text-[#162543] group-open:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9] [&::-webkit-details-marker]:hidden">{mode==='suggest'?<PenLine aria-hidden="true" className="h-4 w-4 shrink-0"/>:<Flag aria-hidden="true" className="h-4 w-4 shrink-0"/>}{mode==='suggest'?t('Sugerir un cambio','Suggest an edit'):t('Reportar un problema o pedir el retiro','Report a problem or request removal')}</summary>
   <form onSubmit={submit} className="mt-2 space-y-3 pb-2">
-   <label className="block text-sm font-medium" htmlFor="place-report-kind">{t('Motivo','Reason')}</label>
+   <label className="block text-sm font-medium" htmlFor="place-report-kind">{mode==='suggest'?t('¿Qué hay que cambiar?','What needs to change?'):t('Motivo','Reason')}</label>
    <select id="place-report-kind" name="kind" required className="min-h-11 w-full rounded-lg border border-slate-300 px-3" onChange={()=>{reportId.current=null;}}>
-    {REPORT_KINDS.map(k=><option key={k} value={k}>{LABELS[k][en?1:0]}</option>)}
+    {(mode==='suggest'?SUGGEST_KINDS:REPORT_KINDS).map(k=><option key={k} value={k}>{LABELS[k][en?1:0]}</option>)}
    </select>
    <label className="block text-sm font-medium" htmlFor="place-report-message">{t('Detalle','Details')}</label>
    <textarea id="place-report-message" name="message" required minLength={5} maxLength={2000} rows={4} className="w-full rounded-lg border border-slate-300 p-3" onChange={()=>{reportId.current=null;}}/>
@@ -51,7 +54,7 @@ export function PlaceReportForm({slug,locale,bare=false}:{slug:string;locale:str
    {state==='error'&&<p role="alert" className="text-sm text-red-700">{t('No pudimos enviar el reporte. Revise los datos e intente de nuevo.','We could not send the report. Please check the details and try again.')}</p>}
    {state==='limit'&&<p role="alert" className="text-sm text-red-700">{t('Se recibieron demasiados reportes. Intente más tarde.','Too many reports were received. Please try again later.')}</p>}
    <button type="submit" disabled={state==='sending'} className="inline-flex min-h-11 items-center rounded-full bg-[#162543] px-5 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60">
-    {state==='sending'?t('Enviando…','Sending…'):t('Enviar reporte','Send report')}</button>
+    {state==='sending'?t('Enviando…','Sending…'):mode==='suggest'?t('Enviar sugerencia','Send suggestion'):t('Enviar reporte','Send report')}</button>
   </form>
  </details>;
 }

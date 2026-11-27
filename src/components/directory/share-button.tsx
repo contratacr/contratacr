@@ -32,7 +32,7 @@ export function ShareButton({title,locale,className,suggest=false,sheet=false}:{
   {open&&<div role="menu" data-share-sheet aria-label={t('Compartir este lugar','Share this place')} className={sheet?'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-[120] rounded-2xl border border-[#e5e7eb] bg-white p-1.5 shadow-2xl lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-0 lg:top-full lg:z-30 lg:mt-2 lg:w-60 lg:shadow-lg':'absolute left-0 top-full z-30 mt-2 w-60 rounded-2xl border border-[#e5e7eb] bg-white p-1.5 shadow-lg'}>
    <button type="button" role="menuitem" data-share-copy onClick={()=>void copy()} className={item}><Copy aria-hidden="true" className="h-4 w-4"/>{t('Copiar enlace','Copy link')}</button>
    <button type="button" role="menuitem" data-share-send onClick={()=>void send()} className={item}><Send aria-hidden="true" className="h-4 w-4"/>{t('Enviar a amigos','Send to friends')}</button>
-   {suggest&&<a role="menuitem" href="#reportar" data-share-suggest onClick={()=>setOpen(false)} className={item}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a>}
+   {suggest&&<a role="menuitem" href="#sugerir-cambio" data-share-suggest onClick={()=>setOpen(false)} className={item}><PenLine aria-hidden="true" className="h-4 w-4"/>{t('Sugerir un cambio','Suggest an edit')}</a>}
   </div>}
   <span role="status" aria-live="polite" className={copied?'absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#162543] px-3 py-1.5 text-xs font-semibold text-white shadow-lg':'sr-only'} data-share-status={copied??undefined}>
    {copied==='ok'?t('Enlace copiado','Link copied'):copied==='error'?t('No se pudo copiar el enlace','Could not copy the link'):''}</span>
