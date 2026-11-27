@@ -15,9 +15,13 @@ const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
 const noSubscribe=()=>()=>{};
 const button=`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold ${ring}`;
 const secondary=`${button} !min-h-0 h-11 !px-5 !text-[13px] !font-bold border border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6]`;
-/** `chipClass`: the pill look is replaced by the caller's chip (place page chip row). */
-export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,variant='pill',chipClass}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;
- name?:string;area?:string;image?:string;variant?:'pill'|'icon';chipClass?:string}){
+/** `chipClass`: the pill look is replaced by the caller's chip (place page chip row).
+ *  `openOn` + `hideButton` (2026-11-27, the place page's «…» sheet on phones, MenuFicha like the professional profile):
+ *  no button of its own; the window event opens the sheet. Every load announces `ccr:place-saved` ({saved}) so the menu
+ *  shows «Guardado» with a filled bookmark. */
+export const PLACE_SAVED_EVENT='ccr:place-saved';
+export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,variant='pill',chipClass,openOn,hideButton=false}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;
+ name?:string;area?:string;image?:string;variant?:'pill'|'icon';chipClass?:string;openOn?:string;hideButton?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const [open,setOpen]=useState(false),[lists,setLists]=useState<SavedList[]|null>(null),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState(false);
  const nameRef=useRef<HTMLInputElement>(null),closeRef=useRef<HTMLButtonElement>(null);
@@ -30,8 +34,11 @@ export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,varia
  useEffect(()=>{if(!open)return;closeRef.current?.focus();const k=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false);};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[open]);
  // The button shows «Guardado» as soon as the person is known to have the place somewhere: load once on mount.
  useEffect(()=>{if(signedIn&&variant==='pill')void load();},[signedIn,variant]);// eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(()=>{if(!openOn||!signedIn)return;const on=()=>{setOpen(true);if(lists===null)void load();};
+  window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn,signedIn,lists]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!signedIn)return loginHref?<a data-save-login className={variant==='icon'?`grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] ${ring}`:chipClass??`${secondary} bg-white`} href={loginHref} aria-label={t('Guardar','Save')}><Bookmark aria-hidden="true" className="h-4 w-4"/>{variant==='icon'?null:t('Guardar','Save')}</a>:null;
- async function load(){const l=await fetchLists(slug);setLists(l??[]);if(l)rememberBeenHereCount(l);}
+ async function load(){const l=await fetchLists(slug);setLists(l??[]);if(l)rememberBeenHereCount(l);
+  window.dispatchEvent(new CustomEvent(PLACE_SAVED_EVENT,{detail:{slug,saved:(l??[]).some(x=>x.hasPlace)}}));}
  const fail=(reason?:string)=>setMsg({ok:false,text:featureReasonText(reason,en)});
  const toggleSystem=async(sysName:typeof BEEN_NAME|typeof WANT_NAME,on:boolean)=>{
   setBusy(true);setMsg(null);const r=await setSystemList(sysName,slug,on);if(!r.ok)fail(r.reason);await load();setBusy(false);
@@ -53,9 +60,9 @@ export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,varia
  const saved=(lists??[]).some(l=>l.hasPlace);
  const sysRows:{n:typeof BEEN_NAME|typeof WANT_NAME;label:string;icon:typeof Check}[]=[{n:BEEN_NAME,label:t('He estado','Been here'),icon:Check},{n:WANT_NAME,label:t('Quiero ir','Want to go'),icon:Bookmark}];
  return <div className="relative" data-save-to-list data-ready={ready||undefined}>
-  <button type="button" aria-haspopup="dialog" aria-expanded={open} data-save-open aria-label={variant==='icon'?(saved?t('Guardado','Saved'):t('Guardar','Save')):undefined}
+  {!hideButton&&<button type="button" aria-haspopup="dialog" aria-expanded={open} data-save-open aria-label={variant==='icon'?(saved?t('Guardado','Saved'):t('Guardar','Save')):undefined}
    className={variant==='icon'?`grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] ${saved?'bg-[#eaf6fb] text-[#0089bb]':'bg-white text-[#162543]'} ${ring}`:chipClass?`${chipClass} ${saved?'!bg-[#d9f0fb]':''}`:`${secondary} ${saved?'bg-[#eaf6fb]':'bg-white'}`}
-   onClick={async()=>{setOpen(true);if(lists===null)await load();}}><Bookmark aria-hidden="true" className={`h-4 w-4 ${saved?'fill-current':''}`}/>{variant==='icon'?null:saved?t('Guardado','Saved'):t('Guardar','Save')}</button>
+   onClick={async()=>{setOpen(true);if(lists===null)await load();}}><Bookmark aria-hidden="true" className={`h-4 w-4 ${saved?'fill-current':''}`}/>{variant==='icon'?null:saved?t('Guardado','Saved'):t('Guardar','Save')}</button>}
   {open&&<div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/40 sm:items-center" onClick={e=>{if(e.target===e.currentTarget)setOpen(false);}}>
    <div id="save-panel" role="dialog" aria-modal="true" aria-label={t('Guardar en','Save to')} className="max-h-[85vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] text-[#162543] shadow-2xl sm:rounded-3xl sm:pb-5">
     <div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">{t('Guardar en','Save to')}</h2>

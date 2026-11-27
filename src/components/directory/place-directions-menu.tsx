@@ -2,7 +2,8 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 
 /**
- * «Cómo llegar» with the choice of navigation app (owner request 2026-11-23): Waze, Google Maps and Apple Maps, as a
+ * «Cómo llegar» with the choice of navigation app (owner request 2026-11-23): Waze and Google Maps (Apple Maps removed,
+ * owner 2026-11-27: «quita Apple Maps como opción»), as a
  * small menu under the button (pill variant) or a sheet above the bottom bar (bar variant). Plain links, no tracking;
  * closes on Escape, on an outside click and after choosing.
  */
@@ -16,7 +17,7 @@ export function PlaceDirectionsMenu({maps,locale,label,className,variant='pill',
   document.addEventListener('mousedown',onDown);document.addEventListener('touchstart',onDown);document.addEventListener('keydown',onKey);
   return()=>{document.removeEventListener('mousedown',onDown);document.removeEventListener('touchstart',onDown);document.removeEventListener('keydown',onKey);};
  },[open]);
- const items:[string,string,string][]=[['waze','Waze',maps.waze],['google','Google Maps',maps.google],['apple','Apple Maps',maps.apple]];
+ const items:[string,string,string][]=[['waze','Waze',maps.waze],['google','Google Maps',maps.google]];
  const panel=variant==='bar'
   ?'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-50 mx-auto max-w-sm'
   :'absolute left-0 top-full z-30 mt-2 w-60 max-w-[calc(100vw-2rem)]';

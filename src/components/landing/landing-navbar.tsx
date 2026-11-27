@@ -578,7 +578,10 @@ let encabezadoYaHidratado = false;
 // Search sheet (owner 2026-11-26): the most used places first; the rest are one tap away in Categorías.
 const SEARCH_PLACE_ORDER = ["restaurantes", "farmacias", "hospedaje", "atracciones", "supermercados", "talleres", "gasolineras", "parqueos", "tiendas", "cafes"];
 
-export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
+/** Section bar known by the server (detail screens such as /lugar): the first paint already shows «← Título ···». */
+export type SeccionInicialDeBarra = { title: string; menu?: boolean; centrado?: boolean };
+
+export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate, seccionInicial }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean; seccionInicial?: SeccionInicialDeBarra } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -1104,10 +1107,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Una sola barra superior: si la pantalla actual publica un título de sección
   // ("ccr:section-header"), la barra muestra "← Título" en lugar del logo y
   // confirma con "ccr:section-header-ack" para que la pantalla oculte la suya.
-  const [sectionTitle, setSectionTitle] = useState<string | null>(null);
+  // EL PRIMER PINTADO YA ES EL DE LA PANTALLA (27-nov-2026). La barra nacía con el
+  // logo y el ☰ y, al hidratar, cambiaba a «← Restaurantes ···»: al recargar la
+  // ficha de un lugar se veía saltar la cabecera. Si quien pinta la barra ya sabe
+  // la sección (`seccionInicial`), el servidor la dibuja así desde el principio.
+  const [sectionTitle, setSectionTitle] = useState<string | null>(seccionInicial?.title ?? null);
   // Un paso dentro de una sección (formulario, conversación): sin campana.
   const [sectionPaso, setSectionPaso] = useState(false);
-  const [sectionActive, setSectionActive] = useState(false);
+  const [sectionActive, setSectionActive] = useState(!!seccionInicial);
   // El buscador del home entra en una SEGUNDA LÍNEA bajo la barra, igual que en
   // /buscar. No toca --ccr-native-header-height a propósito: si el hueco
   // reservado creciera a mitad del scroll, la página daría un salto de 60 px.
@@ -1115,14 +1122,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const segundaLineaBuscador = !onWelcomeNavigate && (showMobileNavbarSearch || buscadorHomeMovil);
   const [sectionRoot, setSectionRoot] = useState(false);
   const [sectionShare, setSectionShare] = useState(false);
-  const [sectionMenu, setSectionMenu] = useState(false);
+  const [sectionMenu, setSectionMenu] = useState(!!seccionInicial?.menu);
   // El rótulo de la barra es la etiqueta de la FLECHA («Volver a favoritos»), no
   // un título: va pegado a ella, no centrado.
   const [sectionVolver, setSectionVolver] = useState(false);
   // Fichas de detalle (lugar, perfil del profesional): el rótulo va centrado de
   // verdad entre la flecha y el hueco de la derecha, aunque sea un «Volver a…»
   // (Isaac, 26-nov-2026). Solo en la web; la app conserva su barra.
-  const [sectionCentrado, setSectionCentrado] = useState(false);
+  const [sectionCentrado, setSectionCentrado] = useState(!!seccionInicial?.centrado);
   useEffect(() => {
     // La pantalla puede haber publicado su título antes de que esta barra
     // montara, así que se lee también el valor global.

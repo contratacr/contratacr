@@ -1,5 +1,5 @@
 'use client';
-import {useId,useRef,useState,useSyncExternalStore,type ReactNode} from 'react';
+import {useEffect,useId,useRef,useState,useSyncExternalStore,type ReactNode} from 'react';
 const noSubscribe=()=>()=>{};
 import {ImagePlus,X} from 'lucide-react';
 import {PUBLIC_IMAGE_OPTIONS,prepareImageForUpload} from '@/lib/client-image-upload';
@@ -61,11 +61,13 @@ export function PhotoPicker({files,onChange,en,label,max=PLACE_PHOTO_BATCH,disab
 
 /** «Agregar fotos» of a place. Owner/team: published at once; others: pending review. `popover` (2026-11-19, action bar
  *  of the Yelp-model header): the button sits in the bar and the panel/result open as a floating card under it. */
-export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popover=false,buttonClass}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean;popover?:boolean;buttonClass?:string}){
+/** `openOn` + `hideButton` (2026-11-27): the place page's «…» sheet on phones opens the same panel through a window event. */
+export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popover=false,buttonClass,openOn,hideButton=false}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean;popover?:boolean;buttonClass?:string;openOn?:string;hideButton?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [open,setOpen]=useState(false),[files,setFiles]=useState<File[]>([]),[caption,setCaption]=useState(''),[busy,setBusy]=useState(false);
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();const panel=useRef<HTMLDivElement>(null);
+ useEffect(()=>{if(!openOn)return;const on=()=>{setOpen(true);setResult(null);};window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn]);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
  const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
  // Phones: a bottom sheet (the button lives in a sliding chip row that clips anything hanging below it); lg: a card under the button.
@@ -80,7 +82,7 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
   </div>;
  }
  return <div className={popover?'relative inline-flex':'space-y-3'} data-place-photo-add>
-  {(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>}
+  {!hideButton&&(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>}
   {open&&<div ref={panel} className={`space-y-3 rounded-2xl border border-[#d7e1ea] p-4 ${float}`} data-place-photo-panel>
    <p className="text-sm text-slate-700">{isManager?t('Como administrador de la empresa, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
     :t('Sus fotos se revisan antes de publicarse. Suba solo fotos tomadas por usted, sin personas reconocibles ni datos privados.','Your photos are reviewed before they are published. Only upload photos you took, without recognisable people or private data.')}</p>

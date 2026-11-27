@@ -7,8 +7,8 @@ import { publicWorkplaces, directionsUrl, wazeUrl, type PublicWorkplace } from '
  * de cada marca (el pin de Google Maps y el Wazer), usada como máscara para que
  * tome el color del texto en vez de sus colores propios.
  */
-const SOCIAL = 'grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]';
-function BrandGlyph({ src }: { src: string }) {
+export const SOCIAL = 'grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]';
+export function BrandGlyph({ src }: { src: string }) {
   const mask: CSSProperties = { WebkitMaskImage: `url(${src})`, maskImage: `url(${src})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: 'contain', maskSize: 'contain' };
   return <span aria-hidden="true" data-brand-glyph={src} className="block h-4 w-4 bg-current" style={mask} />;
 }

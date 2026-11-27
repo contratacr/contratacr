@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,login,origin,ownerFixture,proOff} from './pro-round2-fixture';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {claimByEmail,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {claimByEmail,hideSeededPlaces,label,postJson,seedPlace,uid,openPlaceTab} from './pro-dir-fixture';
 import {crDay,featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): local events and the «Pedir» link-out. The owner of a claimed bar creates an
@@ -81,6 +81,7 @@ test('events + «Pedir»: owner publishes, /eventos filters, team role, staff mo
     await featureShots(p,`eventos-${language}`,info);
     await gotoOK(p,`${prefix}/eventos?provincia=Lim%C3%B3n`);await expect(p.locator('[data-event]').filter({hasText:tag})).toHaveCount(0);
     await gotoOK(p,`${prefix}/lugar/${slug}`);
+    await openPlaceTab(p,'info');
     await expect(p.locator('[data-place-events]')).toContainText(title);
     await expect(p.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688776655');
     await expect(p.locator('[data-place-action="order"]').first()).toHaveAttribute('rel',/nofollow/);

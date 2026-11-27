@@ -29,13 +29,17 @@ test('saved lists: save from the place page, private by default, share link with
   user=await createDisposableAccount({prefix:'dir-lists'});await login(context,user);
   const listName=`Sodas ${tag}`;
   await gotoOK(page,`/lugar/${a}`);
-  // Phones (owner 2026-11-26): Guardar lives in the bar's «…» sheet; from lg it sits in the chip row.
-  if((page.viewportSize()?.width??1280)<1024)await expect(async()=>{await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await expect(page.locator('[data-place-more-menu] [data-save-to-list][data-ready]')).toBeVisible({timeout:2000});}).toPass({timeout:45000});
-  await expect(page.locator('[data-save-to-list][data-ready]').filter({visible:true})).toBeVisible({timeout:45000});
-  await page.locator('[data-save-open]').filter({visible:true}).click();
+  // Phones (owner 2026-11-27): «Guardar» is an option of the bar's «…» sheet (MenuFicha); from lg it sits in the chip row.
+  const phone=(page.viewportSize()?.width??1280)<1024;
+  const menuItem=(name:string)=>page.locator('[data-menu-ficha]').filter({visible:true}).getByRole('menuitem',{name});
+  if(phone)await expect(async()=>{await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await menuItem('Guardar').click({timeout:1500});
+   await expect(page.locator('[data-save-new-name]')).toBeVisible({timeout:3000});}).toPass({timeout:45000});
+  else{await expect(page.locator('[data-save-to-list][data-ready]').filter({visible:true})).toBeVisible({timeout:45000});
+   await page.locator('[data-save-open]').filter({visible:true}).click();}
   await page.locator('[data-save-new-name]').fill(listName);await page.locator('[data-save-create]').click();
   await expect(page.locator(`[data-save-list="${listName}"]`)).toBeChecked({timeout:20000});
-  await expect(page.locator('[data-save-open]').filter({visible:true})).toHaveText('Guardado');
+  if(phone){await page.keyboard.press('Escape');await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await expect(menuItem('Guardado')).toBeVisible();await page.keyboard.press('Escape');}
+  else await expect(page.locator('[data-save-open]').filter({visible:true})).toHaveText('Guardado');
   // Second place through the API (same list).
   const mine=await (await context.request.get(`${origin}/api/listas?slug=${b}`)).json() as {items:{listId:string;revision:number;name:string;hasPlace:boolean}[]};
   const list=mine.items.find(l=>l.name===listName)!;expect(list.hasPlace).toBe(false);

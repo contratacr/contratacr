@@ -161,8 +161,8 @@ export async function claimByEmail(context:BrowserContext,slug:string,db:Db=dirD
 /** HTML of the current page without scripts, for "never shown" checks. */
 export const visibleHtml=(page:Page)=>page.evaluate(()=>document.body.innerText);
 
-/** Opens a tab of the place page («info», «offer», «reviews», «photos», «questions»). The tab bar is hydrated by then. */
-export async function openPlaceTab(page:Page,id:'info'|'offer'|'reviews'|'photos'|'questions'){
+/** Opens a tab of the place page («info», «location», «offer», «reviews», «photos», «questions»). The tab bar is hydrated by then. */
+export async function openPlaceTab(page:Page,id:'info'|'location'|'offer'|'reviews'|'photos'|'questions'){
  const tab=page.locator(`[data-place-tab="${id}"]`);
  await expect(async()=>{
   await tab.click({timeout:2000});

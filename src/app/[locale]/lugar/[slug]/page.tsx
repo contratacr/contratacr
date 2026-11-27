@@ -158,8 +158,11 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // Owner 2026-11-27: no empty «Menú/Precios» tab — prices count only when at least one item has a price.
  const hasPrices=!!(prices.data&&!prices.error&&(prices.data as PublicPriceCurrent).items?.some(i=>i.current||i.lastKnown));
  const hasOffer=!!(menuData&&menuData.sections.length>0)||hasPrices||reportPrices||placeListings.length>0;
- return <DirectoryShell>{/* Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). */}<SectionHeaderTitle title={en?place.vertical.nameEn:place.vertical.nameEs} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
+ // Phones: ← and the place's section as the bar title (detail screen, owner 2026-11-26). The shell paints the same bar
+ // on the server (header pixel-stable on reload, 2026-11-27); SectionHeaderTitle keeps the back and «…» wiring.
+ const barTitle=en?place.vertical.nameEn:place.vertical.nameEs;
+ return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/lugar/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{

@@ -99,7 +99,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await expect(page.locator('[data-place-reviews]')).toBeVisible();// service reviews (2026-11-17)
  await expect(page.locator('[data-place-review-note]')).toContainText(en?'not about rates, fees, financial products':'No tratan sobre tasas, comisiones, productos financieros');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);
- await expect(page.locator('[data-place-claim-link]')).toBeVisible();// the business can still claim and fix its listing
+ await openPlaceTab(page,'info'); await expect(page.locator('[data-place-claim-link]')).toBeVisible();// the business can still claim and fix its listing
  await gotoOK(page,`${prefix}/lugar/e2e-banco-${tag}/reclamar`);// 2026-11-19: the claim flow and its benefits have their own page
  await expect(page.locator('[data-place-claim]')).toBeVisible();
  await expect(page.locator('[data-claim-benefits]')).not.toContainText(en?'prices':'precios');
@@ -120,6 +120,7 @@ for(const language of ['es','en'] as const)test(`cafés moved out of restaurants
  await expect(card.locator('[data-public-service]')).toBeVisible();
  await expect(page.locator('[data-places-home="salud"]')).not.toContainText(en?'medical or veterinary advice':'no da consejo médico');
  await gotoOK(page,`${prefix}/lugar/e2e-clinica-${tag}`);
+ await openPlaceTab(page,'info');
  await expect(page.locator('[data-health-permit="unverified"]')).toContainText(en?'Permit not verified by ContrataCR.':'Habilitación sin verificar por ContrataCR.');
  await openPlaceTab(page,'reviews');await expect(page.locator('[data-place-review-note]')).toContainText(en?'attention and service':'la atención y el servicio');
  await expect(page.locator('[data-place-price-report]')).toHaveCount(0);

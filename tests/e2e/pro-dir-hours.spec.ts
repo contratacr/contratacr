@@ -1,7 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,origin} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,label,trackPlace,uid} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,label,trackPlace,uid,openPlaceTab} from './pro-dir-fixture';
 
 // Multivertical F2 extras (LOCAL Pro): hours and website imported from OpenStreetMap. A synthetic place whose hours and
 // website come from the OSM source shows «Horario según OpenStreetMap; confírmelo con el negocio», «24 horas» for
@@ -32,6 +32,7 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  await make(owner,`Soda Horario ${tag} dueño`,[{weekday:1,opens:'08:00',closes:'17:00'}],'owner');
 
  await gotoOK(page,`${prefix}/lugar/${open247}`);
+ await openPlaceTab(page,'info');
  const hours=page.locator('section[aria-labelledby="place-hours"]');
  await expect(hours.locator('[data-place-hours-source="osm"]')).toHaveText(t('Horario según OpenStreetMap.','Hours from OpenStreetMap.'));
  await expect(hours.locator('dd').first()).toHaveText(t('24 horas','24 hours'));
@@ -46,6 +47,7 @@ for(const language of ['es','en'] as const)test(`F2 extras: OSM hours note, webs
  await gotoOK(page,`${prefix}/lugar/${closed}`);
  await expect(page.locator('[data-place-open-status="closed"]')).toContainText(en?/Closed · opens (today|tomorrow) at \d\d:\d\d/:/Cerrado · abre (hoy|mañana) a las \d\d:\d\d/);
  await gotoOK(page,`${prefix}/lugar/${owner}`);
+ await openPlaceTab(page,'info');
  await expect(page.locator('section[aria-labelledby="place-hours"]')).not.toContainText(t('Confirme el horario','Please confirm the hours'));// 2026-11-19: moved to the Terms (13.1)
  await expect(page.locator('[data-place-hours-source]')).toHaveCount(0);
 

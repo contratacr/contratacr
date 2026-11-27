@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {DIRECTORY_VERTICALS,PLACE_STATUSES,REPORT_KINDS,VERIFICATION_LEVELS,type DirectoryVertical} from './types';
 import {placeSectionById} from './place-verticals';
+import {placeSocialSchema} from './place-social';
 
 // LOCAL PRO ONLY (multivertical F1/F2). zod mirrors of the checks in directory-core-local.sql; the database checks
 // again. Attribute keys per vertical must match dir_verticals.attribute_keys. Messages in Spanish («usted»); the
@@ -13,7 +14,8 @@ const list=<T extends [string,...string[]]>(values:T,max:number)=>z.array(z.enum
 const kindOf=(id:string)=>{const values=placeSectionById(id)?.kinds.map(x=>x.value)??[];return z.string().refine(v=>values.includes(v),'Tipo inválido para esta sección.').optional();};
 
 /** WhatsApp number recorded by the team or an import (2026-11-26); shown as the WhatsApp button until the owner sets a «Pedir» link. */
-const contact={whatsapp:z.string().trim().regex(/^\+?[0-9][0-9 ()-]{6,22}$/,'WhatsApp inválido.').optional()};
+/** `social` (2026-11-27, migration 539): the place's social links, {network: https URL} (place-social.ts). */
+const contact={whatsapp:z.string().trim().regex(/^\+?[0-9][0-9 ()-]{6,22}$/,'WhatsApp inválido.').optional(),social:placeSocialSchema};
 /** Bounded, typed attributes per vertical. No price, sponsorship or ranking keys: order never depends on payment. */
 export const verticalAttributeSchemas={
  restaurant:z.object({...contact,cuisines:z.array(text(40)).max(10).optional(),priceLevel:z.number().int().min(1).max(4).optional(),

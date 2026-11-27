@@ -2,7 +2,7 @@ import {test,expect} from 'playwright/test';
 import {collectPageErrors,gotoOK,expectNoHorizontalOverflow} from './helpers';
 import {local,origin} from './pro-round2-fixture';
 import {regressionAdminClient} from './seed';
-import {hideSeededPlaces,trackPlace} from './pro-dir-fixture';
+import {hideSeededPlaces,openPlaceTab,trackPlace} from './pro-dir-fixture';
 
 // Multivertical F1/F2 (LOCAL Pro): canonical place page /lugar/<slug>. Draft → 404; published → page with hours,
 // verification label and OSM attribution; pharmacy without license_verified → public with a neutral «permit not verified»
@@ -24,7 +24,7 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  expect((await page.request.get(origin+prefix+'/lugar/'+slug)).status()).toBe(404);// draft
  rev=(await mutate({action:'hours',placeId,revision:rev,hours:[{weekday:1,opens:'08:00',closes:'17:00'}]})).revision;
  rev=(await mutate({action:'status',placeId,revision:rev,status:'published'})).revision;
- await gotoOK(page,prefix+'/lugar/'+slug);
+ await gotoOK(page,prefix+'/lugar/'+slug);await openPlaceTab(page,'info');
  await expect(page.getByRole('heading',{level:1})).toHaveText('Soda E2E '+label);
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);// 2026-11-27: no «No reclamado» label; the claim box at the end invites the owner
  await expect(page.locator('[data-place-claim-link]')).toBeVisible();
@@ -50,9 +50,10 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  const ph=await mutate({action:'create',placeId:pharmacyId,revision:0,place:{slug:'farmacia-e2e-'+label,vertical:'pharmacy',name:'Farmacia E2E '+label}});
  await mutate({action:'status',placeId:pharmacyId,revision:ph.revision,status:'published'});
  await gotoOK(page,prefix+'/lugar/farmacia-e2e-'+label);
+ await openPlaceTab(page,'info');
  await expect(page.locator('[data-pharmacy-license="unverified"]')).toContainText(t('Permiso sin verificar por ContrataCR.','License not verified by ContrataCR.'));
  await expect(page.locator('[data-place-verification]')).toHaveCount(0);
- await gotoOK(page,prefix+'/lugar/'+slug);
+ await gotoOK(page,prefix+'/lugar/'+slug);await openPlaceTab(page,'info');
  // report through the real form; a second identical POST with the same reportId is accepted once
  // «Sugerir un cambio» in the side card opens the report form (#reportar).
  await page.waitForLoadState('networkidle');await page.locator('[data-place-suggest]').click();
@@ -65,5 +66,62 @@ for(const language of ['es','en'] as const)test(`F1/F2: place page, attribution,
  const bad=await page.request.post(origin+'/api/lugar/'+slug+'/reporte',{headers:{Origin:origin},data:{reportId:crypto.randomUUID(),kind:'spam',message:'x'}});expect(bad.status()).toBe(400);
  const resolved=await db.rpc('dir_report_resolve',{p_actor:staff,p_input:{actionId:crypto.randomUUID(),reportId:reports[0].id,decision:'accept',revision:rev}});expect(resolved.error).toBeNull();
  expect((await page.request.get(origin+prefix+'/lugar/'+slug)).status()).toBe(404);
+ expect(errors()).toEqual([]);
+});
+
+// Owner 2026-11-27: «al refrescar el navbar se mueve» and «también deberían de salir los iconos de las redes sociales».
+// (1) On a phone the bar of /lugar is «← Sección ···» from the FIRST paint: the server HTML (JavaScript off) already has
+// the back arrow, the centred title and the «…», at the same pixels as after hydration, and never the logo or the ☰.
+// (2) Social links stored in attributes.social (and a «website» that is really a Facebook page) show as icon links, then
+// Waze and Google Maps (owner 2026-11-27, «arriba en lugar de poner waze y maps poner los iconos de redes sociales»):
+// https only, the network's own host, new tab, rel="noopener noreferrer"; a foreign host is never shown. Synthetic seed.
+test('place header pixel-stable from first paint; social icons from real data only',async({page,browser},info)=>{
+ test.setTimeout(240000);local(info.project.use.baseURL);
+ const db=regressionAdminClient(),staff=crypto.randomUUID(),label=crypto.randomUUID().slice(0,8),placeId=crypto.randomUUID(),slug='soda-redes-'+label;
+ const mutate=async(input:Record<string,unknown>)=>{const r=await db.rpc('dir_place_mutate',{p_actor:staff,p_input:{actionId:crypto.randomUUID(),...input}});if(r.error)throw r.error;return r.data as {revision:number};};
+ trackPlace(placeId,staff);const errors=collectPageErrors(page);
+ const rev=(await mutate({action:'create',placeId,revision:0,source:{id:'osm',ref:'node/e2e-redes-'+label},verificationLevel:'imported',
+  place:{slug,vertical:'restaurant',name:'Soda Redes '+label,adminArea1:'San José',lat:9.933,lng:-84.08,phone:'+506 2200 0002',website:'https://www.facebook.com/sodaredes'+label,
+   attributes:{social:{instagram:'@sodaredes'+label,tiktok:'https://www.tiktok.com/@sodaredes'+label}}}})).revision;
+ await mutate({action:'status',placeId,revision:rev,status:'published'});
+ const box=async(p:import('playwright/test').Page)=>p.evaluate(()=>{const q=(s:string)=>{const e=[...document.querySelectorAll(`header[data-testid="landing-navbar"] ${s}`)].find(x=>x.getBoundingClientRect().width>0);if(!e)return null;const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height].map(n=>Math.round(n*2)/2);};
+  return {back:q('[data-ccr-section-back]'),title:q('[data-ccr-section-title]'),menu:q('[data-ccr-section-menu]'),burger:q('[data-ccr-menu-burger]'),logo:q('a[aria-label="ContrataCR"]')};});
+ const phone={viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3};
+ const cold=await browser.newContext({...phone,javaScriptEnabled:false});
+ try{
+  const first=await cold.newPage();await first.goto(origin+'/lugar/'+slug,{waitUntil:'load'});await first.evaluate(()=>document.fonts.ready);
+  const ssr=await box(first);
+  expect(ssr.back,'server paints the back arrow').not.toBeNull();expect(ssr.menu,'server paints the «…»').not.toBeNull();
+  expect(ssr.burger).toBeNull();expect(ssr.logo).toBeNull();
+  await expect(first.locator('[data-ccr-section-title]')).toHaveText('Restaurantes');
+  const warm=await browser.newContext(phone);
+  try{
+   const p=await warm.newPage();
+   await p.addInitScript(()=>{(window as unknown as {__ls:number[]}).__ls=[];new PerformanceObserver(l=>{for(const e of l.getEntries() as unknown as {value:number;sources:{currentRect:DOMRectReadOnly;previousRect:DOMRectReadOnly}[]}[])
+    if(e.sources.some(s=>s.previousRect.top<70||s.currentRect.top<70))(window as unknown as {__ls:number[]}).__ls.push(e.value);}).observe({type:'layout-shift',buffered:true});});
+   await p.goto(origin+'/lugar/'+slug,{waitUntil:'load'});await p.reload({waitUntil:'load'});
+   await expect(p.locator('header[data-testid="landing-navbar"][data-hydrated="true"]')).toHaveCount(1,{timeout:45000});await p.waitForTimeout(500);
+   expect(await box(p),'header boxes after hydration = first paint').toEqual(ssr);
+   expect(await p.evaluate(()=>(window as unknown as {__ls:number[]}).__ls.reduce((a,b)=>a+b,0)),'header CLS').toBe(0);
+   // Icon row of the card (owner 2026-11-27): Facebook (from the website), Instagram (handle → link), TikTok, then Google
+   // Maps and Waze, in the professional profile's icon style; no Waze/Maps text chips any more.
+   const card=p.locator('[data-place-header] [data-place-social]');await expect(card).toBeVisible();
+   await expect(card.locator('a')).toHaveCount(5);
+   // Production professional profile order: website, social links, Google Maps, Waze; centred under «<name> · <address>».
+   await expect(card.locator('a').nth(3)).toHaveAttribute('data-place-action','maps');await expect(card.locator('a').nth(4)).toHaveAttribute('data-place-action','waze');
+   await expect(p.locator('[data-place-address-line]')).toContainText('Soda Redes '+label+' · ');
+   await expect(card.locator('[data-place-action="waze"]')).toHaveAttribute('aria-label','Abrir en Waze');
+   await expect(card.locator('[data-place-action="maps"]')).toHaveAttribute('href',/^https:\/\/www\.google\.com\/maps\//);
+   await expect(card.locator('[data-place-social-link]')).toHaveCount(3);
+   for(const [n,href] of [['facebook','https://www.facebook.com/sodaredes'+label],['instagram','https://www.instagram.com/sodaredes'+label],['tiktok','https://www.tiktok.com/@sodaredes'+label]]){
+    const a=card.locator(`[data-place-social-link="${n}"]`);await expect(a).toHaveAttribute('href',href);await expect(a).toHaveAttribute('target','_blank');await expect(a).toHaveAttribute('rel','noopener noreferrer');}
+   // The Facebook page is not offered a second time as «Sitio web».
+   await expect(p.locator('[data-place-action="website"], [data-place-contact="website"]')).toHaveCount(0);
+  }finally{await warm.close();}
+ }finally{await cold.close();}
+ // Computers: the same row in the identity card.
+ await page.setViewportSize({width:1280,height:900});await gotoOK(page,'/lugar/'+slug);
+ await expect(page.locator('[data-place-header] [data-place-social] a')).toHaveCount(5);
+ await expect(page.locator('[data-place-header] [data-place-social]')).toBeVisible();
  expect(errors()).toEqual([]);
 });

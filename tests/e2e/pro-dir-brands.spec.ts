@@ -1,7 +1,7 @@
 import {test,expect} from 'playwright/test';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local,origin,ownerFixture,proOff} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,label,postJson,seedPlace,uid,openPlaceTab} from './pro-dir-fixture';
 import {featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): brand pages. Synthetic branches imported «from OSM» (brand +
@@ -47,6 +47,7 @@ test('brands: OSM brand import + name match, brand page, split/merge, claim with
    await expect(page.locator('[data-brand-branch]')).toHaveCount(1);
    await expect(page.locator('[data-brand-map]')).toHaveAttribute('data-brand-map','1');
    await gotoOK(page,`${prefix}/lugar/${slugs[0]}`);
+   await openPlaceTab(page,'info');
    await expect(page.locator(`[data-place-brand="${b.slug}"]`)).toContainText(en?'Branch of':'Sucursal de');
   }
   // Staff split the «Express» branch into a new brand, then merge it back; the merged slug redirects.
@@ -93,6 +94,7 @@ test('brands: OSM brand import + name match, brand page, split/merge, claim with
    await expect(page.locator('[data-brand-website]')).toHaveAttribute('href','https://cadena.example.test');
    await expect(page.locator('main')).toContainText(language==='en'?'Neighbourhood supermarkets.':'Supermercados de barrio.');
    await gotoOK(page,`${prefix}/lugar/${slugs[1]}`);
+   await openPlaceTab(page,'info');
    await expect(page.locator('[data-place-brand-about]')).toContainText(language==='en'?'Neighbourhood supermarkets.':'Supermercados de barrio.');// 2026-11-19: «Acerca de <marca>» section
   }
   expect(errors()).toEqual([]);

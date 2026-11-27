@@ -3,7 +3,7 @@ import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {collectPageErrors,expectNoHorizontalOverflow,gotoOK} from './helpers';
 import {local} from './pro-round2-fixture';
-import {dirDb,hideSeededPlaces,label,seedPlace,seedSyntheticFuel,uid,type Db} from './pro-dir-fixture';
+import {dirDb,hideSeededPlaces,label,seedPlace,seedSyntheticFuel,uid,type Db,openPlaceTab} from './pro-dir-fixture';
 import {seedPriceComparison} from './pro-dir-prices-fixture';
 
 // 2026-11-19: the places sections use the /profesionales layout; the complete GET form lives in the «Filtros» drawer
@@ -119,6 +119,7 @@ for(const language of ['es','en'] as const)test(`2026-11-17: product price filte
   if(info.project.name==='chromium-desktop'){await gotoOK(page,`${prefix}/farmacias?product=${seed.otc}&sort=price_asc`);await shot(page,`farmacias-producto-${language}`,1440);await shot(page,`farmacias-producto-${language}`,390);}
   // The place page of the unverified pharmacy: public, neutral note; prescription prices never.
   await gotoOK(page,`${prefix}/lugar/${seed.places.sinPermiso}`);
+  await openPlaceTab(page,'info');
   await expect(page.locator('[data-pharmacy-license="unverified"]')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(seed.rxName);
   // A prescription product is never resolvable as a price filter.

@@ -26,7 +26,7 @@ for(const language of ['es','en'] as const)test(`F3: claim by the e-mail on the 
   await page.locator('[data-place-claim]').screenshot({path:`${shotsDir}/${name}-${language}-${width}-${info.project.name}.png`});}};
  // Anonymous: the place page carries only the compact claim link (2026-11-19, Yelp model); the claim page explains
  // what claiming gives and invites to sign in; the API refuses.
- await gotoOK(page,`${prefix}/lugar/${slug}`);
+ await gotoOK(page,`${prefix}/lugar/${slug}`);await openPlaceTab(page,'info');
  await expect(page.locator('[data-claim-benefits]')).toHaveCount(0);
  await expect(page.locator('[data-place-claim-link] a')).toHaveAttribute('href',`${prefix}/lugar/${slug}/reclamar`);
  await gotoOK(page,`${prefix}/lugar/${slug}/reclamar`);

@@ -20,12 +20,14 @@
 // Accepts OSM-style GeoJSON (FeatureCollection of Point/Polygon features with OSM tags in `properties`) or
 // Overpass JSON ({elements:[{type,id,lat,lon|center,tags}]}). Keeps ONLY: name, vertical, address, coordinates and
 // the business phone (dropped with --no-phone or when the source license does not allow it; the database checks
-// dir_data_sources.allows_phone again). Raw tags, opening hours, e-mails and people's names are never copied.
+// dir_data_sources.allows_phone again). Since 2026-11-27 also the business's social links (contact:facebook / instagram /
+// tiktok / twitter / youtube / linkedin, validated by osm-social.mjs) as attributes.social. Raw tags, opening hours, e-mails and people's names are never copied.
 // No network access, no database connection: apply the payload with the dir_import_stage RPC (service role).
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {basename,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {socialFromTags} from './osm-social.mjs';
 import {phoneFromTags,whatsappFromTags} from './osm-contact.mjs';
 
 export const PART_SIZE=5000;
@@ -260,8 +262,8 @@ function row(ref,tags,point,allowPhone,opts={}){
   adminArea1:cut(tags['addr:province']??tags['addr:state'],80),adminArea2:cut(tags['addr:county']??tags['addr:canton'],80),adminArea3:cut(tags['addr:district']??tags['addr:suburb'],80),
   lat:Number.isFinite(point?.lat)?Math.round(point.lat*1e6)/1e6:null,lng:Number.isFinite(point?.lng)?Math.round(point.lng*1e6)/1e6:null,locationPrecision:point?.precision??'exact',
   phone:allowPhone?phoneOf(tags):undefined,attributes:undefined};
- // WhatsApp (2026-11-27): only a number really tagged in OSM (osm-contact.mjs) → attributes.whatsapp.
- const whatsapp=allowPhone?whatsappFromTags(tags):undefined,attrs={...(cls.attributes??{}),...(whatsapp?{whatsapp}:{})};
+ // Social links (2026-11-27): OSM contact:facebook / instagram / … → attributes.social (osm-social.mjs; invalid values dropped).
+ const social=socialFromTags(tags),whatsapp=allowPhone?whatsappFromTags(tags):undefined,attrs={...(cls.attributes??{}),...(social?{social}:{}),...(whatsapp?{whatsapp}:{})};
  out.attributes=Object.keys(attrs).length?attrs:undefined;
  return Object.fromEntries(Object.entries(out).filter(([,v])=>v!==undefined));
 }

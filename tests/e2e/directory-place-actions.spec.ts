@@ -2,6 +2,8 @@ import {test,expect} from 'playwright/test';
 import {gotoOK,isMobileProject} from './helpers';
 import {PLACE_ACTIONS,resolvePlaceActions,placeActionSpec,placeBarActions,placeCardActions,type PlaceActionInput} from '../../src/lib/directory/place-actions';
 import {PLACE_SECTIONS,reviewsOn,sectionRatingSort} from '../../src/lib/directory/place-verticals';
+import {placeSocialLinks,placeSocialUrl} from '../../src/lib/directory/place-social';
+import {verticalAttributeSchemas} from '../../src/lib/directory/schemas';
 
 // Botones principales por categoría (estilo app móvil de Yelp): el mapa vive en src/lib/directory/place-actions.ts.
 // Regla: un botón existe solo si el lugar tiene el dato (nunca un botón muerto). Parte 1: el mapa puro. Parte 2: páginas
@@ -26,6 +28,21 @@ test('mapa de botones: cada sección tiene su juego y nunca hay botones muertos'
  }
 });
 
+// Redes sociales (dueño 2026-11-27): solo enlaces https del propio sitio de la red; un usuario («@soda») se vuelve enlace;
+// nada de otros dominios, javascript: ni páginas de búsqueda. La «web» que en realidad es Facebook se muestra como su icono.
+test('redes sociales del lugar: solo enlaces válidos de la propia red',()=>{
+ expect(placeSocialUrl('instagram','@soda_tica')).toBe('https://www.instagram.com/soda_tica');
+ expect(placeSocialUrl('facebook','http://m.facebook.com/sodatica/?ref=x')).toBe('https://www.facebook.com/sodatica');
+ expect(placeSocialUrl('x','https://twitter.com/sodatica')).toBe('https://x.com/sodatica');
+ for(const [n,v] of [['facebook','https://evil.example/facebook.com/a'],['facebook','javascript:alert(1)'],['facebook','https://www.facebook.com/search/top?q=a'],['instagram','https://www.facebook.com/a'],['youtube','https://www.youtube.com/']] as const)
+  expect(placeSocialUrl(n,v),`${n} ${v}`).toBeNull();
+ expect(placeSocialLinks({social:{instagram:'@a',x:'https://bad.example/a'}},'https://www.facebook.com/a').map(l=>l.network)).toEqual(['facebook','instagram']);
+ expect(placeSocialLinks({},'https://example.com')).toEqual([]);
+ expect(verticalAttributeSchemas.restaurant.safeParse({social:{facebook:'https://www.facebook.com/a'}}).success).toBe(true);
+ expect(verticalAttributeSchemas.restaurant.safeParse({social:{facebook:'https://evil.example/a'}}).success).toBe(false);
+ expect(verticalAttributeSchemas.restaurant.safeParse({social:{myspace:'a'}}).success).toBe(false);
+});
+
 test('sin reseñas (dueño 2026-11-26): trámites y centros comerciales nunca; educación y transporte solo en algunos tipos',()=>{
  expect(reviewsOn('government','municipality')).toBe(false);expect(reviewsOn('mall')).toBe(false);
  expect(reviewsOn('education','school')).toBe(false);expect(reviewsOn('education','college')).toBe(false);expect(reviewsOn('education','university')).toBe(true);
@@ -45,9 +62,9 @@ test('restaurantes: Reservar usa la herramienta de reservas o "Llamar para reser
  expect(resolvePlaceActions(['reserve'],{...FULL,reservation:false,locale:'en'})[0]!.label).toBe('Call to reserve');
 });
 
-test('Cómo llegar ofrece Waze, Google Maps y Apple Maps; WhatsApp y Cotizar salen del enlace del dueño',()=>{
+test('Cómo llegar ofrece Waze y Google Maps; WhatsApp y Cotizar salen del enlace del dueño',()=>{
  const [d]=resolvePlaceActions(['directions'],FULL);
- expect(d!.type).toBe('directions');expect(d!.maps!.waze).toContain('waze.com');expect(d!.maps!.google).toContain('google.com/maps');expect(d!.maps!.apple).toContain('maps.apple.com');
+ expect(d!.type).toBe('directions');expect(d!.maps!.waze).toContain('waze.com');expect(d!.maps!.google).toContain('google.com/maps');
  expect(resolvePlaceActions(['whatsapp'],{...FULL,order:null})).toHaveLength(0);
  const q=resolvePlaceActions(['quote','whatsapp'],{...FULL,verticalId:'hardware'});
  expect(q.map(a=>a.id)).toEqual(['quote']);expect(q[0]!.href).toMatch(/^https:\/\/wa\.me\/50688887777\?text=/);
@@ -82,8 +99,8 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
  // La ficha no se desborda (el encabezado global se mide aparte en navbar-brand-consistency).
  expect(await page.locator('[data-place-page]').evaluate(m=>m.scrollWidth<=m.clientWidth+1),'la ficha desborda').toBe(true);
  // Cómo llegar: elección de aplicación.
- // Phones: Maps and Waze chips; from lg: «Cómo llegar» in the side card opens the app chooser.
- if(mobile){const maps=chips.locator('[data-place-action="maps"]');if(await maps.count())await expect(maps).toHaveAttribute('href',/^https:/);}
+ // Waze and Google Maps icons in the card's icon row (2026-11-27); from lg «Cómo llegar» in the side card opens the app chooser.
+ {const maps=chips.locator('[data-place-action="maps"]');if(await maps.count())await expect(maps).toHaveAttribute('href',/^https:/);}
  const cta=page.locator('[data-place-side-card]').locator('[data-place-directions-cta]').first();
  if(!mobile&&await cta.count()){
   // Clic real en el centro del botón (la barra es fija: sin el desplazamiento automático de Playwright).
@@ -93,8 +110,10 @@ for(const locale of ['es','en'] as const)for(const section of SECTIONS)test(`fic
    if(!(await opts.count())){const box=(await cta.boundingBox())!;await page.mouse.click(box.x+box.width/2,box.y+box.height/2);}
    await expect(opts).toBeVisible({timeout:1500});
   }).toPass({timeout:15000});
-  await expect(opts.locator('[data-directions-app]')).toHaveCount(3);
-  for(const app of ['waze','google','apple'])await expect(opts.locator(`[data-directions-app="${app}"]`)).toHaveAttribute('href',/^https:/);
+  // Apple Maps removed (owner 2026-11-27): Waze and Google Maps only.
+  await expect(opts.locator('[data-directions-app]')).toHaveCount(2);
+  await expect(opts.locator('[data-directions-app="apple"]')).toHaveCount(0);
+  for(const app of ['waze','google'])await expect(opts.locator(`[data-directions-app="${app}"]`)).toHaveAttribute('href',/^https:/);
   await page.keyboard.press('Escape');await expect(opts).toHaveCount(0);
  }
 });
@@ -108,9 +127,13 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
  if(!(await link.count())){test.skip(true,'sin lugares');return;}
  await gotoOK(page,(await link.getAttribute('href'))!);
  const en=locale==='en';
- // Pestañas: Reseñas e Información siempre («Más» se unió a Información, 2026-11-26); sin desbordar.
- for(const id of ['info','reviews'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
+ // Pestañas: Reseñas, Información y Ubicación siempre; sin desbordar.
+ // 2026-11-27: Información and Ubicación (no Contacto tab); the page opens on its first tab, like the professional profile.
+ for(const id of ['info','location','reviews'])await expect(page.locator(`[data-place-tab="${id}"]`)).toBeVisible();
  await expect(page.locator('[data-place-tab="info"]')).toHaveText(en?'Information':'Información');
+ await expect(page.locator('[data-place-tab="location"]')).toHaveText(en?'Location':'Ubicación');
+ await expect(page.locator('[data-place-tab="contact"]')).toHaveCount(0);
+ await expect(page.locator('[data-place-tab]').first()).toHaveAttribute('aria-selected','true');
  await expect(page.locator('[data-place-tab="more"]')).toHaveCount(0);
  // «¿Ya visitó este lugar?» (owner 2026-11-26, like the professional profile): five stars; a tap opens the form with that rating.
  const reviewsTab=page.locator('[data-place-tab="reviews"]');
@@ -123,11 +146,19 @@ for(const locale of ['es','en'] as const)test(`ficha: estrellas de reseña, pest
   await expect(page.locator('[data-place-review-form]')).toBeVisible({timeout:1500});
   await expect(page.locator('[data-place-review-form] input[name="rating"]')).toHaveValue('3',{timeout:1500});
  }).toPass({timeout:15000});
- // Hoja de compartir: Copiar enlace, Enviar a amigos, Sugerir un cambio.
- // Phones: Compartir lives in the bar's «…» sheet (owner 2026-11-26); from lg it is inline in the chip row.
+ // Phones (owner 2026-11-27, «las opciones dentro de … deberían ser iguales al perfil profesional»): the bar's «…» opens the
+ // shared MenuFicha sheet with Guardar · Compartir · Agregar fotos · Sugerir un cambio · Reportar (red).
  const phone=isMobileProject(info);
- const btn=phone?page.locator('[data-place-more-menu] [data-share-button]'):page.locator('[data-place-actions-bar] [data-share-button]');
- await expect(async()=>{if(phone&&!(await page.locator('[data-place-more-menu]').count()))await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await btn.click();await expect(page.locator('[data-share-sheet]')).toBeVisible({timeout:1500});}).toPass({timeout:15000});
+ if(phone){
+  const sheet=page.locator('[data-menu-ficha]').filter({visible:true});
+  await expect(async()=>{await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();await expect(sheet).toBeVisible({timeout:1500});}).toPass({timeout:15000});
+  expect((await sheet.getByRole('menuitem').allInnerTexts()).map(x=>x.trim())).toEqual(en?['Save','Share','Add photos','Suggest an edit','Report']:['Guardar','Compartir','Agregar fotos','Sugerir un cambio','Reportar']);
+  await page.keyboard.press('Escape');await expect(sheet).toHaveCount(0);
+  return;
+ }
+ // Computers: Hoja de compartir del chip row: Copiar enlace, Enviar a amigos, Sugerir un cambio.
+ const btn=page.locator('[data-place-actions-bar] [data-share-button]');
+ await expect(async()=>{await btn.click();await expect(page.locator('[data-share-sheet]')).toBeVisible({timeout:1500});}).toPass({timeout:15000});
  await expect(page.locator('[data-share-copy]')).toHaveText(en?'Copy link':'Copiar enlace');
  await expect(page.locator('[data-share-send]')).toHaveText(en?'Send to friends':'Enviar a amigos');
  await expect(page.locator('[data-share-suggest]')).toHaveText(en?'Suggest an edit':'Sugerir un cambio');

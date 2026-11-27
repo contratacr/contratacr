@@ -4,7 +4,7 @@ import {local,login,origin,ownerFixture,proOff} from './pro-round2-fixture';
 // PRO_ENABLED off: the owner side lives in «Mi negocio» (/api/negocio/reservas, /api/negocio/lugar, /dashboard/negocio/reservas).
 const RES_API=proOff?'/api/negocio/reservas':'/api/pro/table-reservations',PLACE_API=proOff?'/api/negocio/lugar':'/api/pro/place-events',RES_UI=proOff?'/dashboard/negocio/reservas':'/dashboard/pro/reservas-mesa';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {chooseEdition,claimByEmail,hideSeededPlaces,label,postJson,seedPlace,uid} from './pro-dir-fixture';
+import {chooseEdition,claimByEmail,hideSeededPlaces,label,postJson,seedPlace,uid,openPlaceTab} from './pro-dir-fixture';
 import {crDay,featureShots,randomIp} from './pro-dir-features-fixture';
 
 // Place features round (LOCAL Pro, 2026-11-17): table reservations + same-day waitlist of a CLAIMED restaurant that
@@ -54,6 +54,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
    for(const language of ['es','en'] as const){
     const en=language==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
     await gotoOK(g,`${prefix}/lugar/${slug}`);
+    await openPlaceTab(g,'info');
     const box=g.locator('[data-place-reservations][data-ready]');await expect(box).toBeVisible({timeout:45000});
     await expect(box.getByRole('heading',{name:t('Reservar mesa','Book a table')})).toBeVisible();
     await box.locator('[data-reservation-day]').fill(day);
@@ -77,6 +78,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
    expect([noContact.status,noContact.body?.reason]).toEqual([400,'contact_required']);
    // Same-day waitlist through the UI.
    await gotoOK(g,`/lugar/${slug}`);
+   await openPlaceTab(g,'info');
    const box=g.locator('[data-place-reservations][data-ready]');await expect(box).toBeVisible({timeout:45000});
    await box.locator('[data-reservation-mode="waitlist"]').click();
    await box.locator('[data-reservation-name]').fill('Lista Espera');await box.locator('[data-reservation-email]').fill('lista@ejemplo.test');
@@ -139,6 +141,7 @@ test('reservations: opt-in, booking + waitlist, capacity, owner decisions with m
   for(const language of ['es','en'] as const){
    const prefix=language==='en'?'/en':'/es';
    await gotoOK(page,`${prefix}/lugar/${slug}`);
+   await openPlaceTab(page,'info');
    await expect(page.locator('html')).toHaveAttribute('lang',language);
    await expect(page.locator('[data-place-reservations][data-ready]')).toBeVisible({timeout:45000});
    await expect(page.locator('[data-place-action="order"]').first()).toHaveAttribute('href','https://wa.me/50688880101');
