@@ -1,15 +1,20 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, waitForInteractivePage } from "./helpers";
+import { directoryEnabled, gotoOK, waitForInteractivePage } from "./helpers";
 import { stabilizeLocalProRuntime } from "./pro-local-stable-runtime";
 
-test("navbar logo stays identical without web fonts across public routes", async ({ page, baseURL }) => {
+// Directory on (test only, 0eb6a9582, owner 2026-11-23): on phones /solicitudes opens the «Proyectos» hub; the board with
+// its marketplace header (the surface these brand checks measure) lives at ?vista=comunidad. Production (off) unchanged.
+const boardPath = (path: string, directory: boolean) => directory && /\/solicitudes$/.test(path) ? `${path}?vista=comunidad` : path;
+
+test("navbar logo stays identical without web fonts across public routes", async ({ page, baseURL, request }) => {
+  const directory = await directoryEnabled(request);
   if (baseURL === "http://127.0.0.1:3185" && process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321") {
     await stabilizeLocalProRuntime(page.context(), baseURL);
   }
   // Reproduce a cold/slow font request: the logo must not fall back to Arial.
   await page.route(/\.woff2(?:\?.*)?$/, route => route.abort());
   for (const path of ["/", "/registro", "/login", "/solicitudes", "/promociones", "/empleos"]) {
-    await gotoOK(page, path);
+    await gotoOK(page, boardPath(path, directory));
     await waitForInteractivePage(page);
     // Marketplace mobile headers intentionally show only the mark + section
     // title. The full brand lives in their shared navigation drawer.
@@ -19,9 +24,9 @@ test("navbar logo stays identical without web fonts across public routes", async
     const wordmark = surface.locator('img[src="/brand/wordmark-light.svg"]').filter({ visible: true });
     await expect(wordmark).toHaveCount(1);
     await expect.poll(() => wordmark.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
-    const box = await wordmark.boundingBox();
-    expect(box!.width).toBeCloseTo(105, 2);
-    expect(box!.height).toBeCloseTo(24, 2);
+    // Directory on, the menu curtain drops its logo row in with a short scale (testing notes §3): measure once it settles.
+    await expect.poll(async () => (await wordmark.boundingBox())!.width).toBeCloseTo(105, 2);
+    expect((await wordmark.boundingBox())!.height).toBeCloseTo(24, 2);
     // Measure visible ink, including transparent padding inside the mark.
     const measureVisibleGap = () => wordmark.evaluate(async (word: HTMLImageElement) => {
       const mark = word.previousElementSibling as HTMLImageElement;
@@ -51,15 +56,16 @@ test("navbar logo stays identical without web fonts across public routes", async
 });
 
 // Section names replace the wordmark, not the geometry of the brand lockup.
-test("section headers keep home mark size and title spacing", async ({ page }) => {
+test("section headers keep home mark size and title spacing", async ({ page, request }) => {
   test.setTimeout(120_000);
+  const directory = await directoryEnabled(request);
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoOK(page, "/");
   const home = page.locator('header img[src="/brand/wordmark-light.svg"]').filter({ visible: true }).first();
   await expect(home).toBeVisible();
   const homeGap = await home.evaluate(word => word.getBoundingClientRect().left - word.previousElementSibling!.getBoundingClientRect().right);
   for (const path of ["/solicitudes", "/empleos", "/promociones", "/servicios", "/en/solicitudes"]) {
-    await gotoOK(page, path);
+    await gotoOK(page, boardPath(path, directory));
     const brand = page.locator("[data-ccr-section-brand]").filter({ visible: true }).first();
     await expect(brand).toBeVisible();
     const geometry = await brand.evaluate(el => {
@@ -76,12 +82,17 @@ test("section headers keep home mark size and title spacing", async ({ page }) =
   }
 });
 
-test("mobile search text aligns across both fields and all four search surfaces", async ({ page }) => {
+test("mobile search text aligns across both fields and all four search surfaces", async ({ page, request }) => {
   test.setTimeout(120_000);
+  const directory = await directoryEnabled(request);
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/buscar", "/solicitudes", "/empleos", "/promociones", "/en/buscar"]) {
-    await gotoOK(page, path);
-    const entry = path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio está buscando|Services, restaurants, pharmacies|Servicios, restaurantes, farmacias/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
+    await gotoOK(page, boardPath(path, directory));
+    await waitForInteractivePage(page);
+    // Directory on (testing notes §2): the search screen is a map with the floating search card («Accesos rápidos»)
+    // instead of the header; its service button opens the same search sheet.
+    const directoryEntry = page.getByRole("navigation", { name: /Accesos rápidos|Quick links/i }).getByRole("button", { name: /Todos los servicios|All services/i }).filter({ visible: true }).first();
+    const entry = path.includes("buscar") && directory ? directoryEntry : path.includes("buscar") ? page.locator("header").getByRole("button", { name: /What service are you looking for|Qué servicio está buscando|Services, restaurants, pharmacies|Servicios, restaurantes, farmacias/i }).filter({ visible: true }).first() : page.locator(".ccr-marketplace-sticky input").filter({ visible: true }).first();
     await expect(entry).toBeVisible();
     await entry.click();
     const sheet = page.locator(".ccr-native-search-panel, .ccr-hoja-buscador").filter({ visible: true });
@@ -110,7 +121,8 @@ test("mobile search text aligns across both fields and all four search surfaces"
 });
 
 // Render the actual branded, interior/back and full-screen form headers with
-// the real generated stylesheet. No authenticated fixture or backend is needed.
+// the real generated stylesheet. No authenticated fixture or backend is needed. SectionBrand reads next-intl since
+// d3ae4ba3b (menu label), so the harness mounts the real Spanish messages, as the app layout does.
 test("all navbar title variants keep the same typography at every breakpoint", async ({ page }) => {
   const { build } = await import("esbuild");
   const { readFileSync } = await import("node:fs");
@@ -125,6 +137,7 @@ test("all navbar title variants keep the same typography at every breakpoint", a
   };
   const bundle = await build({ stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
     import React,{useState} from 'react';import{createRoot}from'react-dom/client';
+    import{NextIntlClientProvider}from'next-intl';import messages from './messages/es.json';
     import{SectionBrand}from'./src/components/layout/section-brand';
     import{FocusedHeader}from'./src/components/layout/focused-header';
     import{Modal}from'./src/components/ui/modal';
@@ -132,7 +145,7 @@ test("all navbar title variants keep the same typography at every breakpoint", a
       <SectionBrand title="Notificaciones"/>
       <FocusedHeader title="Configuración de la cuenta con un título largo" onBack={()=>window.backClicks=(window.backClicks||0)+1}/>
       <Modal open={open} onClose={()=>setOpen(false)} mobilePresentation={presentation} title="Editar publicación con un título largo" backLabel="Volver al formulario"><p>Formulario</p></Modal>
-    </>}createRoot(document.getElementById('root')).render(<App/>);` }, bundle: true, write: false, format: "iife", platform: "browser", jsx: "automatic", plugins: [{ name: "title-transports", setup(builder) {
+    </>}createRoot(document.getElementById('root')).render(<NextIntlClientProvider locale="es" messages={messages} timeZone="America/Costa_Rica"><App/></NextIntlClientProvider>);` }, bundle: true, write: false, format: "iife", platform: "browser", jsx: "automatic", plugins: [{ name: "title-transports", setup(builder) {
       builder.onResolve({ filter: /.*/ }, args => args.path in mocks ? { path: args.path, namespace: "title-transports" } : undefined);
       builder.onLoad({ filter: /.*/, namespace: "title-transports" }, args => ({ contents: mocks[args.path], resolveDir: process.cwd() }));
     } }] });

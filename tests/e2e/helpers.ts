@@ -1,5 +1,5 @@
 import { completeAdminMfa } from "./admin-mfa-helper";
-import { expect, type Locator, type Page, type TestInfo } from "playwright/test";
+import { expect, type APIRequestContext, type Locator, type Page, type TestInfo } from "playwright/test";
 
 const runtimeIssues = new WeakMap<Page, string[]>();
 const guardedPages = new WeakSet<Page>();
@@ -500,6 +500,17 @@ export async function apiJson<T = unknown>(
     },
     { path, method: options.method ?? "GET", body: options.body },
   ) as Promise<{ status: number; body: T }>;
+}
+
+/**
+ * Whether the server under test runs with the public directory on (DIR_ENABLED). The flag lives on the server, so ask
+ * it: with the directory on `/categorias` is the catalogue page (200); with it off the middleware sends it to
+ * `/servicios`. Specs use this to assert the production behaviour when off and the owner-approved test behaviour when on.
+ */
+let directoryFlag: Promise<boolean> | undefined;
+export function directoryEnabled(request: APIRequestContext) {
+  directoryFlag ??= request.get("/categorias", { maxRedirects: 0 }).then(response => response.status() === 200);
+  return directoryFlag;
 }
 
 export function isMobileProject(testInfo: TestInfo) {
