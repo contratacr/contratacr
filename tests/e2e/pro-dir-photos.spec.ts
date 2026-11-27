@@ -24,6 +24,7 @@ async function upload(page:Page,file:{name:string;buffer:Buffer},caption?:string
  await panel.locator('[data-photo-input]').setInputFiles({name:file.name,mimeType:'image/jpeg',buffer:file.buffer});
  await expect(panel).toContainText('1 foto elegida');
  if(caption)await panel.getByLabel('Descripción (opcional)').fill(caption);
+ await panel.locator('[data-place-photo-rights] input').check();
  await panel.locator('[data-place-photo-submit]').click();
  await expect(page.locator('[data-place-photo-result]')).toBeVisible({timeout:45000});
 }
@@ -58,6 +59,7 @@ test('place photos: owner publishes, customer pending → staff approves → vis
    await expect(p.locator('[data-place-photo-pending]')).toContainText('pendiente de revisión');
    // Same image again → duplicate.
    await p.locator('[data-place-photo-panel] [data-photo-input]').setInputFiles({name:'casado.jpg',mimeType:'image/jpeg',buffer:await jpeg('#e76f51')});
+   await p.locator('[data-place-photo-rights] input').check();
    await p.locator('[data-place-photo-submit]').click();
    await expect(p.locator('[data-place-photo-result]')).toContainText('Esa foto ya está en este lugar');
   }finally{await c.close();}

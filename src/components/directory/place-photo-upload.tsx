@@ -66,7 +66,9 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [open,setOpen]=useState(false),[files,setFiles]=useState<File[]>([]),[caption,setCaption]=useState(''),[busy,setBusy]=useState(false);
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
- const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();const panel=useRef<HTMLDivElement>(null);
+ const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();
+ // Owner 2026-11-27: everyone confirms the photos are theirs or that they have permission (Terms §10) before uploading.
+ const [rights,setRights]=useState(false);const panel=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(!openOn)return;const on=()=>{setOpen(true);setResult(null);};window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn]);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
  const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
@@ -89,9 +91,13 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
    <PhotoPicker files={files} onChange={setFiles} en={en} disabled={busy}/>
    <label htmlFor={captionId} className="flex flex-col gap-1 text-sm font-medium">{t('Descripción (opcional)','Caption (optional)')}
     <input id={captionId} value={caption} onChange={e=>setCaption(e.target.value)} maxLength={200} placeholder={t('Ej.: Terraza del segundo piso','E.g. Second-floor terrace')} className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-base text-[#162543]"/></label>
+   <label className="flex items-start gap-2.5 text-sm text-[#334155]" data-place-photo-rights>
+    <input type="checkbox" checked={rights} onChange={e=>setRights(e.target.checked)} disabled={busy} className="mt-0.5 h-5 w-5 shrink-0 accent-[#009FD9]"/>
+    <span>{t('Confirmo que tomé estas fotos o tengo permiso para publicarlas. No son de Google Maps, redes sociales ni otros sitios.','I confirm I took these photos or have permission to publish them. They are not from Google Maps, social networks or other sites.')}</span>
+   </label>
    <div className="flex flex-wrap gap-2">
-    <button type="button" data-place-photo-submit disabled={busy||files.length===0} onClick={async()=>{setBusy(true);setResult(null);
-      const r=await uploadPlacePhotos(slug,files,{caption:caption.trim()||undefined,en});setBusy(false);setResult(r);if(!r.errors.length){setFiles([]);setCaption('');}}}
+    <button type="button" data-place-photo-submit disabled={busy||files.length===0||!rights} onClick={async()=>{setBusy(true);setResult(null);
+      const r=await uploadPlacePhotos(slug,files,{caption:caption.trim()||undefined,en});setBusy(false);setResult(r);if(!r.errors.length){setFiles([]);setCaption('');setRights(false);}}}
      className={`${btn} bg-[#162543] text-white disabled:opacity-50`}>{busy?t('Subiendo…','Uploading…'):t('Subir fotos','Upload photos')}</button>
     <button type="button" disabled={busy} onClick={()=>{setOpen(false);setFiles([]);}} className={`${btn} text-[#162543] underline`}>{t('Cancelar','Cancel')}</button>
    </div>
