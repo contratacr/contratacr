@@ -3027,20 +3027,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   );
 }
 
-/** Directory on (owner 2026-11-26): «Busque profesionales», «Busque restaurantes»… the word changes every few seconds. */
+/** Directory on (owner 2026-11-26): "Busque y compare profesionales", "… restaurantes"; the word rises from the centre and fades out every few seconds. */
 function RotatingSearchHint() {
   const t = useTranslations("header");
   const words = t("rotatingWords").split("|");
   const [i, setI] = useState(0);
+  const [ticked, setTicked] = useState(false);
   useEffect(() => {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => setI((x) => (x + 1) % words.length), 2600);
+    const id = window.setInterval(() => { setTicked(true); setI((x) => (x + 1) % words.length); }, 2800);
     return () => window.clearInterval(id);
   }, [words.length]);
+  const prev = (i - 1 + words.length) % words.length;
+  // The new word rises into place while the previous one keeps rising and fades out (both share one grid cell).
   return (
-    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]" data-rotating-search-hint>
-      {t("rotatingPrefix")}{" "}
-      <span key={i} className="inline-block animate-[ccr-hero-text_450ms_ease-out] text-[#5b6b82]">{words[i]}</span>
+    <span className="flex min-w-0 flex-1 items-baseline gap-[0.3em] overflow-hidden whitespace-nowrap text-[15px] font-medium text-[#8f9aaa]" data-rotating-search-hint>
+      <span className="shrink-0">{t("rotatingPrefix")}</span>
+      <span className="relative inline-grid min-w-0 overflow-hidden py-[2px] [&>*]:col-start-1 [&>*]:row-start-1">
+        {ticked ? (
+          <span key={`out-${i}`} aria-hidden className="truncate font-semibold text-[#162543] opacity-0 animate-[ccr-word-out_520ms_cubic-bezier(.4,0,.2,1)]">{words[prev]}</span>
+        ) : null}
+        <span key={`in-${i}`} className="truncate font-semibold text-[#162543] animate-[ccr-word-in_520ms_cubic-bezier(.2,.8,.2,1)]">{words[i]}</span>
+      </span>
     </span>
   );
 }
