@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { hayPantallaAnterior, volverHastaSalir } from "@/lib/volver-por-historial";
 
 // Destinos personales de la app (Mensajes, Notificaciones, Soporte, Ayuda…):
 // la barra dice dónde estás y ofrece volver, en vez de repetir la marca.
@@ -71,8 +72,10 @@ export function SectionHeaderTitle({
   useEffect(() => {
     if (!publica) return;
     const volver = () => {
+      // Back to the previous SCREEN of the app (entries inside this screen —#fotos, the big map— are skipped); opened
+      // directly (no in-app screen behind), the arrow goes to `fallbackHref` instead of leaving the site or staying.
       if (alVolver) alVolver();
-      else if (window.history.length > 1) router.back();
+      else if (hayPantallaAnterior()) volverHastaSalir();
       else router.push(fallbackHref);
     };
     window.addEventListener("ccr:section-back", volver);

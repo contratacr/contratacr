@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
+import {useCallback,useEffect,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {ArrowLeft,Maximize2} from 'lucide-react';
 import {PlacesMap,type PlacesMapPoint} from '@/components/maps/places-map';
@@ -13,12 +13,15 @@ const RING='focus-visible:outline focus-visible:outline-2 focus-visible:outline-
  * The big map mounts only when opened. Esc, the arrow and the phone's back button close it (a history entry is pushed).
  */
 export function PlaceMapDialog({points,locale,label,zoom,apps}:{points:PlacesMapPoint[];locale:string;label:string;zoom:number;apps?:ReactNode}){
- const en=locale==='en',[open,setOpen]=useState(false),pushed=useRef(false);
- const close=useCallback(()=>{if(pushed.current){pushed.current=false;history.back();}else setOpen(false);},[]);
+ const en=locale==='en',[open,setOpen]=useState(false);
+ // The big map owns ONE history entry, marked in history.state, so the phone's back button closes it. Pushed only if the
+ // current entry is not already ours (dev StrictMode / hot reload re-run effects; an extra entry trapped the back button).
+ const ours=()=>typeof window!=='undefined'&&!!(history.state as {ccrPlaceMap?:boolean}|null)?.ccrPlaceMap;
+ const close=useCallback(()=>{if(ours())history.back();else setOpen(false);},[]);
  useEffect(()=>{
   if(!open)return;
-  history.pushState({ccrPlaceMap:true},'');pushed.current=true;
-  const onPop=()=>{pushed.current=false;setOpen(false);};
+  if(!ours())history.pushState({...(history.state??{}),ccrPlaceMap:true},'');
+  const onPop=()=>{if(!ours())setOpen(false);};
   const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape')close();};
   const prev=document.body.style.overflow;document.body.style.overflow='hidden';
   window.addEventListener('popstate',onPop);window.addEventListener('keydown',onKey);

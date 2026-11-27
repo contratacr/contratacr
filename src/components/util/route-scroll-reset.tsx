@@ -53,7 +53,7 @@ export function RouteScrollReset() {
   const pathname = usePathname();
 
   useEffect(() => {
-    anotarCambioDeRuta();
+    anotarCambioDeRuta(primeraRuta);
     const documentoNuevo = primeraRuta && documentoRecienAbierto();
     if (!primeraRuta) anotarCambioEnElDocumento();
     primeraRuta = false;

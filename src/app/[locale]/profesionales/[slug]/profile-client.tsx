@@ -31,7 +31,7 @@ import { VerificationInfo } from "@/components/ui/verification-info";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
-import { rutaAnterior } from "@/lib/volver-por-historial";
+import { hayPantallaAnterior, rutaAnterior, volverHastaSalir } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
@@ -425,7 +425,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     // la flecha regresa a la pantalla anterior, o al inicio si no hay.
     const onBack = () => {
       if (volverRef.current) return volverRef.current();
-      if (window.history.length > 1) window.history.back();
+      if (hayPantallaAnterior()) volverHastaSalir();
       else window.location.assign("/");
     };
     const onShare = () => compartirRef.current?.();

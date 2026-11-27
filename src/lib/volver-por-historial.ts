@@ -84,14 +84,63 @@ export function rutaAnterior(): string | null {
   }
 }
 
-/** Se llama en cada cambio de ruta: la que había pasa a ser «la anterior». */
-export function anotarCambioDeRuta(): void {
+// The in-app screens of this tab, oldest first (the last one is the current screen). Hash entries (#fotos), the big map
+// and URL syncs live INSIDE one screen and never count: the back arrow must leave the screen, not step through them.
+const CLAVE_PILA = "ccr:pila-rutas";
+const MAX_PILA = 40;
+function leerPila(): string[] {
+  try { const p = JSON.parse(sessionStorage.getItem(CLAVE_PILA) || "[]"); return Array.isArray(p) ? p.filter((x) => typeof x === "string") : []; } catch { return []; }
+}
+
+/** Se llama en cada cambio de ruta: la que había pasa a ser «la anterior». `documentoNuevo`: first route of a document. */
+export function anotarCambioDeRuta(documentoNuevo = false): void {
   try {
     const actual = claveDeRuta();
     const previa = sessionStorage.getItem(CLAVE_ACTUAL);
     if (previa && previa !== actual) sessionStorage.setItem(CLAVE_ANTERIOR, previa);
     sessionStorage.setItem(CLAVE_ACTUAL, actual);
+    let pila = leerPila();
+    // A document opened from outside the site (typed URL, Google, a shared link) starts a new trail: the screens
+    // seen before in this tab are no longer behind it in the history.
+    if (documentoNuevo) {
+      const nav = performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined;
+      let deAqui = false;
+      try { deAqui = !!document.referrer && new URL(document.referrer).origin === window.location.origin; } catch { /* sin referrer */ }
+      if ((nav?.type ?? "navigate") === "navigate" && !deAqui) pila = [];
+    }
+    if (pila.length >= 2 && pila[pila.length - 2] === actual) pila.pop();
+    else if (pila[pila.length - 1] !== actual) pila.push(actual);
+    sessionStorage.setItem(CLAVE_PILA, JSON.stringify(pila.slice(-MAX_PILA)));
   } catch { /* sin almacenamiento */ }
+}
+
+/** True when an in-app screen is behind the current one in this tab's history. */
+export function hayPantallaAnterior(): boolean {
+  if (typeof window === "undefined") return false;
+  const pila = leerPila();
+  return pila.length >= 2 && pila[pila.length - 1] === claveDeRuta() && window.history.length > 1;
+}
+
+let saliendo: (() => void) | null = null;
+/**
+ * Goes back in the history until the screen (path + query) changes: entries inside the same screen (a #fotos anchor,
+ * the big map, an old duplicate) are skipped instead of leaving the user on the same page. Only call it when
+ * `hayPantallaAnterior()` says there is a screen to go back to.
+ */
+export function volverHastaSalir(): void {
+  if (typeof window === "undefined") return;
+  saliendo?.();
+  const inicio = claveDeRuta();
+  let pasos = 0;
+  const fin = () => { window.removeEventListener("popstate", alVolver); window.removeEventListener("pagehide", fin); saliendo = null; };
+  function alVolver() {
+    if (claveDeRuta() !== inicio || ++pasos > 20) { fin(); return; }
+    window.history.back();
+  }
+  window.addEventListener("popstate", alVolver);
+  window.addEventListener("pagehide", fin);
+  saliendo = fin;
+  window.history.back();
 }
 
 /**
@@ -108,7 +157,7 @@ export function volverSiEsLaAnterior(href: string): boolean {
     const sinIdioma = (r: string) => r.replace(/^\/es(?=\/|$)/, "") || "/";
     // La lista puede llevar filtros en la dirección (?q=…): basta la misma ruta.
     if (sinIdioma(anterior).split("?")[0] !== sinIdioma(destino).split("?")[0]) return false;
-    window.history.back();
+    volverHastaSalir();
     return true;
   } catch {
     return false;

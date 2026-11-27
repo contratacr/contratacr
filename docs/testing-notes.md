@@ -136,6 +136,7 @@ Estado actual (rediseño de producción-profesional, más reciente prevalece):
 - [ ] Barra inferior en teléfono: dos botones como el perfil profesional (WhatsApp verde, Llamar blanco). Con reservas: Reservar primero y luego WhatsApp/Llamar. Si falta WhatsApp o teléfono: aparece Reseñar en lugar de Cómo llegar. Texto envuelve, no se corta.
 - [ ] «…» en teléfono (MenuFicha): Guardar, Compartir, Agregar fotos, Sugerir un cambio, Reportar.
 - [ ] Encabezado de teléfono estable al recargar: sin salto "logo + ☰" a "← Restaurantes ···" (CLS = 0, probar con JavaScript apagado).
+- [ ] Salir de la ficha (2026-11-27, iPhone): desde /restaurantes tocar una tarjeta → «← Volver» regresa a /restaurantes, también después de tocar enlaces internos (#fotos, #resenas) y de abrir y cerrar el mapa grande (flecha, Esc o atrás). La flecha atrás del navegador y el gesto de iOS también regresan. Abierta directo (enlace compartido): «Volver» va a la portada. Igual en el perfil profesional. (`tests/e2e/directory-back-navigation.spec.ts`)
 - [ ] Columna lateral solo en escritorio (contacto y dirección); en teléfono no hay.
 - [ ] «Negocios similares cerca»: los 10 más cercanos en carril con flechas, sin tarjeta "Ver más", sin separador.
 - [ ] Redes sociales: `attributes.social` solo acepta el dominio propio de cada red; un "sitio web" que es realmente Facebook/Instagram se muestra como red.
