@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {createAdminClient} from '@/lib/supabase/admin';
 import {dirEnabledOnly} from '@/lib/directory/public-route';
 import {isMapillaryThumbUrl,THUMB_TTL_MS} from '@/lib/directory/street-view';
+import {STREET_VIEW_ENABLED} from '@/lib/directory/street-view-server';
 
 // «Vista de la calle» (2026-11-27): the Mapillary image chosen for a place without photos (dir_place_street_view, 543).
 // GET [?s=2048] → 302 to a fresh Mapillary CDN thumb. Image files are never copied into our storage; Mapillary thumb URLs
@@ -15,6 +16,8 @@ const notFound=()=>new Response(null,{status:404,headers:headers(300)});
 
 export async function GET(req:Request,{params}:{params:Promise<{placeId:string}>}){
  const off=dirEnabledOnly();if(off)return off;
+ // Street views are off everywhere (owner 2026-11-27): nothing links here, and the route does not answer either.
+ if(!STREET_VIEW_ENABLED)return notFound();
  const {placeId}=await params;if(!idSchema.safeParse(placeId).success)return notFound();
  const big=new URL(req.url).searchParams.get('s')==='2048';
  const db=createAdminClient();

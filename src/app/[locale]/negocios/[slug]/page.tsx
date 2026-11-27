@@ -31,12 +31,11 @@ import {isServiceReviewVertical,placeSectionById,RESERVATION_VERTICALS} from '@/
 import {PLACE_SEARCH_VERTICALS,type DirectorySearchResult,type PlaceSearchItem} from '@/lib/directory/search-schemas';
 import {PlaceSimilar} from '@/components/directory/place-similar';
 import {PlaceReservation} from '@/components/directory/place-reservation';
-import {PlaceQuestions} from '@/components/directory/place-questions';
 import {PlaceEvents} from '@/components/directory/place-events';
 import {SaveToList} from '@/components/directory/save-to-list';
 import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import {businessPlaces} from '@/lib/directory/business-access';
-import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,PublicQuestions,ReservationConfig} from '@/lib/directory/place-features';
+import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
 import {proMoney} from '@/lib/pro/money';
 import {placeStreetViews} from '@/lib/directory/street-view-server';
@@ -102,7 +101,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const en=locale==='en',prefix=en?'/en':'',db=createAdminClient(),vertical=place.vertical.id;
  // Classified listings are OFF by owner decision: dealers/agencies show as places only (no listings block).
  const listingView=!DIRECTORY_LISTINGS_ENABLED?null:vertical==='vehicle_dealer'?'public_vehicle_listings':vertical==='real_estate'?'public_property_listings':null;
- const [claim,prices,reviews,menu,listings,user,hoursSource,questions,events,order,brand,reservation]=await Promise.all([
+ const [claim,prices,reviews,menu,listings,user,hoursSource,events,order,brand,reservation]=await Promise.all([
   db.from('dir_places').select('id,claim_status').eq('slug',slug).maybeSingle(),
   db.rpc('public_price_current',{p_place_slug:slug,p_item_slug:null}),
   db.rpc('dir_place_reviews_public',{p_slug:slug,p_after:null}),
@@ -110,13 +109,12 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
   listingView?db.from(listingView).select('*',{count:'exact'}).eq('place_slug',slug).order('published_at',{ascending:false}).order('code').limit(6):Promise.resolve(null),
   createClient().then(safeGetUser),
   place.hours.length?db.rpc('dir_place_hours_source',{p_slug:slug}):Promise.resolve(null),
-  db.rpc('dir_place_questions_public',{p_slug:slug}),
   db.rpc('dir_place_events_public',{p_slug:slug}),
   db.rpc('dir_order_link_public',{p_slug:slug}),
   db.rpc('dir_place_brand_public',{p_slug:slug}),
   (RESERVATION_VERTICALS as readonly string[]).includes(vertical)?db.rpc('dir_reservation_public_config',{p_slug:slug}):Promise.resolve(null),
  ]);
- const qa=questions.error?null:questions.data as PublicQuestions|null,upcoming=events.error?[]:(events.data as PlaceEvent[]|null)??[];
+ const upcoming=events.error?[]:(events.data as PlaceEvent[]|null)??[];
  const orderLink=order.error?null:order.data as OrderLink|null,placeBrand=brand.error?null:brand.data as PlaceBrand|null;
  const reservationConfig=reservation&&!reservation.error?reservation.data as ReservationConfig|null:null;
  const unclaimed=claim.data?.claim_status==='unclaimed'&&place.status==='published';
@@ -126,9 +124,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const loginHref=user?null:`${prefix}/login?redirect=${encodeURIComponent(`${prefix}/negocios/${slug}`)}`;
  const manage=user?await replyTargets(db,user.id,slug):null;
  const reportPrices=place.status==='published'&&vertical in PRICE_REPORT_KINDS;
- // Managers (or their Pro team with listing.publish, see replyTargets) answer questions as the business instead of asking.
  // The review reply editor posts to /api/pro/review-replies, so it is offered only while Pro is on.
- const isManager=!!manage;
  // «Mi empresa» shortcut (free, outside Pro): only the owner/managers of THIS claimed place see the shortcut (not Pro team members).
  const managesHere=!!user&&(await businessPlaces(db,user.id)).some(p=>p.slug===slug);
  const appUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://contratacr.com').replace(/\/$/,'');
@@ -187,7 +183,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
     {placeListings.length>0&&<PlaceListingsSection listings={placeListings} locale={locale} total={listings?.count??undefined}/>}
    </>:null,
    events:upcoming.length?<PlaceEvents events={upcoming} locale={locale}/>:null,
-   questions:qa?<PlaceQuestions slug={slug} locale={locale} initial={qa} signedIn={!!user} loginHref={loginHref} isManager={isManager}/>:null,
+   // Q&A is not rendered on the place page (6ac114902), so its data is not fetched; the API and component stay.
    reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
    similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null,streetView:cardExtras[item.slug]?.streetView??null}))}

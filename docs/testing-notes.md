@@ -165,7 +165,7 @@ Estado actual (rediseño de producción-profesional, más reciente prevalece):
 Quitado:
 - [ ] «No reclamado» (los no reclamados solo tienen la caja de reclamar al final).
 - [ ] Apple Maps (tarjeta de mapa y selector de «Cómo llegar»).
-- [ ] Pestaña/botón «Preguntar» (y «Más»). La API `/api/lugar/<slug>/preguntas`, la cola «Preguntas» de `/admin/directorio` y la moderación siguen activas (`tests/e2e/pro-dir-questions.spec.ts` las prueba por API); nada de preguntas se ve en la ficha.
+- [ ] Pestaña/botón «Preguntar» (y «Más»). La API `/api/lugar/<slug>/preguntas`, la cola «Preguntas» de `/admin/directorio` y la moderación siguen activas (`tests/e2e/pro-dir-questions.spec.ts` las prueba por API); nada de preguntas se ve en la ficha y la ficha ya no pide los datos de preguntas (2026-11-27).
 - [ ] «¿Recomienda este lugar?».
 - [ ] «Reseñar» en la tarjeta de identidad (vive solo dentro de Reseñas); chips «Waze» y «Maps» como texto; chip «Sitio web» en el hero.
 - [ ] Línea de crédito de datos y enlace de reporte al final de la página (crédito ODbL ahora en Términos, "Origen de los datos"; el mapa mantiene su atribución).
@@ -218,7 +218,7 @@ Decisión del dueño 2026-11-26: el perfil es igual al de producción también c
 - [ ] Bandera apagada: subida de portafolio de profesionales sigue funcionando (1600 px WebP + miniatura 400 px).
 - [ ] **Apagada desde `2ab082a33` (dueño 2026-11-27: «fotos de los negocios o nada», `STREET_VIEW_ENABLED=false`):** ninguna tarjeta, negocio similar ni ficha muestra vista de la calle. Lo siguiente queda para si se vuelve a encender. Vista de la calle (Mapillary, migración 543, `docs/directory-photos.md`): solo en lugares sin ninguna foto propia; rótulo "Vista de la calle" sobre la imagen y crédito "© <creador> · Mapillary · CC BY-SA 4.0" enlazado a la imagen en mapillary.com y a la licencia; nota "No es una foto del negocio". Tocar abre la vista grande (Esc cierra). Un lugar con foto propia nunca la muestra.
 - [ ] Vista de la calle en tarjetas de resultados y en "Negocios similares cerca": imagen con rótulo y crédito en texto (sin enlace dentro de la tarjeta).
-- [ ] `/api/vista-calle/<placeId>` (la ruta sigue activa con el directorio encendido) responde 302 a la miniatura de Mapillary (caché 5 min), 404 para un id inválido, lugares sin vista o no publicados (`pro-dir-photos.spec.ts` prueba los 404); nunca muestra el token; la URL se renueva después de 1 h.
+- [ ] `/api/vista-calle/<placeId>` responde 404 siempre mientras `STREET_VIEW_ENABLED` esté apagado (2026-11-27). Si se vuelve a encender: 302 a la miniatura de Mapillary (caché 5 min), 404 para un id inválido, lugares sin vista o no publicados (`pro-dir-photos.spec.ts` prueba los 404); nunca muestra el token; la URL se renueva después de 1 h.
 - [ ] Script `scripts/directory/mapillary-streetview.mjs`: dry run por defecto, `--apply` guarda found/none, relanzarlo omite lo revisado en 90 días; máximo 5 consultas por segundo. En test/prod requiere `wrangler secret put MAPILLARY_CLIENT_TOKEN` y el OK de Isaac.
 
 ### Importar desde Instagram (2026-11-27, `docs/instagram-import.md`)
