@@ -2789,7 +2789,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}
           >
             {/* La fila de arriba: igual que la cabecera de la página. */}
-            <div className="ccr-menu-fila-superior shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
+            <div className="ccr-menu-fila-superior shrink-0 bg-white" style={{ paddingTop: altoSobreCabecera }}>
               <div className="flex h-16 items-center justify-between px-4 sm:px-6">
                 <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
