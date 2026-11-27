@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {useRouter} from 'next/navigation';
+import {Camera} from 'lucide-react';
 import {PhotoPicker,uploadPlacePhotos} from './place-photo-upload';
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
@@ -32,7 +33,7 @@ const noSubscribe=()=>()=>{};
 export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null,placeName}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null;placeName?:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const router=useRouter();
- const [photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null);
+ const [photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null),[rights,setRights]=useState(false);
  const sectionRef=useRef<HTMLElement>(null),action=useRef('');
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  // «Reseñar» (#escribir-resena, bottom bar) brings the write card into view.
@@ -42,6 +43,8 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
   fromHash();window.addEventListener('hashchange',fromHash);return()=>window.removeEventListener('hashchange',fromHash);
  },[]);
  const enviar=async({rating,comment,nombre}:{rating:number;comment:string;nombre?:string}):Promise<string|null>=>{
+  // Same rights rule as the place photo uploader: attached photos need the confirmation.
+  if(signedIn&&photos.length&&!rights)return t('Confirme que tomó estas fotos o tiene permiso para publicarlas.','Please confirm you took these photos or have permission to publish them.');
   if(!action.current)action.current=crypto.randomUUID();
   try{
    const r=await fetch(`/api/lugar/${encodeURIComponent(slug)}/resenas`,{method:'POST',headers:{'content-type':'application/json','accept-language':en?'en':'es'},
@@ -50,7 +53,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    action.current=crypto.randomUUID();
    if(r.ok){
     // Photos of the review (launch round 2026-11-18): uploaded after the review exists; they wait for staff approval.
-    if(signedIn&&photos.length){const up=await uploadPlacePhotos(slug,photos,{review:true,en});setPhotos([]);
+    if(signedIn&&photos.length){const up=await uploadPlacePhotos(slug,photos,{review:true,en});setPhotos([]);setRights(false);
      if(up.pending>0)setPhotoNote(t(`${up.pending===1?'Su foto quedó pendiente':`Sus ${up.pending} fotos quedaron pendientes`} de revisión.`,`${up.pending===1?'Your photo is':`Your ${up.pending} photos are`} awaiting review.`));}
     return null;
    }
@@ -68,7 +71,13 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    :<div data-place-review-form data-ready={ready||undefined}>
     <LeaveReviewModal professionalId={`lugar:${slug}`} professionalName={placeName??''} embedded isAuthenticated={signedIn} pedirNombre={!signedIn}
      pregunta={t('¿Ya visitó este lugar?','Have you been here?')} enviar={enviar} onClose={()=>undefined} onSuccess={()=>router.refresh()}
-     extra={signedIn?<div className="space-y-1 text-sm"><PhotoPicker files={photos} onChange={setPhotos} en={en} label={t('Agregar fotos a la reseña (opcional)','Add photos to the review (optional)')}/>
+     // Owner 2026-11-27: the photo invitation right after the stars, before the text; optional, reviewed before publishing.
+     extra={signedIn?<div className="space-y-2 rounded-xl bg-[#f3f9fc] p-3 text-sm" data-place-review-photos>
+      <p className="flex items-center gap-2 font-semibold text-[#162543]"><Camera aria-hidden="true" className="h-5 w-5 shrink-0 text-[#0083b0]"/>{t('Agregue una foto y ayude a otros a conocer este lugar','Add a photo and help others get to know this place')}</p>
+      <PhotoPicker files={photos} onChange={setPhotos} en={en} label={t('Agregar fotos (opcional)','Add photos (optional)')}/>
+      {photos.length>0&&<label className="flex items-start gap-2.5 text-sm text-[#334155]" data-place-review-photo-rights>
+       <input type="checkbox" checked={rights} onChange={e=>setRights(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#009FD9]"/>
+       <span>{t('Confirmo que tomé estas fotos o tengo permiso para publicarlas. No son de Google Maps, redes sociales ni otros sitios.','I confirm I took these photos or have permission to publish them. They are not from Google Maps, social networks or other sites.')}</span></label>}
       <p className="text-xs text-[#68778d]">{t('Se revisan antes de publicarse.','They are reviewed before they are published.')}</p></div>:null}/>
     {photoNote&&<p role="status" className="mt-2 text-sm text-[#526277]" data-place-review-photos-pending>{photoNote}</p>}
    </div>}

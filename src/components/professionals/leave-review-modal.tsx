@@ -34,7 +34,7 @@ interface LeaveReviewModalProps {
   enviar?: (datos: { rating: number; comment: string; nombre?: string }) => Promise<string | null>;
   /** Pregunta de la caja incrustada cuando no es un profesional («¿Ya visitó este lugar?»). */
   pregunta?: string;
-  /** Campos extra antes de enviar (fotos de la reseña de un lugar). */
+  /** Campos extra justo después de las estrellas (fotos de la reseña de un lugar). */
   extra?: React.ReactNode;
 }
 
@@ -420,6 +420,7 @@ export function LeaveReviewModal({
           {displayRating > 0 && <span className="text-sm font-semibold tabular-nums text-[#374151]">{displayRating.toFixed(1)}</span>}
         </div>
       </div>
+      {extra && (!embedded || rating > 0 || isEditing) && extra}
       {(!embedded || rating > 0 || isEditing) && <div>
         <div className={`flex items-center ${embedded ? "mb-1.5 justify-end" : "mb-1.5 justify-between"}`}>
           {!embedded && <p className="text-sm font-medium text-[#374151]"><EtiquetaObligatoria>{t("commentLabel")}</EtiquetaObligatoria></p>}
@@ -453,7 +454,6 @@ export function LeaveReviewModal({
           <p className="mt-1.5 text-xs text-[#68778d]">{t("nameHelp")}</p>
         </div>
       )}
-      {extra && (!embedded || rating > 0 || isEditing) && extra}
       {(!embedded || rating > 0 || isEditing) && error && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
           <AlertCircle className="h-4 w-4 shrink-0" />
