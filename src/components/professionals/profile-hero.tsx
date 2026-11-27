@@ -31,34 +31,29 @@ export function ProfileHero({
 }) {
   const avatar = avatarUrl ? r2Thumb(avatarUrl, 320) : null;
   return (
-    <div data-pro-hero className="relative -mx-4 mb-2 bg-white sm:mx-0">
-      <div className="px-4 pb-5 pt-4 sm:px-0 sm:pt-6">
-        {/* Identity row (redesign 2026-11-26): the one photo on the left, name, trade and zone, reviews and years. */}
-        <div className="flex items-center gap-4">
-          <ImagePreviewDialog
-            src={avatarUrl ?? undefined}
-            alt={altName}
-            openLabel={en ? "View profile photo" : "Ver foto de perfil"}
-            closeLabel={en ? "Close" : "Cerrar"}
-            className="shrink-0 self-start rounded-full"
-          >
-            <span data-profile-identity-avatar className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`}>
-              {!avatar && <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{initials}</span>}
-              {/* eslint-disable-next-line @next/next/no-img-element -- server-painted avatar, same as the classic header */}
-              {avatar && <img src={avatar} alt={altName} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover" />}
-            </span>
-          </ImagePreviewDialog>
-          {/* Below 360 px the name keeps the same measure as the account panel (it wraps at the same word). */}
-          <div className="min-w-0 flex-1">
-            <div className="min-w-0 max-[359px]:pr-8" data-verification-owner>{name}</div>
-            {subtitle && <div className="mt-0.5 text-[13.5px] font-semibold leading-snug text-[#5f6f86] sm:text-[14px]">{subtitle}</div>}
-            {stats && <div className="mt-2">{stats}</div>}
-          </div>
-          {menu && <div className="hidden shrink-0 self-start lg:block">{menu}</div>}
-        </div>
+    <div data-pro-hero className="relative mb-2 pt-3 sm:pt-6">
+      {/* Airbnb-style card (owner 2026-11-26): centred photo, name, trade and zone, three big numbers. */}
+      <div className="relative mx-auto max-w-md rounded-3xl bg-white px-5 pb-5 pt-6 text-center shadow-[0_10px_36px_-12px_rgba(22,37,67,0.25)] ring-1 ring-[#eef2f6]">
+        {menu && <div className="absolute right-3 top-3 hidden lg:block">{menu}</div>}
+        <ImagePreviewDialog
+          src={avatarUrl ?? undefined}
+          alt={altName}
+          openLabel={en ? "View profile photo" : "Ver foto de perfil"}
+          closeLabel={en ? "Close" : "Cerrar"}
+          className="mx-auto block w-fit rounded-full"
+        >
+          <span data-profile-identity-avatar className={`relative mx-auto grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] ${profileIdentityAvatarClass}`}>
+            {!avatar && <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{initials}</span>}
+            {/* eslint-disable-next-line @next/next/no-img-element -- server-painted avatar, same as the classic header */}
+            {avatar && <img src={avatar} alt={altName} loading="eager" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full bg-white object-cover" />}
+          </span>
+        </ImagePreviewDialog>
+        <div className="mt-3 flex min-w-0 justify-center [&_h1]:text-center" data-verification-owner>{name}</div>
+        {subtitle && <div className="mt-1 text-[13.5px] font-semibold leading-snug text-[#5f6f86] sm:text-[14px]">{subtitle}</div>}
+        {stats && <div className="mt-2 flex justify-center">{stats}</div>}
         {facts && <div className="mt-5">{facts}</div>}
-        {contact && <div className="mt-5 lg:hidden">{contact}</div>}
       </div>
+      {contact && <div className="mx-auto mt-4 max-w-md lg:hidden">{contact}</div>}
     </div>
   );
 }

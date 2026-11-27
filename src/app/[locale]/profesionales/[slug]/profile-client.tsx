@@ -1,5 +1,4 @@
 "use client";
-import { categoryImageUrl } from "@/lib/data/category-images";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 import { serviceModalities } from "@/components/professionals/service-modalities";
@@ -809,6 +808,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         // la ubicación no separa nada y queda suelta contra el borde.
         hayContenidoDespues={redesDelProfesional.length > 0}
         onResenar={() => {
+          if (directoryOn) {
+            setAbiertas((prev) => new Set(prev).add("resenas"));
+            requestAnimationFrame(() => document.getElementById("perfil-resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+            return;
+          }
           setActiveTab("resenas");
           requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
         }}
@@ -869,7 +873,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const filaSeccion = (k: string) => {
     const en = locale === "en";
     const etiqueta = TABS.find((x) => x.id === k)?.label ?? k;
-    const pista = k === "resenas" && professional.reviewCount > 0
+    // Preview on the row: three work photos, or the latest review in one line.
+    const fotos = k === "casos" ? (professional.portfolioUrls ?? []).slice(0, 3) : [];
+    const ultima = k === "resenas" ? professional.reviews?.find((x) => x.comment?.trim()) : undefined;
+    const pista = ultima ? `"${ultima.comment.trim()}"`
+      : k === "resenas" && professional.reviewCount > 0
       ? `★ ${professional.ratingAvg.toFixed(1)} · ${professional.reviewCount}`
       : k === "casos" && professional.portfolioUrls?.length ? `${professional.portfolioUrls.length} ${en ? (professional.portfolioUrls.length === 1 ? "photo" : "photos") : (professional.portfolioUrls.length === 1 ? "foto" : "fotos")}` : "";
     const abierta = abiertas.has(k);
@@ -878,7 +886,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       <button key={`fila-${k}`} type="button" onClick={() => alternarSeccion(k)} aria-expanded={abierta} aria-controls={`perfil-${k}`} data-profile-row={k}
         className={cn("flex min-h-[58px] w-full items-center gap-3 border-t border-[#eef2f6] text-left", orden)}>
         <span className="min-w-0 flex-1 text-[16px] font-bold text-[#162543]">{etiqueta}</span>
-        {pista && <span className="shrink-0 text-[13px] font-semibold text-[#68778d]">{pista}</span>}
+        {fotos.length > 0 ? (
+          <span className="flex shrink-0 gap-1">
+            {/* eslint-disable-next-line @next/next/no-img-element -- small previews, sized by the URL */}
+            {fotos.map((u) => <img key={u} src={r2Thumb(u, 120)} alt="" loading="lazy" className="h-10 w-10 rounded-lg object-cover" />)}
+          </span>
+        ) : pista && <span className={cn("shrink-0 text-[13px] font-semibold text-[#68778d]", ultima && "max-w-[55%] truncate font-medium italic")}>{pista}</span>}
         <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#8a97a8] transition-transform", abierta && "rotate-180")} aria-hidden />
       </button>
     );
@@ -973,22 +986,20 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                   return [oficios, lugar].filter(Boolean).join(" · ") || null;
                 })()}
                 facts={(() => {
-                  // Key facts (owner 2026-11-26): only real data, never repeated below — rating, experience, service areas.
+                  // Three big numbers (Airbnb card, owner 2026-11-26): rating, years, jobs shown. Only real data.
                   const en = locale === "en";
-                  const zonas = Array.isArray(professional.workplaces) ? professional.workplaces.length : 0;
-                  const nServicios = new Set(services.map((x) => (x as { category?: string }).category ?? "")).size || services.length;
+                  const trabajos = (professional.portfolioItems?.length || professional.portfolioUrls?.length) ?? 0;
                   const items = [
-                    professional.reviewCount > 0 ? { k: "resenas", label: en ? `${professional.reviewCount} reviews` : `${professional.reviewCount} ${professional.reviewCount === 1 ? "reseña" : "reseñas"}`, value: `★ ${professional.ratingAvg.toFixed(1)}` } : null,
-                    expYears > 0 ? { k: "experiencia", label: en ? "Experience" : "Experiencia", value: en ? `${expYears} yrs` : `${expYears} ${expYears === 1 ? "año" : "años"}` } : null,
-                    zonas > 0 ? { k: "zonas", label: en ? "Service areas" : "Zonas", value: String(zonas) } : null,
-                    nServicios > 0 ? { k: "servicios", label: en ? "Services" : "Servicios", value: String(nServicios) } : null,
-                  ].filter(Boolean).slice(0, 3) as { k: string; label: string; value: string }[];
+                    professional.reviewCount > 0 ? { k: "resenas", value: `${professional.ratingAvg.toFixed(1)} ★`, label: en ? `${professional.reviewCount} reviews` : `${professional.reviewCount} ${professional.reviewCount === 1 ? "reseña" : "reseñas"}` } : null,
+                    expYears > 0 ? { k: "experiencia", value: String(expYears), label: en ? (expYears === 1 ? "year" : "years") : (expYears === 1 ? "año" : "años") } : null,
+                    trabajos > 0 ? { k: "trabajos", value: String(trabajos), label: en ? (trabajos === 1 ? "job" : "jobs") : (trabajos === 1 ? "trabajo" : "trabajos") } : null,
+                  ].filter(Boolean) as { k: string; value: string; label: string }[];
                   return items.length ? (
-                    <dl className="grid grid-cols-3 divide-x divide-[#e5e9ee] rounded-2xl bg-[#f5f8fb] py-3" data-profile-facts>
+                    <dl className={cn("grid divide-x divide-[#e5e9ee] border-t border-[#eef2f6] pt-4", items.length === 3 ? "grid-cols-3" : items.length === 2 ? "grid-cols-2" : "grid-cols-1")} data-profile-facts>
                       {items.map((i) => (
-                        <div key={i.k} className="min-w-0 px-2 text-center">
-                          <dt className="text-[11.5px] font-semibold text-[#68778d]">{i.label}</dt>
-                          <dd className="truncate text-[15px] font-extrabold text-[#162543]">{i.value}</dd>
+                        <div key={i.k} className="min-w-0 px-2">
+                          <dd className="text-[22px] font-extrabold leading-none text-[#162543]">{i.value}</dd>
+                          <dt className="mt-1 text-[12px] font-semibold text-[#68778d]">{i.label}</dt>
                         </div>
                       ))}
                     </dl>
@@ -1220,35 +1231,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                               const hasFullDescription = description.length > 150;
                               const priceParts = splitPricingLabel(priceLabel);
                               if (directoryOn) {
-                                // One row per service: photo (theirs, else the Categorías one), name, price, a line of description.
-                                const foto = serviceImageUrl ? r2Large(serviceImageUrl, 240) : categoryImageUrl(cat)?.replace("w=1100", "w=240");
+                                // "Lo que ofrece" (Airbnb card, owner 2026-11-26): one short line per service, name and price.
                                 return (
-                                  <div key={cat} className="flex gap-3.5 py-3.5 first:pt-0" data-profile-service={cat}>
-                                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#eef2f6]">
-                                      {/* eslint-disable-next-line @next/next/no-img-element -- small thumbnail, sized by the URL */}
-                                      {foto && <img src={foto} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-start justify-between gap-3">
-                                        <h3 className="min-w-0 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
-                                        <p className="shrink-0 text-right leading-tight">
-                                          <span className="block text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
-                                          {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
-                                        </p>
-                                      </div>
-                                      {description
-                                        ? <p className="mt-0.5 line-clamp-2 text-[13.5px] leading-snug text-[#526277] [overflow-wrap:anywhere]">{description}</p>
-                                        : <p className="mt-0.5 text-[13.5px] leading-snug text-[#68778d]">{t("askForDetails")}</p>}
-                                      {hasFullDescription && (
-                                        <button type="button" onClick={() => setServiceDescriptionOpen({ title, description })} className="mt-1 text-left text-xs font-semibold text-[#009FD9] hover:text-[#0089bb]">{t("readFullDescription")}</button>
-                                      )}
-                                      {credentialNumber && (
-                                        <p className="mt-1.5 flex items-start gap-1.5 text-xs font-semibold leading-snug text-[#526277]">
-                                          <BadgeCheck className="mt-px h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                                          <span className="min-w-0">{credentialLabel}: {credentialNumber}{credentialIssuer ? ` · ${credentialIssuer}` : ""}</span>
-                                        </p>
-                                      )}
-                                    </div>
+                                  <div key={cat} className="flex items-baseline justify-between gap-3 py-3 first:pt-0" data-profile-service={cat}>
+                                    <h3 className="min-w-0 text-[15px] font-semibold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
+                                    <p className="shrink-0 text-right text-[14px] font-bold text-[#162543]">
+                                      {priceParts.amount}{priceParts.unit && <span className="ml-1 text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
+                                    </p>
                                   </div>
                                 );
                               }
