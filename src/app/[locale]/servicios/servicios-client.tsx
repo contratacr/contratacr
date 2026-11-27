@@ -2,6 +2,7 @@
 import { SectionBrand } from "@/components/layout/section-brand";
 
 import { serviceGroupPhoto } from "@/lib/data/service-group-photos";
+import { categoryImageUrl } from "@/lib/data/category-images";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Carril } from "@/components/ui/carril";
 import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
@@ -377,6 +378,31 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                 );
               })}
             </section>
+          ) : mobileGroup && conPestanas ? (
+            // Directory on (owner 2026-11-26): inside a group the services are photo tiles too, like the groups — the
+            // service's own photo, else the group's. "Todos los servicios de X" leads the page as a link.
+            <section className="mx-4 mt-3" data-group-service-tiles>
+              <Link href={`/profesionales?grupo=${mobileGroup.key}`} className="mb-3 inline-flex items-center gap-1 text-[15px] font-bold text-[#0083b0]">
+                {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}<ChevronRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {mobileGroup.visibleIds.map((id) => {
+                  const foto = categoryImageUrl(id)?.replace("w=1100", "w=500") ?? serviceGroupPhoto(mobileGroup.key, 500, mobileGroup.visibleIds);
+                  return (
+                    <li key={id}>
+                      <Link href={rutaDeBusqueda({ categoria: id })} data-group-service-row={id}
+                        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white shadow-sm transition-colors hover:border-[#009FD9]">
+                        {foto
+                          // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL
+                          ? <img src={foto} alt="" loading="lazy" className="h-24 w-full object-cover sm:h-28" />
+                          : <span className="grid h-24 w-full place-items-center bg-[#eef8fc] text-[#009FD9] sm:h-28"><mobileGroup.Icon className="h-10 w-10" aria-hidden /></span>}
+                        <span className="flex min-w-0 flex-1 p-3 text-[15px] font-extrabold leading-tight text-[#162543] group-hover:text-[#0083b0] [overflow-wrap:anywhere]">{getCategoryLabel(id, locale)}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           ) : mobileGroup ? (
             <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d7e1ea] bg-white">
               <Link
@@ -389,15 +415,10 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
-                <Link key={id} href={rutaDeBusqueda({ categoria: id })} data-group-service-row={id} className="flex min-h-[62px] items-center gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
-                  {/* Owner 2026-11-26: a small icon, the same for every service of the group, instead of photos. */}
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]" aria-hidden>
-                    <mobileGroup.Icon className="h-[18px] w-[18px]" />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                <Link key={id} href={rutaDeBusqueda({ categoria: id })} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                  <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                     {getCategoryLabel(id, locale)}
                   </span>
-                  <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" aria-hidden />
                 </Link>
               ))}
             </section>
