@@ -20,12 +20,16 @@ const draftSchema=z.object({professional:z.string().uuid(),path:z.string().max(2
 
 const maxDay=()=>new Date(Date.parse(crTodayISO()+'T12:00:00Z')+90*86400000).toISOString().slice(0,10);
 type PublicRequestProps={professional:string;service:string;isOwn?:boolean;professionalName?:string;fallback?:ReactNode;pinned?:boolean;
- /** Classes of the pinned strip (default: the standard one). */pinnedClass?:string};
+ /** Classes of the pinned strip (default: the standard one). */pinnedClass?:string;
+ /** Profile contact: with it, `fallback` stays on screen while availability is checked and without booking; with booking
+  * the pinned strip shows this node (WhatsApp) beside «Agendar», and the unpinned card shows «Agendar» under `fallback`. */
+ companion?:ReactNode;
+ /** Classes of the «Agendar» button that goes with `companion`. */bookClass?:string};
 export function PublicReservations(props:PublicRequestProps){
  const {user}=useAuth();
  return <PublicRequestForm key={props.professional+':'+(user?.id??'guest')} {...props}/>;
 }
-function PublicRequestForm({professional,service,isOwn=false,professionalName,fallback,pinned=false,pinnedClass}:PublicRequestProps){
+function PublicRequestForm({professional,service,isOwn=false,professionalName,fallback,pinned=false,pinnedClass,companion,bookClass}:PublicRequestProps){
  const {user,loading:authLoading}=useAuth();
  const initialDayChosen=useRef(false),leavingForLogin=useRef(false),loginNotice=useRef<HTMLParagraphElement>(null);
  const journey=useTranslations('ClientJourney');
@@ -108,7 +112,11 @@ function PublicRequestForm({professional,service,isOwn=false,professionalName,fa
    })}</div>
    <button type="button" className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25" aria-label={tr('Días siguientes','Next days')} disabled={previewOffset+3>=calendar.length} onClick={event=>{event.stopPropagation();setPreviewOffset(v=>v+3);}}><ChevronRight className="h-[15px] w-[15px]"/></button>
   </div>}
-  {(() => {const action=enabled?<Button type="button" className="w-full" disabled={isOwn} onClick={()=>void begin()}>{pinned&&<CalendarDays aria-hidden className="mr-2 h-4 w-4"/>}{tr('Ver disponibilidad','View availability')}</Button>:checked?fallback:<span role="status" className="text-sm text-[#68778d]">{copy.loadingSlots}</span>;return pinned?<AccionesAlPie className={pinnedClass??"flex flex-col gap-2"}>{action}</AccionesAlPie>:action;})()}
+  {companion!==undefined?(() => {const book=<Button type="button" data-profile-book className={bookClass??'w-full'} disabled={isOwn} onClick={()=>void begin()}><CalendarDays aria-hidden className="h-4 w-4 shrink-0"/>{tr('Agendar','Book')}</Button>;
+   // One strip in every state: contact while checking, then the call button gives its half to «Agendar».
+   return pinned?<AccionesAlPie className={pinnedClass??"flex flex-col gap-2"}>{enabled?<div className="grid grid-cols-2 gap-2">{companion}{book}</div>:fallback}</AccionesAlPie>
+    :<div className="ccr-grupo-botones flex flex-col gap-2">{fallback}{enabled&&book}</div>;})()
+  :(() => {const action=enabled?<Button type="button" className="w-full" disabled={isOwn} onClick={()=>void begin()}>{pinned&&<CalendarDays aria-hidden className="mr-2 h-4 w-4"/>}{tr('Ver disponibilidad','View availability')}</Button>:checked?fallback:<span role="status" className="text-sm text-[#68778d]">{copy.loadingSlots}</span>;return pinned?<AccionesAlPie className={pinnedClass??"flex flex-col gap-2"}>{action}</AccionesAlPie>:action;})()}
   <Modal open={open} onClose={()=>void close()} title={sentId?(confirmed?tr('Cita confirmada','Appointment confirmed'):copy.sentTitle):copy.requestTitle} ariaLabel={sentId?(confirmed?tr('Cita confirmada','Appointment confirmed'):copy.sentTitle):copy.requestTitle} closeLabel={copy.close} backLabel={step==='details'&&!sentId?tr('Volver al horario','Back to time selection'):undefined} onBack={step==='details'&&!sentId?()=>{if(!disabled){setStep('calendar');setLogin(false);}}:undefined} mobilePresentation="fullscreen" footer={!sentId?<div className="flex w-full gap-2">{step==='details'&&!uncertain&&<Button type="button" variant="secondary" disabled={saving} onClick={()=>{setStep('calendar');setLogin(false);}}>{tr('Cambiar horario','Change time')}</Button>}<Button type="submit" className="flex-1" form={'appointment-request-'+professional} disabled={saving||repeatLoading||step==='calendar'&&!other&&(!time||slotLoading)}>{saving?copy.sending:uncertain?copy.retryCheck:step==='calendar'?tr('Continuar','Continue'):direct&&!other?tr('Reservar cita','Book appointment'):copy.requestCta}</Button></div>:undefined}>
    {sentId?<div className="space-y-4"><p>{confirmed?tr('La cita ya está en la agenda. Puede consultar sus detalles y su historial en Mis citas.','Your appointment is on the calendar. Review its details and history in My appointments.'):copy.sentHint}</p><a href={mine} className="block min-h-11 rounded-full bg-[#009fd9] px-4 py-3 text-center font-semibold text-white">{copy.viewMine}</a><Button type="button" variant="secondary" onClick={()=>{setOpen(false);reset();setSlotTick(value=>value+1);}}>{copy.done}</Button></div>:<form id={'appointment-request-'+professional} onSubmit={event=>void submit(event)} className="space-y-5">
    <p className="font-semibold text-[#162543]">{professionalName||service}</p><p className="text-sm text-[#52627a]">{direct&&!other?tr("Elija una hora y revise los datos antes de reservar. Hora de Costa Rica.","Choose a time and review the details before booking. Costa Rica time."):copy.requestHint}</p>{repeatLoading&&<p role="status">{copy.repeatLoading}</p>}{repeated&&<p className="text-sm text-[#52627a]">{copy.repeated}</p>}

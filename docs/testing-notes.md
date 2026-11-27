@@ -165,6 +165,11 @@ Decisión del dueño 2026-11-26: el perfil es igual al de producción también c
 - [ ] Encabezado: una sola foto, reseñas y años de experiencia, sin franja de portada ni píldora de casos; subtítulo cuenta servicios y zonas cuando son muchos.
 - [ ] Contactos como producción: WhatsApp y Llamar; Reseñar solo dentro de Reseñas. Sin subtítulo genérico "Servicios ofrecidos"; cada tarjeta de servicio con foto.
 - [ ] Reseñas: resumen con barras mientras el directorio está encendido.
+- [ ] Franja de abajo (teléfono), profesional CON agenda: dos mitades iguales de 48 px, WhatsApp (verde) + «Agendar» (azul, icono de calendario); «Agendar» abre el mismo calendario de disponibilidad. (Reemplaza al botón único «Ver disponibilidad», que tapaba WhatsApp.)
+- [ ] Franja de abajo (teléfono), SIN agenda: WhatsApp + Llamar como hoy (sin Llamar habilitado: WhatsApp a lo ancho).
+- [ ] Mientras se consulta la agenda: se ve WhatsApp + Llamar (ya no "Consultando horarios…"), y al terminar Llamar cambia a «Agendar» sin salto de alto ni de posición. Una sola franja fija en todos los estados.
+- [ ] Tarjeta lateral de computadora con agenda: WhatsApp + Llamar arriba y «Agendar» a lo ancho debajo; sin agenda, igual que antes.
+- [ ] Perfil propio: «Agendar» aparece deshabilitado.
 - [ ] «Profesionales similares cerca»: misma provincia primero, hasta 10, carril con flechas, texto sin cortar.
 - [ ] Sin pie de página en teléfonos.
 - [ ] Casos límite: sin foto de perfil, sin reseñas, nombre largo (medida de nombre igual bajo 360 px), muchos servicios y zonas.

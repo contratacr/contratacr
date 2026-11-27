@@ -21,9 +21,11 @@ test('local phone gateway preserves login and booking/contact alternatives',asyn
   expect((await db.from('pro_workspaces').insert({user_id:owner.id,document,revision:1})).error).toBeNull();
   expect((await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1})).error).toBeNull();
   await page.goto('/profesionales/'+slug);
-  await expect(page.getByRole('button',{name:'Ver disponibilidad',exact:true}).filter({visible:true}).first()).toBeVisible();
-  await expect(page.getByRole('button',{name:/WhatsApp|Llamar|Contactar por llamada/i}).filter({visible:true})).toHaveCount(0);
-  await page.getByRole('button',{name:'Ver disponibilidad',exact:true}).filter({visible:true}).first().click();
+  await expect(page.getByRole('button',{name:'Agendar',exact:true}).filter({visible:true}).first()).toBeVisible();
+  // With booking the contact stays: WhatsApp + «Agendar» share the phone strip (Llamar gives its half); on the desktop card «Agendar» goes under WhatsApp/Llamar.
+  await expect(page.getByRole('button',{name:/WhatsApp/i}).filter({visible:true}).first()).toBeVisible();
+  if((page.viewportSize()?.width??1280)<640){const strip=page.locator('.ccr-barra-accion').filter({visible:true});await expect(strip).toHaveCount(1);await expect(strip.getByRole('button',{name:/Llamar|Contactar por llamada/i})).toHaveCount(0);await expect(strip.getByRole('button',{name:'Agendar',exact:true})).toBeVisible();}
+  await page.getByRole('button',{name:'Agendar',exact:true}).filter({visible:true}).first().click();
   const dialog=page.getByRole('dialog',{name:'Solicitar una cita',exact:true});await expect(dialog).toContainText('Prueba local de disponibilidad');
   await expect(dialog.getByRole('button',{name:day,exact:true})).toBeEnabled();
   await expect(dialog.getByRole('button',{name:day,exact:true})).toHaveAttribute('aria-pressed','true');
@@ -33,7 +35,7 @@ test('local phone gateway preserves login and booking/contact alternatives',asyn
   await page.reload();
   await expect(page.getByRole('button',{name:/WhatsApp/i}).filter({visible:true}).first()).toBeVisible();
   await expect(page.getByRole('button',{name:/Llamar|Contactar por llamada/i}).filter({visible:true}).first()).toBeVisible();
-  await expect(page.getByRole('button',{name:'Ver disponibilidad',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Agendar',exact:true})).toHaveCount(0);
   // Actual password login through the same endpoint the physical phone uses.
   const authRequests:string[]=[];page.on('request',r=>{if(r.url().includes('/auth/v1/'))authRequests.push(r.url());});
   await gotoOK(page,'/login');await page.locator('input[type=email]').fill(owner.email);await page.locator('input[type=password]').fill(owner.password);

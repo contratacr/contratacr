@@ -35,7 +35,7 @@ test('Pro calendar compatibility: free client legacy API books atomically, new U
         await auth(page.context(), client);
         expect((await page.request.get('/api/pro/workspace')).status()).toBe(403); // The booking customer has no Pro.
         await page.goto('/profesionales/' + slug);
-        const availability = page.getByRole('button', { name: 'Ver disponibilidad', exact: true }).filter({visible:true}).first();
+        const availability = page.getByRole('button', { name: 'Agendar', exact: true }).filter({visible:true}).first();
         await availability.scrollIntoViewIfNeeded();
         await availability.click();
         await expect(page.getByRole('dialog',{name:'Solicitar una cita',exact:true})).toContainText('El profesional debe confirmar la cita');

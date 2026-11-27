@@ -66,6 +66,8 @@ interface ProfessionalScheduleProps {
   /** STACKED single-column layout for the professional-profile contact card:
    *  location → buttons. Default false = the /profesionales card layout. */
   stacked?: boolean;
+  /** Stacked only: false for the desktop side card, so the page mounts ONE strip fixed to the bottom of the phone. */
+  pinBar?: boolean;
   /** Explicit video-consultation search result: show that place only. */
   forceContactOnly?: boolean;
   /** Preferred place when search context should show a specific location/modality. */
@@ -89,7 +91,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, videoConsultApplies = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, alLadoDeLaZona, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, hayContenidoDespues = false, onResenar }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, videoConsultApplies = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, alLadoDeLaZona, stacked = false, pinBar = true, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, hayContenidoDespues = false, onResenar }: ProfessionalScheduleProps) {
   // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
   const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
@@ -568,7 +570,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               de camino, arriba, y desaparecía apenas bajaba a leer. En
               computadora se queda donde estaba: ahí la columna de contacto ya
               está siempre a la vista. */}
-          {PRO_UI_ENABLED ? <PublicReservations professional={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} service={categoryName} isOwn={isOwn} pinned fallback={profileContactButtons}/> : <AccionesAlPie className="flex flex-col gap-2">{profileContactButtons}</AccionesAlPie>}
+          {/* Con agenda, la franja del teléfono es WhatsApp + «Agendar»; mientras se consulta y sin agenda, WhatsApp +
+              Llamar, en la misma franja: no salta. En la tarjeta de computadora «Agendar» va debajo. */}
+          {PRO_UI_ENABLED ? <PublicReservations professional={professional.id} professionalName={getProfessionalDisplayName(professional.fullName, professional.businessName).primaryDesktop} service={categoryName} isOwn={isOwn} pinned={pinBar} fallback={profileContactButtons} companion={chatLauncher} bookClass={messageButtonBarClass}/> : <AccionesAlPie className="flex flex-col gap-2">{profileContactButtons}</AccionesAlPie>}
         </div>
         {selfModal}
       </>

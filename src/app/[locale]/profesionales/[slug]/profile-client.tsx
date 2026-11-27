@@ -795,6 +795,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       </div>
       <ProfessionalSchedule
         stacked
+        pinBar={conAncla}
         professional={professional}
         activeCategory={activeCategory}
         categoryName={catLabel(professional.categoryId)}

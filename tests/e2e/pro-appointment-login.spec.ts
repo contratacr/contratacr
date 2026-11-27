@@ -24,7 +24,7 @@ for(const locale of ['es','en'] as const)test(`Guest appointment survives real p
   expect((await db.from('pro_appointment_preferences').insert({owner_id:owner.id,enabled:true,revision:1})).error).toBeNull();
   expect((await db.rpc('pro_appointment_schedule_record',{p_actor:owner.id,p_input:{revision:0,actionId:crypto.randomUUID(),durationMinutes:120,weekly:[],closedDates:[]}})).error).toBeNull();
   await page.goto(`/${locale}/profesionales/${slug}`);
-  await page.getByRole('button',{name:locale==='en'?'View availability':'Ver disponibilidad',exact:true}).filter({visible:true}).first().click();
+  await page.getByRole('button',{name:locale==='en'?'Book':'Agendar',exact:true}).filter({visible:true}).first().click();
   const form=page.getByRole('dialog',{name:copy.requestTitle,exact:true});
   if(day.slice(0,7)!==new Date().toISOString().slice(0,7))await form.getByRole('button',{name:locale==='en'?'Next month':'Mes siguiente',exact:true}).click();
   await form.getByRole('button',{name:day,exact:true}).click();
