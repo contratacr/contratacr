@@ -930,15 +930,21 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
               <ProfileHero
                 en={locale === "en"}
                 avatarUrl={professional.avatarUrl}
-                coverUrl={professional.portfolioUrls?.[0] ?? null}
                 initials={getInitials(displayName.primaryMobile)}
                 altName={displayName.primaryMobile}
                 name={<ProfileIdentityName testId="professional-profile-name" name={displayName.primaryDesktop}
                   badge={professional.verificationStatus === "verified" ? <VerificationInfo /> : null} />}
                 subtitle={(() => {
-                  const oficios = ((professional.professions?.length ? professional.professions : [professional.categoryId]) as (string | null | undefined)[])
-                    .map((id) => catLabel(id)).filter(Boolean).slice(0, 2);
-                  return [...oficios, locationText].filter(Boolean).join(" · ") || null;
+                  // Owner 2026-11-26: with many services or zones the line says how many instead of growing.
+                  const todos = ((professional.professions?.length ? professional.professions : [professional.categoryId]) as (string | null | undefined)[])
+                    .map((id) => catLabel(id)).filter(Boolean) as string[];
+                  const en = locale === "en";
+                  const oficios = todos.length > 2
+                    ? `${todos[0]} ${en ? `and ${todos.length - 1} more services` : `y ${todos.length - 1} servicios más`}`
+                    : todos.join(", ");
+                  const zonas = Array.isArray(professional.workplaces) ? professional.workplaces.length : 0;
+                  const lugar = zonas > 1 ? (en ? `${zonas} service areas` : `${zonas} zonas de servicio`) : locationText;
+                  return [oficios, lugar].filter(Boolean).join(" · ") || null;
                 })()}
                 stats={(professional.reviewCount > 0 || expYears > 0) ? (
                   <div className="flex flex-wrap items-center gap-2 text-[13px]">
