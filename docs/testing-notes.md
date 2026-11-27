@@ -94,7 +94,7 @@ Dispositivos/límites:
 - [ ] Herramientas en el menú: una sola flecha; abre `/herramientas`.
 - [ ] En pantallas de mapa el menú cubre todo y trae su propio logo y fila de cierre; la flecha atrás vuelve de donde venía la persona (portada si se abrió directo).
 - [ ] Panel Favoritos: fila hacia las empresas guardadas ("Mis listas") con el estilo de fila del panel.
-- [ ] Reducir movimiento: instantáneo. Bandera apagada: menú de producción.
+- [ ] Reducir movimiento: instantáneo. Bandera apagada: menú de producción (entra deslizando desde la derecha). La cortina solo existe con el directorio encendido (`data-menu-cortina`, 2026-11-27: antes el CSS de la cortina no dependía de la bandera y habría llegado a producción).
 
 ## 4. Categorías (`/categorias`, `/servicios` redirige 308 con directorio)
 

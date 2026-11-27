@@ -1,9 +1,12 @@
 import { expect, test, type Page } from "playwright/test";
-import { gotoOK, isMobileProject, loginAs, waitForInteractivePage } from "./helpers";
+import { directoryEnabled, gotoOK, isMobileProject, loginAs, waitForInteractivePage } from "./helpers";
 
 // LO NUEVO DEL 1-OCT-2026: cabecera sin íconos sin sesión, menú a pantalla
 // completa, marcas que abren su perfil, Mensajes en la barra de abajo de la app
 // y la flecha del perfil que no existe. Todo sin sesión y sin crear datos.
+// Con el directorio encendido (solo test; docs/testing-notes.md §1-3, dueño 2026-11-26) la portada y el menú cambian a
+// propósito: sin cinta de marcas, «Busque en su provincia», menú que cae desde arriba como cortina y Categorías en
+// /categorias. Cada prueba afirma producción con el directorio apagado y lo aprobado con él encendido.
 
 async function pauseNextMenuSlide(page: Page) {
   await page.locator(".ccr-menu-completo").evaluate((element) => {
@@ -11,6 +14,21 @@ async function pauseNextMenuSlide(page: Page) {
       if ((event as TransitionEvent).propertyName !== "transform") return;
       element.removeEventListener("transitionrun", onTransition);
       const animation = element.getAnimations().find((item) => (item as CSSTransition).transitionProperty === "transform");
+      if (!animation) return;
+      animation.pause();
+      animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 4;
+    };
+    element.addEventListener("transitionrun", onTransition);
+  });
+}
+
+// Directorio encendido: la cortina abre con clip-path (sin transform); se congela a un cuarto igual que el deslizamiento.
+async function pauseNextMenuCurtain(page: Page) {
+  await page.locator(".ccr-menu-completo").evaluate((element) => {
+    const onTransition = (event: Event) => {
+      if ((event as TransitionEvent).propertyName !== "clip-path") return;
+      element.removeEventListener("transitionrun", onTransition);
+      const animation = element.getAnimations().find((item) => (item as CSSTransition).transitionProperty === "clip-path");
       if (!animation) return;
       animation.pause();
       animation.currentTime = Number(animation.effect!.getComputedTiming().duration) / 4;
@@ -65,8 +83,14 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await expect(page.locator(".ccr-menu-completo.ccr-menu-abierto")).toHaveCount(0);
   });
 
-  test("cada marca de la cinta enlaza al perfil de su negocio", async ({ page }) => {
+  test("cada marca de la cinta enlaza al perfil de su negocio", async ({ page, request }) => {
     await gotoOK(page, "/");
+    // Directorio encendido: la portada no lleva cinta de marcas (testing-notes §1, «Quitado»).
+    if (await directoryEnabled(request)) {
+      await waitForInteractivePage(page);
+      await expect(page.locator(".featured-brands-ribbon")).toHaveCount(0);
+      return;
+    }
     const enlaces = await page.locator(".featured-brands-ribbon a[data-brand-slug]").evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))]);
     expect(enlaces.length).toBeGreaterThanOrEqual(9);
     for (const href of enlaces) expect(href).toMatch(/^\/(en\/)?profesionales\/[a-z0-9-]+\?from=%2F$/);
@@ -171,9 +195,11 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(orden.despues && orden.zImg >= orden.zVideo).toBe(true);
   });
 
-  test("las secciones de abajo de la portada se ven al bajar", async ({ page }) => {
+  test("las secciones de abajo de la portada se ven al bajar", async ({ page, request }) => {
     await gotoOK(page, "/");
-    const zona = page.locator("h2", { hasText: /Encuentre profesionales cerca de usted|Find professionals near you/ });
+    // Directorio encendido: la sección de zonas se llama «Busque en su provincia» (testing-notes §1).
+    const titulo = await directoryEnabled(request) ? /Busque en su provincia|Search your province/ : /Encuentre profesionales cerca de usted|Find professionals near you/;
+    const zona = page.locator("h2", { hasText: titulo });
     await zona.scrollIntoViewIfNeeded();
     await expect.poll(() => zona.evaluate((e) => Number(getComputedStyle(e.closest("section") ?? e).opacity))).toBe(1);
   });
@@ -202,10 +228,41 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     for (const c of corte) expect(c, "una foto empieza por encima de su franja (queda bajo la cabecera)").toBeGreaterThanOrEqual(0);
   });
 
-  test("el menú se abre y se cierra deslizando, siempre opaco", async ({ page }) => {
+  test("el menú se abre y se cierra deslizando, siempre opaco", async ({ page, request }) => {
     test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
+    if (await directoryEnabled(request)) {
+      // Directorio encendido (testing-notes §3): cortina desde arriba, opaca, que deja ver solo su parte de arriba a
+      // mitad de camino y sube con todo puesto al cerrar.
+      const cortina = page.locator(".ccr-menu-completo");
+      const abierto = () => cortina.evaluate((e) => {
+        const box = e.getBoundingClientRect();
+        const inset = /inset\(\s*0(?:px)?\s+0(?:px)?\s+([\d.]+)(px|%)/.exec(getComputedStyle(e).clipPath);
+        const bottom = !inset ? 0 : inset[2] === "%" ? Number(inset[1]) / 100 * box.height : Number(inset[1]);
+        return { x: Math.round(box.x), visible: Math.round(box.height - bottom), alto: Math.round(box.height), o: getComputedStyle(e).opacity };
+      });
+      await pauseNextMenuCurtain(page);
+      await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+      await waitForPausedMenuSlide(page);
+      const bajando = await abierto();
+      expect(bajando.x, "la cortina cubre todo el ancho desde el borde").toBe(0);
+      expect(bajando.o, "el menú no se funde").toBe("1");
+      expect(bajando.visible, "la cortina debe ir cayendo, no aparecer de golpe").toBeGreaterThan(0);
+      expect(bajando.visible, "la cortina debe ir cayendo, no aparecer de golpe").toBeLessThan(bajando.alto);
+      await cortina.evaluate((element) => element.getAnimations().forEach((animation) => animation.play()));
+      await expect.poll(async () => { const a = await abierto(); return a.visible === a.alto; }).toBe(true);
+      await pauseNextMenuCurtain(page);
+      await page.getByRole("button", { name: /Cerrar men[uú]/ }).click();
+      await waitForPausedMenuSlide(page);
+      const subiendo = await abierto();
+      expect(subiendo.o, "al cerrar no debe volverse transparente").toBe("1");
+      expect(subiendo.visible, "al cerrar la cortina sube").toBeLessThan(subiendo.alto);
+      await expect(page.locator(".ccr-menu-completo .ccr-menu-cuerpo nav > *").first()).toHaveCSS("opacity", "1");
+      await cortina.evaluate((element) => element.getAnimations().forEach((animation) => animation.play()));
+      await expect(cortina).not.toHaveClass(/ccr-menu-abierto/);
+      return;
+    }
     // Desliza el CUERPO del menú; la fila del logo y la X queda quieta sobre la cabecera.
     const menu = page.locator(".ccr-menu-completo .ccr-menu-cuerpo");
     // Sample a real transition at a fixed fraction, rather than guessing how
@@ -255,7 +312,8 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(medida.ultima, "la última opción queda tapada por el teclado").toBeLessThanOrEqual(476);
   });
 
-  test("los logos de la cinta están cargados desde el principio (ninguno en blanco)", async ({ page }) => {
+  test("los logos de la cinta están cargados desde el principio (ninguno en blanco)", async ({ page, request }) => {
+    test.skip(await directoryEnabled(request), "Con el directorio encendido la portada no lleva cinta (lo afirma «cada marca de la cinta…»).");
     await gotoOK(page, "/");
     await page.waitForLoadState("load");
     const sinCargar = await page.locator(".featured-brands-ribbon img").evaluateAll((imgs) =>
@@ -263,7 +321,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(sinCargar, "logos sin cargar al terminar la página").toEqual([]);
   });
 
-  test("al tocar un enlace del menú no se ve el inicio entre medio: el menú se queda hasta que llega la sección", async ({ page }) => {
+  test("al tocar un enlace del menú no se ve el inicio entre medio: el menú se queda hasta que llega la sección", async ({ page, request }) => {
     test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
@@ -281,9 +339,11 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
       };
       requestAnimationFrame(f);
     });
-    // "Servicios" (or "Categorías" with the directory on) is a plain link to /servicios.
-    await menu.getByRole("link", { name: /^(Servicios|Categorías)$/ }).click();
-    await expect(page).toHaveURL(/\/servicios/);
+    // "Servicios" is a plain link to /servicios; with the directory on it is "Categorías", second row, to /categorias
+    // (testing-notes §3-4; the middleware sends /servicios there).
+    const directory = await directoryEnabled(request);
+    await menu.getByRole("link", { name: directory ? /^Categorías$/ : /^Servicios$/ }).click();
+    await expect(page).toHaveURL(directory ? /\/categorias/ : /\/servicios/);
     expect(await page.evaluate(() => (window as unknown as { __vioInicio: boolean }).__vioInicio), "se vio el inicio antes de la sección").toBe(false);
     await expect.poll(() => menu.evaluateAll((es) => es.every((e) => getComputedStyle(e).visibility === "hidden"))).toBe(true);
   });

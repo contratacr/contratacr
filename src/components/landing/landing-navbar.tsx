@@ -2792,6 +2792,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               const dy = Math.abs(e.changedTouches[0].clientY - start.y);
               if (dx > 55 && dx > dy * 1.5) setMobileOpen(false);
             }}
+            // Directory on (test): the curtain from the top (globals.css); production keeps the slide from the right.
+            data-menu-cortina={directoryOn ? "" : undefined}
             className={cn(
               // One full-screen surface: header and options enter together.
               // Once open, only the options scroll; the close control stays put.
