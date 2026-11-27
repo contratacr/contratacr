@@ -1,4 +1,5 @@
 "use client";
+import { categoryImageUrl } from "@/lib/data/category-images";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 import { serviceModalities } from "@/components/professionals/service-modalities";
@@ -1153,7 +1154,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     return (
                       <div>
                         <h2 className={directoryOn ? "mb-1 text-xl font-extrabold tracking-tight text-[#162543]" : "text-lg font-semibold text-[#162543] mb-1"}>{t("servicesOffered")}</h2>
-                        <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>
+                        {/* Directory on (owner 2026-11-26): no generic subtitle; the services speak for themselves. */}
+                        {directoryOn ? <div className="mb-4" /> : <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>}
                         {cats.length === 0 ? (
                           <FichaVacio icono="servicios" titulo={t("noServices")} />
                         ) : (
@@ -1188,6 +1190,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                                 <article key={cat} className={directoryOn
                                   ? "flex flex-col overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(22,37,67,0.08)]"
                                   : "flex flex-col overflow-hidden rounded-2xl sm:min-h-[280px] border border-[#e5e7eb] bg-white shadow-sm transition-colors hover:border-[#bdd7e5]"}>
+                                  {/* Directory on (owner 2026-11-26): every service has a picture — the one the
+                                      professional added, else the same photo the service has in Categorías. */}
+                                  {directoryOn && !serviceImageUrl && categoryImageUrl(cat) && (
+                                    <span className="block aspect-[16/9] w-full overflow-hidden border-b border-[#e5e7eb] bg-[#eef2f6]" data-service-fallback-photo>
+                                      {/* eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL */}
+                                      <img src={categoryImageUrl(cat)!.replace("w=1100", "w=900")} alt="" loading="lazy" className="h-full w-full object-cover" />
+                                    </span>
+                                  )}
                                   {serviceImageUrl && (
                                     <ImagePreviewDialog
                                       src={serviceImageUrl}
