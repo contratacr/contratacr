@@ -3082,58 +3082,58 @@
       "next": "Next"
     },
     "heroSlides": {
-      "restaurants": "Where to eat near you",
+      "restaurants": "Restaurants and sodas",
       "restaurantsButton": "Restaurants",
       "groups": {
-        "hogar": "Experts for your home",
-        "construccion_ingenieria": "Build with people who know",
-        "limpieza": "Spotless, effortless",
-        "salud": "Specialists who care for you",
-        "bienestar": "Take a break",
-        "automotriz": "Your car in expert hands",
-        "tecnologia": "Tech with the best reviews",
-        "profesional": "Advisors who grow your company",
-        "creatividad": "Creative talent near you",
-        "eventos": "Your event, worry-free",
-        "educacion": "Learn from the best",
-        "transporte": "Always on time",
-        "turismo": "Live Costa Rica",
-        "mascotas": "Expert care for your pet",
-        "jardin": "Gardens to fall in love with",
-        "belleza": "Look amazing today",
-        "seguridad": "Your peace of mind first"
+        "hogar": "Technicians for your home",
+        "construccion_ingenieria": "Building and remodeling",
+        "limpieza": "Home and office cleaning",
+        "salud": "Doctors and therapists",
+        "bienestar": "Massage and trainers",
+        "automotriz": "Mechanics and garages",
+        "tecnologia": "Websites and tech support",
+        "profesional": "Accountants and lawyers",
+        "creatividad": "Design, photo and video",
+        "eventos": "Everything for your event",
+        "educacion": "Tutors and classes",
+        "transporte": "Moving and hauling",
+        "turismo": "Tours and guides",
+        "mascotas": "Vets and more",
+        "jardin": "Gardeners",
+        "belleza": "Hair, nails and more",
+        "seguridad": "Cameras and alarms"
       },
-      "default": "Chosen by their reviews",
+      "default": "Top rated",
       "search": "Search services or businesses",
-      "default2": "Reviews from real customers",
-      "default3": "Recommended near you",
+      "default2": "With real reviews",
+      "default3": "Near you",
       "places": {
         "restaurantes": {
-          "title": "People's favourites, near you",
-          "button": "Restaurants"
+          "title": "Restaurants and sodas",
+          "button": "See restaurants"
         },
         "parqueos": {
-          "title": "Find where to leave your car",
-          "button": "Parking"
+          "title": "Parking near you",
+          "button": "See parking"
         },
         "farmacias": {
-          "title": "See which ones are open now",
-          "button": "Pharmacies"
+          "title": "Pharmacies near you",
+          "button": "See pharmacies"
         },
         "hospedaje": {
-          "title": "Hotels and homes for your next trip",
-          "button": "Lodging"
+          "title": "Hotels and rentals",
+          "button": "See lodging"
         },
         "lavacar": {
-          "title": "Get your car looking new",
-          "button": "Car wash"
+          "title": "Car washes near you",
+          "button": "See car wash"
         },
         "gasolineras": {
-          "title": "Compare prices before you fill up",
-          "button": "Gas stations"
+          "title": "Gas prices",
+          "button": "See gas stations"
         }
       },
-      "seeButton": "See"
+      "seeButton": "Find"
     },
     "homeCategories": {
       "title": "Most searched",

@@ -3082,58 +3082,58 @@
       "next": "Siguientes"
     },
     "heroSlides": {
-      "restaurants": "Dónde comer cerca de usted",
+      "restaurants": "Restaurantes y sodas",
       "restaurantsButton": "Restaurantes",
       "groups": {
-        "hogar": "Expertos para su hogar",
-        "construccion_ingenieria": "Obras con quienes saben",
-        "limpieza": "Todo impecable, sin esfuerzo",
-        "salud": "Especialistas que lo cuidan",
-        "bienestar": "Dese un respiro",
-        "automotriz": "Su carro en manos expertas",
-        "tecnologia": "Tecnología con las mejores reseñas",
-        "profesional": "Asesores que impulsan su empresa",
-        "creatividad": "Talento creativo cerca de usted",
-        "eventos": "Su evento, sin preocupaciones",
-        "educacion": "Aprenda con los mejores",
-        "transporte": "Llegue a tiempo, siempre",
-        "turismo": "Viva Costa Rica",
-        "mascotas": "Cuidado experto para su mascota",
-        "jardin": "Jardines que enamoran",
-        "belleza": "Luzca increíble hoy",
-        "seguridad": "Su tranquilidad, primero"
+        "hogar": "Técnicos para su casa",
+        "construccion_ingenieria": "Construcción y obras",
+        "limpieza": "Limpieza de casas",
+        "salud": "Médicos y terapeutas",
+        "bienestar": "Masajes y entrenadores",
+        "automotriz": "Mecánicos y talleres",
+        "tecnologia": "Páginas web y soporte",
+        "profesional": "Contadores y abogados",
+        "creatividad": "Diseño, fotos y video",
+        "eventos": "Todo para su evento",
+        "educacion": "Tutores y clases",
+        "transporte": "Mudanzas y fletes",
+        "turismo": "Tours y guías",
+        "mascotas": "Veterinarios y más",
+        "jardin": "Jardineros",
+        "belleza": "Peluquería, uñas y más",
+        "seguridad": "Cámaras y alarmas"
       },
-      "default": "Elegidos por sus reseñas",
+      "default": "Los mejor calificados",
       "search": "Busque servicios o negocios",
-      "default2": "Reseñas de clientes reales",
-      "default3": "Recomendados en su zona",
+      "default2": "Con reseñas reales",
+      "default3": "Cerca de usted",
       "places": {
         "restaurantes": {
-          "title": "Los favoritos de la gente, cerca de usted",
-          "button": "Restaurantes"
+          "title": "Restaurantes y sodas",
+          "button": "Ver restaurantes"
         },
         "parqueos": {
-          "title": "Encuentre dónde dejar su carro",
-          "button": "Parqueos"
+          "title": "Parqueos cerca de usted",
+          "button": "Ver parqueos"
         },
         "farmacias": {
-          "title": "Vea cuáles están abiertas ahora",
-          "button": "Farmacias"
+          "title": "Farmacias cerca de usted",
+          "button": "Ver farmacias"
         },
         "hospedaje": {
-          "title": "Hoteles y casas para su próximo viaje",
-          "button": "Hospedaje"
+          "title": "Hoteles y casas por día",
+          "button": "Ver hospedaje"
         },
         "lavacar": {
-          "title": "Deje su carro como nuevo",
-          "button": "Lavacar"
+          "title": "Lavacar cerca de usted",
+          "button": "Ver lavacar"
         },
         "gasolineras": {
-          "title": "Compare precios antes de cargar",
-          "button": "Gasolineras"
+          "title": "Precios de gasolina",
+          "button": "Ver gasolineras"
         }
       },
-      "seeButton": "Ver"
+      "seeButton": "Buscar"
     },
     "homeCategories": {
       "title": "Lo más buscado",

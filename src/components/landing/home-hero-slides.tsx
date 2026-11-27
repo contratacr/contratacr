@@ -13,7 +13,7 @@ const SLIDE_MS = 6000;
  * own headline and one search button, and progress bars that fill while each photo is shown. The next photo is loaded
  * before its turn, so the change is smooth. Tapping a bar jumps to that slide.
  */
-export function HomeHeroSlides({ slides, searchLabel }: { slides: HeroSlide[]; searchLabel: string }) {
+export function HomeHeroSlides({ slides }: { slides: HeroSlide[]; searchLabel?: string }) {
   const [current, setCurrent] = useState(0);
   const [loaded, setLoaded] = useState<ReadonlySet<number>>(() => new Set([0]));
   const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -61,9 +61,9 @@ export function HomeHeroSlides({ slides, searchLabel }: { slides: HeroSlide[]; s
       </div>
 
       <div key={slide.key} className="absolute inset-x-0 bottom-0 z-10 px-5 pb-7 animate-[ccr-hero-text_600ms_ease-out]">
-        <h1 className="text-[clamp(1.25rem,5.6vw,2.2rem)] font-extrabold leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" data-titular-portada="">{slide.title}</h1>
+        <h1 className="truncate text-[clamp(1.25rem,5.6vw,2.2rem)] font-extrabold leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]" data-titular-portada="">{slide.title}</h1>
         <Link href={slide.href} prefetch={false} data-hero-slide-search={slide.key} className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-[#009FD9] px-5 text-[15px] font-bold text-white shadow-[0_8px_22px_rgba(0,159,217,0.35)]">
-          <Search className="h-4 w-4" strokeWidth={2.4} aria-hidden />{searchLabel} {slide.button.toLowerCase()}
+          <Search className="h-4 w-4" strokeWidth={2.4} aria-hidden />{slide.button}
         </Link>
       </div>
     </section>

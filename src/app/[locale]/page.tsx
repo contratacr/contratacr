@@ -98,9 +98,9 @@ async function HomeHeroSlidesServer({ locale }: { locale: string }) {
     .sort((a, b) => b[1] - a[1]).slice(0, 3)
     .map(([id]): HeroSlide => {
       const label = getCategoryLabel(id, locale);
-      return { key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: label, href: `/buscar?categoria=${id}` };
+      return { key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: `${t("seeButton")} ${label.toLowerCase()}`, href: `/buscar?categoria=${id}` };
     });
-  const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: getCategoryLabel(id, locale), href: `/buscar?categoria=${id}` }));
+  const fallback: HeroSlide[] = ["electricidad", "plomeria", "carpinteria"].map((id) => ({ key: id, image: categoryImageUrl(id)!.replace("w=1100", "w=900"), title: heroLine(id), button: `${t("seeButton")} ${getCategoryLabel(id, locale).toLowerCase()}`, href: `/buscar?categoria=${id}` }));
   const list = services.length ? services : fallback;
   // Alternate (owner 2026-11-26): a professional service, then a company section, and so on — the most important ones.
   const enabled = sitemapSections().map((x) => x.section as string);
