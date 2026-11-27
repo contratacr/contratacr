@@ -2558,6 +2558,9 @@ html[data-pro-denied~="finance:export"] [data-pro-export="finance"] { display: n
    navbar's own phone row (logo, ☰) steps aside while it is mounted. The drawer is outside the header and still opens. */
 @media (max-width: 1023px) {
   body.ccr-dir-header [data-testid="landing-navbar"] { display: none; }
+  /* Map screens with the floating search card: hide the navbar from the FIRST paint (owner 2026-11-26). The class
+     above is set after hydration, so on a refresh the main navbar flashed before the floating card took over. */
+  body:has([data-quick-nav-floating]) [data-testid="landing-navbar"] { display: none; }
   /* That header is in the page flow (not fixed): the search map and sheet fill only what is left under it. */
   /* Its menu button is the symbol: the menu unfolds DOWNWARD right under that row (logo and search stay visible, the
      same button closes it) and the chevron turns up while it is open. --ccr-menu-top is set by toggleBrandMenu. */
