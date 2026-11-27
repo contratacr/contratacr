@@ -126,7 +126,8 @@ function JobMetaLine({ job, className = "", showApplicants = false }: { job: Job
 
 export function JobsBoard({ jobs:initialJobs, initialFeed, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
   // Directory on (test), phones: brand ▾ and this screen's search share the first row, like the home header.
-  const dirHeader = PHONE_DIRECTORY_HEADER && useSiteFeatures().directorySections.length > 0;
+  const siteFeatures = useSiteFeatures();
+  const dirHeader = PHONE_DIRECTORY_HEADER && siteFeatures.directorySections.length > 0;
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());

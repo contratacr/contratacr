@@ -20,7 +20,8 @@ export function SectionBrand({ title, as: Heading = "h1", onHomeClick, className
 }) {
   // Directory on (test, owner 2026-11-26): on phones the brand + title is the menu button (chevron, menu from the left),
   // like the home header; the separate ☰ of the screen steps aside. With the directory off nothing changes.
-  const menuMode = PHONE_DIRECTORY_HEADER && useSiteFeatures().directorySections.length > 0;
+  const siteFeatures = useSiteFeatures();
+  const menuMode = PHONE_DIRECTORY_HEADER && siteFeatures.directorySections.length > 0;
   const t = useTranslations("quickNav");
   return (
     <div data-ccr-section-brand="" className={cn("flex min-w-0 items-center gap-0", className)}>

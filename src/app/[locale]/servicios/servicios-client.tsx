@@ -251,7 +251,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
   }, []);
   const conPestanas = placeSectionsShown.length > 0;
   const pestanas = (clase?: string) => conPestanas && (
-    <div role="tablist" aria-label={locale === "en" ? "What are you looking for?" : "¿Qué busca?"} data-categorias-tabs className={cn("grid grid-cols-2 gap-1 rounded-full bg-[#eef2f6] p-1", clase)}>
+    <div role="tablist" aria-label={tp("tabsAria")} data-categorias-tabs className={cn("grid grid-cols-2 gap-1 rounded-full bg-[#eef2f6] p-1", clase)}>
       {(["servicios", "negocios"] as const).map((v) => (
         <button key={v} type="button" role="tab" aria-selected={vista === v} data-categorias-tab={v}
           onClick={() => { setVista(v); window.scrollTo({ top: 0 }); }}
@@ -383,7 +383,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
             // service's own photo, else the group's. "Todos los servicios de X" leads the page as a link.
             <section className="mx-4 mt-3" data-group-service-tiles>
               <Link href={`/profesionales?grupo=${mobileGroup.key}`} className="mb-3 inline-flex items-center gap-1 text-[15px] font-bold text-[#0083b0]">
-                {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}<ChevronRight className="h-4 w-4" aria-hidden />
+                {tp("allGroupServices", { group: mobileGroup.label })}<ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {mobileGroup.visibleIds.map((id) => {
@@ -412,7 +412,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
                   <mobileGroup.Icon className="h-[18px] w-[18px]" />
                 </span>
-                {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
+                {tp("allGroupServices", { group: mobileGroup.label })}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
                 <Link key={id} href={rutaDeBusqueda({ categoria: id })} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">

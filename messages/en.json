@@ -713,7 +713,8 @@
       "writeReview": "Leave a review",
       "contactCardTitle": "Contact this professional",
       "moreCategories": "{count, plural, one {+# more service} other {+# more services}}"
-    }
+    },
+    "experienceYears": "{years, plural, one {# year} other {# years}} of experience"
   },
   "auth": {
     "login": {
@@ -2542,7 +2543,9 @@
     "prosTileCount": "{count, plural, =1 {# professional} other {# professionals}}",
     "servicesCount": "{count, plural, =1 {# service} other {# services}}",
     "backToCategories": "Categories",
-    "pageTitleDirectory": "Categories"
+    "pageTitleDirectory": "Categories",
+    "tabsAria": "What are you looking for?",
+    "allGroupServices": "All {group} services"
   },
   "installGuide": {
     "eyebrow": "Quick access",

@@ -25,7 +25,7 @@ const label='flex flex-col gap-1 text-sm font-semibold text-[#162543]';
 
 function PinPicker({lat,lng,onPick,locale,hint,failed}:{lat:number|null;lng:number|null;onPick:(lat:number,lng:number)=>void;locale:string;hint:string;failed:string}){
  const box=useRef<HTMLDivElement>(null),map=useRef<MapLibreMap|null>(null),marker=useRef<Marker|null>(null),lib=useRef<typeof import('maplibre-gl')|null>(null);
- const pick=useRef(onPick);pick.current=onPick;
+ const pick=useRef(onPick);useEffect(()=>{pick.current=onPick;},[onPick]);
  const [error,setError]=useState(false);
  useEffect(()=>{
   let alive=true;

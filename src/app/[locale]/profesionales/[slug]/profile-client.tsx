@@ -991,7 +991,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       </button>
                     )}
                     {professional.reviewCount > 0 && expYears > 0 && <span aria-hidden>·</span>}
-                    {expYears > 0 && <span>{locale === "en" ? `${expYears} ${expYears === 1 ? "year" : "years"} of experience` : `${expYears} ${expYears === 1 ? "año" : "años"} de experiencia`}</span>}
+                    {expYears > 0 && <span>{t("experienceYears", { years: expYears })}</span>}
                   </p>
                 ) : null}
                 menu={<MenuFicha opciones={opcionesDeLaFicha} />}

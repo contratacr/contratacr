@@ -71,6 +71,11 @@ import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
  */
 export { ContrataCRLogo, ContrataCRMark } from "@/components/brand/brand-logo";
 
+// Fuera del hook: el compilador de React no deja modificar `document` dentro de él.
+function escribirCookie(valor: string) {
+  document.cookie = valor;
+}
+
 export function useSwitchLang() {
   // El router de Next, no el de next-intl: con `{ locale }` next-intl fuerza el
   // prefijo también para el español (/es/servicios) y el middleware responde
@@ -105,10 +110,10 @@ export function useSwitchLang() {
       // LEYENDO por un enlace: esa marca la pone el middleware como cookie de
       // sesión. Así el inglés de paso no se queda pegado para siempre, pero el
       // inglés elegido a mano sí manda.
-      document.cookie = `NEXT_LOCALE=${lang}; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`;
+      escribirCookie(`NEXT_LOCALE=${lang}; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`);
       // Marca aparte para que el middleware sepa que hubo una elección a mano
       // y no vuelva a pisarla con la detección del idioma del dispositivo.
-      document.cookie = `ccr_locale_elegido=1; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`;
+      escribirCookie(`ccr_locale_elegido=1; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`);
       document.documentElement.setAttribute("data-locale-switch", "1");
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }
@@ -1150,6 +1155,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
     const inicial = global.__ccrSectionHeader ?? null;
     if (inicial || global.__ccrSectionActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- lee al montar el título que la pantalla publicó antes (global externo)
       setSectionTitle(inicial);
       setSectionActive(true);
       setSectionRoot(!!global.__ccrSectionRoot);
@@ -1581,6 +1587,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   useEffect(() => {
     if (!nativeSearchOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- al abrir el buscador se leen las búsquedas guardadas (localStorage)
     setBusquedasRecientes(leerBusquedasRecientesConFecha());
     setVisitasRecientes([...readRecentVisits("profesionales"), ...readRecentVisits("negocios")]);
   }, [nativeSearchOpen]);
@@ -1968,18 +1975,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <>
                             <Link href="/categorias" data-explore-servicios onClick={() => { setOpenMenu(null); window.dispatchEvent(new CustomEvent("ccr:categorias-vista", { detail: "servicios" })); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                               <Search className="h-5 w-5 shrink-0" />
-                              {locale === "en" ? "Services" : "Servicios"}
+                              {t("searchServicesLabel")}
                             </Link>
                             <Link href="/categorias?vista=negocios" data-explore-negocios onClick={() => { setOpenMenu(null); window.dispatchEvent(new CustomEvent("ccr:categorias-vista", { detail: "negocios" })); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                               <Store className="h-5 w-5 shrink-0" />
-                              {locale === "en" ? "Businesses" : "Negocios"}
+                              {t("searchBusinesses")}
                             </Link>
                             <div className="my-1 border-t border-gray-100" aria-hidden />
                           </>
                         ) : (
                           <Link href="/profesionales" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                             <Search className="h-5 w-5 shrink-0" />
-                            {locale === "en" ? "Find professionals" : "Buscar profesionales"}
+                            {t("findProfessionals")}
                           </Link>
                         )}
                         {EMPLEOS_VISIBLE && (

@@ -370,7 +370,8 @@ export function ProjectsBoard({
   misProyectos?: string[];
 }) {
   // Directory on (test), phones: brand ▾ and this screen's search share the first row, like the home header.
-  const dirHeader = PHONE_DIRECTORY_HEADER && useSiteFeatures().directorySections.length > 0;
+  const siteFeatures = useSiteFeatures();
+  const dirHeader = PHONE_DIRECTORY_HEADER && siteFeatures.directorySections.length > 0;
   const locale = marketplaceLocale(useLocale());
   const en = locale === "en";
   const copy = COPY[locale];
