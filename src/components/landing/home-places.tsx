@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
 import { useThemes } from "./directory-nav";
-import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
+import { serviceGroupIcon } from "@/lib/visuals/section-visuals";
 
 // "Categorías populares" (home, directory on): one tile per theme (the same themes as the Categorías menu: service groups with
 // their places merged in), with the first places and services of the theme as links. Without the directory the section is not
@@ -28,7 +28,7 @@ export function HomePlacesTiles() {
         </div>
         <ul className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
           {tiles.map(({ id, label, rows }) => {
-            const Icon = getCategoryGroupIcon(id);
+            const Icon = serviceGroupIcon(id);
             return (
               <li key={id} data-home-place-group={id} className="flex flex-col rounded-2xl border border-[#e5e9ee] bg-white p-3 shadow-sm sm:p-4">
                 <Link href={rows[0].href} className="flex items-center gap-2.5 text-[15px] font-extrabold text-[#1A2744] transition-colors hover:text-[#009FD9] sm:text-lg">

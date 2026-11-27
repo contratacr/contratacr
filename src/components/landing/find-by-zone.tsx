@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { DIRECTORY_SECTION_ICONS } from "@/lib/directory/directory-groups";
+import { sectionIcon } from "@/lib/visuals/section-visuals";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { useRouter } from "@/i18n/navigation";
 import { MapPin, ArrowRight, Loader2, Navigation } from "lucide-react";
@@ -253,7 +253,7 @@ export function FindByZone({ coverage, companies = null, pros = null }: { covera
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("companiesIn", { province: province.name })}</p>
                 <div className="mb-6 grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3" data-zone-company-sections>
                   {ZONE_SECTIONS.filter((id) => directorySections.includes(id)).map((id) => {
-                    const Icon = DIRECTORY_SECTION_ICONS[id] ?? MapPin;
+                    const Icon = sectionIcon(id);
                     return (
                       <button key={id} type="button" onClick={() => router.push(`/${id}?province=${encodeURIComponent(province.name)}`)}
                         className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-left text-sm font-medium leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors">

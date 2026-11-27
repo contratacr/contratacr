@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Store, ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, LayoutList, ArrowLeft, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, Compass, Users, MoreHorizontal, Search, LayoutList, ArrowLeft, Map as MapIcon, type LucideIcon } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSiteFeatures } from "@/components/site-features";
 import { DIRECTORY_SECTION_LABELS, unifiedSearchPlaceholder } from "@/lib/search/directory-search";
 import { DIRECTORY_SECTION_ICONS, groupPlaces, curatedGroupItems, pick } from "@/lib/directory/directory-groups";
+import { sectionIcon } from "@/lib/visuals/section-visuals";
+import { SectionIcon } from "@/lib/visuals/section-icon";
 import { getAllCategories, getAllCategoryGroups, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
@@ -15,9 +17,10 @@ import { PHONE_DIRECTORY_HEADER } from "@/lib/directory/phone-header";
 
 // Public navigation to the place directory (2026-11-18): the «Categorías» menu (desktop) and the mobile drawer list the
 // sections that are on (useSiteFeatures, from the server flags). Short menu labels; the section page keeps its full name.
+/** Kept for existing importers; the icons come from lib/visuals/section-visuals.ts. */
 export { DIRECTORY_SECTION_ICONS };
 const SECTIONS: Record<string, { es: string; en: string; icon: LucideIcon }> = Object.fromEntries(
-  Object.entries(DIRECTORY_SECTION_LABELS).map(([section, label]) => [section, { ...label, icon: DIRECTORY_SECTION_ICONS[section] ?? Store }]),
+  Object.entries(DIRECTORY_SECTION_LABELS).map(([section, label]) => [section, { ...label, icon: sectionIcon(section) }]),
 );
 function useSections() {
   const { directorySections } = useSiteFeatures();
@@ -180,11 +183,10 @@ export function DirectoryHomeSection({ locale }: { locale: string }) {
         </div>
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
           {sections.map((s) => {
-            const { icon: Icon } = SECTIONS[s];
             return (
               <li key={s}>
                 <Link href={`/${s}`} data-home-directory-section={s} className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-[#e5e9ee] bg-white px-3 py-3 text-sm sm:gap-3 sm:px-3.5 sm:text-[15px] font-semibold text-[#1A2744] shadow-sm transition-colors hover:border-[#009FD9] hover:text-[#009FD9]">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#eaf7fd] sm:h-9 sm:w-9 text-[#009FD9]"><Icon className="h-[18px] w-[18px]" aria-hidden /></span>
+                  <SectionIcon id={s} size="sm" className="sm:h-9 sm:w-9" glyphClassName="h-[18px] w-[18px]" />
                   <span className="min-w-0 leading-tight">{en ? SECTIONS[s].en : SECTIONS[s].es}</span>
                 </Link>
               </li>

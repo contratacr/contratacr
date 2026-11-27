@@ -1,5 +1,6 @@
-import type {ReactNode} from 'react';
-import {ArrowLeft,Barcode,ChevronRight,Fuel,MapPin,MessageSquarePlus,PackageSearch,Pill,Search,ShoppingCart,Store,TrendingDown} from 'lucide-react';
+import {createElement,type ReactNode} from 'react';
+import {sectionIcon} from '@/lib/visuals/section-visuals';
+import {ArrowLeft,Barcode,ChevronRight,MapPin,MessageSquarePlus,PackageSearch,Search,Store,TrendingDown} from 'lucide-react';
 import {CR_PROVINCES} from '@/lib/directory/listing-public';
 import {COMPARE_SORTS,CONFIDENCE_LABEL,bilingual,categoryLabel,crDay,money,perUnitLabel,
  type CompareSort,type PriceComparison,type PriceHistory,type PriceOffer,type PriceOverview,type PriceOverviewItem,type PriceQuery,type PriceSearchItem,type PriceSearchResult} from '@/lib/directory/price-compare';
@@ -171,7 +172,7 @@ function FiltersForm({query,base,keep,t}:{query:PriceQuery;base:string;keep:Reco
 }
 
 function KindIcon({kind,className}:{kind:string;className?:string}){
- return kind==='medicine'||kind==='pharmacy'?<Pill className={className} aria-hidden/>:<ShoppingCart className={className} aria-hidden/>;
+ return createElement(sectionIcon(kind==='medicine'||kind==='pharmacy'?'farmacias':'supermercados'),{className,'aria-hidden':true});
 }
 
 function ProductCard({item,href,t,en,searchItem}:{item:PriceSearchItem|PriceOverviewItem;href:string;t:T;en:boolean;searchItem?:boolean}){
@@ -223,8 +224,8 @@ function Landing({overview,fuel,landing,link,t,en,prefix,reportHref}:{overview:P
  const cats=overview?.categories??[],items=overview?.items??[];
  const count=(v:'grocery'|'pharmacy')=>cats.filter(c=>c.vertical===v||c.vertical==='mixed').reduce((s,c)=>s+c.items,0);
  const departments=[
-  {key:'supermercados' as const,icon:<ShoppingCart className="h-6 w-6" aria-hidden/>,label:t('Supermercado','Supermarket'),n:count('grocery'),stores:`${prefix}/supermercados`},
-  {key:'farmacias' as const,icon:<Pill className="h-6 w-6" aria-hidden/>,label:t('Farmacia (venta libre)','Pharmacy (over the counter)'),n:count('pharmacy'),stores:`${prefix}/farmacias`},
+  {key:'supermercados' as const,icon:createElement(sectionIcon('supermercados'),{className:'h-6 w-6','aria-hidden':true}),label:t('Supermercado','Supermarket'),n:count('grocery'),stores:`${prefix}/supermercados`},
+  {key:'farmacias' as const,icon:createElement(sectionIcon('farmacias'),{className:'h-6 w-6','aria-hidden':true}),label:t('Farmacia (venta libre)','Pharmacy (over the counter)'),n:count('pharmacy'),stores:`${prefix}/farmacias`},
  ];
  return <div className="space-y-6">
   <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -267,7 +268,7 @@ function FuelCard({fuel,t,en,prefix}:{fuel:PublicPriceCurrent;t:T;en:boolean;pre
  items.sort((a,b)=>order(a.item.slug)-order(b.item.slug));
  return <section aria-labelledby="price-fuel" className={`${card} flex flex-col overflow-hidden`} data-price-fuel>
   <div className="flex items-center gap-3 border-b border-[#eef2f6] px-4 py-3.5">
-   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#162543] text-white"><Fuel className="h-5 w-5" aria-hidden/></span>
+   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#162543] text-white">{createElement(sectionIcon('gasolineras'),{className:'h-5 w-5','aria-hidden':true})}</span>
    <div className="min-w-0"><h2 id="price-fuel" className="text-[15px] font-bold leading-tight">{t('Combustibles','Fuel')}</h2>
     <p className="text-[12px] text-[#6b7280]">{t('Precio oficial de hoy','Official price today')}</p></div>
    <span className="ml-auto rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-bold text-[#007fae]">ARESEP</span>

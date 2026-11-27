@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
-import { ArrowLeft, ChevronRight, Clock, MapPin, Search, Store, TrendingUp, Utensils, Wrench, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, MapPin, Search, Store, TrendingUp, Wrench, X } from "lucide-react";
+import { sectionIcon } from "@/lib/visuals/section-visuals";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
 import { guardarBusquedaReciente, leerBusquedasRecientesConFecha, olvidarBusquedaReciente, readRecentVisits, type RecentVisit } from "@/lib/recent-visits";
 import { getCategoryLabel, searchCategories } from "@/lib/data/categories";
 import { suggestDirectorySections } from "@/lib/search/directory-search";
+
+const RestaurantIcon = sectionIcon("restaurantes");
 
 /**
  * Search entry of the app home (Yelp "search entry" screen, our colours): back, field with voice, location row,
@@ -126,7 +129,7 @@ export function SearchEntry({ onClose, initialText = "", autoVoice = false }: { 
         ) : (
           <>
             <div className="flex flex-wrap gap-2 pb-2">
-              {directorySections.includes("restaurantes") && <Link href="/restaurantes" onClick={onClose} className={chip} data-search-chip="restaurantes"><Utensils className="h-4 w-4 text-[#009FD9]" aria-hidden />{t("Restaurantes", "Restaurants")}</Link>}
+              {directorySections.includes("restaurantes") && <Link href="/restaurantes" onClick={onClose} className={chip} data-search-chip="restaurantes"><RestaurantIcon className="h-4 w-4 text-[#009FD9]" aria-hidden />{t("Restaurantes", "Restaurants")}</Link>}
               <Link href={`/asistente?q=${encodeURIComponent(t("Necesito ayuda para arreglar ", "I need help fixing "))}`} onClick={onClose} className={chip} data-search-chip="arreglar"><Wrench className="h-4 w-4 text-[#009FD9]" aria-hidden />{t("Necesito ayuda para arreglar", "I need help fixing")}<ChevronRight className="h-4 w-4 text-[#7a889c]" aria-hidden /></Link>
             </div>
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { Store } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DIRECTORY_SECTION_ICONS } from "@/components/landing/directory-nav";
+import { SectionIcon } from "@/lib/visuals/section-icon";
 import type { DirectorySectionSuggestion } from "@/lib/search/directory-search";
 
 // «Lugares» group of the unified search (2026-11-19): directory sections that
@@ -42,7 +41,6 @@ export function DirectorySuggestionRows({
     <div data-search-places-group="" role="group" aria-label={en ? "Businesses" : "Negocios"} className="@container">
       <SuggestionGroupLabel variant={variant}>{en ? "Businesses" : "Negocios"}</SuggestionGroupLabel>
       {items.map((item, i) => {
-        const Icon = DIRECTORY_SECTION_ICONS[item.section] ?? Store;
         const active = i === activeIndex;
         return variant === "sheet" ? (
           <button
@@ -54,9 +52,7 @@ export function DirectorySuggestionRows({
             onClick={() => onPick(item)}
             className={cn("flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left active:bg-[#eef9fd]", active && "bg-[#eef9fd]")}
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#eaf7fd]">
-              <Icon className="h-5 w-5 text-[#009FD9]" aria-hidden />
-            </span>
+            <SectionIcon id={item.section} size="md" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[16px] font-bold text-[#1A2744]">{item.label}</span>
               <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{en ? "See on the map" : "Ver en el mapa"}</span>
@@ -73,9 +69,7 @@ export function DirectorySuggestionRows({
             onClick={() => onPick(item)}
             className={cn("flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors", active ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]")}
           >
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#eaf7fd]">
-              <Icon className="h-4 w-4 text-[#009FD9]" aria-hidden />
-            </span>
+            <SectionIcon id={item.section} size="sm" className="h-7 w-7" />
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#1a2744]">{item.label}</span>
             {/* The header dropdown is as narrow as its field: the hint only where it fits. */}
             <span className="hidden shrink-0 text-[11px] text-gray-400 @sm:inline">{en ? "See all" : "Ver todos"}</span>

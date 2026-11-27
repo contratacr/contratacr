@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
-import { Bookmark, ChevronRight, Droplets, Info, MoreHorizontal, Search, Sparkles, Star, Truck, Utensils, Wrench, X, type LucideIcon } from "lucide-react";
+import { Bookmark, ChevronRight, Info, MoreHorizontal, Search, Star, X, type LucideIcon } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { categoryIcon, sectionIcon } from "@/lib/visuals/section-visuals";
 import { MoreCategories } from "./more-categories";
 import { SearchEntry } from "./search-entry";
 import { SaveToList } from "./save-to-list";
@@ -17,12 +18,13 @@ import type { TopPlace } from "./app-home-data";
  */
 type Tile = { key: string; es: string; en: string; icon: LucideIcon; href: string; section?: string };
 const TILES: Tile[] = [
-  { key: "restaurantes", es: "Restaurantes", en: "Restaurants", icon: Utensils, href: "/restaurantes", section: "restaurantes" },
-  { key: "talleres", es: "Taller mecánico", en: "Auto repair", icon: Wrench, href: "/talleres", section: "talleres" },
-  { key: "mudanzas", es: "Mudanzas", en: "Movers", icon: Truck, href: rutaDeBusqueda({ categoria: "mudanzas" }) },
-  { key: "plomeros", es: "Plomeros", en: "Plumbers", icon: Droplets, href: rutaDeBusqueda({ categoria: "plomeria" }) },
-  { key: "limpieza", es: "Limpieza", en: "Cleaning", icon: Sparkles, href: rutaDeBusqueda({ categoria: "limpieza" }) },
+  { key: "restaurantes", es: "Restaurantes", en: "Restaurants", icon: sectionIcon("restaurantes"), href: "/restaurantes", section: "restaurantes" },
+  { key: "talleres", es: "Taller mecánico", en: "Auto repair", icon: sectionIcon("talleres"), href: "/talleres", section: "talleres" },
+  { key: "mudanzas", es: "Mudanzas", en: "Movers", icon: categoryIcon("mudanzas"), href: rutaDeBusqueda({ categoria: "mudanzas" }) },
+  { key: "plomeros", es: "Plomeros", en: "Plumbers", icon: categoryIcon("plomeria"), href: rutaDeBusqueda({ categoria: "plomeria" }) },
+  { key: "limpieza", es: "Limpieza", en: "Cleaning", icon: categoryIcon("limpieza"), href: rutaDeBusqueda({ categoria: "limpieza" }) },
 ];
+const RestaurantIcon = sectionIcon("restaurantes");
 const PLACEHOLDERS = [
   { es: "Buscar plomeros", en: "Search plumbers" },
   { es: "Buscar taller mecánico", en: "Search auto repair" },
@@ -140,7 +142,7 @@ export function AppHome({ topPlaces }: { topPlaces: TopPlace[] }) {
                       {p.photo
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={p.photo} alt="" loading="lazy" className="h-full w-full object-cover" />
-                        : <span className="flex h-full items-center justify-center text-[#007fae]"><Utensils className="h-8 w-8" aria-hidden /></span>}
+                        : <span className="flex h-full items-center justify-center text-[#007fae]"><RestaurantIcon className="h-8 w-8" aria-hidden /></span>}
                       <span className="absolute left-2 top-2 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#162543] px-1.5 text-[13px] font-extrabold text-white">{count - i}</span>
                     </span>
                     <span className="block p-2.5">

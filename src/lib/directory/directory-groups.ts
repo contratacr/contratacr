@@ -1,4 +1,5 @@
-import { Utensils, Coffee, Fuel, Pill, ShoppingCart, Store, Hammer, BedDouble, Stethoscope, PawPrint, Wrench, Scissors, Dumbbell, Compass, HeartPulse, Car, Plane, Landmark, SquareParking, Droplets, Mountain, ShoppingBag, Building2, Beef, FileText, GraduationCap, Bus, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { SECTION_VISUAL_IDS, placeGroupIcon, sectionIcon } from "@/lib/visuals/section-visuals";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
 import { idiomaDe } from "@/lib/prefijo-de-idioma";
 
@@ -6,25 +7,22 @@ import { idiomaDe } from "@/lib/prefijo-de-idioma";
 // groups in the navbar menu, the mobile drawer, the footer and the /lugares hub. ONE list for all of them. A section that
 // is not enabled (useSiteFeatures().directorySections / sitemapSections()) is filtered out and an empty group is hidden.
 // Plain module (no "use client") so server pages (the hub) and client menus can both import it.
-/** Icon of each section (menus, hub, suggestions). */
-export const DIRECTORY_SECTION_ICONS: Record<string, LucideIcon> = {
-  restaurantes: Utensils, cafes: Coffee, supermercados: ShoppingCart, pulperias: Store, farmacias: Pill, ferreterias: Hammer,
-  gasolineras: Fuel, talleres: Wrench, hospedaje: BedDouble, tours: Compass, belleza: Scissors, gimnasios: Dumbbell,
-  veterinarias: PawPrint, salud: Stethoscope, bancos: Landmark, parqueos: SquareParking, lavacar: Droplets,
-  atracciones: Mountain, tiendas: ShoppingBag, "centros-comerciales": Building2, "mercados-y-carnicerias": Beef, tramites: FileText,
-  educacion: GraduationCap, transporte: Bus,
-};
+/** Icon of each section — a read-only view of the single visuals module (lib/visuals/section-visuals.ts); new code calls
+ * sectionIcon(id) / <SectionIcon id> there directly. Kept for existing importers. */
+export const DIRECTORY_SECTION_ICONS: Readonly<Record<string, LucideIcon>> = Object.fromEntries(
+  SECTION_VISUAL_IDS.filter((id) => !id.includes(":")).map((id) => [id, sectionIcon(id)]),
+);
 export type Bilingual = { es: string; en: string };
 export type DirectoryGroup = { id: string; es: string; en: string; icon: LucideIcon; sections: readonly string[] };
 
 export const DIRECTORY_GROUPS: readonly DirectoryGroup[] = [
-  { id: "comer", es: "Comer y beber", en: "Food and drink", icon: Utensils, sections: ["restaurantes", "cafes"] },
-  { id: "compras", es: "Compras", en: "Shopping", icon: ShoppingCart, sections: ["supermercados", "pulperias", "ferreterias", "farmacias", "mercados-y-carnicerias", "tiendas", "centros-comerciales"] },
-  { id: "salud", es: "Salud y bienestar", en: "Health and wellness", icon: HeartPulse, sections: ["salud", "veterinarias", "belleza", "gimnasios"] },
-  { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: Car, sections: ["gasolineras", "talleres", "parqueos", "lavacar"] },
-  { id: "viajes", es: "Viajes", en: "Travel", icon: Plane, sections: ["hospedaje", "atracciones", "tours", "transporte"] },
-  { id: "dinero", es: "Dinero", en: "Money", icon: Landmark, sections: ["bancos"] },
-  { id: "servicios-publicos", es: "Trámites y educación", en: "Public services and education", icon: GraduationCap, sections: ["tramites", "educacion"] },
+  { id: "comer", es: "Comer y beber", en: "Food and drink", icon: placeGroupIcon("comer"), sections: ["restaurantes", "cafes"] },
+  { id: "compras", es: "Compras", en: "Shopping", icon: placeGroupIcon("compras"), sections: ["supermercados", "pulperias", "ferreterias", "farmacias", "mercados-y-carnicerias", "tiendas", "centros-comerciales"] },
+  { id: "salud", es: "Salud y bienestar", en: "Health and wellness", icon: placeGroupIcon("salud"), sections: ["salud", "veterinarias", "belleza", "gimnasios"] },
+  { id: "autos", es: "Autos y combustible", en: "Cars and fuel", icon: placeGroupIcon("autos"), sections: ["gasolineras", "talleres", "parqueos", "lavacar"] },
+  { id: "viajes", es: "Viajes", en: "Travel", icon: placeGroupIcon("viajes"), sections: ["hospedaje", "atracciones", "tours", "transporte"] },
+  { id: "dinero", es: "Dinero", en: "Money", icon: placeGroupIcon("dinero"), sections: ["bancos"] },
+  { id: "servicios-publicos", es: "Trámites y educación", en: "Public services and education", icon: placeGroupIcon("servicios-publicos"), sections: ["tramites", "educacion"] },
 ];
 
 /** One line per section (hub cards). */
@@ -119,7 +117,7 @@ export const PLACE_MENU_GROUPS: Record<string, readonly string[]> = {
 };
 
 /** Service categories that duplicate a place section of the same group: hidden from the menus (still in /servicios). */
-export const SERVICE_MENU_HIDE: ReadonlySet<string> = new Set(["restaurantes_comida", "cafeterias", "farmacias", "gasolineras", "supermercados_minisuper"]);
+export const SERVICE_MENU_HIDE: ReadonlySet<string> = new Set(["restaurantes_comida", "cafeterias", "farmacias", "gasolineras", "supermercados_minisuper", "ferreterias"]);
 
 /** The enabled place sections that belong to a group, in the group's order. */
 export function groupPlaces(groupId: string, enabled: readonly string[]): { section: string; label: Bilingual }[] {

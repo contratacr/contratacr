@@ -8,7 +8,7 @@ import { HomeFeed } from "@/components/landing/home-feed";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { HomeTopRated } from "@/components/landing/home-top-rated";
-import { sectionPhoto } from "@/lib/directory/section-photos";
+import { sectionPhoto } from "@/lib/visuals/section-visuals";
 import { HomeCategories } from "@/components/landing/home-categories";
 import { HomeHeroSlides, type HeroSlide } from "@/components/landing/home-hero-slides";
 import { getSupplyCounts } from "@/lib/queries/supply";

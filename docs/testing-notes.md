@@ -30,6 +30,11 @@ Texto:
 - [ ] Ningún texto truncado con "…" (nombres largos, direcciones, tarjetas, barra inferior, "Mejor calificados", negocios similares): envuelve en varias líneas.
 - [ ] Español de Costa Rica, trato de usted, sin jerga; lo mismo en inglés.
 
+Fotos e íconos de secciones, grupos y servicios (regla de Isaac 2026-11-27, tabla en `docs/section-visuals.md`):
+- [ ] Una sección, variante, grupo o servicio muestra SIEMPRE la misma foto y el mismo ícono: hero, "Categorías más buscadas", "Lo más buscado", `/categorias` (Servicios y Negocios), hoja de búsqueda, sugerencias, menú y cajón, "Busque en su provincia", `/precios`, `/solicitudes`, avatar de un negocio sin foto. Revisar al menos Talleres, Restaurantes, Farmacias, Belleza, Salud y Educación (mismo nombre en Servicios y Negocios = misma foto y mismo ícono).
+- [ ] Los íconos van en el círculo "mejorado" de producción, el de la fila Profesionales · Negocios · Solicitudes · Promociones · Empleos: degradado celeste suave `.ccr-caja-icono` con dibujo azul marino; el elegido, degradado azul con dibujo blanco. Cambia el tamaño, nunca el dibujo.
+- [ ] `node scripts/verify-section-visuals.mjs` pasa: sin URLs de Unsplash ni mapas de íconos por pantalla, y ningún nombre con dos fotos o dos íconos.
+
 ## 1. Portada / Home (directorio encendido)
 
 Nota: el commit `d70c4261d` (2026-11-26) dejó test con la portada y la barra inferior de producción; commits posteriores reintrodujeron bloques del directorio. Confirmar con Isaac cuál es la decisión final antes de probar (ver "Pendiente").

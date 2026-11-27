@@ -9,7 +9,7 @@ import { SocialLinks } from "./social-links";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { useSiteFeatures } from "@/components/site-features";
 import { DirectorySuggestionRows, SuggestionGroupLabel } from "@/components/search/directory-suggestions";
-import { DIRECTORY_SECTION_ICONS } from "@/lib/directory/directory-groups";
+import { CategoryIcon, SectionIcon } from "@/lib/visuals/section-icon";
 import { DIRECTORY_SECTION_LABELS, directorySectionForQuery, directorySectionHref, suggestDirectorySections, unifiedSearchPlaceholder, withoutPlaceDuplicates, type DirectorySectionSuggestion } from "@/lib/search/directory-search";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter as useRouterDeNext } from "next/navigation";
@@ -56,7 +56,6 @@ import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { PRO_UI_ENABLED } from "@/lib/pro/enabled-client";
-import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -2656,11 +2655,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <p className="px-2 pb-2 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">{t("searchPros")}</p>
                       <div className="grid grid-cols-2 gap-2">
                         {CATEGORY_GROUPS.filter((g) => g.id !== "otro" && g.id !== "restaurantes").slice(0, 6).map((g) => {
-                          const Icon = getCategoryGroupVisual(g.id).Icon;
                           return (
                             <button key={g.id} type="button" data-search-pro-group={g.id} onClick={() => { closeNativeSearch(); router.push(`/profesionales?grupo=${g.id}`); }}
-                              className="flex h-12 min-w-0 items-center gap-2.5 rounded-xl border border-[#e5e9ee] bg-white px-3 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]">
-                              <Icon className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" aria-hidden />
+                              className="flex h-12 min-w-0 items-center gap-2 rounded-xl border border-[#e5e9ee] bg-white px-2.5 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]">
+                              <CategoryIcon group={g.id} size="sm" />
                               <span className="min-w-0 truncate">{(locale === "en" && CATEGORY_GROUP_LABELS_EN[g.id]) || g.label}</span>
                             </button>
                           );
@@ -2677,17 +2675,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         {SEARCH_PLACE_ORDER.filter((id) => directorySections.includes(id) && DIRECTORY_SECTION_LABELS[id]).slice(0, 6).map((id) => {
-                          const Icon = DIRECTORY_SECTION_ICONS[id] ?? Search;
                           return (
                             <button
                               key={id}
                               type="button"
                               data-search-place-chip={id}
                               onClick={() => { closeNativeSearch(); router.push(`/${id}`); }}
-                              className="flex h-12 min-w-0 items-center gap-2.5 rounded-xl border border-[#e5e9ee] bg-white px-3 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
+                              className="flex h-12 min-w-0 items-center gap-2 rounded-xl border border-[#e5e9ee] bg-white px-2.5 text-left text-[14px] font-semibold text-[#1A2744] active:bg-[#eef9fd]"
                             >
-                              <Icon className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" aria-hidden />
-                              {(DIRECTORY_SECTION_LABELS[id] as Record<string, string>)[locale] ?? DIRECTORY_SECTION_LABELS[id].es}
+                              <SectionIcon id={id} size="sm" />
+                              <span className="min-w-0 leading-tight [overflow-wrap:anywhere]">{(DIRECTORY_SECTION_LABELS[id] as Record<string, string>)[locale] ?? DIRECTORY_SECTION_LABELS[id].es}</span>
                             </button>
                           );
                         })}

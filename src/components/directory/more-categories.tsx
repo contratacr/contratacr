@@ -1,11 +1,13 @@
 "use client";
 import { useEffect } from "react";
 import { useLocale } from "next-intl";
-import { ArrowLeft, Briefcase, ChevronRight, Droplets, FileText, Hammer, Megaphone, Scissors, Sparkles, Store, Wrench, Zap, Calculator, Coffee, Beer, IceCream, Fuel, Users, Flower2, SquareParking, Hotel, House, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Briefcase, ChevronRight, FileText, Megaphone, Users, type LucideIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useSiteFeatures } from "@/components/site-features";
-import { DIRECTORY_SECTION_ICONS, enabledDirectoryGroups, pick, type Bilingual } from "@/lib/directory/directory-groups";
+import { enabledDirectoryGroups, pick, type Bilingual } from "@/lib/directory/directory-groups";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { categoryIcon, sectionIcon, serviceGroupIcon } from "@/lib/visuals/section-visuals";
+import { IconBadge } from "@/lib/visuals/section-icon";
 
 /**
  * "Más categorías" (Yelp "More Categories" model, our own colours and icons). ONE component for the sheet opened by the
@@ -16,35 +18,36 @@ import { rutaDeBusqueda } from "@/lib/buscar-url";
 type Row = { key: string; label: Bilingual; icon: LucideIcon; href: string; section?: string };
 type Group = { id: string; label: Bilingual; rows: Row[] };
 
-const service = (key: string, es: string, en: string, icon: LucideIcon, categoria: string): Row => ({ key, label: { es, en }, icon, href: rutaDeBusqueda({ categoria }) });
-const place = (key: string, es: string, en: string, icon: LucideIcon, href: string, section?: string): Row => ({ key, label: { es, en }, icon, href, section });
+// Icons come from the single visuals module: a service shows its group's icon, a place row its section/variant icon.
+const service = (key: string, es: string, en: string, categoria: string): Row => ({ key, label: { es, en }, icon: categoryIcon(categoria), href: rutaDeBusqueda({ categoria }) });
+const place = (key: string, es: string, en: string, visual: string, href: string, section?: string): Row => ({ key, label: { es, en }, icon: sectionIcon(visual), href, section });
 
 const CURATED: Group[] = [
   { id: "populares", label: { es: "Populares", en: "Popular" }, rows: [
-    service("contadores", "Contadores", "Accountants", Calculator, "contabilidad"),
-    { key: "hogar", label: { es: "Mantenimiento del hogar", en: "Home maintenance" }, icon: Hammer, href: "/buscar?grupo=hogar" },
-    service("electricistas", "Electricistas", "Electricians", Zap, "electricidad"),
+    service("contadores", "Contadores", "Accountants", "contabilidad"),
+    { key: "hogar", label: { es: "Mantenimiento del hogar", en: "Home maintenance" }, icon: serviceGroupIcon("hogar"), href: "/buscar?grupo=hogar" },
+    service("electricistas", "Electricistas", "Electricians", "electricidad"),
   ] },
   { id: "snacks", label: { es: "Snacks y bebidas", en: "Snacks and drinks" }, rows: [
-    place("cafe", "Café y té", "Coffee and tea", Coffee, "/cafes?kind=cafe,coffee_shop", "cafes"),
-    place("bares", "Bares", "Bars", Beer, "/cafes?kind=bar,pub", "cafes"),
-    place("postres", "Postres", "Desserts", IceCream, "/cafes?kind=bakery,ice_cream", "cafes"),
+    place("cafe", "Café y té", "Coffee and tea", "cafes:cafeterias", "/cafes?kind=cafe,coffee_shop", "cafes"),
+    place("bares", "Bares", "Bars", "cafes:bares", "/cafes?kind=bar,pub", "cafes"),
+    place("postres", "Postres", "Desserts", "cafes:postres", "/cafes?kind=bakery,ice_cream", "cafes"),
   ] },
   { id: "spas", label: { es: "Spas y salones", en: "Spas and salons" }, rows: [
-    service("peluquerias", "Peluquerías", "Hair salons", Scissors, "peluqueria"),
-    service("masajes", "Masajes", "Massage", Flower2, "masajes"),
-    service("spas", "Spas", "Spas", Sparkles, "spa"),
+    service("peluquerias", "Peluquerías", "Hair salons", "peluqueria"),
+    service("masajes", "Masajes", "Massage", "masajes"),
+    service("spas", "Spas", "Spas", "spa"),
   ] },
   { id: "autos", label: { es: "Servicios automotrices", en: "Auto services" }, rows: [
-    place("lavacar", "Lavacar", "Car washes", Droplets, "/lavacar", "lavacar"),
-    place("taller", "Taller mecánico", "Auto repair", Wrench, "/talleres", "talleres"),
-    place("gasolineras", "Gasolineras", "Fuel stations", Fuel, "/gasolineras", "gasolineras"),
-    place("parqueos", "Parqueos", "Parking", SquareParking, "/parqueos", "parqueos"),
+    place("lavacar", "Lavacar", "Car washes", "lavacar", "/lavacar", "lavacar"),
+    place("taller", "Taller mecánico", "Auto repair", "talleres", "/talleres", "talleres"),
+    place("gasolineras", "Gasolineras", "Fuel stations", "gasolineras", "/gasolineras", "gasolineras"),
+    place("parqueos", "Parqueos", "Parking", "parqueos", "/parqueos", "parqueos"),
   ] },
   // Owner 2026-11-26: hotels and houses/apartments by the day, one tap away (kind filters of /hospedaje).
   { id: "hospedaje", label: { es: "Dónde quedarse", en: "Places to stay" }, rows: [
-    place("hoteles", "Hoteles", "Hotels", Hotel, "/hospedaje?kind=hotel", "hospedaje"),
-    place("por-dias", "Casas y apartamentos por días", "Vacation rentals", House, "/hospedaje?kind=vacation_rental", "hospedaje"),
+    place("hoteles", "Hoteles", "Hotels", "hospedaje:hoteles", "/hospedaje?kind=hotel", "hospedaje"),
+    place("por-dias", "Casas y apartamentos por días", "Vacation rentals", "hospedaje:por-dias", "/hospedaje?kind=vacation_rental", "hospedaje"),
   ] },
 ];
 
@@ -78,7 +81,7 @@ export function MoreCategories({ variant, onClose }: { variant: "page" | "sheet"
     .map((g) => ({
       id: `own-${g.id}`,
       label: g.label,
-      rows: g.sections.filter((s) => !used.has(s.section)).map((s): Row => ({ key: s.section, label: s.label, icon: DIRECTORY_SECTION_ICONS[s.section] ?? Store, href: `/${s.section}` })),
+      rows: g.sections.filter((s) => !used.has(s.section)).map((s): Row => ({ key: s.section, label: s.label, icon: sectionIcon(s.section), href: `/${s.section}` })),
     }))
     .filter((g) => g.rows.length > 0);
   const groups = [...curated, ...own, MORE_IN_APP];
@@ -103,11 +106,10 @@ export function MoreCategories({ variant, onClose }: { variant: "page" | "sheet"
             <h2 id={`more-${g.id}`} className="mb-2 px-1 text-[13px] font-extrabold uppercase tracking-wide text-[#5b6b82]">{pick(g.label, locale)}</h2>
             <ul className="overflow-hidden rounded-2xl border border-[#e5e9ee] bg-white">
               {g.rows.map((r) => {
-                const Icon = r.icon;
                 return (
                   <li key={r.key} className="border-b border-[#eef2f6] last:border-b-0">
                     <Link href={r.href} onClick={onClose} data-more-row={r.key} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-[15px] font-semibold hover:bg-[#EBF5FB] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#009FD9]">
-                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#007fae]"><Icon className="h-[18px] w-[18px]" aria-hidden /></span>
+                      <IconBadge icon={r.icon} size="md" />
                       <span className="min-w-0 flex-1">{pick(r.label, locale)}</span>
                       <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c2d1]" aria-hidden />
                     </Link>

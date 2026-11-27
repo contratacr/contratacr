@@ -1,7 +1,7 @@
 "use client";
 import { SectionBrand } from "@/components/layout/section-brand";
 
-import { serviceGroupPhoto } from "@/lib/data/service-group-photos";
+import { serviceGroupPhoto } from "@/lib/visuals/section-visuals";
 import { categoryImageUrl } from "@/lib/data/category-images";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Carril } from "@/components/ui/carril";
@@ -18,8 +18,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { avisarCambioDeCatalogo, instalarCatalogoDelServidor, useCustomCategories } from "@/lib/data/use-custom-categories";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useAuth } from "@/hooks/use-auth";
-import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
-import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
+import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
+import { categoryIcon, serviceGroupIcon } from "@/lib/visuals/section-visuals";
 import {
   ArrowLeft,
   ChevronRight,
@@ -117,7 +117,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
       const hasPlaces = groupPlaces(group.id, directorySections).length > 0;
       return {
         key: group.id,
-        Icon: getCategoryGroupIcon(group.id, group.iconKey),
+        Icon: serviceGroupIcon(group.id, group.iconKey),
         label: (directorySections.length > 0 && DIRECTORY_GROUP_LABELS[group.id]?.[locale === "en" ? "en" : "es"]) || getCategoryGroupLabel(group.id, locale),
         ids: (idsByGroup.get(group.id) ?? []).filter((id) => !(hasPlaces && SERVICE_MENU_HIDE.has(id))),
       };
@@ -363,7 +363,7 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
                   tiene salida a `/profesionales` para quien quiera filtrar. Solo
                   faltaba el primero. */}
               {searchResults.map(({ id, groupLabel }) => {
-                const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
+                const IconoFamilia = categoryIcon(id);
                 return (
                 <Link key={id} href={rutaDeBusqueda({ categoria: id })} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <IconoFamilia className="h-5 w-5 shrink-0 text-[#64748b]" />

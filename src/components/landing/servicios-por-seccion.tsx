@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Store } from "lucide-react";
 import { HeroTile } from "@/components/directory/biz-ui";
+import { sectionPhoto } from "@/lib/visuals/section-visuals";
 import { Link } from "@/i18n/navigation";
 import { ServiceImage } from "@/components/professionals/service-image";
 import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
@@ -129,7 +130,11 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
                 {/* Start the four prepared photos together, including the second
                     mobile row. Unvisited groups still mount no photos, and the
                     hero retains high network priority over these normal requests. */}
-                {servicio.place
+                {/* A business section (directory on): its one section photo, the same as Categorías (owner 2026-11-27). */}
+                {servicio.place && sectionPhoto(servicio.id)
+                  // eslint-disable-next-line @next/next/no-img-element -- remote CDN photo, sized by the URL
+                  ? <img src={sectionPhoto(servicio.id, 600)!} alt="" loading="lazy" data-section-photo={servicio.id} className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]" />
+                  : servicio.place
                   ? <HeroTile verticalId={servicio.place} className="pointer-events-none absolute inset-0 h-full w-full" iconClass="h-12 w-12 lg:h-16 lg:w-16" />
                   : <ServiceImage categoryId={servicio.id} badge={false} loading="eager" diferida={indice !== activa && !preparadas.has(indice)} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />}
                 <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />

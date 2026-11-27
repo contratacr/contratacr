@@ -2,9 +2,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { HomeCategoriesTabs } from "@/components/landing/home-categories-tabs";
 import { sitemapSections } from "@/lib/directory/sitemap-sections";
 import { DIRECTORY_SECTION_LABELS } from "@/lib/search/directory-search";
-import { sectionPhoto } from "@/lib/directory/section-photos";
 import { getCategoryGroupLabel } from "@/lib/data/categories";
-import { serviceGroupPhoto } from "@/lib/data/service-group-photos";
+import { sectionPhoto, serviceGroupPhoto } from "@/lib/visuals/section-visuals";
 
 // Owner 2026-11-26: a service group and a business section in turn, 6 + 6 = 12 tiles (an even grid on phones and
 // computers), with the SAME photos as the Servicios and Negocios tabs of /categorias. "Ver todas" opens Categorías.

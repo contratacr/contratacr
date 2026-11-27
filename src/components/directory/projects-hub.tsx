@@ -4,27 +4,22 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useLocale } from "next-intl";
 import {
   ArrowRight,
-  Car,
   Check,
   ChevronRight,
-  Droplets,
   Flower2,
-  HardHat,
   LayoutGrid,
   Leaf,
   MoreHorizontal,
-  Plug,
-  Refrigerator,
   Sofa,
   Sparkles,
   Thermometer,
   Trees,
-  Truck,
   Umbrella,
-  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { categoryIcon, serviceGroupIcon } from "@/lib/visuals/section-visuals";
+import { IconBadge as CategoryIconBadge } from "@/lib/visuals/section-icon";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { rutaProyecto } from "@/lib/marketplace-url";
@@ -40,19 +35,19 @@ type L2 = { es: string; en: string };
 type Oficio = { icon: LucideIcon; label: L2; categoria: string };
 
 const OFICIOS: Oficio[] = [
-  { icon: Truck, label: { es: "Mudanzas", en: "Movers" }, categoria: "mudanzas" },
-  { icon: Sparkles, label: { es: "Limpieza del hogar", en: "Home cleaning" }, categoria: "limpieza" },
-  { icon: Droplets, label: { es: "Plomeros", en: "Plumbers" }, categoria: "plomeria" },
-  { icon: Refrigerator, label: { es: "Reparación de electrodomésticos", en: "Appliance repair" }, categoria: "reparacion_electrodomesticos" },
-  { icon: Plug, label: { es: "Electricistas", en: "Electricians" }, categoria: "electricidad" },
-  { icon: Car, label: { es: "Detallado automotriz", en: "Auto detailing" }, categoria: "detailing" },
-  { icon: HardHat, label: { es: "Contratistas", en: "Contractors" }, categoria: "construccion" },
+  { icon: categoryIcon("mudanzas"), label: { es: "Mudanzas", en: "Movers" }, categoria: "mudanzas" },
+  { icon: categoryIcon("limpieza"), label: { es: "Limpieza del hogar", en: "Home cleaning" }, categoria: "limpieza" },
+  { icon: categoryIcon("plomeria"), label: { es: "Plomeros", en: "Plumbers" }, categoria: "plomeria" },
+  { icon: categoryIcon("reparacion_electrodomesticos"), label: { es: "Reparación de electrodomésticos", en: "Appliance repair" }, categoria: "reparacion_electrodomesticos" },
+  { icon: categoryIcon("electricidad"), label: { es: "Electricistas", en: "Electricians" }, categoria: "electricidad" },
+  { icon: categoryIcon("detailing"), label: { es: "Detallado automotriz", en: "Auto detailing" }, categoria: "detailing" },
+  { icon: categoryIcon("construccion"), label: { es: "Contratistas", en: "Contractors" }, categoria: "construccion" },
 ];
 
 const SIGUIENTE: { icon: LucideIcon; label: L2; categoria: string }[] = [
-  { icon: Sparkles, label: { es: "Limpieza del hogar", en: "Home cleaning" }, categoria: "limpieza" },
-  { icon: Wrench, label: { es: "Mantenimiento del hogar", en: "Home maintenance" }, categoria: "remodelacion" },
-  { icon: HardHat, label: { es: "Contratistas generales", en: "General contractors" }, categoria: "construccion" },
+  { icon: categoryIcon("limpieza"), label: { es: "Limpieza del hogar", en: "Home cleaning" }, categoria: "limpieza" },
+  { icon: serviceGroupIcon("hogar"), label: { es: "Mantenimiento del hogar", en: "Home maintenance" }, categoria: "remodelacion" },
+  { icon: categoryIcon("construccion"), label: { es: "Contratistas generales", en: "General contractors" }, categoria: "construccion" },
 ];
 
 type Tarjeta = { n: number; icon: LucideIcon; titulo: L2; boton: L2; categoria: string };
@@ -255,7 +250,7 @@ export function ProjectsHub({ proyectos = [] }: { proyectos?: ProyectoPublico[] 
           {OFICIOS.map(({ icon: Icono, label, categoria }) => (
             <li key={categoria}>
               <Link href={buscar(categoria)} className="flex flex-col items-center gap-1.5 text-center active:scale-95">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#e8f6fc] text-[#007bab]"><Icono className="h-7 w-7" /></span>
+                <CategoryIconBadge icon={Icono} size="xl" />
                 <span className="line-clamp-2 text-[12px] font-semibold leading-tight text-[#162543]">{label[lang]}</span>
               </Link>
             </li>
@@ -276,7 +271,7 @@ export function ProjectsHub({ proyectos = [] }: { proyectos?: ProyectoPublico[] 
             return (
               <li key={categoria} className="rounded-2xl border border-[#e1e9ef] bg-white p-3.5 shadow-[0_6px_18px_-16px_rgba(22,37,67,0.5)]">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#e8f6fc] text-[#007bab]"><Icono className="h-6 w-6" /></span>
+                  <CategoryIconBadge icon={Icono} size="lg" />
                   <p className="text-[17px] font-extrabold">{label[lang]}</p>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2.5">
