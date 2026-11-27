@@ -31,7 +31,9 @@ export async function GET(req:Request,{params}:{params:Promise<{placeId:string}>
   try{
    const res=await fetch(`https://graph.mapillary.com/${encodeURIComponent(row.image_id)}?fields=thumb_1024_url,thumb_2048_url`,
     {headers:{Authorization:`OAuth ${token}`},signal:AbortSignal.timeout(8000),cache:'no-store'});
-   if(res.status===404||res.status===400){
+   // Only «does not exist» marks it gone (404, or 400 with Graph error 100); token/permission errors keep the cached URL.
+   const gone=res.status===404||(res.status===400&&await res.clone().json().then((j:{error?:{code?:number;message?:string}})=>j?.error?.code===100||/does not exist/i.test(j?.error?.message??'')).catch(()=>false));
+   if(gone){
     // Removed upstream: stop showing it (the script looks the place up again later).
     await db.from('dir_place_street_view').update({status:'none',image_id:null,creator:null,thumb_1024_url:null,thumb_2048_url:null,thumb_fetched_at:null}).eq('place_id',placeId);
     return notFound();

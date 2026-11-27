@@ -687,7 +687,7 @@ const CABECERAS_DE_SEGURIDAD: Record<string, string> = {
     "object-src 'none'",
     "form-action 'self'",
     "frame-ancestors 'self'",
-    `img-src 'self' data: blob: https://res.cloudinary.com https://assets.contratacr.com https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://www.facebook.com ${ORIGENES_DE_MAPA}`,
+    `img-src 'self' data: blob: https://res.cloudinary.com https://assets.contratacr.com https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://www.facebook.com https://*.fbcdn.net ${ORIGENES_DE_MAPA}`, // *.fbcdn.net: Mapillary thumbs behind /api/vista-calle (302)
     // cdn.jsdelivr.net: el lector de fotos de vacantes (tesseract.js) baja de ahí
     // su motor y el modelo de idioma; la imagen se lee en el dispositivo.
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://accounts.google.com https://connect.facebook.net https://cdn.jsdelivr.net",
