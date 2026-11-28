@@ -1,12 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight, ChevronLeft, HardHat, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { Navbar } from "@/components/layout/navbar";
+import { CabeceraDeEntrada } from "@/components/auth/cabecera-de-entrada";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 import { useSiteFeatures } from "@/components/site-features";
@@ -23,6 +23,11 @@ export default function RegisterPage() {
   // («Empresa o local» → add or claim the place). With the directory off (production) the card is the same link as always.
   const directoryOn = useSiteFeatures().directorySections.length > 0;
   const [proStep, setProStep] = useState(() => searchParams.get("paso") === "profesional");
+  // Directory on (owner 2026-11-27): «Crear cuenta» is a step of the sign-in flow when it came from login
+  // (cabecera-de-entrada.tsx) and the professional-kind question is a step of «Crear cuenta»: phones get «← paso» in
+  // the bar instead of an in-page «Volver». Directory off: the site bar, as always.
+  const en = useLocale() === "en";
+  const createTitle = en ? "Create account" : "Crear cuenta";
 
   if (checking) {
     return (
@@ -35,11 +40,11 @@ export default function RegisterPage() {
   if (directoryOn && proStep) {
     return (
       <div className="ccr-account-page min-h-dvh flex flex-col bg-white" data-register-pro-kind>
-        <Navbar mobileSearch={false} />
+        <CabeceraDeEntrada title={t("proTitle")} onBack={() => setProStep(false)} />
         <main className="flex-1 ccr-centrado-seguro px-4 py-12 lg:py-20">
           <div className="w-full max-w-2xl">
             <div className="ccr-entrada text-center mb-8 lg:mb-12">
-              <button type="button" onClick={() => setProStep(false)} className="mb-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
+              <button type="button" data-register-kind-back onClick={() => setProStep(false)} className="mb-3 hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
                 <ChevronLeft className="h-4 w-4" aria-hidden />{t("back")}
               </button>
               <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("proKindTitle")}</h1>
@@ -93,7 +98,7 @@ export default function RegisterPage() {
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* Misma envoltura que ingresar: navbar y pie en todo tamaño. La salida
           es el propio menú, no un botón de volver. */}
-      <Navbar mobileSearch={false} />
+      <CabeceraDeEntrada title={createTitle} parentHref={`/login${redirectSuffix}`} />
       <main className="flex-1 ccr-centrado-seguro px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
           {/* El saludo va arriba y pequeño: la marca ya está en el navbar y en el
@@ -144,7 +149,7 @@ export default function RegisterPage() {
           </p>
           <p className="ccr-entrada [animation-delay:300ms] text-center text-sm text-[#6b7280] mt-6 lg:mt-8">
             {t("haveAccount")}{" "}
-            <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">
+            <Link href={directoryOn ? `/login${redirectSuffix}` : "/login"} className="text-[#009FD9] font-semibold hover:underline">
               {t("signIn")}
             </Link>
           </p>

@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowRight, AlertCircle, MailCheck, RefreshCw } from "lucide-react";
-import { Navbar } from "@/components/layout/navbar";
+import { CabeceraDeEntrada, useFlujoDeEntrada } from "@/components/auth/cabecera-de-entrada";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
@@ -32,6 +32,9 @@ export default function OlvideContrasenaPage() {
   const [success, setSuccess] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const resendState = useResendCooldown();
+  // In the sign-in flow the way back to login keeps the gated destination; elsewhere it is plain /login (production).
+  const { enFlujo, redirect } = useFlujoDeEntrada();
+  const loginHref = enFlujo && redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login";
 
   useEffect(() => {
     if (!success) return;
@@ -74,7 +77,8 @@ export default function OlvideContrasenaPage() {
 
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
-      <Navbar mobileSearch={false} />
+      {/* Directory on (owner 2026-11-27): from the sign-in flow, «← Recuperar contraseña» on phones (cabecera-de-entrada.tsx). */}
+      <CabeceraDeEntrada title={locale === "en" ? "Reset password" : "Recuperar contraseña"} parentHref={loginHref} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-7 shadow-sm sm:p-8">
@@ -144,7 +148,7 @@ export default function OlvideContrasenaPage() {
           )}
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
-            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
+            <Link href={loginHref} className="text-[#009FD9] font-medium hover:underline">
               {t("backToLogin")}
             </Link>
           </p>

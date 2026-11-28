@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {ChevronLeft,ChevronRight,MapPin,Search,Store} from 'lucide-react';
 import {Navbar} from '@/components/layout/navbar';
+import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
 import {FooterSoloWeb} from '@/components/landing/footer-solo-web';
 import {useSiteFeatures} from '@/components/site-features';
 import {SELECT_CLASS,SELECT_STYLE} from './select-style';
@@ -25,7 +26,10 @@ export function BusinessSignup({locale,signedIn,redirect}:{locale:string;signedI
  const {directorySections}=useSiteFeatures();
  const sections=useMemo(()=>PLACE_SECTIONS.filter(s=>directorySections.includes(s.section)),[directorySections]);
  const here=`${prefix}/registro/empresa${redirect?`?redirect=${encodeURIComponent(redirect)}`:''}`;
- const back=`${prefix}/registro?paso=profesional${redirect?`&redirect=${encodeURIComponent(redirect)}`:''}`;
+ const backPath=`/registro?paso=profesional${redirect?`&redirect=${encodeURIComponent(redirect)}`:''}`,back=prefix+backPath;
+ // Phones (owner 2026-11-27): a child screen of «Crear cuenta», so the bar is «← Agregar mi empresa» (server-painted)
+ // and the arrow returns to the account-type step; the in-page «Volver» and the visible title stay only from lg.
+ const barTitle=t('Agregar mi empresa','Add my business');
 
  const [q,setQ]=useState(''),[hits,setHits]=useState<Hit[]|null>(null),[searching,setSearching]=useState(false);
  useEffect(()=>{
@@ -44,11 +48,11 @@ export function BusinessSignup({locale,signedIn,redirect}:{locale:string;signedI
 
  const [asking,setAsking]=useState(false);
  return <div className="ccr-account-page flex min-h-dvh flex-col bg-white" data-business-signup>
-  <Navbar mobileSearch={false}/>
+  <Navbar mobileSearch={false} seccionInicial={{title:barTitle,centrado:true}}/><SectionHeaderTitle title={barTitle} fallbackHref={backPath} tambienEnLaWeb centrado/>
   <main id="contenido" className="mx-auto w-full max-w-2xl flex-1 px-4 pb-14 pt-6 text-[#162543] lg:pt-12">
-   <a href={back} className={`inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline ${ring}`}><ChevronLeft aria-hidden className="h-4 w-4"/>{t('Volver','Back')}</a>
-   <h1 className="mt-2 text-[1.6rem] font-extrabold leading-tight tracking-tight sm:text-4xl">{t('Agregar o reclamar mi empresa','Add or claim my business')}</h1>
-   <p className="mt-2 text-[15px] leading-relaxed text-[#526277]">{t('Busque su negocio por nombre. Si ya aparece en ContrataCR, reclámelo gratis; si no aparece, solicite que lo agreguemos.','Search for your business by name. If it is already on ContrataCR, claim it for free; if not, ask us to add it.')}</p>
+   <a href={back} data-business-signup-back className={`max-lg:hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline ${ring}`}><ChevronLeft aria-hidden className="h-4 w-4"/>{t('Volver','Back')}</a>
+   <h1 className="max-lg:sr-only mt-2 text-[1.6rem] font-extrabold leading-tight tracking-tight sm:text-4xl">{t('Agregar o reclamar mi empresa','Add or claim my business')}</h1>
+   <p className="text-[15px] leading-relaxed text-[#526277] lg:mt-2">{t('Busque su negocio por nombre. Si ya aparece en ContrataCR, reclámelo gratis; si no aparece, solicite que lo agreguemos.','Search for your business by name. If it is already on ContrataCR, claim it for free; if not, ask us to add it.')}</p>
 
    <label className="relative mt-6 block">
     <span className="sr-only">{t('Nombre del negocio','Business name')}</span>

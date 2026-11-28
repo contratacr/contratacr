@@ -56,14 +56,17 @@ export function PriceComparePage({locale,query,data}:Props){
  const clear=activeFilters>0?{href:hrefWith(base,{q:keep.q,producto:keep.producto,categoria:keep.categoria}),label:t('Limpiar filtros','Clear filters')}:undefined;
  const filtersLabel=t('Filtros','Filters');
  const landing=!query.item&&!query.q&&!query.category;
+ // Category / product: a child screen whose phone bar is «← Lácteos» / «← Producto» (precios/page.tsx), so the strip's
+ // title, the category heading and the in-page back links stay only from lg (owner 2026-11-27).
+ const childScreen=!invalid&&!!(query.item||query.category);
  const kindOfItem=comparison?.item.kind;
  const reportHref=`${prefix}/${kindOfItem==='medicine'||query.verticalParam==='farmacias'?'farmacias':'supermercados'}`;
  return <main id="contenido" data-price-compare className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-10 pt-3 text-[#162543] sm:px-6 sm:pt-4">
   {/* Title row: the same strip as the places sections (accent bar · H1 · chips). */}
   <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-4">
    <div className="flex items-center gap-2.5">
-    <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden/>
-    <h1 className="text-lg font-bold leading-tight">{t('Comparar precios','Compare prices')}</h1>
+    <span className={`h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9] ${childScreen?'max-lg:hidden':''}`} aria-hidden/>
+    <h1 className={`text-lg font-bold leading-tight ${childScreen?'max-lg:sr-only':''}`}>{t('Comparar precios','Compare prices')}</h1>
     {overview&&overview.totals.priced>0&&<p className="hidden whitespace-nowrap text-[13px] text-[#6b7280] sm:block" data-price-totals>· {fmtInt(overview.totals.priced,en)} {overview.totals.priced===1?t('producto con precios','product with prices'):t('productos con precios','products with prices')}</p>}
    </div>
    <div className="min-w-0 lg:flex-1" data-price-chips>
@@ -87,10 +90,10 @@ export function PriceComparePage({locale,query,data}:Props){
   </section>}
 
   {query.category&&overview&&!query.item&&<section aria-labelledby="price-category" className="space-y-3" data-price-category={query.category}>
-   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-    <a href={link({categoria:undefined})} className={`inline-flex min-h-9 items-center gap-1 text-[13px] font-semibold text-[#007fae] hover:underline ${ring}`}><ArrowLeft className="h-4 w-4" aria-hidden/>{t('Todas las categorías','All categories')}</a>
+   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 max-lg:hidden">
+    <a href={link({categoria:undefined})} data-price-back className={`inline-flex min-h-9 items-center gap-1 text-[13px] font-semibold text-[#007fae] hover:underline ${ring}`}><ArrowLeft className="h-4 w-4" aria-hidden/>{t('Todas las categorías','All categories')}</a>
    </div>
-   <SectionTitle id="price-category">{categoryLabel(query.category,en)}</SectionTitle>
+   <SectionTitle id="price-category" phoneHidden>{categoryLabel(query.category,en)}</SectionTitle>
    {overview.items.length===0
     ?<Invitation t={t} prefix={prefix} reportHref={reportHref} empty title={t('Todavía no hay productos en esta categoría','No products in this category yet')}/>
     :<ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{overview.items.map(i=><li key={i.slug}><ProductCard item={i} href={link({producto:i.slug,categoria:undefined})} t={t} en={en}/></li>)}</ul>}
@@ -110,14 +113,14 @@ export function PriceComparePage({locale,query,data}:Props){
  </main>;
 }
 
-function SectionTitle({id,children,aside}:{id:string;children:ReactNode;aside?:ReactNode}){
- return <div className="flex items-baseline justify-between gap-3">
+function SectionTitle({id,children,aside,phoneHidden}:{id:string;children:ReactNode;aside?:ReactNode;phoneHidden?:boolean}){
+ return <div className={`flex items-baseline justify-between gap-3 ${phoneHidden?'max-lg:sr-only':''}`}>
   <h2 id={id} className="text-[17px] font-bold leading-tight text-[#162543]">{children}</h2>{aside}
  </div>;
 }
 
 function BackLink({href,t}:{href:string;t:T}){
- return <a href={href} className={`inline-flex min-h-9 items-center gap-1 text-[13px] font-semibold text-[#007fae] hover:underline ${ring}`}><ArrowLeft className="h-4 w-4" aria-hidden/>{t('Productos','Products')}</a>;
+ return <a href={href} data-price-back className={`max-lg:hidden lg:inline-flex min-h-9 items-center gap-1 text-[13px] font-semibold text-[#007fae] hover:underline ${ring}`}><ArrowLeft className="h-4 w-4" aria-hidden/>{t('Productos','Products')}</a>;
 }
 
 /** The one prominent product search (plain GET). Keeps the type/province/range filters as hidden fields. */

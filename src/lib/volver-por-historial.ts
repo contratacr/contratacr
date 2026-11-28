@@ -173,3 +173,33 @@ export function volverSiEsLaAnterior(href: string): boolean {
     return false;
   }
 }
+
+// The sign-in flow (owner 2026-11-27): login, create account and password recovery are steps of ONE interruption.
+const RUTA_DEL_FLUJO = /^(?:\/(?:es|en))?\/(?:login|registro|olvide-contrasena)(?:[/?]|$)/;
+const sinIdiomaNiBarra = (r: string) => (r.replace(/^\/(?:es|en)(?=\/|\?|$)/, "") || "/").replace(/\/(?=\?|$)/, "") || "/";
+
+/**
+ * «X» of the sign-in flow: back to the screen the person was on BEFORE the gated section. Skips every step of the flow
+ * and the gated address itself (`objetivo`, the `?redirect=`) — going there again would bounce back to login. Returns
+ * false when no such screen is behind in this tab (opened from outside): the caller goes home instead.
+ */
+export function salirDelFlujoDeEntrada(objetivo: string | null): boolean {
+  if (typeof window === "undefined") return false;
+  const destino = objetivo ? sinIdiomaNiBarra(claveDeRuta(objetivo)) : null;
+  const dentro = (clave: string) => RUTA_DEL_FLUJO.test(clave) || (!!destino && sinIdiomaNiBarra(clave) === destino);
+  const pila = leerPila();
+  if (pila[pila.length - 1] !== claveDeRuta() || window.history.length < 2) return false;
+  if (!pila.slice(0, -1).some((clave) => !dentro(clave))) return false;
+  saliendo?.();
+  let pasos = 0;
+  const fin = () => { window.removeEventListener("popstate", alVolver); window.removeEventListener("pagehide", fin); saliendo = null; };
+  function alVolver() {
+    if (!dentro(claveDeRuta()) || ++pasos > 20) { fin(); return; }
+    window.history.back();
+  }
+  window.addEventListener("popstate", alVolver);
+  window.addEventListener("pagehide", fin);
+  saliendo = fin;
+  window.history.back();
+  return true;
+}

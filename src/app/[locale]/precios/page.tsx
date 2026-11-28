@@ -2,7 +2,8 @@ import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {DirectoryShell} from '@/components/directory/directory-shell';
 import {PriceComparePage,type PricePageData} from '@/components/directory/price-compare-page';
-import {parsePriceQuery,type PriceQuery} from '@/lib/directory/price-compare';
+import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
+import {categoryLabel,parsePriceQuery,type PriceQuery} from '@/lib/directory/price-compare';
 import {comparePrices,nationalFuelPrices,priceHistory,priceOverview,searchPriceItems} from '@/lib/directory/price-compare-server';
 import {DIR_ENABLED} from '@/lib/directory/feature-flags';
 
@@ -44,5 +45,12 @@ export default async function PricesRoute({params,searchParams}:{params:Promise<
   if(o.ok)data.overview=o.result;
   data.fuel=fuel;
  }
- return <DirectoryShell><PriceComparePage locale={locale} query={query} data={data}/></DirectoryShell>;
+ // Phones (owner 2026-11-27): a category or a product is a child screen of /precios, so the bar is «← Lácteos» /
+ // «← Producto» (server-painted) and the arrow returns to the list it came from (with no history: the same address the
+ // desktop back link uses). The landing and the search results keep the site bar.
+ const en=locale==='en',p=(k:string,v:string|number|null|undefined)=>v!=null&&v!==''?[[k,String(v)]]:[];
+ const parentOf=(extra:[string,string][])=>{const qs=new URLSearchParams([...p('q',query.q),...p('tipo',query.verticalParam),...p('provincia',query.province),...extra]).toString();return '/precios'+(qs?'?'+qs:'');};
+ const child=!parsed.ok?null:query.item?{title:en?'Product':'Producto',parent:parentOf([...p('precioMin',query.priceMin),...p('precioMax',query.priceMax)] as [string,string][])}
+  :query.category?{title:categoryLabel(query.category,en),parent:parentOf([])}:null;
+ return <DirectoryShell section={child?{title:child.title,centrado:true}:undefined}>{child&&<SectionHeaderTitle title={child.title} fallbackHref={child.parent} tambienEnLaWeb centrado/>}<PriceComparePage locale={locale} query={query} data={data}/></DirectoryShell>;
 }

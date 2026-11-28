@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { CABECERA_BOTON, CABECERA_GLIFO, CABECERA_TITULO, COLUMNAS_CABECERA } from "@/components/layout/cabecera";
@@ -19,8 +19,13 @@ import { Navbar } from "@/components/layout/navbar";
 // Sin `title` se queda como estaba: el logo centrado y nada más. Es la primera
 // pantalla después de crear la cuenta (onboarding), donde no hay sección a la
 // que ponerle nombre ni lugar al que volver.
-export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", soloTelefono = false }: {
+export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", soloTelefono = false, cerrar = false, tituloComo = "h1" }: {
   title?: string;
+  // A full-screen interruption (sign-in reached from a gated section, owner 2026-11-27): «X» closes the whole flow
+  // instead of «←» going one step back (Apple HIG modal / Material full-screen dialog). Needs `onBack`.
+  cerrar?: boolean;
+  // The screen already has its own <h1> (the sign-in card): the bar title is then a plain paragraph.
+  tituloComo?: "h1" | "p";
   /**
    * En computadora estas pantallas llevan la barra principal —la misma que
    * cuando se entra sin sesión—; esta cabecera de flecha y título es el patrón
@@ -59,10 +64,11 @@ export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", s
           type="button"
           onClick={onBack}
           data-native-back="focused-step"
+          data-focused-close={cerrar ? "" : undefined}
           aria-label={backLabel}
           className={cn(CABECERA_BOTON, "justify-self-start")}
         >
-          <ArrowLeft className={CABECERA_GLIFO} />
+          {cerrar ? <X className={CABECERA_GLIFO} /> : <ArrowLeft className={CABECERA_GLIFO} />}
         </button>
       ) : backHref ? (
         <Link
@@ -76,7 +82,9 @@ export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", s
       ) : (
         <span />
       )}
-      <h1 className={cn(CABECERA_TITULO, "text-center")}>{title}</h1>
+      {tituloComo === "p"
+        ? <p data-focused-title="" className={cn(CABECERA_TITULO, "text-center")}>{title}</p>
+        : <h1 data-focused-title="" className={cn(CABECERA_TITULO, "text-center")}>{title}</h1>}
       <span />
     </header>
   );

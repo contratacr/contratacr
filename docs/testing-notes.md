@@ -39,6 +39,15 @@ Texto:
 - [ ] Ningún texto truncado con "…" (nombres largos, direcciones, tarjetas, barra inferior, "Mejor calificados", negocios similares): envuelve en varias líneas.
 - [ ] Español de Costa Rica, trato de usted, sin jerga; lo mismo en inglés.
 
+Pantallas hijas en el teléfono (regla del dueño 2026-11-27, `tests/e2e/pro-child-screen-headers.spec.ts`):
+- [ ] Una pantalla hija (detalle, paso, categoría) dice su propio nombre en la barra con flecha, «← Título», sin logo ni ☰; sin «Volver»/«← Sección» dentro de la página ni título repetido debajo. Las raíces (Inicio, Herramientas, Mi panel, Categorías) conservan «[logo] Título». En computadora puede seguir el enlace de volver dentro de la página.
+- [ ] La flecha vuelve a la pantalla de la que se vino; abierta directo (enlace compartido, recarga), va a la pantalla madre.
+- [ ] `/registro/empresa`: «← Agregar mi empresa» (madre: `/registro?paso=profesional`); sin «Volver» ni el título grande en el teléfono.
+- [ ] `/marca/<slug>`: «← Marca» (sin historial: portada); la ruta «Inicio › Marcas › …» solo desde lg.
+- [ ] `/precios?categoria=…`: «← Granos» (el nombre de la categoría; madre: `/precios` con los mismos filtros); `/precios?producto=…`: «← Producto» (madre: la lista o la búsqueda de la que vino). Sin «← Todas las categorías» / «← Productos» ni el título «Comparar precios» en el teléfono. `/precios` y la búsqueda (`?q=`) siguen con la barra del sitio.
+- [ ] `/registro?paso=profesional` («¿Cómo ofrece sus servicios?»): «← Ofrezco servicios», la flecha vuelve a «¿Cómo quiere empezar?»; el «Volver» de la página solo desde lg.
+- [ ] Con directorio apagado todas estas pantallas (y login/registro) se ven como en producción.
+
 Fotos e íconos de secciones, grupos y servicios (regla de Isaac 2026-11-27, tabla en `docs/section-visuals.md`):
 - [ ] Una sección, variante, grupo o servicio muestra SIEMPRE la misma foto y el mismo ícono: hero, "Categorías más buscadas", "Lo más buscado", `/categorias` (Servicios y Negocios), hoja de búsqueda, sugerencias, menú y cajón, "Busque en su provincia", `/precios`, `/solicitudes`, avatar de un negocio sin foto. Revisar al menos Talleres, Restaurantes, Farmacias, Belleza, Salud y Educación (mismo nombre en Servicios y Negocios = misma foto y mismo ícono).
 - [ ] Los íconos van en el círculo "mejorado" de producción, el de la fila Profesionales · Negocios · Solicitudes · Promociones · Empleos: degradado celeste suave `.ccr-caja-icono` con dibujo azul marino; el elegido, degradado azul con dibujo blanco. Cambia el tamaño, nunca el dibujo.
@@ -261,6 +270,12 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 - [ ] Con directorio encendido, `/onboarding` (Google/Apple) y la bienvenida de la app («¿Cómo quiere empezar?») también preguntan «Profesional independiente» (→ `/registro/profesional`) o «Empresa o local» (onboarding: cuenta de cliente y luego `/registro/empresa`; app: `/registro/empresa`), con «Volver». Bandera apagada: «Ofrezco servicios» va directo como antes.
 - [ ] Casos: nombre con varias palabras (búsqueda simple, la ranqueada daba timeout), nombre ya reclamado, enviar dos veces.
 - [ ] «Mi negocio» tiene límite por cuenta.
+- [ ] Iniciar sesión como interrupción (dueño 2026-11-27, solo con directorio): una sección que pide cuenta (p. ej. Guardados `/listas`) lleva a `/login?redirect=…`; en el teléfono la barra es «X Iniciar sesión» (sin logo, ☰ ni buscador) y la tarjeta dice por qué: «Inicie sesión para usar Guardados» (Herramientas, Mis reservas, Mi panel, Mensajes, publicar una solicitud, escribir una reseña…; si no se reconoce, «Inicie sesión para continuar»). Nunca cortado. En computadora, la barra del sitio y la misma línea.
+- [ ] La X cierra todo el flujo y vuelve a la pantalla de ANTES de la sección protegida (nunca a la sección: rebotaría al login); abierta desde fuera (sin historial), a la portada. Probar desde un enlace normal y desde el menú.
+- [ ] Dentro del flujo: «Regístrese» → «← Crear cuenta», «¿Olvidó su contraseña?» → «← Recuperar contraseña» (conserva el destino), el código de correo → «← Código de verificación»: la flecha retrocede un paso; la X solo está en la primera pantalla.
+- [ ] Al entrar, llega a la sección que quería abrir (cualquier ruta interna segura, también con Google/Apple) y «atrás» del navegador NO vuelve al login (se reemplaza la entrada).
+- [ ] `/login` abierto desde el menú («Ingresar»): barra normal del sitio; si hay una pantalla de la app detrás, «← Iniciar sesión» (aparece al hidratar). Lo mismo «← Crear cuenta» y «← Recuperar contraseña».
+- [ ] Pendiente: `/registro/cliente` y `/registro/profesional` sin sesión todavía muestran la barra del sitio (no son paso del flujo aún); la app nativa no esconde su barra de abajo en login.
 
 ## 11. Panel Pro / Herramientas
 

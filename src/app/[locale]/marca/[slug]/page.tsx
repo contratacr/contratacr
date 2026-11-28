@@ -4,6 +4,7 @@ import {createAdminClient} from '@/lib/supabase/admin';
 import {createClient} from '@/lib/supabase/server';
 import {safeGetUser} from '@/lib/supabase/get-user';
 import {DirectoryShell} from '@/components/directory/directory-shell';
+import {SectionHeaderTitle} from '@/components/mobile/section-header-title';
 import {BrandClaim} from '@/components/directory/brand-claim';
 import {placeSlugSchema} from '@/lib/directory/schemas';
 import {placeSectionById} from '@/lib/directory/place-verticals';
@@ -58,8 +59,11 @@ export default async function BrandRoute({params,searchParams}:{params:Promise<{
  const desc=en?b.descriptionEn:b.descriptionEs,base=`${prefix}/marca/${b.slug}`;
  const firstVertical=b.branches[0]?.vertical??'grocery';
  const pill=(active:boolean)=>`inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition-colors ${ring} ${active?'border-[#162543] bg-[#162543] text-white':'border-[#cfd9e3] bg-white text-[#162543] hover:border-[#162543]'}`;
- return <DirectoryShell><main id="contenido" data-brand-page={b.slug} className="mx-auto max-w-7xl px-4 pb-14 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
-  <nav aria-label={t('Ruta de navegación','Breadcrumb')} className="mb-5 text-sm text-[#526277]"><ol className="flex flex-wrap items-center gap-1">
+ // Phones (owner 2026-11-27): a detail screen, so the bar is «← Marca» (server-painted, no jump) instead of the logo, and
+ // the breadcrumb (its way back) stays only from lg. No in-app screen behind → the arrow goes home.
+ const barTitle=t('Marca','Brand');
+ return <DirectoryShell section={{title:barTitle,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref="/" tambienEnLaWeb centrado/><main id="contenido" data-brand-page={b.slug} className="mx-auto max-w-7xl px-4 pb-14 pt-4 text-[#162543] sm:px-6 lg:px-8 lg:pt-8">
+  <nav aria-label={t('Ruta de navegación','Breadcrumb')} data-brand-breadcrumb className="mb-5 text-sm text-[#526277] max-lg:hidden"><ol className="flex flex-wrap items-center gap-1">
    <li><a className={`hover:underline ${ring}`} href={en?'/en':'/'}>{t('Inicio','Home')}</a></li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li>{t('Marcas','Brands')}</li><li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5"/></li><li aria-current="page" className="text-[#162543]">{b.name}</li></ol></nav>
   <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
    <header className="min-w-0 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6 lg:col-start-1 lg:row-start-1">

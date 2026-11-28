@@ -10,7 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { Navbar } from "@/components/layout/navbar";
+import { CabeceraDeEntrada, MotivoDeEntrada, useFlujoDeEntrada } from "@/components/auth/cabecera-de-entrada";
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
@@ -146,6 +147,12 @@ export default function LoginPage() {
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | "apple" | null>(null);
   const registerRedirect = searchParams.get("redirect");
+  // Directory on (owner 2026-11-27): reached from a gated section, sign-in is an interruption (cabecera-de-entrada.tsx)
+  // and, once signed in, the person lands on what they were opening — any safe in-app address, by `replace` so Back
+  // does not return to this screen. Directory off (production): the panel / meaningful targets, as always.
+  const { directoryOn, enFlujo } = useFlujoDeEntrada();
+  const destinoTrasEntrar = (raw: string | null) => meaningfulRedirect(raw) ?? (directoryOn ? rutaInternaSegura(raw) : null);
+  const forgotHref = enFlujo && registerRedirect ? `/olvide-contrasena?redirect=${encodeURIComponent(registerRedirect)}` : "/olvide-contrasena";
   const registerHref = registerRedirect ? `/registro?redirect=${encodeURIComponent(registerRedirect)}` : "/registro";
 
   // Built inside the component so the validation messages are localized.
@@ -184,7 +191,7 @@ export default function LoginPage() {
   }, [t, locale]);
 
   async function finishPasswordLogin(supabase: ReturnType<typeof createClient>, signedInUser?: User | null) {
-    const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
+    const redirect = destinoTrasEntrar(new URLSearchParams(window.location.search).get("redirect"));
     await waitForAuthCookie();
 
     let resolvedUser = signedInUser ?? null;
@@ -212,7 +219,8 @@ export default function LoginPage() {
     // había forma de llegar a su propio panel sin terminarlo.
     if (redirect && redirect !== "projects") {
       const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : rutaConIdioma(locale, redirect);
-      window.location.assign(withPostLoginActivity(dest));
+      if (directoryOn) window.location.replace(withPostLoginActivity(dest));
+      else window.location.assign(withPostLoginActivity(dest));
       return;
     }
 
@@ -290,7 +298,7 @@ export default function LoginPage() {
     // the callback role-resolves to the right panel instead of bouncing to the page
     // the user came from (e.g. home). The `next` stays URL-ENCODED (an unencoded query
     // previously broke the code exchange = auth=error).
-    const next = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect")) ?? "";
+    const next = destinoTrasEntrar(new URLSearchParams(window.location.search).get("redirect")) ?? "";
     return window.location.origin + `/auth/callback?flow=oauth&provider=${provider}&locale=${locale}` + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 
@@ -456,7 +464,7 @@ export default function LoginPage() {
   if (otpEmail) {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
-        <Navbar mobileSearch={false} />
+        <CabeceraDeEntrada title={locale === "en" ? "Verification code" : "Código de verificación"} onBack={() => setOtpEmail(null)} />
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 sm:p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
@@ -485,7 +493,7 @@ export default function LoginPage() {
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><AuthenticationLoading /></div>}
 
-      <Navbar mobileSearch={false} />
+      <CabeceraDeEntrada title={locale === "en" ? "Sign in" : "Iniciar sesión"} inicio />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and
@@ -494,6 +502,7 @@ export default function LoginPage() {
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
           {/* Un solo encabezado: "Ingresa a tu cuenta" decía lo mismo que
               "Ingresa a tu cuenta" justo debajo. */}
+          <MotivoDeEntrada />
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
           </div>
@@ -539,7 +548,7 @@ export default function LoginPage() {
                 {...register("password")}
               />
               <div className="flex justify-end mt-1">
-                <Link href="/olvide-contrasena" className="text-xs text-[#009FD9] hover:underline">
+                <Link href={forgotHref} className="text-xs text-[#009FD9] hover:underline">
                   {t("forgotPassword")}
                 </Link>
               </div>
