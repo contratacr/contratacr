@@ -201,8 +201,8 @@ jobs:
           python -m pip install --quiet "osmium==4.3.2"
           mkdir -p "$RUNNER_TEMP/osm/out"
           cd "$RUNNER_TEMP/osm"
-          curl -fsSL --retry 3 -o costa-rica-latest.osm.pbf https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf
-          curl -fsSL --retry 3 -o costa-rica-latest.osm.pbf.md5 https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf.md5
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o costa-rica-latest.osm.pbf https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o costa-rica-latest.osm.pbf.md5 https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf.md5
           md5sum -c costa-rica-latest.osm.pbf.md5
           python -I "$GITHUB_WORKSPACE/scripts/directory/osm-pbf-to-json.py" costa-rica-latest.osm.pbf out
           ls -la out
