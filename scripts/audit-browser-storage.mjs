@@ -48,6 +48,7 @@ const reviewed = new Map([
   ["src/lib/directory/assistant-history.ts", { count: 5, reason: "directory assistant conversations (may hold personal details) kept only in this tab's sessionStorage, at most 20, removed on sign-out (signOutToHome); one removal of the copy older versions left in localStorage; never the account's copy" }],
   ["src/components/directory/projects-hub.tsx", { count: 2, reason: "device-local checklist of the service categories picked for a project plan (category ids only); no identity, request or account-owned records" }],
   ["src/components/saved/recently-viewed.ts", { count: 2, reason: "device-local list of recently opened public places (slug, name, area, photo; at most 12) and which «Comparta su experiencia» cards were dismissed or answered here; like src/lib/recent-visits.ts, nothing account-owned (reviews and lists persist through their APIs)" }],
+  ["src/components/pro/catalog-list-columns.tsx", { count: 2, reason: "presentation preference: which columns each catalogue row shows on this device; no records" }],
   ["src/components/pro/finance-table.tsx", { count: 2, reason: "presentation preference: cards/table view per finance table; no records" }],
   ["src/components/pro/lead-onboarding-tiles.tsx", { count: 2, reason: "presentation preference: the lead onboarding tiles were hidden on this device; no records" }],
   ["src/components/pro/leads-table-view.tsx", { count: 4, reason: "presentation preference: lead table column order/visibility and cards/table view; no lead data" }],

@@ -392,3 +392,5 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 
 - Barra inferior de 5 pestañas estilo Yelp (Buscar, Proyectos, Asistente, Mis listas, Yo) y la pantalla de inicio de app móvil: retiradas en `d70c4261d`; la barra inferior de test es la de producción.
 - «Negocios» como nombre único: el directorio dice «Empresas» en unos lugares y «Negocios» en pestañas/botones; revisar consistencia de vocabulario en cada pantalla.
+
+- 2026-11-28: `catalog-list-columns.tsx` (selector de columnas del catálogo) agregado a la lista revisada de `audit-browser-storage`: solo guarda en el dispositivo qué columnas se ven; sin datos de cuenta.
