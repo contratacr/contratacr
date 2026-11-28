@@ -30,6 +30,11 @@ on:
         required: false
         type: boolean
         default: false
+      pro_demo:
+        description: "SOLO TEST: crea o actualiza la cuenta ficticia demo-pro@contratacr.test (Pro activo) y la llena con datos de ejemplo de cada sección Pro (scripts/pro/demo/seed-pro-demo.mjs). Con dry_run solo cuenta. Repetirlo es seguro."
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   # Test migrations, mirroring/seeding and regression all mutate the same
@@ -42,7 +47,7 @@ jobs:
   deploy:
     name: Migrate ${{ inputs.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.directory_data && 120 || inputs.seed_directory && 60 || 15 }}
+    timeout-minutes: ${{ inputs.directory_data && 120 || inputs.seed_directory && 60 || inputs.pro_demo && 30 || 15 }}
     environment: ${{ inputs.target }}
     permissions:
       contents: read
@@ -66,6 +71,10 @@ jobs:
           fi
           if [ "${{ inputs.directory_data }}" = "true" ] && [ "$TARGET_ENV" != "test" ]; then
             echo "::error::directory_data only runs against test."
+            exit 1
+          fi
+          if [ "${{ inputs.pro_demo }}" = "true" ] && [ "$TARGET_ENV" != "test" ]; then
+            echo "::error::pro_demo only runs against test."
             exit 1
           fi
           if [ "$TARGET_ENV" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
@@ -233,4 +242,54 @@ jobs:
             node scripts/directory/run-test-data.mjs test --pois "$out/osm-pois.json" --admin-areas "$out/osm-admin-areas.json"
           else
             node scripts/directory/run-test-data.mjs test --pois "$out/osm-pois.json" --admin-areas "$out/osm-admin-areas.json" --apply
+          fi
+
+      # Pro demo company on TEST only (2026-11-28): the fictitious account demo-pro@contratacr.test (reserved .test domain,
+      # confirmed through the admin API, so no mail is sent) gets an active Pro grant and example data («Ejemplo») for each
+      # Pro section, written with the same schemas and RPCs the /api/pro routes use. Its password comes only from the test
+      # Environment secret PRO_DEMO_TEST_PASSWORD. seed-pro-demo.mjs refuses any target but test, any ref but the test
+      # branch and any API URL or key that is not the test project. Idempotent; dry_run only reads and counts.
+      - name: Pro demo guard (test only)
+        if: ${{ inputs.pro_demo == true }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET_ENV" != "test" ] || [ "${{ github.ref }}" != "refs/heads/test" ]; then
+            echo "::error::pro_demo only runs against test, from the test branch."; exit 1
+          fi
+          case "$SUPABASE_DB_URL" in
+            *"$PRODUCTION_SUPABASE_PROJECT_REF"*) echo "::error::The database URL names the production project."; exit 1 ;;
+            *"$TEST_SUPABASE_PROJECT_REF"*) ;;
+            *) echo "::error::The database URL is not the test project."; exit 1 ;;
+          esac
+          node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$TEST_SUPABASE_PROJECT_REF"
+          node scripts/ci/validate-supabase-target.mjs api NEXT_PUBLIC_SUPABASE_URL "$TEST_SUPABASE_PROJECT_REF"
+
+      - name: Set up Node (Pro demo)
+        if: ${{ inputs.pro_demo == true && inputs.target == 'test' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies (Pro demo)
+        if: ${{ inputs.pro_demo == true && inputs.target == 'test' }}
+        # supabase-js and esbuild (the app's zod schemas are bundled in memory); no install scripts run.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Seed the Pro demo company (test)
+        if: ${{ inputs.pro_demo == true && inputs.target == 'test' }}
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PRO_DEMO_TEST_PASSWORD: ${{ secrets.PRO_DEMO_TEST_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/pro/demo/seed-pro-demo.mjs test
+          else
+            test -n "$PRO_DEMO_TEST_PASSWORD" || { echo "::error::Missing test PRO_DEMO_TEST_PASSWORD."; exit 1; }
+            node scripts/pro/demo/seed-pro-demo.mjs test --apply
           fi
