@@ -32,6 +32,7 @@ import { useSiteFeatures } from "@/components/site-features";
 import { formatFullPersonName } from "@/lib/display-name";
 import { borrarDeLaNube, elegirCvPublico, esUuid, guardarEnLaNube, leerDeLaNube } from "@/lib/cv/nube";
 import { enlacePerfil } from "@/lib/profile-url";
+import { CERRAR_EDITOR_CV } from "@/components/dashboard/cv-events";
 
 /**
  * «MI CV» EN EL PANEL: CV y carta de presentación listos para descargar.
@@ -539,7 +540,7 @@ async function bajarPdf(borrador: Borrador, tipo: Tipo) {
 const esCancelacion = (error: unknown) => /cancel/i.test(String((error as Error)?.message ?? error));
 
 /** El panel escucha esto para cerrar el editor con la flecha de la barra. */
-export const CERRAR_EDITOR_CV = "ccr:cv-close-editor";
+export { CERRAR_EDITOR_CV };
 
 /**
  * Espera la sesión: los documentos son de cada cuenta. Se rearma si llega el perfil.

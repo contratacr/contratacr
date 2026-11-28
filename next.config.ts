@@ -28,8 +28,11 @@ const nextConfig: NextConfig = {
     && process.env.NEXT_PUBLIC_SUPABASE_URL === "http://127.0.0.1:54321"
     ? { onDemandEntries: { maxInactiveAge: 15 * 60 * 1000, pagesBufferLength: 20 } }
     : {}),
-  ...(process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN
-    ? { allowedDevOrigins: [new URL(process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN).hostname] } : {}),
+  // Development only. `next dev` without --hostname trusts only localhost; a page opened at http://127.0.0.1:3000 (what
+  // the local Supabase env and the Playwright base URLs use) had its HMR socket refused as cross-origin, so the client
+  // never hydrated and the dev overlay reloaded the page every ~40 s: the panel sat on its skeleton for minutes.
+  ...(process.env.NODE_ENV === "development"
+    ? { allowedDevOrigins: ["127.0.0.1", ...(process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN ? [new URL(process.env.NEXT_PUBLIC_PRO_LAN_ORIGIN).hostname] : [])] } : {}),
   // Sin el círculo «N» de desarrollo: caía justo encima de la pestaña
   // Profesionales del menú de abajo y el toque le llegaba a él, no a la pestaña
   // (parecía que el botón no respondía). Los errores de compilación y de

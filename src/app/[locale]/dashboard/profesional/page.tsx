@@ -3,12 +3,10 @@ import { GuideVisualWalkthrough, hasVisualGuide } from "@/components/dashboard/g
 import {useLocalProAccess} from "@/components/pro/use-local-pro-access";
 import {BusinessDashboardEntry} from "@/components/directory/business-dashboard-entry";
 import { PanelListSkeleton } from "@/components/ui/content-loading";
+import dynamic from "next/dynamic";
+import { reconnectingImport } from "@/lib/reconnecting-import";
 import {backPro,navigatePro,pushProPath,replaceProPath,setProNavigationAccount} from "@/lib/pro/navigation";
-import {ProWorkspace} from "@/components/pro/pro-workspace";
 import {ProManagementShell} from "@/components/pro/management-shell";
-import {ProTools} from "@/components/pro/simple-workspace";
-import {SalesWorkspace} from "@/components/pro/sales-workspace";
-import {AppointmentRequestsWorkspace} from "@/components/pro/appointment-requests-workspace";
 import { ProfileIdentityName, profileIdentityAvatarClass } from "@/components/professionals/profile-identity-name";
 
 import { AvatarFileInput } from "@/components/ui/avatar-file-input";
@@ -33,9 +31,7 @@ import {
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser, Mail,
   CalendarCheck,
   } from "lucide-react";
-import { CERRAR_EDITOR_CV, CvBuilder } from "@/components/dashboard/cv-builder";
-import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
-import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
+import { CERRAR_EDITOR_CV } from "@/components/dashboard/cv-events";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Herramientas } from "@/components/dashboard/herramientas";
@@ -530,6 +526,19 @@ function acknowledgedNavbarHeader() {
   return header.__ccrSectionAck ? header.__ccrSectionHeader ?? null : null;
 }
 const emptyExternalSnapshot = () => null;
+
+// Sections that only one tab shows load on demand (same pattern as pro-space.tsx). Imported statically they put the whole
+// Pro suite (agenda, clients, sales, work files), the CV builder and the statistics charts into the panel's first load:
+// 5 MB of minified client code before any tab painted, and a 49 MB development chunk that took minutes to compile and parse.
+const SectionLoading = () => <PanelListSkeleton rows={3} compacto />;
+const ProWorkspace = dynamic(() => reconnectingImport(() => import("@/components/pro/pro-workspace")).then((m) => m.ProWorkspace), { loading: SectionLoading });
+const ProTools = dynamic(() => reconnectingImport(() => import("@/components/pro/simple-workspace")).then((m) => m.ProTools), { loading: SectionLoading });
+const SalesWorkspace = dynamic(() => reconnectingImport(() => import("@/components/pro/sales-workspace")).then((m) => m.SalesWorkspace), { loading: SectionLoading });
+const AppointmentRequestsWorkspace = dynamic(() => reconnectingImport(() => import("@/components/pro/appointment-requests-workspace")).then((m) => m.AppointmentRequestsWorkspace), { loading: SectionLoading });
+const QuotesSection = dynamic(() => reconnectingImport(() => import("@/components/quotes/quotes-section")).then((m) => m.QuotesSection), { loading: SectionLoading });
+const CvBuilder = dynamic(() => reconnectingImport(() => import("@/components/dashboard/cv-builder")).then((m) => m.CvBuilder), { loading: SectionLoading });
+const StatisticsPanel = dynamic(() => reconnectingImport(() => import("@/components/dashboard/statistics/statistics-panel")).then((m) => m.StatisticsPanel), { loading: SectionLoading });
+const cargarCotizaciones = () => import("@/components/quotes/quotes-section").then((m) => m.cargarCotizaciones());
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
