@@ -8,7 +8,7 @@
     "handlers": 444,
     "components": 749,
     "hooks": 29,
-    "specs": 646
+    "specs": 647
   },
   "dashboardTabs": [
     "pro_tools",
@@ -94026,6 +94026,15 @@
         {
           "line": 47,
           "title": "'task center detail: edit and delete a comment keeping the history'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-task-center-export.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "`Task center export: selected tasks to CSV and Excel [${language}]`"
         }
       ]
     },
