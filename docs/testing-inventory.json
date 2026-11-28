@@ -8,7 +8,7 @@
     "handlers": 444,
     "components": 751,
     "hooks": 29,
-    "specs": 649
+    "specs": 650
   },
   "dashboardTabs": [
     "pro_tools",
@@ -89985,6 +89985,15 @@
         {
           "line": 64,
           "title": "`Daily log footer: sibling private file staging suspends and restores the pristine footer (${language})`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-daily-log-settings-ui.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "`Daily log weather source and automatic drafts settings [${language}]`"
         }
       ]
     },
