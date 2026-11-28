@@ -31,3 +31,11 @@ test('cabinas: named cabinas become kind cabins; hotels, motels and campings nam
  assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Cabinas del Poás',attributes:{kind:'motel'}}),{});
  assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Cabinas Wray',attributes:{kind:'cabins'}}),{});
 });
+
+test('holiday rentals: OSM tourism=apartment / chalet typed by the older import become vacation_rental; named cabinas stay',()=>{
+ assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Apartamentos Sol',attributes:{kind:'apartment'}},{tourism:'apartment'}),{kind:'vacation_rental'});
+ assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Casa Luna',attributes:{kind:'cabins'}},{tourism:'chalet',name:'Casa Luna'}),{kind:'vacation_rental'});
+ assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Cabinas Mar',attributes:{kind:'cabins'}},{tourism:'chalet',name:'Cabinas Mar'}),{});
+ assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Torre Apartamentos',attributes:{kind:'apartment'}},{tourism:'hotel'}),{});
+ assert.deepEqual(filterPatch({vertical_id:'lodging',name:'Casa Luna',attributes:{kind:'cabins'}},{}),{});
+});

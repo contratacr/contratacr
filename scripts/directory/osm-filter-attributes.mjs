@@ -11,9 +11,10 @@
 //   education   attributes.publicService (operator MEP / Ministerio de Educación Pública only; UCR, UNA, INA are not MEP)
 //   lodging     attributes.kind = cabins for places named «Cabina(s) …» that the import typed hotel/hostel/guest house/
 //               vacation rental (OSM has no «cabinas» tag). Names that also say hotel/hostal/hostel/motel keep their kind,
-//               motels and campings keep theirs.
+//               motels and campings keep theirs. Holiday rentals the older import typed «apartment» (OSM
+//               tourism=apartment) or «cabins» (tourism=chalet not named Cabina(s)) become «vacation_rental» (2026-11-28).
 // Only unclaimed places without an active manager and without staff/owner attribute edits are touched. New keys are
-// filled only when EMPTY; the cabinas kind is the only overwrite. Every write goes through dir_place_mutate ('update':
+// filled only when EMPTY; the lodging kind (cabinas, vacation rentals) is the only overwrite. Every write goes through dir_place_mutate ('update':
 // revision check, history, provenance 'osm' + ref, or 'contratacr' for team places without an OSM ref) with deterministic
 // action ids, so a re-run changes nothing. Dry run by default (counts per filter value); --apply writes.
 //   source ~/bin/pro-local-env.sh
@@ -65,7 +66,7 @@ export const GROCERY_RULES=[['Maxi Palí',/\bmaxi ?pali\b/],['Palí',/\bpali\b/]
  ['Pequeño Mundo',/pequeno mundo/]];
 const match=(rules,...texts)=>{for(const t of texts){const f=fold(t);if(!f)continue;for(const [label,re] of rules)if(re.test(f))return label;}return null;};
 
-const CABIN_NAME=/\bcabinas?\b/,CABIN_KEEP=/\b(hotel|hostal|hostel|motel)\b/,CABIN_FROM=new Set(['hotel','hostel','guest_house','vacation_rental']);
+const CABINAS_TAG_NAME=/\bcabinas?\b/i,CABIN_NAME=/\bcabinas?\b/,CABIN_KEEP=/\b(hotel|hostal|hostel|motel)\b/,CABIN_FROM=new Set(['hotel','hostel','guest_house','vacation_rental']);
 export const isPublicHealth=t=>t['operator:type']==='public'||t['operator:type']==='government'||/\b(ccss|caja costarricense|ebais)\b/i.test(`${t.operator??''} ${t.name??''}`);
 export const isMep=t=>/^(mep|ministerio de educacion( publica)?)$/.test(fold(t.operator));
 
@@ -80,7 +81,13 @@ export function filterPatch(place,tags={}){
   case 'grocery':fill('chain',match(GROCERY_RULES,tags.brand,name));break;
   case 'health':if(isPublicHealth({...tags,name}))fill('publicService',true);break;
   case 'education':if(isMep(tags))fill('publicService',true);break;
-  case 'lodging':{const f=fold(name);if(CABIN_NAME.test(f)&&!CABIN_KEEP.test(f)&&CABIN_FROM.has(a.kind))out.kind='cabins';break;}
+  case 'lodging':{const f=fold(name);
+   // 2026-11-28: holiday rentals typed by the older import (tourism=apartment → «apartment», tourism=chalet → «cabins»)
+   // become «vacation_rental», the kind stage-import.mjs gives them since 2026-11-26. Evidence is the OSM tag only;
+   // a chalet named «Cabina(s) …» stays cabins.
+   if(a.kind==='apartment'&&tags.tourism==='apartment'){out.kind='vacation_rental';break;}
+   if(a.kind==='cabins'&&tags.tourism==='chalet'&&!CABINAS_TAG_NAME.test(`${tags['name:es']??''} ${tags.name??''} ${name}`)){out.kind='vacation_rental';break;}
+   if(CABIN_NAME.test(f)&&!CABIN_KEEP.test(f)&&CABIN_FROM.has(a.kind))out.kind='cabins';break;}
  }
  return out;
 }
