@@ -8,7 +8,7 @@
     "handlers": 444,
     "components": 750,
     "hooks": 29,
-    "specs": 647
+    "specs": 648
   },
   "dashboardTabs": [
     "pro_tools",
@@ -91898,6 +91898,19 @@
         {
           "line": 46,
           "title": "'task CSV: bilingual header, escaping and formula neutralisation'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-notification-digest-tick.spec.ts",
+      "cases": [
+        {
+          "line": 10,
+          "title": "'digest tick: due hour writes one simulated row per person and hour, quiet hours and other weekdays skip it'"
+        },
+        {
+          "line": 42,
+          "title": "`Notification schedule panel: quiet hours, daily digest and a simulated try [${language}]`"
         }
       ]
     },
