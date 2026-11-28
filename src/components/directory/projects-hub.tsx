@@ -236,7 +236,7 @@ export function ProjectsHub({ proyectos = [] }: { proyectos?: ProyectoPublico[] 
 
       <header className="sticky top-0 z-30 border-b border-transparent bg-white/95 backdrop-blur" style={{ borderColor: desplazado ? "#e5ebf0" : "transparent" }}>
         <div className="relative flex min-h-14 items-center justify-center px-14">
-          <h1 className={cn("truncate text-[17px] font-extrabold transition-opacity", desplazado ? "opacity-100" : "opacity-0")} aria-hidden={!desplazado}>{titulo}</h1>
+          <h1 className={cn("text-[17px] font-extrabold leading-tight transition-opacity", desplazado ? "opacity-100" : "opacity-0")} aria-hidden={!desplazado}>{titulo}</h1>
           <div className="absolute right-3 top-2"><MenuPuntos lang={lang} /></div>
         </div>
       </header>
@@ -318,8 +318,8 @@ export function ProjectsHub({ proyectos = [] }: { proyectos?: ProyectoPublico[] 
                 <li key={p.id}>
                   <Link href={rutaProyecto(p)} className="flex items-center gap-3 px-3.5 py-3 active:bg-[#f3f8fb]">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px] font-bold">{p.title}</span>
-                      <span className="mt-0.5 block truncate text-[13px] text-[#5b6b80]">{[p.category_name, p.location_label].filter(Boolean).join(" · ")}</span>
+                      <span className="block text-[15px] font-bold [overflow-wrap:anywhere]">{p.title}</span>
+                      <span className="mt-0.5 block text-[13px] text-[#5b6b80]">{[p.category_name, p.location_label].filter(Boolean).join(" · ")}</span>
                     </span>
                     <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8b8]" />
                   </Link>

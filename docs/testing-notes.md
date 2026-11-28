@@ -31,6 +31,10 @@ Pie de página del sitio (regla 2026-11-27, la misma de `FooterSoloWeb` en produ
 - [ ] Pantallas de uso sin pie en teléfono y con pie desde lg: `/categorias`, `/precios`, `/resena-google` (solo con directorio; en producción igual que hoy), `/herramientas`, `/solicitudes`, `/promociones`, `/empleos`, `/registro/empresa`, panel profesional, `/listas`, `/mis-reservas`, `/yo`, `/eventos`, `/inmuebles`, `/vehiculos`, `/marca/...`, `/reserva/...`, `/lista/...`, login, registro, soporte, notificaciones.
 - [ ] Nunca pie en teléfono: ficha de negocio (y su menú y reclamar), perfil profesional, secciones de negocios y `/buscar` (lista y mapa), mensajes. Sin pie en ninguna medida: `/publicar-solicitud`, `/cotizar`, `/asistente`, paneles. En la app nativa nunca hay pie.
 
+Listas de opciones (regla 2026-11-27):
+- [ ] Toda fila de opciones al estilo «Mi panel» lleva ícono de contorno gris (#52627a) a la izquierda y flecha a la derecha: Mi panel, Herramientas (grupos y herramientas), pestaña Información de un negocio (Contacto, Reclamar, Sugerir un cambio). Las listas de contenido (solicitudes, negocios) no llevan ícono de fila: llevan foto, ícono mejorado de la sección o solo texto.
+- [ ] Sin texto cortado en Herramientas ni en la lista de solicitudes de `/solicitudes` (títulos largos envuelven).
+
 Texto:
 - [ ] Ningún texto truncado con "…" (nombres largos, direcciones, tarjetas, barra inferior, "Mejor calificados", negocios similares): envuelve en varias líneas.
 - [ ] Español de Costa Rica, trato de usted, sin jerga; lo mismo en inglés.

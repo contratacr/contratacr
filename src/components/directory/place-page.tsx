@@ -213,7 +213,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  // One line per row (owner 2026-11-27, like «Mi panel»): label (+ small badge) on the left, the value on the right; the
  // value only drops below when it truly does not fit, and is never cut.
  const rowBody=(icon:ReactNode,label:string,value?:ReactNode,badge?:string)=><>
-  <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#0083b0]">{icon}</span>
+  <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#52627a]">{icon}</span>
   <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
    <span className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-[#162543]">{label}{badge&&<span className="rounded-full bg-[#eaf7fd] px-2 py-0.5 text-[11px] font-bold text-[#0083b0]">{badge}</span>}</span>
    {value&&<span className="text-right text-[14px] leading-snug text-[#526277] [overflow-wrap:anywhere]">{value}</span>}</span>

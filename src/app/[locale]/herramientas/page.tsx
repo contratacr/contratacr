@@ -68,7 +68,7 @@ export default async function ToolsPage({ params, searchParams }: { params: Prom
                   <li key={i.key}>
                     <Link href={i.href} prefetch={false} data-tools-entry={i.key} className={ROW}>
                       <span className={ICON}><Icon aria-hidden /></span>
-                      <span className="min-w-0 flex-1 truncate">{i.label}</span>
+                      <span className="min-w-0 flex-1">{i.label}</span>
                       <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
                     </Link>
                   </li>
@@ -82,7 +82,7 @@ export default async function ToolsPage({ params, searchParams }: { params: Prom
               <li key={id}>
                 <Link href={`/herramientas?grupo=${id}`} prefetch={false} data-tools-group-tile={id} className={ROW}>
                   <span className={ICON}><Icon aria-hidden /></span>
-                  <span className="min-w-0 flex-1 truncate">{t(`g_${id}`)}</span>
+                  <span className="min-w-0 flex-1">{t(`g_${id}`)}</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
                 </Link>
               </li>
