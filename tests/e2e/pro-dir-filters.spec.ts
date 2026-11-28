@@ -26,25 +26,32 @@ async function pick(page:Page,menu:string,option:string){
  await link.click();
 }
 
+type Stats={total:number;withHours:number;cuisines:{value:string;count:number}[];brands:{value:string;label:string;count:number}[];soda:number;atm:number;public:number;reservations:number};
+/** The same numbers the chips are built from (dir_section_filter_stats). A seeded CI database has no imported OSM data:
+ *  the data-dependent checks follow these numbers instead of assuming the local import. */
+async function stats(section:string):Promise<Stats>{const {data,error}=await dirDb().rpc('dir_section_filter_stats',{p_vertical:section});expect(error).toBeNull();return data as Stats;}
+const brandCount=(s:Stats,v:string)=>s.brands.find(b=>b.value===v)?.count??0;
+const cuisineCount=(s:Stats,v:string)=>s.cuisines.find(b=>b.value===v)?.count??0;
+
 // Real-data checks (local imported OSM data): every result of the first page matches the filter.
-const REAL:[string,string,(it:Item)=>boolean][]=[
- ['restaurantes','cuisine=pizza',it=>Array.isArray(attr(it,'cuisines'))&&(attr(it,'cuisines') as string[]).includes('pizza')],
- ['restaurantes','soda=1',it=>attr(it,'soda')===true],
- ['restaurantes','reservations=1',()=>true],// claimed + reservations on: checked with the seeded place below
- ['bancos','brand=bcr',it=>attr(it,'brand')==='BCR'],
- ['bancos','atm=1',it=>attr(it,'atm')===true||attr(it,'kind')==='atm'],
- ['gasolineras','brand=delta',it=>attr(it,'brand')==='Delta'],
- ['supermercados','brand=auto-mercado',it=>attr(it,'chain')==='Auto Mercado'],
- ['salud','public=1',it=>attr(it,'publicService')===true],
- ['educacion','public=1',it=>attr(it,'publicService')===true],
- ['hospedaje','kind=cabins',it=>attr(it,'kind')==='cabins'],
+// The 4th value: how many places the stats say match (the first page must then not be empty); null = not counted there.
+const REAL:[string,string,(it:Item)=>boolean,((s:Stats)=>number)|null][]=[
+ ['restaurantes','cuisine=pizza',it=>Array.isArray(attr(it,'cuisines'))&&(attr(it,'cuisines') as string[]).includes('pizza'),s=>cuisineCount(s,'pizza')],
+ ['restaurantes','soda=1',it=>attr(it,'soda')===true,s=>s.soda],
+ ['bancos','brand=bcr',it=>attr(it,'brand')==='BCR',s=>brandCount(s,'bcr')],
+ ['bancos','atm=1',it=>attr(it,'atm')===true||attr(it,'kind')==='atm',s=>s.atm],
+ ['gasolineras','brand=delta',it=>attr(it,'brand')==='Delta',s=>brandCount(s,'delta')],
+ ['supermercados','brand=auto-mercado',it=>attr(it,'chain')==='Auto Mercado',s=>brandCount(s,'auto-mercado')],
+ ['salud','public=1',it=>attr(it,'publicService')===true,s=>s.public],
+ ['educacion','public=1',it=>attr(it,'publicService')===true,s=>s.public],
+ ['hospedaje','kind=cabins',it=>attr(it,'kind')==='cabins',null],
 ];
 
 test('every section filter returns only matching places (API, real data and synthetic places)',async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
- for(const [section,qs,ok] of REAL){
+ for(const [section,qs,ok,expected] of REAL){
   const items=await api(page,`vertical=${section}&${qs}&limit=50`);
-  if(!qs.startsWith('reservations'))expect(items.length,`${section}?${qs} has data`).toBeGreaterThan(0);
+  if(expected&&expected(await stats(section))>0)expect(items.length,`${section}?${qs} has data`).toBeGreaterThan(0);
   const bad=items.filter(it=>!ok(it)).map(it=>it.name);
   expect(bad,`${section}?${qs}`).toEqual([]);
  }
@@ -61,6 +68,14 @@ test('every section filter returns only matching places (API, real data and synt
  await seed('bac','banking','Banco Filtro Dos',{kind:'bank',brand:'BAC'});
  await seed('ccss','health','EBAIS Filtro',{kind:'clinic',publicService:true});
  await seed('privada','health','Clinica Filtro',{kind:'clinic'});
+ await seed('delta','fuel','Estacion Filtro Uno',{brand:'Delta'});
+ await seed('sinmarca','fuel','Estacion Filtro Dos',{});
+ await seed('am','grocery','Super Filtro Uno',{chain:'Auto Mercado'});
+ await seed('mxm','grocery','Super Filtro Dos',{chain:'Más x Menos'});
+ await seed('mep','education','Escuela Filtro Uno',{kind:'school',publicService:true});
+ await seed('priv','education','Escuela Filtro Dos',{kind:'school'});
+ await seed('cab','lodging','Cabinas Filtro',{kind:'cabins'});
+ await seed('hot','lodging','Hotel Filtro',{kind:'hotel'});
  const only=async(section:string,qs:string,expected:string[])=>{
   const got=(await api(page,`vertical=${section}&q=${tag}&${qs}`)).map(it=>it.slug).sort();
   expect(got,`${section}?${qs}`).toEqual(expected.map(s=>`e2e-flt-${s}-${tag}`).sort());
@@ -72,6 +87,10 @@ test('every section filter returns only matching places (API, real data and synt
  await only('bancos','brand=bcr',['bcr']);
  await only('bancos','atm=1',['bcr']);
  await only('salud','public=1',['ccss']);
+ await only('gasolineras','brand=delta',['delta']);
+ await only('supermercados','brand=mas-x-menos',['mxm']);
+ await only('educacion','public=1',['mep']);
+ await only('hospedaje','kind=cabins',['cab']);
 });
 
 test('chips filter the list, keep the state in the URL across reload and Back, and the empty state is friendly',async({page},info)=>{
@@ -84,13 +103,14 @@ test('chips filter the list, keep the state in the URL across reload and Back, a
 
  await open(page,`/restaurantes?q=${tag}`);
  await expect(item('open')).toHaveCount(1);await expect(item('other')).toHaveCount(1);
- // Toggle «Sodas»: only the soda, state in the URL.
- await chip('soda').click();
+ const st=await stats('restaurantes');
+ // Toggle «Sodas» (offered with ≥ 5 sodas; a seeded CI database has none: then through the URL, where the chip shows on).
+ if(st.soda>=5)await chip('soda').click();else await open(page,`/restaurantes?q=${tag}&soda=1`);
  await expect(page).toHaveURL(/[?&]soda=1/);
  await expect(item('open')).toHaveCount(1);await expect(item('other')).toHaveCount(0);
  await expect(chip('soda')).toHaveAttribute('aria-pressed','true');
  // Menu «Tipo de comida» → China: no soda serves Chinese food here → friendly empty state.
- await pick(page,'cuisine','China');
+ if(cuisineCount(st,'china')>=5)await pick(page,'cuisine','China');else await open(page,`/restaurantes?q=${tag}&soda=1&cuisine=china`);
  await expect(page).toHaveURL(/cuisine=china/);await expect(page).toHaveURL(/soda=1/);
  const empty=page.getByRole('status').filter({hasText:'No encontramos resultados con estos filtros.'});
  await expect(empty).toBeVisible();
@@ -122,28 +142,33 @@ test('chips filter the list, keep the state in the URL across reload and Back, a
 
 test('«Abierto ahora» shows only where enough places have hours; the value lists come from the data',async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
- const db=dirDb();
  for(const section of ['restaurantes','bancos','gasolineras','supermercados','salud','educacion','hospedaje','tiendas']){
-  const {data,error}=await db.rpc('dir_section_filter_stats',{p_vertical:section});expect(error).toBeNull();
-  const s=data as {total:number;withHours:number};const useful=s.withHours>=20&&s.withHours/s.total>=0.3;
+  const s=await stats(section);const useful=s.withHours>=20&&s.withHours/s.total>=0.3;
   await open(page,`/${section}`);
   const n=await page.locator('[data-chip="open-now"]').count();
   expect(n>0,`${section}: ${s.withHours}/${s.total} with hours`).toBe(useful);
  }
- // Bancos: «Banco» lists banks by count (BCR and Banco Nacional first), «Con cajero» is there; no price chip at fuel stations.
+ // Bancos: «Banco» lists the banks with ≥ 5 places by count; «Con cajero» with ≥ 5; no price chip at fuel stations.
+ const banks=await stats('bancos'),listed=banks.brands.filter(b=>b.count>=5);
  await open(page,'/bancos');
+ await expect(page.locator('[data-chip="atm"]').filter({visible:true})).toHaveCount(banks.atm>=5?1:0);
+ if(banks.atm>=5)await expect(page.locator('[data-chip="atm"]').filter({visible:true})).toHaveText('Con cajero');
+ await expect(page.locator('[data-chip-menu="brand"]').filter({visible:true})).toHaveCount(listed.length?1:0);
+ if(listed.length){
  const opener=page.locator('[data-chip-menu="brand"]').filter({visible:true}).first();
  const options=page.locator('[data-chip-sheet="brand"] a, [data-chip-menu="brand"] ul a').filter({visible:true});
  await expect(async()=>{if(!(await options.count()))await opener.click();await expect(options.first()).toHaveText(/^Todos los bancos/,{timeout:2000});}).toPass({timeout:30000});
  const names=await options.allInnerTexts();
- expect(names.slice(1,3).map(x=>x.replace('✓','').trim()).sort()).toEqual(['BCR','Banco Nacional'].sort());
- await expect(page.locator('[data-chip="atm"]').filter({visible:true})).toHaveText('Con cajero');
+ expect(names.slice(1).map(x=>x.replace('✓','').trim())).toEqual(listed.map(b=>b.label));// count order, same labels
+ }
+ const fuel=await stats('gasolineras');
  await open(page,'/gasolineras');
- await expect(page.locator('[data-chip-menu="brand"]').filter({visible:true})).toContainText('Marca');
+ if(fuel.brands.some(b=>b.count>=5))await expect(page.locator('[data-chip-menu="brand"]').filter({visible:true})).toContainText('Marca');
  await expect(page.locator('[data-chip-menu="price"], [data-chip="price"]')).toHaveCount(0);
+ const rest=await stats('restaurantes');
  await open(page,'/en/restaurantes');
- await expect(page.locator('[data-chip-menu="cuisine"]').filter({visible:true})).toContainText('Cuisine');
- await expect(page.locator('[data-chip="reservations"]').filter({visible:true})).toHaveText('Takes reservations');
+ if(rest.cuisines.some(c=>c.count>=5))await expect(page.locator('[data-chip-menu="cuisine"]').filter({visible:true})).toContainText('Cuisine');
+ if(rest.reservations>=1)await expect(page.locator('[data-chip="reservations"]').filter({visible:true})).toHaveText('Takes reservations');
 });
 
 for(const width of [390,360])test(`chip rows at ${width} px: whole labels, no ellipsis, no page overflow`,async({page},info)=>{
@@ -154,7 +179,7 @@ for(const width of [390,360])test(`chip rows at ${width} px: whole labels, no el
   const rail=page.locator('[data-places-home] [role="group"]').filter({visible:true}).first();
   await expect(rail).toBeVisible();
   const chips=rail.locator('a, button');
-  expect(await chips.count()).toBeGreaterThan(1);
+  expect(await chips.count()).toBeGreaterThan(0);
   const cut=await chips.evaluateAll(els=>els.flatMap(el=>{const t=(el as HTMLElement).innerText;
    const clipped=el.scrollWidth>el.clientWidth+1||/…|\.\.\./.test(t)||getComputedStyle(el).textOverflow==='ellipsis';return clipped?[t]:[];}));
   expect(cut,`${section} at ${width}px`).toEqual([]);
