@@ -97,6 +97,10 @@ const handlerRules = [
   [/^\/api\/lugar\/\[slug\]\/reservas$/, "pro-dir-reservations.spec.ts"],
   [/^\/api\/pro\/table-reservations$/, "pro-dir-reservations.spec.ts"],
   [/^\/api\/reservas\/\[token\]$/, "pro-dir-reservations.spec.ts"],
+  // «Mis reservas» inside Mi panel (directory on, signed in): the panel section reads this list.
+  [/^\/api\/mis-reservas$/, "pro-tools-panel.spec.ts"],
+  // «¿Sabe si este lugar…?» (directory on): one Sí / No / No sé answer per attribute; bad keys answer 400.
+  [/^\/api\/lugar\/\[slug\]\/atributos$/, "pro-dir-user-photos.spec.ts"],
   // Pending fixes round (2026-11-17): directory entries of the Pro hub («Reservas de mesa», «Menú», «Mi lugar»).
   [/^\/api\/pro\/place-hub$/, "pro-dir-hub.spec.ts"],
   [/^\/api\/pro\/editions$/, "pro-gaps-editions-team.spec.ts"],
