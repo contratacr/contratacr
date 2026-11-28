@@ -26,7 +26,7 @@ on:
         type: boolean
         default: false
       directory_data:
-        description: "SOLO TEST: atributos de filtros, cabinas y enlaces de menú desde OSM (scripts/directory/run-test-data.mjs). Con dry_run solo cuenta. Repetirlo es seguro."
+        description: "SOLO TEST: secciones OSM que el paquete no trae (Educación, Trámites, Tiendas…), limpieza, filtros, menús y contactos (scripts/directory/run-test-data.mjs). Con dry_run solo cuenta. Repetirlo es seguro."
         required: false
         type: boolean
         default: false
@@ -42,7 +42,7 @@ jobs:
   deploy:
     name: Migrate ${{ inputs.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ (inputs.seed_directory || inputs.directory_data) && 60 || 15 }}
+    timeout-minutes: ${{ inputs.directory_data && 120 || inputs.seed_directory && 60 || 15 }}
     environment: ${{ inputs.target }}
     permissions:
       contents: read
@@ -192,6 +192,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up Node (directory data)
+        if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies (directory data)
+        if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
+        # osm-reclassify-cleanup.mjs needs @supabase/supabase-js; no install scripts run.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Build the OSM input (directory data)
         if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
         run: |
@@ -211,10 +223,14 @@ jobs:
         if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
         env:
           DRY_RUN: ${{ inputs.dry_run }}
+          # Only for osm-reclassify-cleanup.mjs; run-test-data.mjs checks both name the test project first.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
+          out="$RUNNER_TEMP/osm/out"
           if [ "$DRY_RUN" = "true" ]; then
-            node scripts/directory/run-test-data.mjs test --pois "$RUNNER_TEMP/osm/out/osm-pois.json"
+            node scripts/directory/run-test-data.mjs test --pois "$out/osm-pois.json" --admin-areas "$out/osm-admin-areas.json"
           else
-            node scripts/directory/run-test-data.mjs test --pois "$RUNNER_TEMP/osm/out/osm-pois.json" --apply
+            node scripts/directory/run-test-data.mjs test --pois "$out/osm-pois.json" --admin-areas "$out/osm-admin-areas.json" --apply
           fi
