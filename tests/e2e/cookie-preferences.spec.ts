@@ -12,6 +12,9 @@ test.beforeAll(async () => {
  }}]});
  script=result.outputFiles[0].text;
  css=(await postcss([tailwind()]).process(readFileSync('src/app/globals.css','utf8'),{from:'src/app/globals.css'})).css;
+ // The app sets --font-sans to the bundled Inter (next/font/local in src/app/layout.tsx). Without it the harness fell back to
+ // each OS's system font, so text measurements (wrapping, sheet height) depended on the machine instead of the product font.
+ css=[400,500,600,700,800,900].map(weight=>`@font-face{font-family:"Inter harness";font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${readFileSync(`src/fuentes/inter-latin-${weight}.woff2`).toString('base64')}) format("woff2")}`).join('')+':root{--font-sans:"Inter harness"}'+css;
 });
 for(const locale of ['es','en']) for(const width of [320,390,768,1440]) test(`consent UI ${locale} ${width}: one Continuar button, close, no refusal button, independent purposes and reopening`,async({page})=>{
  await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
@@ -136,10 +139,9 @@ test('withdrawing from the footer settings stops measurement and the notice does
  expect(await page.evaluate(()=>document.cookie)).toContain('ccr_ads_consent_v2=declined');
 });
 
-test('cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target', async ({ page }, info) => {
- // A phone measurement: the desktop project only narrows a desktop window (no mobile emulation, desktop text metrics);
- // on Linux CI that wrapped the copy to 294 px against the 279 px limit. Phones are measured in the mobile projects.
- test.skip(!info.project.use.isMobile, 'phone layout is measured in the mobile projects');
+test('cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target', async ({ page }) => {
+ // Runs in every project. In desktop Chromium on Linux the page keeps a classic 15 px scrollbar gutter (html{scrollbar-gutter:stable}),
+ // so the fixed sheet is 375 px wide at a 390 px window, the same width as a 375 px phone (iPhone SE / mini).
  await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
  await page.setViewportSize({width:390,height:844});
  await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
@@ -147,8 +149,11 @@ test('cookie notice stays compact on a phone: about a third of the screen at mos
  await page.goto('http://localhost/cookie-harness');
  await page.addStyleTag({content:css}); await page.addScriptTag({content:script});
  const banner=page.locator('[data-cookie-banner]');await expect(banner).toBeVisible();
+ await page.evaluate(()=>document.fonts.ready);expect(await page.evaluate(()=>document.fonts.check('800 18px "Inter harness"'))).toBe(true);
  const box=(await banner.boundingBox())!;
  expect(box.height).toBeLessThanOrEqual(844*0.33);
+ // The title keeps one line at that width: its reserved right padding only clears the close button, no more.
+ expect((await page.locator('#cookie-title').boundingBox())!.height).toBeLessThan(30);
  const close=(await page.locator('[data-cookie-close]').boundingBox())!;
  expect(close.width).toBeGreaterThanOrEqual(44);expect(close.height).toBeGreaterThanOrEqual(44);
  const continuar=(await banner.getByRole('button',{name:'Continuar',exact:true}).boundingBox())!;

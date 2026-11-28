@@ -375,7 +375,7 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Sin Cloudflare Images: ninguna imagen depende de él.
 - [ ] Cron del Worker (resumen horario de Pro, recordatorios) corre.
 - [ ] Previsualizaciones de enlaces: una sola tarjeta de marca, logo único (`og-logos` íntegros).
-- [ ] Aviso de cookies compacto (~30 % del iPhone), un botón Continuar, X. (2026-11-28: la prueba automática lo mide solo en los proyectos móviles; la ventana de escritorio angosta no cuenta como teléfono.)
+- [ ] Aviso de cookies compacto (~30 % del iPhone), un botón Continuar, X. (2026-11-28, reemplaza la nota anterior: la prueba automática vuelve a medirlo en todos los proyectos. En una ventana de computadora con barra de desplazamiento clásica, Linux/Windows, el aviso queda 15 px más angosto; el título "Cookies y píxeles de seguimiento" ahora cabe en una línea también a 375 px, iPhone SE/mini, porque su margen derecho solo deja libre la X. Revisar: título en una línea a 375 px y la X no tapa texto.)
 
 ## Pendiente de activar / requiere a Isaac
 

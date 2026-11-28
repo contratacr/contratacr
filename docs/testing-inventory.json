@@ -16494,7 +16494,8 @@
         "tests/e2e/interaction-surfaces.spec.ts"
       ],
       "directReferences": [
-        "tests/e2e/admin-bottom-nav.spec.ts"
+        "tests/e2e/admin-bottom-nav.spec.ts",
+        "tests/e2e/cookie-preferences.spec.ts"
       ],
       "evidence": "Referencia estática detectada; verificar assertions",
       "strategy": "Smoke de carga + regresión de acciones y estados + accesibilidad + visual responsive + ES/EN",
@@ -86760,32 +86761,28 @@
       "file": "tests/e2e/cookie-preferences.spec.ts",
       "cases": [
         {
-          "line": 16,
+          "line": 19,
           "title": "`consent UI ${locale} ${width}: one Continuar button, close, no refusal button, independent purposes and reopening`"
         },
         {
-          "line": 103,
+          "line": 106,
           "title": "'closing the notice with the X accepts, recorded as \"close\"'"
         },
         {
-          "line": 112,
+          "line": 115,
           "title": "'a refusal saved earlier survives the X and Continuar (even if expired)'"
         },
         {
-          "line": 120,
+          "line": 123,
           "title": "'Continuar keeps a refusal that is still valid'"
         },
         {
-          "line": 127,
+          "line": 130,
           "title": "'withdrawing from the footer settings stops measurement and the notice does not come back'"
         },
         {
-          "line": 139,
-          "title": "'cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target'"
-        },
-        {
           "line": 142,
-          "title": "!info.project.use.isMobile"
+          "title": "'cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target'"
         }
       ]
     },
