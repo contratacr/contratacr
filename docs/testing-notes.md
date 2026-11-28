@@ -26,6 +26,11 @@ Banderas apagadas (producción debe verse idéntica):
 - [ ] Con directorio apagado `/categorias`, `/negocios/...`, `/registro/empresa`, `/herramientas` no existen (404 o redirección).
 - [ ] Con Pro apagado no aparece nada de Herramientas/Pro en menú ni enlaces.
 
+Pie de página del sitio (regla 2026-11-27, la misma de `FooterSoloWeb` en producción):
+- [ ] Páginas de contenido con pie en teléfono y computadora: portada, Cómo funciona, Ayuda, ContrataCR Pro, Términos, Privacidad, `/precios`, `/como-ordenamos`.
+- [ ] Pantallas de uso sin pie en teléfono y con pie desde lg: `/herramientas`, `/listas`, `/mis-reservas`, `/yo`, `/eventos`, `/inmuebles`, `/vehiculos`, `/marca/...`, `/reserva/...`, `/lista/...`, login, registro, soporte, notificaciones.
+- [ ] Nunca pie en teléfono: ficha de negocio (y su menú y reclamar), perfil profesional, secciones de negocios y `/buscar` (lista y mapa), `/categorias`, mensajes. En la app nativa nunca hay pie.
+
 Texto:
 - [ ] Ningún texto truncado con "…" (nombres largos, direcciones, tarjetas, barra inferior, "Mejor calificados", negocios similares): envuelve en varias líneas.
 - [ ] Español de Costa Rica, trato de usted, sin jerga; lo mismo en inglés.

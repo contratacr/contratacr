@@ -44,5 +44,5 @@ export default async function PricesRoute({params,searchParams}:{params:Promise<
   if(o.ok)data.overview=o.result;
   data.fuel=fuel;
  }
- return <DirectoryShell><PriceComparePage locale={locale} query={query} data={data}/></DirectoryShell>;
+ return <DirectoryShell footer="full"><PriceComparePage locale={locale} query={query} data={data}/></DirectoryShell>;
 }

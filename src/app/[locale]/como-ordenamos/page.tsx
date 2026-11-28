@@ -56,7 +56,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
 }
 export default async function HowWeRankPage({params}:{params:Promise<{locale:string}>}){
  const {locale}=await params,en=locale==='en',i=en?1:0;
- return <DirectoryShell><main id="contenido" data-how-we-rank className="mx-auto max-w-3xl space-y-8 px-4 py-8 text-[#162543] sm:py-12">
+ return <DirectoryShell footer="full"><main id="contenido" data-how-we-rank className="mx-auto max-w-3xl space-y-8 px-4 py-8 text-[#162543] sm:py-12">
   <header className="space-y-3">
    <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">{en?'How we rank results':'Cómo ordenamos los resultados'}</h1>
    <p className="text-lg text-slate-700">{en?'ContrataCR orders results with the same neutral criteria for everyone. Order never depends on payment.':'ContrataCR ordena los resultados con los mismos criterios neutros para todos. El orden nunca depende de pagos.'}</p>
