@@ -44,7 +44,22 @@ export type AllowanceHistoryEntry=z.infer<typeof allowanceHistorySchema>;
 /** Live status of each linked extra in Extras y cambios, keyed by change id. */
 export const allowanceChangeStatusSchema=z.enum(['proposed','accepted','declined','withdrawn']);
 export type AllowanceChangeStatus=z.infer<typeof allowanceChangeStatusSchema>;
-export const allowanceDetailSchema=z.object({workId,today:day,items:z.array(allowanceItemSchema).max(200),totals:allowanceTotalsSchema,history:z.array(allowanceHistorySchema).max(100),changeStatuses:z.record(uuid,allowanceChangeStatusSchema)}).strict();
+/** Purchase-order lines linked to one allowance (migration 562): issued/partial/received count as committed, drafts apart, cancelled never. */
+export const allowanceCommitmentSchema=z.object({committedCents:cents,draftCents:cents,receivedCents:cents,
+ orders:z.array(z.object({id:uuid,number:z.number().int().positive(),status:z.enum(['draft','issued','partial','received'])}).strict()).max(500)}).strict();
+export type AllowanceCommitment=z.infer<typeof allowanceCommitmentSchema>;
+export const allowanceCommitmentTotalsSchema=z.object({committedCents:sum,draftCents:sum,receivedCents:sum}).strict();
+export const allowanceDetailSchema=z.object({workId,today:day,items:z.array(allowanceItemSchema).max(200),totals:allowanceTotalsSchema,history:z.array(allowanceHistorySchema).max(100),changeStatuses:z.record(uuid,allowanceChangeStatusSchema),
+ commitments:z.record(uuid,allowanceCommitmentSchema),commitmentTotals:allowanceCommitmentTotalsSchema}).strict();
+/**
+ * What a commitment means for one allowance: the reference is the chosen total once decided, the planned amount before.
+ * 'over' = the issued orders already exceed it; 'within' = they fit; null = nothing committed.
+ */
+export function allowanceCommitmentState(item:Pick<AllowanceItem,'status'|'plannedCents'|'choice'>,commitment:AllowanceCommitment|undefined){
+ if(!commitment||commitment.committedCents===0)return null;
+ const reference=item.status==='decided'&&item.choice?item.choice.actualCents:item.plannedCents;
+ return {reference,remainingCents:reference-commitment.committedCents,state:commitment.committedCents>reference?'over' as const:'within' as const};
+}
 export type AllowanceDetail=z.infer<typeof allowanceDetailSchema>;
 export const allowanceResultSchema=z.object({item:allowanceItemSchema}).strict();
 

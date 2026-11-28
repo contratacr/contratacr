@@ -7,8 +7,8 @@ import {useAppDialog} from '@/hooks/use-app-dialog';
 import {Button} from '@/components/ui/button';
 import {proMoney} from '@/lib/pro/money';
 import {
- ALLOWANCE_NOTES_MAX,allowanceDetailSchema,allowanceMutationSchema,allowanceResultSchema,centsToInput,clientAllowancesSchema,colonesToCents,parseQuantity,
- type AllowanceChangeStatus,type AllowanceDetail,type AllowanceHistoryEntry,type AllowanceItem,type AllowanceMutation,type ClientAllowances,
+ ALLOWANCE_NOTES_MAX,allowanceCommitmentState,allowanceDetailSchema,allowanceMutationSchema,allowanceResultSchema,centsToInput,clientAllowancesSchema,colonesToCents,parseQuantity,
+ type AllowanceChangeStatus,type AllowanceCommitment,type AllowanceDetail,type AllowanceHistoryEntry,type AllowanceItem,type AllowanceMutation,type ClientAllowances,
 } from '@/lib/pro/allowances';
 import {workChangeMutation,type WorkChangesPage} from '@/lib/pro/work-changes';
 import {PRO_SERVICE_REFRESH,useProChildGuard} from './use-pro-child-guard';
@@ -58,6 +58,10 @@ function copy(en:boolean){
   history:'Change history',historyEmpty:'No changes yet.',
   actions:{create:'Created',update:'Edited',decide:'Choice defined',reopen:'Reopened',archive:'Archived',restore:'Restored',link_change:'Extra proposed'} as Record<AllowanceHistoryEntry['action'],string>,
   previous:(v:string)=>`Previous choice: ${v}`,
+  commitTitle:'Purchase orders',commitTotals:(committed:string,draft:string,received:string)=>`Committed in issued purchase orders: ${committed} · In draft orders: ${draft} · Received: ${received}`,
+  committed:(v:string)=>`Committed in issued orders: ${v}`,draftOrders:(v:string)=>`In draft orders (not committed yet): ${v}`,received:(v:string)=>`Received so far: ${v}`,
+  commitRemaining:(v:string,ref:string)=>`Still uncommitted: ${v} of ${ref}`,commitOver:(v:string,ref:string)=>`The issued orders exceed ${ref} by ${v}`,
+  orderCode:(n:number)=>'OC-'+String(n).padStart(4,'0'),orderStatus:{draft:'Draft',issued:'Issued',partial:'Partially received',received:'Received'} as Record<AllowanceCommitment['orders'][number]['status'],string>,
  }:{
   title:'Montos previstos',intro:'Reserve un monto para materiales o acabados que su cliente todavía debe elegir. Cuando se elija, regístrelo y compárelo con lo previsto.',
   add:'Nuevo monto previsto',planned:'Previsto',actual:'Definido (real)',difference:'Diferencia en lo definido',pending:'Por elegir',overdue:'Vencidas',projected:(value:string)=>`Total proyectado con las elecciones actuales: ${value}`,
@@ -84,6 +88,10 @@ function copy(en:boolean){
   history:'Historial de cambios',historyEmpty:'Todavía no hay cambios.',
   actions:{create:'Creada',update:'Editada',decide:'Elección definida',reopen:'Reabierta',archive:'Archivada',restore:'Restaurada',link_change:'Extra propuesto'} as Record<AllowanceHistoryEntry['action'],string>,
   previous:(v:string)=>`Elección anterior: ${v}`,
+  commitTitle:'Órdenes de compra',commitTotals:(committed:string,draft:string,received:string)=>`Comprometido en órdenes de compra emitidas: ${committed} · En órdenes en borrador: ${draft} · Recibido: ${received}`,
+  committed:(v:string)=>`Comprometido en órdenes emitidas: ${v}`,draftOrders:(v:string)=>`En órdenes en borrador (aún no comprometido): ${v}`,received:(v:string)=>`Recibido hasta ahora: ${v}`,
+  commitRemaining:(v:string,ref:string)=>`Sin comprometer: ${v} de ${ref}`,commitOver:(v:string,ref:string)=>`Las órdenes emitidas superan ${ref} en ${v}`,
+  orderCode:(n:number)=>'OC-'+String(n).padStart(4,'0'),orderStatus:{draft:'Borrador',issued:'Emitida',partial:'Recibida en parte',received:'Recibida'} as Record<AllowanceCommitment['orders'][number]['status'],string>,
  };
 }
 type Copy=ReturnType<typeof copy>;
@@ -213,6 +221,7 @@ function AllowancesSession({accountId,workId,onStateChange,onOpenChanges}:{accou
    <Stat label={c.overdue} value={String(t.overdueCount)} id="overdue" tone={t.overdueCount>0?'over':undefined} wide/>
   </dl>
   {t.count>0&&<p data-allowance-projected className="text-sm text-[#52627a]">{c.projected(money(t.projectedCents))}</p>}
+  {(detail.commitmentTotals.committedCents>0||detail.commitmentTotals.draftCents>0)&&<p data-allowance-commitment-totals className="break-words text-sm text-[#52627a]">{c.commitTotals(money(detail.commitmentTotals.committedCents),money(detail.commitmentTotals.draftCents),money(detail.commitmentTotals.receivedCents))}</p>}
   {notice&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#eef8f4] p-3 text-sm text-[#18573a]"><p>{notice}</p>{extraNotice&&onOpenChanges&&<Button type="button" variant="secondary" onClick={onOpenChanges}>{c.openChanges}</Button>}</div>}
   {loadError&&<div role="alert" className="space-y-2 text-sm"><p>{c.loadError}</p><Button type="button" variant="secondary" disabled={loading||saving} onClick={()=>void load()}>{c.retry}</Button></div>}
   {error&&<div role="alert" data-allowance-error className="space-y-2 rounded-xl bg-[#fff4f2] p-3 text-sm text-[#8a2a1b]"><p>{error}</p>
@@ -222,7 +231,7 @@ function AllowancesSession({accountId,workId,onStateChange,onOpenChanges}:{accou
   {!visible.length&&!form&&<div data-allowances-empty className="rounded-2xl border border-dashed border-[#d7e1ea] bg-[#f7f9fc] p-5 text-center"><p className="font-semibold text-[#162543]">{c.empty}</p><p className="mt-1 text-sm text-[#52627a]">{c.emptyHelp}</p></div>}
   {!!visible.length&&<ul className="space-y-3">{visible.map(item=><li key={item.id}>
    {editingId===item.id&&form?.mode==='edit'?<DetailsForm c={c} form={form} busy={busy||conflict} saving={saving} onChange={draft=>setForm({...form,draft})} onSubmit={submit} onCancel={cancel}/>:
-    <ItemCard c={c} en={en} item={item} changeStatus={item.changeId?detail.changeStatuses[item.changeId]??null:null} disabled={busy||conflict||!!form} canOpenChanges={!!onOpenChanges} onOpenChanges={onOpenChanges}
+    <ItemCard c={c} en={en} item={item} commitment={detail.commitments[item.id]} changeStatus={item.changeId?detail.changeStatuses[item.changeId]??null:null} disabled={busy||conflict||!!form} canOpenChanges={!!onOpenChanges} onOpenChanges={onOpenChanges}
      onEdit={()=>open({mode:'edit',item,draft:detailsOf(item),initial:detailsOf(item)})}
      onDecide={()=>{const initial={description:'',supplier:'',quantity:'1',actual:''};open({mode:'decide',item,draft:initial,initial});}}
      onReopen={()=>void act(item,'reopen')} onArchive={()=>void act(item,'archive')} onExtra={()=>void proposeExtra(item)} surcharge={item.status==='decided'&&(item.differenceCents??0)>0?<AllowanceSurcharge accountId={accountId} workId={workId} item={item} disabled={busy||conflict||!!form}/>:null}
@@ -258,7 +267,7 @@ function StatusBadge({item,c}:{item:AllowanceItem;c:Copy}){
  return <span data-allowance-status={item.status} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>{c[item.status]}</span>;
 }
 
-function ItemCard({surcharge,c,en,item,changeStatus,disabled,decide,canOpenChanges,onOpenChanges,onEdit,onDecide,onReopen,onArchive,onExtra}:{surcharge?:ReactNode;c:Copy;en:boolean;item:AllowanceItem;changeStatus:AllowanceChangeStatus|null;disabled:boolean;decide:ReactNode;canOpenChanges:boolean;onOpenChanges?:()=>void;onEdit:()=>void;onDecide:()=>void;onReopen:()=>void;onArchive:()=>void;onExtra:()=>void}){
+function ItemCard({surcharge,commitment,c,en,item,changeStatus,disabled,decide,canOpenChanges,onOpenChanges,onEdit,onDecide,onReopen,onArchive,onExtra}:{surcharge?:ReactNode;commitment?:AllowanceCommitment;c:Copy;en:boolean;item:AllowanceItem;changeStatus:AllowanceChangeStatus|null;disabled:boolean;decide:ReactNode;canOpenChanges:boolean;onOpenChanges?:()=>void;onEdit:()=>void;onDecide:()=>void;onReopen:()=>void;onArchive:()=>void;onExtra:()=>void}){
  const decided=item.status==='decided'&&item.choice,diff=item.differenceCents??0;
  return <article data-allowance-item={item.id} className="space-y-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -276,6 +285,7 @@ function ItemCard({surcharge,c,en,item,changeStatus,disabled,decide,canOpenChang
    <p data-allowance-variance={item.variance} className={`font-semibold ${item.variance==='over'?'text-[#a03c1f]':item.variance==='under'?'text-[#18573a]':'text-[#162543]'}`}>{item.variance==='over'?c.over(signed(diff)):item.variance==='under'?c.under(signed(diff)):c.equal}</p>
    {item.changeId&&<p data-allowance-linked-change={changeStatus??'unknown'} className={`flex flex-wrap items-center gap-2 ${changeStatus==='declined'||changeStatus==='withdrawn'?'text-[#7a4b00]':changeStatus==='accepted'?'text-[#18573a]':'text-[#006e90]'}`}><span className="min-w-0">{changeStatus?c.extraStatus[changeStatus]:c.extraUnknown}</span>{canOpenChanges&&<button type="button" className="min-h-11 font-semibold underline" onClick={onOpenChanges}>{c.openChanges}</button>}</p>}
   </div>}
+  {commitment&&<Commitment c={c} item={item} commitment={commitment}/>}
   {item.notes&&<p className="whitespace-pre-wrap break-words text-sm text-[#52627a]"><span className="font-semibold">{c.notesLabel}: </span>{item.notes}</p>}
   {decide}
   {!decide&&surcharge}
@@ -286,6 +296,19 @@ function ItemCard({surcharge,c,en,item,changeStatus,disabled,decide,canOpenChang
    <Button type="button" variant="ghost" disabled={disabled} onClick={onArchive}>{c.archive}</Button>
   </div>}
  </article>;
+}
+
+/** Row 75: purchase-order lines linked to this allowance (migration 562). Read only; the orders are edited in Purchase orders. */
+function Commitment({c,item,commitment}:{c:Copy;item:AllowanceItem;commitment:AllowanceCommitment}){
+ const state=allowanceCommitmentState(item,commitment);
+ return <div data-allowance-commitment={state?.state??'none'} className="space-y-1 rounded-xl border border-[#e3eaf0] p-3 text-sm">
+  <p className="font-semibold text-[#162543]">{c.commitTitle}</p>
+  {commitment.committedCents>0&&<p data-allowance-committed>{c.committed(money(commitment.committedCents))}</p>}
+  {commitment.draftCents>0&&<p data-allowance-draft-orders className="text-[#52627a]">{c.draftOrders(money(commitment.draftCents))}</p>}
+  {commitment.committedCents>0&&<p data-allowance-received className="text-[#52627a]">{c.received(money(commitment.receivedCents))}</p>}
+  {state&&<p data-allowance-commitment-state={state.state} className={`font-semibold ${state.state==='over'?'text-[#a03c1f]':'text-[#18573a]'}`}>{state.state==='over'?c.commitOver(money(-state.remainingCents),money(state.reference)):c.commitRemaining(money(state.remainingCents),money(state.reference))}</p>}
+  <ul className="flex flex-wrap gap-1.5">{commitment.orders.map(order=><li key={order.id} data-allowance-order={order.status} className="rounded-full bg-[#f2f5f8] px-2.5 py-1 text-xs font-semibold text-[#334155]">{c.orderCode(order.number)} · {c.orderStatus[order.status]}</li>)}</ul>
+ </div>;
 }
 
 function DetailsForm({c,form,busy,saving,onChange,onSubmit,onCancel}:{c:Copy;form:Extract<Form,{mode:'create'|'edit'}>;busy:boolean;saving:boolean;onChange:(draft:DetailsDraft)=>void;onSubmit:(event:FormEvent)=>void;onCancel:()=>void}){
