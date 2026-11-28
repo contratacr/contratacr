@@ -646,7 +646,9 @@ export function ServiciosClient({ catalogoInicial, placeTotals = {} }: { catalog
         </div>
       </main>
 
-      <LandingFooter />
+      {/* With the directory on this is /categorias, a tool screen: no footer on phones (owner 2026-11-27). Production
+          /servicios (directory off) keeps the footer as today. */}
+      {directorySections.length > 0 ? <div className="hidden lg:block"><LandingFooter /></div> : <LandingFooter />}
     </div>
   );
 }

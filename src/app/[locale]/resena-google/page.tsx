@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Star } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { DIR_ENABLED } from "@/lib/directory/feature-flags";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { ENLACE_RESENA_GOOGLE as ENLACE } from "@/lib/notifications/resena-google-enlace";
 
@@ -42,7 +43,8 @@ export default async function ResenaGooglePage() {
           <p className="mt-3 text-xs text-[#8b95a5]">{t("nota")}</p>
         </div>
       </main>
-      <LandingFooter />
+      {/* One-button task page: with the directory on, no footer on phones (owner 2026-11-27); production unchanged. */}
+      {DIR_ENABLED ? <div className="hidden lg:block"><LandingFooter /></div> : <LandingFooter />}
     </div>
   );
 }
