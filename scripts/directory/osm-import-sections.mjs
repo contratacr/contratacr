@@ -7,7 +7,8 @@
 //               already exists come back «duplicate»; removed places stay out («rejected»).
 //   2. extras   stage-osm-extras.mjs buildExtrasPayloads (opening hours, website, e-mail) for the same OSM elements
 //               → dir_import_extras_stage + dir_import_extras_commit (never overwrites owner data).
-//   3. tours → attraction  dir_import_reclassify for places of «Tours» that classify as attractions today (kind kept
+//   3. tours → attraction and auto_services → car_wash  dir_import_reclassify for places the seed filed under the older
+//      section that classify into the new one today (kind kept
 //               from the classifier; unclaimed only; other sections are skipped by the RPC).
 // Idempotent: batch and action ids are derived from the file hash and part; a part already committed is skipped and a
 // staged one is committed. Dry run by default: every part is staged AND committed inside a transaction that is rolled
@@ -87,13 +88,15 @@ if(apply){
  }
 }else console.log('Extras: dry run, not staged (they attach to the places above).');
 
-// ---- 3. tours → attraction
-const moves=payloads.flatMap(p=>p.rows.filter(r=>r.vertical==='attraction').map(r=>({ref:r.ref,attributes:r.attributes&&typeof r.attributes==='object'?{kind:r.attributes.kind}:{}})))
- .map(r=>r.attributes.kind?r:{ref:r.ref});
-for(let i=0;i<moves.length;i+=5000){
- const input={sourceId:'osm',from:'tours',to:'attraction',rows:moves.slice(i,i+5000)};
- const call={actionId:uuidOf(`osm-sections:tours-attraction:${createHash('sha256').update(JSON.stringify(input)).digest('hex')}`),...input};
- console.log(`tours → attraction: ${psql(HEAD+`begin;\nselect public.dir_import_reclassify(${q(ACTOR)}::uuid,${lit(call)});\n${apply?'commit;':'rollback;'}`).trim().split('\n').pop()}`);
+// ---- 3. places that the seed filed under an older section: tours → attraction; auto_services → car_wash (until
+// 2026-11-26 amenity=car_wash was a «Talleres» kind). Only rows of the target section move; others are skipped by the RPC.
+for(const [from,to] of [['tours','attraction'],['auto_services','car_wash']]){
+ const moves=payloads.flatMap(p=>p.rows.filter(r=>r.vertical===to)).map(r=>r.attributes?.kind?{ref:r.ref,attributes:{kind:r.attributes.kind}}:{ref:r.ref});
+ for(let i=0;i<moves.length;i+=5000){
+  const input={sourceId:'osm',from,to,rows:moves.slice(i,i+5000)};
+  const call={actionId:uuidOf(`osm-sections:${from}-${to}:${createHash('sha256').update(JSON.stringify(input)).digest('hex')}`),...input};
+  console.log(`${from} → ${to}: ${psql(HEAD+`begin;\nselect public.dir_import_reclassify(${q(ACTOR)}::uuid,${lit(call)});\n${apply?'commit;':'rollback;'}`).trim().split('\n').pop()}`);
+ }
 }
 
 const after=JSON.parse(psql(`select coalesce(jsonb_object_agg(vertical_id,n),'{}') from (select vertical_id,count(*) n from public.dir_places where status='published' group by 1) t;`)||'{}');
