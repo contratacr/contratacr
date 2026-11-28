@@ -3,6 +3,7 @@ import {PROPERTY_OPERATIONS,PROPERTY_TYPES,VEHICLE_FUELS,VEHICLE_TRANSMISSIONS,V
 import {PLACE_SECTIONS,placeSection,sectionRatingSort} from '@/lib/directory/place-verticals';
 import {proMoney} from '@/lib/pro/money';
 import {FiltersDisclosure} from './filters-disclosure';
+import {sectionExtraFilters} from '@/lib/directory/section-filters';
 
 /**
  * LOCAL PRO ONLY (multivertical F6): directory filters as a plain GET form (works without JavaScript; every field
@@ -67,6 +68,8 @@ export function SearchFilters({vertical,values,facets,locale,action,sorts,panel=
  const grid=panel?'grid grid-cols-1 gap-3':'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1';
  const kinds=placeSection(vertical)?.kinds??[],example=PRODUCT_EXAMPLE[vertical]??PRODUCT_EXAMPLE.supermercados!;
  return <form method="get" action={action} role="search" aria-label={t('Buscar y filtrar','Search and filter')} className={`space-y-4 text-[#162543] ${panel?'':'rounded-2xl border border-slate-200 bg-white p-4'}`} data-search-filters={vertical}>
+  {/* 2026-11-27: the section chips (cuisine, brand, soda, ATM, CCSS/MEP, reservations) have no field here; kept as they are. */}
+  {sectionExtraFilters(vertical).map(k=>values[k]?<input key={k} type="hidden" name={k} value={values[k]}/>:null)}
   <label className={field}>{t('¿Qué busca?','What are you looking for?')}
    <input type="search" name="q" maxLength={100} defaultValue={values.q??''} className={input} enterKeyHint="search"/></label>
   {(()=>{const fields=<>

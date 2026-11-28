@@ -4,6 +4,7 @@ import type {PublicPriceObservation} from './price-schemas';
 import {matchVerticals,normalizeIntentText,type DirectoryVertical as IntentVertical} from './vertical-vocabulary';
 import {DIRECTORY_VERTICALS} from './types';
 import {NEW_PLACE_SECTIONS,PLACE_SECTIONS,placeSection} from './place-verticals';
+import {EXTRA_FILTER_KEYS,sectionExtraFilters} from './section-filters';
 
 // LOCAL PRO ONLY (multivertical F6). Query validation, cursor codec and result types for dir_search / dir_facets
 // (docs/pro/sql/directory-search-local.sql). Not imported by any route yet: see the F6 wiring notes.
@@ -55,7 +56,10 @@ const flag=z.enum(['1','true','0','false']).transform(v=>v==='1'||v==='true');
 const placeShape={vertical:csv(z.enum(PLACE_VERTICAL_IDS)).optional(),province:area.optional(),canton:area.optional(),district:area.optional(),
  openNow:flag.optional(),open24h:flag.optional(),
  // Subtype of a 2026-11-17 section (attributes.kind); checked against the section's kinds in parseSearchParams.
- kind:csv(z.string().regex(/^[a-z_]{2,30}$/)).optional()};
+ kind:csv(z.string().regex(/^[a-z_]{2,30}$/)).optional(),
+ // 2026-11-27 (migration 546): section filters with data; each section accepts only its own (SECTION_EXTRA_FILTERS).
+ cuisine:csv(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(40)).optional(),brand:csv(z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(40)).optional(),
+ soda:flag.optional(),reservations:flag.optional(),atm:flag.optional(),public:flag.optional()};
 const placeFilters=z.object(placeShape).strict();
 // Whole colones (₡); the SQL compares céntimos (×100) and refuses the same ranges with 22023.
 const placePrice={priceMin:int(0,1e9).optional(),priceMax:int(0,1e9).optional()};
@@ -74,9 +78,14 @@ const propertyFilters=z.object({operation:csv(z.enum(PROPERTY_OPERATIONS)).optio
  .refine(f=>f.priceMin==null||f.priceMax==null||f.priceMin<=f.priceMax,'priceMin>priceMax').refine(f=>f.m2Min==null||f.m2Max==null||f.m2Min<=f.m2Max,'m2Min>m2Max');
 export const FILTER_KEYS={
  places:['vertical','province','canton','district','openNow','open24h'],
- restaurantes:['vertical','province','canton','district','openNow','open24h','priceMin','priceMax'],
+ restaurantes:['vertical','province','canton','district','openNow','open24h','priceMin','priceMax','cuisine','soda','reservations'],
  farmacias:['vertical','province','canton','district','openNow','open24h','product','priceMin','priceMax'],
- supermercados:['vertical','province','canton','district','openNow','open24h','product','priceMin','priceMax'],
+ supermercados:['vertical','province','canton','district','openNow','open24h','product','priceMin','priceMax','brand'],
+ // 2026-11-27 (546): sections with their own extra filters (section-filters.ts).
+ gasolineras:['vertical','province','canton','district','openNow','open24h','brand'],
+ bancos:['vertical','province','canton','district','openNow','open24h','kind','brand','atm'],
+ salud:['vertical','province','canton','district','openNow','open24h','kind','public'],
+ educacion:['vertical','province','canton','district','openNow','open24h','kind','public'],
  // 2026-11-17 sections: + kind; menu sections + price range; product sections + product and price range.
  kindPlaces:['vertical','province','canton','district','openNow','open24h','kind'],
  cafes:['vertical','province','canton','district','openNow','open24h','kind','priceMin','priceMax'],
@@ -135,6 +144,9 @@ export function parseSearchParams(params:URLSearchParams,{facets=false}:{facets?
  }
  const kinds=(filters.data as {kind?:string[]}).kind;
  if(kinds){const allowed=placeSection(vertical)?.kinds.map(x=>x.value)??[];if(!kinds.every(x=>allowed.includes(x)))return {ok:false,reason:'invalid',field:'kind'};}
+ const extra=sectionExtraFilters(vertical);
+ const foreign=EXTRA_FILTER_KEYS.find(k=>k in (filters.data as object)&&!extra.includes(k));
+ if(foreign)return {ok:false,reason:'invalid',field:foreign};
  let cursor:SearchCursor|null=null;
  if(!facets&&b.cursor){cursor=decodeCursor(b.cursor);if(!cursor||cursor.sort!==sort)return {ok:false,reason:'cursor'};}
  const clean=Object.fromEntries(Object.entries(filters.data).filter(([,v])=>v!==undefined));

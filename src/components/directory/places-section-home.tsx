@@ -18,6 +18,8 @@ import {placeCardExtras} from '@/lib/directory/card-extras';
 import {SearchFilters,sortLabel} from './search-filters';
 import {DIRECTORY_SECTION_LABELS} from '@/lib/search/directory-search';
 import {PlacesFilterChips,PlacesFiltersDrawer,type ChipMenu,type ChipToggle} from './places-search-controls';
+import {CUISINE_LABELS,MIN_VALUE_PLACES,openNowUseful,sectionExtraFilters} from '@/lib/directory/section-filters';
+import {loadSectionFilterStats} from '@/lib/directory/section-filters-server';
 
 /**
  * LOCAL PRO ONLY (multivertical F6): landing of a places section (/restaurantes, /farmacias, /supermercados,
@@ -93,13 +95,37 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
  ];
  const on=(k:string)=>values[k]==='1'||values[k]==='true';
  const facets=page.ok?page.facets:null;
+ // 2026-11-27 (owner «aplica tus recomendaciones», migration 546): section chips with data only. Value lists come from
+ // the section's places (count order, ≥ MIN_VALUE_PLACES each); «Abierto ahora» only where enough places have hours.
+ const extra=sectionExtraFilters(section),stats=await loadSectionFilterStats(section);
+ const listMenu=(key:'cuisine'|'brand',label:string,all:string,list:{value:string;label:string;count:number}[]):ChipMenu|null=>{
+  const current=values[key],shown=list.filter(x=>x.count>=MIN_VALUE_PLACES||x.value===current);
+  if(!shown.length&&!current)return null;
+  if(current&&!shown.some(x=>x.value===current))shown.push({value:current,label:current,count:0});
+  return {key,label:shown.find(x=>x.value===current)?.label??label,active:!!current,
+   options:[{value:`${key}-all`,label:all,href:link({[key]:undefined}),current:!current},...shown.map(x=>({value:`${key}-${x.value}`,label:x.label,href:link({[key]:x.value}),current:x.value===current}))]};
+ };
+ const extraMenus:ChipMenu[]=[];
+ if(extra.includes('cuisine')){const m=listMenu('cuisine',t('Tipo de comida','Cuisine'),t('Todos los tipos de comida','All cuisines'),
+  (stats?.cuisines??[]).flatMap(x=>CUISINE_LABELS[x.value]?[{...x,label:CUISINE_LABELS[x.value][en?'en':'es']}]:[]));if(m)extraMenus.push(m);}
+ if(extra.includes('brand')){
+  const [label,all]=section==='bancos'?[t('Banco','Bank'),t('Todos los bancos','All banks')]:section==='supermercados'?[t('Cadena','Chain'),t('Todas las cadenas','All chains')]:[t('Marca','Brand'),t('Todas las marcas','All brands')];
+  const m=listMenu('brand',label,all,stats?.brands??[]);if(m)extraMenus.push(m);}
+ menus.splice(2,0,...extraMenus);// after Ordenar and Provincia, before Tipo
+ const flag=(key:'soda'|'reservations'|'atm'|'public',label:string,count:number,min=MIN_VALUE_PLACES):ChipToggle[]=>
+  extra.includes(key)&&(count>=min||on(key))?[{key,label,href:link({[key]:on(key)?undefined:'1'}),active:on(key)}]:[];
  const toggles:ChipToggle[]=[
   // «Cerca de mí» left the chips (owner 2026-11-26): it lives in the search's location field; «Más cercanos» stays in Ordenar.
-  {key:'open-now',label:t('Abierto ahora','Open now'),href:link({openNow:on('openNow')?undefined:'1'}),active:on('openNow')},
+  // «Abierto ahora» (2026-11-27): only where the hours are known for enough places (openNowUseful), or when it is on.
+  ...(openNowUseful(stats)||on('openNow')?[{key:'open-now',label:t('Abierto ahora','Open now'),href:link({openNow:on('openNow')?undefined:'1'}),active:on('openNow')}]:[]),
   // «24 horas» left the chips (owner 2026-11-26): «Abierto ahora» already covers it.
+  ...flag('soda',t('Sodas','Sodas'),stats?.soda??0),
+  ...flag('reservations',t('Acepta reservas','Takes reservations'),stats?.reservations??0,1),
+  ...flag('atm',t('Con cajero','With ATM'),stats?.atm??0),
+  ...flag('public',section==='educacion'?t('Pública (MEP)','Public (MEP)'):t('CCSS','CCSS (public)'),stats?.public??0),
  ];
  // The map's floating pill is «Abierto ahora» (not the first chip: «Cerca de mí» needs the position flow of the chip row).
- const openNowToggle=toggles.find(x=>x.key==='open-now')!;
+ const openNowToggle=toggles.find(x=>x.key==='open-now');
  // «Cafés y bares» is shown as two tiles (owner 2026-11-26): with the kind filter the title says which one.
  const kindsOn=String(values.kind??'').split(',');
  const cafesTitle=section==='cafes'?(kindsOn.some(k=>k==='bar'||k==='pub')&&!kindsOn.includes('cafe')?t('Bares','Bars'):kindsOn.includes('cafe')?t('Cafeterías','Cafés'):null):null;
@@ -136,7 +162,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
   {/* No «Ver también profesionales de este rubro» link (owner 2026-11-27). */}
   <main id="contenido" className="flex-1 bg-white">
    <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
-    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&MAP_FIRST_SECTIONS.has(section)} floatingFilters={<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
+    <SearchResultsLayout locale={locale} filters={null} map={map} countLabel={count??undefined} mapaPrimero={points.length>0&&MAP_FIRST_SECTIONS.has(section)} floatingFilters={openNowToggle&&<a href={openNowToggle.href} data-chip="open-now" aria-pressed={openNowToggle.active} className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-bold shadow-sm ${openNowToggle.active?"border-[#009FD9] bg-[#009FD9] text-white":"border-[#d7dde3] bg-white text-[#162543]"}`}>{openNowToggle.active&&<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true"/>}{openNowToggle.label}</a>}
      limpiar={clear} resetKey={JSON.stringify(values)} sinResultados={items.length===0}
      quickFilters={<><h1 className="sr-only">{c.title[i]}</h1>{chips('sheet')}</>}>
      <div className="min-w-0 space-y-0 lg:space-y-3 lg:pb-6" data-search-results={section}>
@@ -152,6 +178,7 @@ export async function PlacesSectionHome({section,locale,page,basePath,banner}:{s
         ?<div role="status" className="my-3 rounded-2xl border border-[#e5e7eb] bg-white px-6 py-10 text-center text-[#162543] lg:my-0">
           <p className="text-base font-bold">{t('No encontramos resultados con estos filtros.','No results with these filters.')}</p>
           <p className="mt-1 text-sm text-[#526277]">{t('Pruebe con menos filtros u otra zona.','Try fewer filters or another area.')}</p>
+          {on('openNow')&&activeFilters>1&&<a href={link({openNow:undefined})} data-empty-remove="open-now" className="mt-4 mr-2 inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-6 text-sm font-bold text-[#162543] hover:border-[#009FD9]">{t('Quitar "Abierto ahora"','Remove "Open now"')}</a>}
           {activeFilters>0&&<a href={clear!.href} className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white hover:bg-[#0089bb]">{t('Limpiar filtros','Clear filters')}</a>}
          </div>
         :<ol className="ccr-search-results-list -mx-4 flex w-[calc(100%+2rem)] min-w-0 flex-col gap-1.5 bg-white lg:mx-0 lg:w-full lg:gap-3 lg:bg-transparent" aria-label={t('Resultados','Results')}>
