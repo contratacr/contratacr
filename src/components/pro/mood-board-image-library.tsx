@@ -61,7 +61,7 @@ export function MoodImageLibrary({accountId,disabled,onPick}:{accountId:string;d
    <img src={'/api/pro/company-files?'+new URLSearchParams({view:'binary',fileId:file.id})} alt="" loading="lazy" className="aspect-square w-full object-cover"/></button></li>)}</ul>}
   {source==='catalog'&&catalog&&catalog.length>0&&<ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">{catalog.map(item=><li key={item.productId}><button type="button" disabled={disabled||busyId!==null} data-mood-library-image={item.productId} aria-label={t('Usar la foto de ','Use the photo of ')+item.name} onClick={()=>void pick(item.productId,'/api/pro/catalog-details?'+new URLSearchParams({view:'image',productId:item.productId}),item.name+'.jpg')} className={cell}>
    {/* eslint-disable-next-line @next/next/no-img-element -- private catalog image reauthorized on every request */}
-   <img src={'/api/pro/catalog-details?'+new URLSearchParams({view:'image',productId:item.productId})} alt="" loading="lazy" className="aspect-square w-full object-cover"/><span className="block truncate px-1 text-xs">{item.name}</span></button></li>)}</ul>}
+   <img src={'/api/pro/catalog-details?'+new URLSearchParams({view:'image',productId:item.productId})} alt="" loading="lazy" className="aspect-square w-full object-cover"/><span className="block break-words px-1 text-xs">{item.name}</span></button></li>)}</ul>}
   {source==='company'&&cursor&&<button type="button" className="min-h-11 text-sm font-semibold text-[#008bb5] underline" disabled={busyId!==null} onClick={()=>void loadCompany(cursor)}>{t('Cargar más imágenes','Load more images')}</button>}
   {busyId&&<p role="status" className="text-xs text-[#52627a]">{t('Copiando la imagen…','Copying the image…')}</p>}
  </div>;
