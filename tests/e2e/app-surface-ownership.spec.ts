@@ -350,6 +350,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/pro\/task-center-detail$/, owner: "pro-task-center-detail-api.spec.ts" },
   { match: /^\/api\/pro\/work-calendar$/, owner: "pro-work-calendar.spec.ts" },
   { match: /^\/api\/pro\/person-workdays$/, owner: "pro-person-workdays.spec.ts" },
+  { match: /^\/api\/pro\/schedule-templates-apply$/, owner: "pro-schedule-template-assignees.spec.ts" },
   { match: /^\/api\/pro\/(?:client-project-overview|getting-started)$/, owner: "pro-round12-features.spec.ts" },
   // Round 13 (rows 68 and 74): portfolio publication and profile metrics; training progress and Pro support.
   { match: /^\/api\/pro\/company-portfolio$/, owner: "pro-round13-portfolio.spec.ts" },
