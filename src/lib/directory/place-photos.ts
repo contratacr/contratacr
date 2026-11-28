@@ -25,10 +25,31 @@ export const placePhotoId=(url:string)=>OWN.exec(url)?.[1]??null;
 /** Same-origin src for a stored URL at a size; seed URLs pass through. */
 export const placePhotoSrc=(url:string,size:320|800|1600=800)=>{const id=placePhotoId(url);return id?`/api/fotos-lugar/${id}?s=${size}`:url;};
 
+/** 547 (2026-11-27, Google Maps / Yelp model): what an uploaded photo shows. Stored per photo; the Fotos tab filters by
+ *  it and the customers' menu photos feed the «Menú» tab of a restaurant/café without a typed menu. */
+export const PHOTO_CATEGORIES=['menu','food','interior','exterior','other'] as const;
+export type PhotoCategory=typeof PHOTO_CATEGORIES[number];
+/** Sections whose photos can show a menu (restaurants, sodas, cafés, bakeries, bars). */
+export const MENU_PHOTO_VERTICALS=['restaurant','cafe_bar'] as const;
+export const menuPhotosFor=(vertical:string)=>(MENU_PHOTO_VERTICALS as readonly string[]).includes(vertical);
+/** Categories offered for a section, in display order (no «Menú» outside food places). */
+export const photoCategoriesFor=(vertical:string):PhotoCategory[]=>menuPhotosFor(vertical)?['menu','food','interior','exterior','other']:['food','interior','exterior','other'];
+/** Label of a category for a section: «Comida y bebida» in food places, «Productos y servicio» elsewhere. */
+export function photoCategoryLabel(c:PhotoCategory,vertical:string,en:boolean):string{
+ const food=menuPhotosFor(vertical);
+ switch(c){
+  case 'menu':return en?'Menu':'Menú';
+  case 'food':return food?(en?'Food and drinks':'Comida y bebida'):(en?'Products and service':'Productos y servicio');
+  case 'interior':return en?'Inside':'Interior';
+  case 'exterior':return en?'Outside':'Exterior';
+  default:return en?'Other':'Otro';
+ }
+}
 export const placePhotoFieldsSchema=z.object({
  uploadId:z.string().uuid(),
  caption:z.string().max(200).optional(),
  review:z.enum(['0','1']).optional(),
+ category:z.enum(PHOTO_CATEGORIES).optional(),
 }).strict();
 export const placePhotoRemoveSchema=z.object({action:z.literal('remove'),actionId:z.string().uuid(),mediaId:z.string().uuid()}).strict();
 export const PHOTO_FLAG_REASONS=['not_this_place','offensive','private_info','copyright','spam','other'] as const;

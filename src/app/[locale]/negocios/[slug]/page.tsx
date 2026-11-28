@@ -34,6 +34,8 @@ import {PlaceReservation} from '@/components/directory/place-reservation';
 import {PlaceEvents} from '@/components/directory/place-events';
 import {SaveToList} from '@/components/directory/save-to-list';
 import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
+import type {PhotoCategory} from '@/lib/directory/place-photos';
+import {menuSectionOf} from '@/lib/directory/place-menu-link';
 import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
@@ -74,6 +76,17 @@ async function reviewDistribution(db:ReturnType<typeof createAdminClient>,placeI
  const bands:[number,number][]=[[0,1.5],[1.5,2.5],[2.5,3.5],[3.5,4.5],[4.5,6]];
  const counts=await Promise.all(bands.map(([lo,hi])=>db.from('dir_reviews').select('id',{count:'exact',head:true}).eq('place_id',placeId).eq('moderation_status','published').gte('rating',lo).lt('rating',hi)));
  return counts.some(c=>c.error)?null:counts.map(c=>c.count??0);
+}
+/** 547: per approved uploaded photo URL, what it shows and who added it: «Foto de <nombre>» with the same profile name the
+ *  person's reviews show; «Foto del negocio» for the owner's. Uploader ids never leave the server. */
+async function placePhotoMeta(db:ReturnType<typeof createAdminClient>,placeId:string){
+ const rows=await db.from('dir_place_media').select('url,category,origin,uploader_id').eq('place_id',placeId).eq('kind','photo').eq('status','active').neq('origin','seed').limit(200);
+ if(rows.error||!rows.data?.length)return undefined;
+ const ids=[...new Set(rows.data.filter(r=>r.origin==='user'&&r.uploader_id).map(r=>r.uploader_id as string))];
+ const names=ids.length?await db.from('profiles').select('id,full_name').in('id',ids):null;
+ const nameOf=new Map((names?.data??[]).map(p=>[p.id as string,((p.full_name as string|null)??'').trim()]));
+ return Object.fromEntries(rows.data.map(r=>[r.url as string,{category:(r.category as PhotoCategory|null)??null,owner:r.origin==='owner',
+  by:r.origin==='user'?nameOf.get(r.uploader_id as string)||null:null}]));
 }
 async function load(slug:string){
  if(!placeSlugSchema.safeParse(slug).success)return null;
@@ -145,6 +158,8 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const branchExtras=cardExtras;
  // «Vista de la calle» (Mapillary, CC BY-SA 4.0): only when the place has no photo of its own (dir_place_street_view, 543).
  const placeId=claim.data?.id as string|undefined;
+ const photoMeta=placeId?await placePhotoMeta(db,placeId):undefined;
+ const photoVertical=menuSectionOf(vertical,place.attributes.kind)??vertical;
  const ownStreetView=!placeId||place.media.some(m=>m.kind==='photo')?null:(await placeStreetViews([placeId],db)).get(placeId)??null;
  // Spread on purpose: PlacePage renders slots.streetView once place-page.tsx declares it (until then it is ignored).
  const streetViewSlot=ownStreetView?{streetView:<PlaceStreetView view={ownStreetView} en={en} placeName={place.name}/>}:{};
@@ -164,8 +179,8 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // on the server (header pixel-stable on reload, 2026-11-27); SectionHeaderTitle keeps the back and «…» wiring.
  const barTitle=en?place.vertical.nameEn:place.vertical.nameEs;
  return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/negocios/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
-  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP}/>:null}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} photoMeta={photoMeta} menuManageHref={managesHere?(vertical==='restaurant'||vertical==='cafe_bar'?`${prefix}/dashboard/negocio/menu?lugar=${slug}`:`${prefix}/dashboard/negocio`):null} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
+  photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP} vertical={photoVertical}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{
    ...streetViewSlot,
@@ -184,7 +199,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    </>:null,
    events:upcoming.length?<PlaceEvents events={upcoming} locale={locale}/>:null,
    // Q&A is not rendered on the place page (6ac114902), so its data is not fetched; the API and component stay.
-   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
+   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} vertical={photoVertical} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
    similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null,streetView:cardExtras[item.slug]?.streetView??null}))}
     title={loc?(en?'Similar businesses nearby':'Negocios similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}

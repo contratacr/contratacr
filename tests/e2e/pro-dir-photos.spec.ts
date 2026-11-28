@@ -18,8 +18,10 @@ async function upload(page:Page,file:{name:string;buffer:Buffer},caption?:string
  // Phones (owner 2026-11-27): «Agregar fotos» is an option of the bar's «…» sheet (MenuFicha); from lg it sits in the chip row.
  if((page.viewportSize()?.width??1280)<1024)await expect(async()=>{await page.locator('[data-ccr-section-menu]').filter({visible:true}).first().click();
   await page.locator('[data-menu-ficha]').filter({visible:true}).getByRole('menuitem',{name:'Agregar fotos'}).click({timeout:1500});await expect(page.locator('[data-place-photo-panel]')).toBeVisible({timeout:1500});}).toPass({timeout:20000});
- else await page.locator('[data-place-photo-open][data-ready]').filter({visible:true}).click();
- const panel=page.locator('[data-place-photo-panel]');
+ else await page.locator('[data-place-photo-open][data-ready]').filter({visible:true}).first().click();
+ const panel=page.locator('[data-place-photo-panel]').filter({visible:true});
+ // 547: the panel asks what the photo shows (restaurant: Menú, Comida y bebida, Interior, Exterior, Otro).
+ if(await panel.locator('[data-place-photo-category]').count())await panel.locator('label:has([data-place-photo-category-option="interior"])').click();
  await expect(panel.locator('[data-photo-choose]')).toHaveText('Elegir fotos');
  await panel.locator('[data-photo-input]').setInputFiles({name:file.name,mimeType:'image/jpeg',buffer:file.buffer});
  await expect(panel).toContainText('1 foto elegida');

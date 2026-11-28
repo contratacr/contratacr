@@ -17,7 +17,7 @@ const SAVE_OPEN='ccr:place-save-open',PHOTO_OPEN='ccr:place-photo-open';
  * sheet, photo panel — owner/team photos publish at once, anyone else's wait for review); without an account they go to
  * the login first. Sugerir un cambio and Reportar open the page's report form (#reportar).
  */
-export function PlaceFichaMenu({slug,name,locale,signedIn,loginHref,isManager}:{slug:string;name:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean}){
+export function PlaceFichaMenu({slug,name,locale,signedIn,loginHref,isManager,vertical}:{slug:string;vertical?:string;name:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const tMenu=useTranslations('menuFicha');
  const [open,setOpen]=useState(false),[saved,setSaved]=useState(false);
@@ -44,7 +44,7 @@ export function PlaceFichaMenu({slug,name,locale,signedIn,loginHref,isManager}:{
   <MenuFicha controlado={{abierto:open,onCambio:setOpen}} opciones={opciones}/>
   {/* The flows the sheet opens (no buttons of their own here; the chip row has them from lg). */}
   {signedIn&&<SaveToList slug={slug} locale={locale} signedIn loginHref={loginHref} hideButton openOn={SAVE_OPEN}/>}
-  {signedIn&&<PlacePhotoUpload slug={slug} locale={locale} signedIn loginHref={loginHref} isManager={isManager} popover hideButton openOn={PHOTO_OPEN}/>}
+  {signedIn&&<PlacePhotoUpload slug={slug} locale={locale} signedIn loginHref={loginHref} isManager={isManager} popover hideButton openOn={PHOTO_OPEN} vertical={vertical}/>}
   {avisoNodo}
  </div>;
 }

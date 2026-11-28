@@ -24,7 +24,7 @@ export async function placeCardExtras(slugs:string[]):Promise<Record<string,Card
   if(places.error||!places.data?.length)return out;
   const bySlug=new Map(places.data.map(p=>[p.id as string,p.slug as string]));const ids=[...bySlug.keys()];
   const [media,reviews,hours,reservations,orders,streets]=await Promise.all([
-   db.from('dir_place_media').select('place_id,url,sort,created_at').in('place_id',ids).eq('kind','photo').eq('status','active').neq('origin','seed')
+   db.from('dir_place_media').select('place_id,url,sort,created_at,category').in('place_id',ids).eq('kind','photo').eq('status','active').neq('origin','seed')
     .order('sort',{ascending:true}).order('created_at',{ascending:false}).limit(ids.length*MAX_PHOTOS),
    db.from('dir_reviews').select('place_id,comment,created_at').in('place_id',ids).eq('moderation_status','published')
     .order('created_at',{ascending:false}).limit(ids.length*3),
@@ -38,7 +38,9 @@ export async function placeCardExtras(slugs:string[]):Promise<Record<string,Card
   for(const h of hours.data??[]){const s=bySlug.get(h.place_id as string);if(!s)continue;const e=ensure(s);(e.hours??=[]).push({weekday:Number(h.weekday),opens:String(h.opens).slice(0,5),closes:String(h.closes).slice(0,5)});}
   for(const r of reservations.data??[]){const s=bySlug.get(r.place_id as string);if(s)ensure(s).reservation=true;}
   for(const o of orders.data??[]){const s=bySlug.get(o.place_id as string);if(s)ensure(s).whatsapp=String(o.value);}
-  for(const m of media.data??[]){const s=bySlug.get(m.place_id as string);if(!s)continue;out[s]??={photo:null,photos:[],snippet:null};if(out[s].photos.length>=MAX_PHOTOS)continue;out[s].photos.push(String(m.url));out[s].photo??=String(m.url);}
+  // 547: a customer's menu photo goes after the place's other photos, so it is the cover only when nothing else exists.
+  const ordered=(media.data??[]).map((m,i)=>({m,i})).sort((a,b)=>Number(a.m.category==='menu')-Number(b.m.category==='menu')||a.i-b.i).map(x=>x.m);
+  for(const m of ordered){const s=bySlug.get(m.place_id as string);if(!s)continue;out[s]??={photo:null,photos:[],snippet:null};if(out[s].photos.length>=MAX_PHOTOS)continue;out[s].photos.push(String(m.url));out[s].photo??=String(m.url);}
   for(const r of reviews.data??[]){const s=bySlug.get(r.place_id as string);if(!s)continue;out[s]??={photo:null,photos:[],snippet:null};out[s].snippet??=String(r.comment);}
   for(const [id,v] of streets){const s=bySlug.get(id);if(!s)continue;const e=ensure(s);if(!e.photos.length)e.streetView=v;}
  }catch{/* extras are optional */}

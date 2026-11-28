@@ -60,3 +60,17 @@ node scripts/directory/mapillary-streetview.mjs --vertical health --limit 50 --s
 ```
 
 Test y producción: solo con autorización de Isaac. Aplicar la migración 543, agregar el secreto `MAPILLARY_CLIENT_TOKEN` al Worker y correr el script con las variables del proyecto y `--remote-ok`. Para unos 16 500 lugares de las cinco secciones prioritarias son de 1 a 2 horas.
+
+## Fotos de clientes: categorías, menú y protección (2026-11-27, migración 547)
+
+- **Categoría** por foto (`dir_place_media.category`: `menu`, `food`, `interior`, `exterior`, `other`, o nula). El panel «Agregar fotos» la pide; "Menú" se ofrece solo en lugares de comida (`menuSectionOf` en `src/lib/directory/place-menu-link.ts`: restaurantes, cafés y bares, y panaderías, heladerías, cafeterías y delis de `food_shop`). La pestaña Fotos filtra por categoría. Las fotos de menú aprobadas forman "Menú (fotos de clientes)" en la pestaña Menú y nunca son portada si hay otra foto.
+- **Crédito**: "Foto de <nombre del perfil>" (el mismo nombre de las reseñas; el id del autor nunca sale del servidor) y "Foto del negocio" para las del dueño.
+- **"Ver menú" externo**: solo se muestra mientras ContrataCR no tiene menú del lugar. Es solo un enlace (`rel="noopener noreferrer nofollow"`). El orden de fuentes es `attributes.menuUrl` (etiquetas OSM `website:menu`, `menu:url`, `contact:menu`, `menu`; script `scripts/directory/backfill-menu-links.mjs`, dry run por defecto), sitio web, Instagram, Facebook y búsqueda de Google Maps.
+- **Contra copias**:
+  - Solo se guardan derivados de 1600/800/320 px reencodificados sin EXIF/GPS (el pipeline rechaza cualquier metadato). El original nunca se guarda.
+  - El bucket de Supabase es privado. R2 se usa solo por binding y sin URL pública `r2.dev`.
+  - Las fotos se sirven solo por `/api/fotos-lugar/<uuid>`, con id no adivinable.
+  - Esa ruta responde 403 (`no-store`) a un Referer de otro sitio. Sin Referer (rastreadores de og:image, correo, app) o desde nuestro dominio responde 200.
+  - No hay ningún endpoint que liste todas las fotos.
+  - No se incrusta una marca IPTC: el pipeline rechaza a propósito todo metadato y añadirla exigiría reencodificar en el servidor.
+  - Recomendado en Cloudflare (lo activa Isaac): Hotlink Protection, Bot Fight Mode o Super Bot Fight Mode y una regla WAF de límite por IP en `/api/fotos-lugar/*`. Además, la caché pública de 5 min del CDN puede servir una copia ya guardada sin volver a mirar el Referer, y Hotlink Protection cubre ese caso.

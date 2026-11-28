@@ -12,7 +12,7 @@ import {PLACE_PHOTO_BUCKET,placePhotoFieldsSchema,placePhotoRemoveSchema} from '
 import {addPlacePhoto,placePhotoActor} from '@/lib/directory/place-photo-add';
 
 // LOCAL (launch round 2026-11-18): photos of a directory place.
-//  POST multipart {file, uploadId, caption?, review?=1} → photo-pipeline (magic bytes JPEG/PNG/WebP — HEIC arrives as JPEG
+//  POST multipart {file, uploadId, caption?, review?=1, category? (547: menu|food|interior|exterior|other)} → photo-pipeline (magic bytes JPEG/PNG/WebP — HEIC arrives as JPEG
 //       from the browser —, 20 MiB, 24 MP, re-encode 1600/800/320 WebP without EXIF/GPS, sha256) → photo store (Worker:
 //       R2 binding PLACE_PHOTOS; elsewhere the private bucket dir-place-photos — place-photo-store.ts) at
 //       dir-places/<photo id>/<size>.webp → dir_place_photo_add (records the store). Manager of the claimed place (or a
@@ -23,7 +23,7 @@ import {addPlacePhoto,placePhotoActor} from '@/lib/directory/place-photo-add';
 // Local runs use the loopback Supabase Storage only (sandbox); nothing is sent to production.
 // v800/v320: the browser-made smaller variants (storage plan 2026-11-26); `file` is then the 1600 variant.
 // The pipeline itself (2026-11-27) lives in src/lib/directory/place-photo-add.ts, shared with the Instagram import.
-const FIELDS=['file','v800','v320','uploadId','caption','review'] as const;
+const FIELDS=['file','v800','v320','uploadId','caption','review','category'] as const;
 export async function POST(req:Request,{params}:{params:Promise<{slug:string}>}){
  const off=dirEnabledOnly();if(off)return off;
  if(!proSameOrigin(req))return dirFail(403,'origin','Origen no autorizado.');
@@ -57,6 +57,6 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  if(!(file instanceof Blob)||!fields.success)return dirFail(400,'invalid','Revise la foto.');
  const upload=new Uint8Array(await file.arrayBuffer()),clientVariants=await clientVariantsOf(form,upload);
  const added=await addPlacePhoto({db,userId:user.id,actor,member,place:{id:place.data.id as string,slug},uploadId:fields.data.uploadId,upload,clientVariants,
-  caption:fields.data.caption,review:fields.data.review==='1',locale});
+  caption:fields.data.caption,review:fields.data.review==='1',category:fields.data.category,locale});
  return added.response;
 }

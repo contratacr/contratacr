@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {useRouter} from 'next/navigation';
 import {Camera} from 'lucide-react';
-import {PhotoPicker,uploadPlacePhotos} from './place-photo-upload';
+import {PhotoPicker,PlacePhotoUpload,uploadPlacePhotos} from './place-photo-upload';
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
 import {ReviewCard,ReviewsEmpty,ReviewsSummary} from '@/components/professionals/review-section';
@@ -30,10 +30,10 @@ const REASONS:Record<string,[string,string]>={
 };
 const noSubscribe=()=>()=>{};
 
-export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null,placeName}:{slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null;placeName?:string}){
+export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null,placeName,vertical}:{/** 547: section of the place (photo categories of the «¿Tiene fotos?» prompt). */vertical?:string;slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null;placeName?:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const router=useRouter();
- const [photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null),[rights,setRights]=useState(false);
+ const [askPhotos,setAskPhotos]=useState(false),[photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null),[rights,setRights]=useState(false);
  const sectionRef=useRef<HTMLElement>(null),action=useRef('');
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  // «Reseñar» (#escribir-resena, bottom bar) brings the write card into view.
@@ -52,6 +52,8 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    const data=await r.json().catch(()=>({})) as {reason?:string;error?:string};
    action.current=crypto.randomUUID();
    if(r.ok){
+    // 547 (Google Maps model): a review posted without photos is followed by «¿Tiene fotos? Agréguelas».
+    if(signedIn&&!photos.length)setAskPhotos(true);
     // Photos of the review (launch round 2026-11-18): uploaded after the review exists; they wait for staff approval.
     if(signedIn&&photos.length){const up=await uploadPlacePhotos(slug,photos,{review:true,en});setPhotos([]);setRights(false);
      if(up.pending>0)setPhotoNote(t(`${up.pending===1?'Su foto quedó pendiente':`Sus ${up.pending} fotos quedaron pendientes`} de revisión.`,`${up.pending===1?'Your photo is':`Your ${up.pending} photos are`} awaiting review.`));}
@@ -80,6 +82,10 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
        <span>{t('Confirmo que tomé estas fotos o tengo permiso para publicarlas. No son de Google Maps, redes sociales ni otros sitios.','I confirm I took these photos or have permission to publish them. They are not from Google Maps, social networks or other sites.')}</span></label>}
       <p className="text-xs text-[#68778d]">{t('Se revisan antes de publicarse.','They are reviewed before they are published.')}</p></div>:null}/>
     {photoNote&&<p role="status" className="mt-2 text-sm text-[#526277]" data-place-review-photos-pending>{photoNote}</p>}
+    {askPhotos&&<div className="mt-3 space-y-2 rounded-2xl bg-[#f3f9fc] p-4 text-sm" data-place-review-ask-photos>
+     <p className="flex items-start gap-2 font-semibold text-[#162543]"><Camera aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#0083b0]"/>{t('Gracias por su reseña. ¿Tiene fotos? Agréguelas','Thank you for your review. Do you have photos? Add them')}</p>
+     <p className="text-[#526277]">{t('Sus fotos del lugar ayudan a otras personas a decidir. Se revisan antes de publicarse.','Your photos of the place help other people decide. They are reviewed before they are published.')}</p>
+     <PlacePhotoUpload slug={slug} locale={locale} signedIn loginHref={null} isManager={false} vertical={vertical}/></div>}
    </div>}
   </div>
   {/* Flat list with thin dividers (owner 2026-11-27, «en plano y con divisiones»): the production professional profile's

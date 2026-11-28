@@ -2,6 +2,22 @@ import { LEGAL_DATE } from "@/lib/privacy/legal-version";
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 import { imagenSocial } from "@/lib/seo/imagen-social";
+import { DIR_ENABLED } from "@/lib/directory/feature-flags";
+
+// Owner 2026-11-27 («que nadie pueda robar fotos de nuestra app»): with the directory on, section 10 also covers the
+// photos and reviews people add to businesses and forbids copying or scraping them. Off: the production text, unchanged.
+const ES_DIR_CONTENT: LegalSection["body"] = [
+  { k: "p", text: "Las fotos y reseñas que usted agrega a la ficha de un negocio siguen siendo suyas. Al publicarlas, usted confirma que las tomó o que tiene permiso para publicarlas, y concede a ContrataCR la licencia descrita arriba para mostrarlas en la Plataforma, junto con su nombre de perfil. No suba fotos copiadas de Google Maps, redes sociales u otros sitios." },
+  { k: "p", text: "**No se permite copiar, descargar de forma masiva, extraer con programas automáticos (scraping) ni reutilizar en otros sitios o aplicaciones** las fotos, reseñas, fichas y demás contenido de ContrataCR sin permiso escrito de ContrataCR y de quien lo publicó. Compartir el enlace de una ficha sí está permitido." },
+  { k: "p", text: "**Reportar uso indebido:** si encuentra una foto o un contenido suyo publicado sin permiso en ContrataCR, o contenido de ContrataCR copiado en otro sitio, use \"Reportar foto\" en la foto o escriba a **soporte@contratacr.com** con el enlace. Lo revisaremos y, si corresponde, retiraremos el contenido." },
+];
+const EN_DIR_CONTENT: LegalSection["body"] = [
+  { k: "p", text: "Photos and reviews you add to a business page remain yours. By publishing them you confirm that you took them or have permission to publish them, and you grant ContrataCR the license described above to show them on the Platform together with your profile name. Do not upload photos copied from Google Maps, social networks or other sites." },
+  { k: "p", text: "**Copying, bulk downloading, automated extraction (scraping) or reuse on other sites or apps** of ContrataCR's photos, reviews, business pages and other content is not allowed without written permission from ContrataCR and from whoever published it. Sharing a link to a page is allowed." },
+  { k: "p", text: "**Report misuse:** if you find a photo or content of yours published on ContrataCR without permission, or ContrataCR content copied to another site, use \"Report photo\" on the photo or write to **soporte@contratacr.com** with the link. We will review it and remove the content where appropriate." },
+];
+const withDirContent = (sections: LegalSection[], id: string, extra: LegalSection["body"]) =>
+  DIR_ENABLED ? sections.map((s) => (s.id === id ? { ...s, body: [...s.body, ...extra] } : s)) : sections;
 
 const ES_SECTIONS: LegalSection[] = [
   {
@@ -704,7 +720,7 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
       summary={en
         ? ["ContrataCR connects Clients and Professionals but does not perform Professional services.", "Hiring terms and payments are agreed directly between Users.", "Users must act lawfully, truthfully, and respectfully.", "Accounts and content may be restricted for fraud, abuse, or legal violations."]
         : ["ContrataCR conecta Clientes y Profesionales, pero no realiza los servicios profesionales.", "La contratación y los pagos se acuerdan directamente entre Usuarios.", "Los Usuarios deben actuar de forma legal, veraz y respetuosa.", "Las cuentas y el contenido pueden limitarse ante fraude, abuso o incumplimientos."]}
-      sections={en ? EN_SECTIONS : ES_SECTIONS}
+      sections={en ? withDirContent(EN_SECTIONS, "content", EN_DIR_CONTENT) : withDirContent(ES_SECTIONS, "contenido", ES_DIR_CONTENT)}
       footer={en ? (
         <>Review our <Link href="/privacidad" className="font-semibold text-[#0089BB] hover:underline">Privacy Policy</Link>.</>
       ) : (

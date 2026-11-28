@@ -18,9 +18,25 @@ import {placePhotoStoreOf} from '@/lib/directory/place-photo-store';
 //  GET ?meta=1 → {attribution} (author, licence, licence URL, source page) of a Commons photo, else null.
 //  POST {flagId, reason, message?} → «Reportar foto» (dir_place_photo_flag_create; device HMAC without an account).
 const idSchema=z.string().uuid();
+/**
+ * Hotlink guard (owner 2026-11-27, «que nadie pueda robar fotos de nuestra app»): another website may not embed our
+ * photos. A request WITH a Referer from a foreign site gets 403 (never cached). Allowed: no Referer at all (direct
+ * loads, link-preview crawlers of WhatsApp/Facebook fetching og:image, e-mail clients, the native app), our own host
+ * (whatever origin serves the page: localhost, test, production) and the native shells' origins.
+ */
+const APP_ORIGINS=new Set(['capacitor://localhost','https://localhost','http://localhost','ionic://localhost']);
+function hotlinked(req:Request):boolean{
+ const ref=req.headers.get('referer');if(!ref)return false;
+ let r:URL;try{r=new URL(ref);}catch{return true;}
+ if(APP_ORIGINS.has(r.origin))return false;
+ const self=new URL(req.url).host,fwd=req.headers.get('x-forwarded-host')??req.headers.get('host');
+ const own=(h:string)=>h===self||h===fwd||h==='contratacr.com'||h.endsWith('.contratacr.com');
+ return !own(r.host);
+}
 export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){
  const off=dirEnabledOnly();if(off)return off;
  const {id}=await params;if(!idSchema.safeParse(id).success)return new Response(null,{status:404});
+ if(hotlinked(req))return new Response(null,{status:403,headers:{'Cache-Control':'no-store','Vary':'Referer'}});
  const s=new URL(req.url).searchParams.get('s'),size=s==='320'||s==='1600'?s:'800';
  const db=createAdminClient();
  let staff=false,o=await db.rpc('dir_place_photo_object',{p_id:id,p_staff:false});

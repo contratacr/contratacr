@@ -7,7 +7,7 @@ import {makePlaceVariants} from '@/lib/client-image-variants';
 import {useRouter} from 'next/navigation';
 import {InstagramImportButton} from '@/components/integrations/instagram-import';
 import {INSTAGRAM_IMPORT_UI_ENABLED} from '@/lib/integrations/instagram/enabled-client';
-import {PLACE_PHOTO_ACCEPT,PLACE_PHOTO_BATCH,checkPhotoPick,photoReasonText} from '@/lib/directory/place-photos';
+import {PLACE_PHOTO_ACCEPT,PLACE_PHOTO_BATCH,checkPhotoPick,photoCategoriesFor,photoCategoryLabel,photoReasonText,type PhotoCategory} from '@/lib/directory/place-photos';
 
 /**
  * Launch round (2026-11-18): «Agregar fotos» of a place and photo picker of the review form.
@@ -18,7 +18,7 @@ import {PLACE_PHOTO_ACCEPT,PLACE_PHOTO_BATCH,checkPhotoPick,photoReasonText} fro
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 export type UploadOutcome={ok:number;pending:number;errors:string[]};
 
-export async function uploadPlacePhotos(slug:string,files:File[],{review=false,caption,en}:{review?:boolean;caption?:string;en:boolean}):Promise<UploadOutcome>{
+export async function uploadPlacePhotos(slug:string,files:File[],{review=false,caption,category,en}:{review?:boolean;caption?:string;category?:PhotoCategory;en:boolean}):Promise<UploadOutcome>{
  const out:UploadOutcome={ok:0,pending:0,errors:[]};
  for(const original of files){
   // Storage plan 2026-11-26: the browser makes the 1600/800/320 variants itself (WebP, or JPEG without a WebP encoder),
@@ -31,7 +31,7 @@ export async function uploadPlacePhotos(slug:string,files:File[],{review=false,c
    try{file=await prepareImageForUpload(original,PUBLIC_IMAGE_OPTIONS);}catch{out.errors.push(`${original.name}: ${photoReasonText('format',en)}`);continue;}
    variants=await makePlaceVariants(file).catch(()=>null);if(variants)file=variants.v1600;
   }
-  const form=new FormData();form.set('file',file);if(variants){form.set('v800',variants.v800);form.set('v320',variants.v320);}form.set('uploadId',crypto.randomUUID());if(caption)form.set('caption',caption);if(review)form.set('review','1');
+  const form=new FormData();form.set('file',file);if(variants){form.set('v800',variants.v800);form.set('v320',variants.v320);}form.set('uploadId',crypto.randomUUID());if(caption)form.set('caption',caption);if(category)form.set('category',category);if(review)form.set('review','1');
   try{
    const r=await fetch(`/api/lugar/${encodeURIComponent(slug)}/fotos`,{method:'POST',body:form,headers:{'accept-language':en?'en':'es'}});
    const j=await r.json().catch(()=>({})) as {reason?:string;error?:string;photo?:{status?:string}};
@@ -56,7 +56,7 @@ export function PhotoPicker({files,onChange,en,label,max=PLACE_PHOTO_BATCH,disab
    <ImagePlus aria-hidden className="h-4 w-4"/>{label??t('Elegir fotos','Choose photos')}</label>
   <p className="text-xs text-slate-600">{files.length===0?t('Ninguna foto elegida. JPG, PNG, WebP o HEIC.','No photo chosen. JPG, PNG, WebP or HEIC.'):t(`${files.length} ${files.length===1?'foto elegida':'fotos elegidas'}`,`${files.length} ${files.length===1?'photo':'photos'} chosen`)}</p>
   {files.length>0&&<ul className="flex flex-wrap gap-2">{files.map((f,i)=><li key={f.name+i} className="inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 py-1 pl-3 pr-1 text-xs">
-   <span className="truncate">{f.name}</span>
+   <span className="min-w-0 [overflow-wrap:anywhere]">{f.name}</span>
    <button type="button" aria-label={t(`Quitar ${f.name}`,`Remove ${f.name}`)} onClick={()=>onChange(files.filter((_,j)=>j!==i))} className={`grid h-7 w-7 place-items-center rounded-full hover:bg-slate-200 ${ring}`}><X aria-hidden className="h-3.5 w-3.5"/></button></li>)}</ul>}
   {warn&&<p role="alert" className="text-xs font-semibold text-red-800">{warn}</p>}
  </div>;
@@ -65,19 +65,23 @@ export function PhotoPicker({files,onChange,en,label,max=PLACE_PHOTO_BATCH,disab
 /** «Agregar fotos» of a place. Owner/team: published at once; others: pending review. `popover` (2026-11-19, action bar
  *  of the Yelp-model header): the button sits in the bar and the panel/result open as a floating card under it. */
 /** `openOn` + `hideButton` (2026-11-27): the place page's «…» sheet on phones opens the same panel through a window event. */
-export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popover=false,buttonClass,openOn,hideButton=false}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean;popover?:boolean;buttonClass?:string;openOn?:string;hideButton?:boolean}){
+/** `vertical` (547, 2026-11-27, Google Maps / Yelp model): the panel asks what the photo shows (Menú only in food places);
+ *  `category` presets it (the empty Menú/Fotos CTAs); `label` renames the open button; the window event may carry
+ *  {category} in its detail. */
+export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popover=false,buttonClass,openOn,hideButton=false,vertical,category:preset,label}:{slug:string;locale:string;signedIn:boolean;loginHref:string|null;isManager:boolean;popover?:boolean;buttonClass?:string;openOn?:string;hideButton?:boolean;vertical?:string;category?:PhotoCategory;label?:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const [open,setOpen]=useState(false),[files,setFiles]=useState<File[]>([]),[caption,setCaption]=useState(''),[busy,setBusy]=useState(false);
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [result,setResult]=useState<UploadOutcome|null>(null);const captionId=useId();
  // Owner 2026-11-27: everyone confirms the photos are theirs or that they have permission (Terms §10) before uploading.
- const [rights,setRights]=useState(false);const panel=useRef<HTMLDivElement>(null);const router=useRouter();
- useEffect(()=>{if(!openOn)return;const on=()=>{setOpen(true);setResult(null);};window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn]);
+ const [rights,setRights]=useState(false);const [category,setCategory]=useState<PhotoCategory|null>(preset??null);
+ const categories=vertical?photoCategoriesFor(vertical):null;const panel=useRef<HTMLDivElement>(null);const router=useRouter();
+ useEffect(()=>{if(!openOn)return;const on=(e:Event)=>{const c=(e as CustomEvent<{category?:PhotoCategory}|null>).detail?.category;if(c)setCategory(c);setOpen(true);setResult(null);};window.addEventListener(openOn,on);return()=>window.removeEventListener(openOn,on);},[openOn]);
  const btn=`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${ring}`;
  const openClass=buttonClass??`${btn} border border-[#162543] text-[#162543] hover:bg-[#F7FAFC]`;
  // Phones: a bottom sheet (the button lives in a sliding chip row that clips anything hanging below it); lg: a card under the button.
  const float=popover?'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-[120] max-h-[80vh] overflow-y-auto bg-white shadow-2xl lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-0 lg:top-full lg:z-30 lg:mt-2 lg:max-h-none lg:w-[26rem] lg:shadow-xl':'';
- if(!signedIn)return <span data-place-photo-add className="inline-flex"><a href={loginHref??'/login'} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</a></span>;
+ if(!signedIn)return <span data-place-photo-add className="inline-flex"><a href={loginHref??'/login'} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{label??t('Agregar fotos','Add photos')}</a></span>;
  let summary:ReactNode=null;
  if(result){
   summary=<div role="status" data-place-photo-result className={`space-y-1 rounded-xl bg-[#F7FAFC] p-3 text-sm`}>
@@ -87,10 +91,15 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
   </div>;
  }
  return <div className={popover?'relative inline-flex':'space-y-3'} data-place-photo-add>
-  {!hideButton&&(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{t('Agregar fotos','Add photos')}</button>}
+  {!hideButton&&(!open||popover)&&<button type="button" data-place-photo-open data-ready={ready||undefined} aria-expanded={popover?open:undefined} onClick={()=>{setOpen(popover?!open:true);setResult(null);}} className={openClass}><ImagePlus aria-hidden className="h-4 w-4"/>{label??t('Agregar fotos','Add photos')}</button>}
   {open&&<div ref={panel} className={`space-y-3 rounded-2xl border border-[#d7e1ea] p-4 ${float}`} data-place-photo-panel>
    <p className="text-sm text-slate-700">{isManager?t('Como administrador de la empresa, sus fotos se publican de inmediato. Cualquier persona puede reportarlas.','As the business manager, your photos are published right away. Anyone can report them.')
     :t('Sus fotos se revisan antes de publicarse. Suba solo fotos tomadas por usted, sin personas reconocibles ni datos privados.','Your photos are reviewed before they are published. Only upload photos you took, without recognisable people or private data.')}</p>
+   {categories&&<fieldset className="space-y-2" data-place-photo-category>
+    <legend className="text-sm font-semibold text-[#162543]">{t('¿Qué muestra la foto?','What does the photo show?')}</legend>
+    <div className="flex flex-wrap gap-2">{categories.map(c=><label key={c} className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 text-sm font-semibold has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#009FD9] ${category===c?'border-[#162543] bg-[#162543] text-white':'border-[#d7e1ea] bg-white text-[#162543]'}`}>
+     <input type="radio" name={`${captionId}-cat`} value={c} checked={category===c} onChange={()=>setCategory(c)} disabled={busy} className="sr-only" data-place-photo-category-option={c}/>{photoCategoryLabel(c,vertical!,en)}</label>)}</div>
+   </fieldset>}
    <PhotoPicker files={files} onChange={setFiles} en={en} disabled={busy}/>
    {/* 2026-11-27: managers can also bring photos from the business's own Instagram (docs/instagram-import.md). */}
    {isManager&&INSTAGRAM_IMPORT_UI_ENABLED&&<InstagramImportButton target="place" slug={slug} locale={locale} disabled={busy} onImported={()=>router.refresh()}/>}
@@ -101,8 +110,8 @@ export function PlacePhotoUpload({slug,locale,signedIn,loginHref,isManager,popov
     <span>{t('Confirmo que tomé estas fotos o tengo permiso para publicarlas. No son de Google Maps, redes sociales ni otros sitios.','I confirm I took these photos or have permission to publish them. They are not from Google Maps, social networks or other sites.')}</span>
    </label>
    <div className="flex flex-wrap gap-2">
-    <button type="button" data-place-photo-submit disabled={busy||files.length===0||!rights} onClick={async()=>{setBusy(true);setResult(null);
-      const r=await uploadPlacePhotos(slug,files,{caption:caption.trim()||undefined,en});setBusy(false);setResult(r);if(!r.errors.length){setFiles([]);setCaption('');setRights(false);}}}
+    <button type="button" data-place-photo-submit disabled={busy||files.length===0||!rights||(!!categories&&!category)} onClick={async()=>{setBusy(true);setResult(null);
+      const r=await uploadPlacePhotos(slug,files,{caption:caption.trim()||undefined,category:category??undefined,en});setBusy(false);setResult(r);if(!r.errors.length){setFiles([]);setCaption('');setRights(false);}if(r.ok>0)router.refresh();}}
      className={`${btn} bg-[#162543] text-white disabled:opacity-50`}>{busy?t('Subiendo…','Uploading…'):t('Subir fotos','Upload photos')}</button>
     <button type="button" disabled={busy} onClick={()=>{setOpen(false);setFiles([]);}} className={`${btn} text-[#162543] underline`}>{t('Cancelar','Cancel')}</button>
    </div>

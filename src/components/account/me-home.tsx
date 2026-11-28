@@ -20,6 +20,9 @@ import {refreshBeenHereCount} from '@/components/saved/lists-client';
  * Counters that the server could not read arrive as null and are hidden instead of faked.
  */
 export type MeCounts={reviews:number|null;photos:number|null;added:number|null};
+/** 547: the person's latest place photos for «Impacto · Fotos» (approved ones are served by the photo route; a pending or
+ *  refused one is a text row, since the route serves only approved photos). */
+export type MePhoto={id:string;status:'approved'|'pending'|'rejected'|'hidden';placeName:string;slug:string};
 const ring='focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#009FD9]';
 const h2='mt-8 mb-3 text-xl font-extrabold text-[#162543]';
 function Badge({n}:{n:number}){return n>0?<span className="ml-auto mr-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1.5 text-xs font-bold text-white">{n>9?'9+':n}</span>:null;}
@@ -33,7 +36,7 @@ function Thumb({name,image}:{name:string;image?:string}){
   :<span aria-hidden="true" className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#eaf6fb] text-lg font-extrabold text-[#0089bb]">{name.trim().charAt(0).toUpperCase()}</span>;
 }
 
-export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,beenCount}:{locale:string;name:string;counts:MeCounts;isPro:boolean;empleos:boolean;shareUrl:string;dashboardHref:string;beenCount:number|null}){
+export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,beenCount,myPhotos=[]}:{myPhotos?:MePhoto[];locale:string;name:string;counts:MeCounts;isPro:boolean;empleos:boolean;shareUrl:string;dashboardHref:string;beenCount:number|null}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const {user,avatarUrl}=useAuth();
  const avisos=useAvisosPorVer(true),mensajes=useDirectMessageUnread(true);
@@ -94,9 +97,15 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
 
   <section data-me-impact aria-labelledby="me-impact"><h2 id="me-impact" className={h2}>{t('Impacto','Impact')}</h2>
    <div role="tablist" className="flex border-b border-[#e3eaf1]">{(['reviews','photos'] as const).map(k=><button key={k} role="tab" type="button" aria-selected={impact===k} onClick={()=>setImpact(k)} className={`flex-1 border-b-2 py-3 text-sm font-bold ${ring} ${impact===k?'border-[#009FD9]':'border-transparent text-slate-600'}`}>{k==='reviews'?t('Reseñas','Reviews'):t('Fotos','Photos')}</button>)}</div>
+   {impact==='photos'&&myPhotos.length>0?<ul className="mt-3 divide-y divide-[#eef2f6]" data-me-photos={myPhotos.length}>{myPhotos.map(p=><li key={p.id} className="flex items-center gap-3 py-3" data-me-photo={p.status}>
+    {p.status==='approved'?/* eslint-disable-next-line @next/next/no-img-element -- own approved place photo (same-origin route) */<img src={`/api/fotos-lugar/${p.id}?s=320`} alt="" draggable={false} className="h-14 w-14 shrink-0 rounded-xl object-cover"/>
+     :<span aria-hidden="true" className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#eef3f8] text-[#68778d]"><ImageIcon className="h-5 w-5"/></span>}
+    <a href={`${prefix}/negocios/${p.slug}#fotos`} className={`min-w-0 flex-1 ${ring}`}><span className="block font-bold [overflow-wrap:anywhere]">{p.placeName}</span>
+     <span className="block text-sm text-slate-600">{p.status==='approved'?t('Publicada','Published'):p.status==='pending'?t('Pendiente de revisión','Awaiting review'):t('No publicada','Not published')}</span></a></li>)}</ul>
+   :<>
    <div className="mt-4 grid grid-cols-2 gap-3">{[[0,t('reacciones en total','reactions all time')],[0,t('vistas últimos 90 días','views last 90 days')]].map(([n,l])=><div key={String(l)} className="rounded-2xl bg-[#f1f6fa] p-4"><p className="text-2xl font-extrabold">{n}</p><p className="text-sm text-slate-700">{l}</p></div>)}</div>
    <p className="mt-4 text-center text-slate-700">{impact==='reviews'?t('¡Las reacciones lo esperan! Escriba su primera reseña para ayudar a otros a descubrir un negocio.','Reactions await! Write your first review to help others discover a business.'):t('¡Las reacciones lo esperan! Agregue su primera foto para ayudar a otros a descubrir un negocio.','Reactions await! Add your first photo to help others discover a business.')}</p>
-   <a href={`${prefix}/buscar?resena=1`} className={`mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-[#e6ecf2] px-4 font-bold ${ring}`}>{impact==='reviews'?t('Escribir una reseña','Write a review'):t('Agregar una foto','Add a photo')}</a></section>
+   <a href={`${prefix}/buscar?resena=1`} className={`mt-3 flex min-h-12 w-full items-center justify-center rounded-full bg-[#e6ecf2] px-4 font-bold ${ring}`}>{impact==='reviews'?t('Escribir una reseña','Write a review'):t('Agregar una foto','Add a photo')}</a></>}</section>
 
   {recent.length>0&&<section data-me-recent aria-labelledby="me-recent"><h2 id="me-recent" className={h2}>{t('Vistos recientemente','Recently viewed')}</h2>
    <ul className="divide-y divide-[#eef2f6]">{recent.slice(0,5).map(p=><li key={p.slug} className="flex items-center gap-3 py-3"><Thumb name={p.name} image={p.image}/>

@@ -10,6 +10,9 @@ import {kindLabel,placeSectionById,reviewsOn} from '@/lib/directory/place-vertic
 import type {OrderLink,PlaceBrand} from '@/lib/directory/place-features';
 import {PlaceMapDialog} from './place-map-dialog';
 import {PlacePhotoGallery} from './place-photo-gallery';
+import {PlaceMenuFallback,PlaceMenuPhotos,PlacePhotosTab} from './place-photos-tab';
+import {menuSectionOf,placeMenuLink} from '@/lib/directory/place-menu-link';
+import {menuPhotosFor,type PhotoCategory} from '@/lib/directory/place-photos';
 import {PlaceSectionAvatar} from './place-section-avatar';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
 import {checkPlacePhone} from '@/lib/directory/phone';
@@ -79,7 +82,7 @@ function offerTabLabel(vertical:string,en:boolean):string{
  if(vertical==='vehicle_dealer'||vertical==='real_estate')return en?'Listings':'Anuncios';
  return en?'Prices':'Precios';
 }
-export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer,claimable=false}:{/** Unclaimed: «Reclamar esta empresa» row at the end of «Información». */claimable?:boolean;viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
+export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer,claimable=false,photoMeta,menuManageHref=null}:{/** «Suba su menú» for the business (owner/managers) in the «Ver menú» fallback. */menuManageHref?:string|null;/** 547: per photo URL, who added it and what it shows (server-built; no ids). */photoMeta?:Record<string,{by:string|null;owner:boolean;category:PhotoCategory|null}>;/** Unclaimed: «Reclamar esta empresa» row at the end of «Información». */claimable?:boolean;viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const area=joinPlaceParts([place.address.adminArea3,place.address.adminArea2,place.address.adminArea1]);
  const days=en?WEEKDAYS.en:WEEKDAYS.es,vertical=en?place.vertical.nameEn:place.vertical.nameEs;
@@ -95,7 +98,12 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const status=place.status==='published'?openStatus(place.hours):null,statusText=status?openStatusText(status,en,days):null;
  const amenities=placeAmenities(place.attributes,{open24:status?.state==='open24'});
  const cuisines=placeCuisines(place.attributes),priceLevel=placePriceLevel(place.attributes);
- const photos=place.media.filter(m=>m.kind==='photo').map(m=>({url:m.url,caption:(en?m.altEn:m.altEs)??null}));
+ // 547: menu photos go last, so the hero, the avatar and the cards show the place itself whenever another photo exists.
+ const photos=place.media.filter(m=>m.kind==='photo').map(m=>({url:m.url,caption:(en?m.altEn:m.altEs)??null,...photoMeta?.[m.url]}))
+  .map((p,i)=>({p,i})).sort((a,b)=>Number(a.p.category==='menu')-Number(b.p.category==='menu')||a.i-b.i).map(x=>x.p);
+ // Bakeries, ice-cream shops, coffee shops and delis (food_shop) take menu photos like a café.
+ const photoVertical=menuSectionOf(place.vertical.id,place.attributes.kind)??place.vertical.id;
+ const menuPhotos=menuPhotosFor(photoVertical)?photos.filter(p=>p.category==='menu'):[];
  const brandAbout=brand?(en?brand.descriptionEn:brand.descriptionEs):null;
  const address=place.address.line?joinPlaceParts([place.address.line,place.address.locality]):null;
  // «Calle 34, Santo Tomás, Santo Domingo, Heredia»: the street line and the areas, each once (the card's grey address line).
@@ -263,10 +271,20 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
 
  // ── Tabs (only the ones with content), in the approved order: Menú/Precios · Reseñas · Fotos · Ubicación · Información ──
  const offerLabel=offerTabLabel(place.vertical.id,en);
+ // «Ver menú» fallback (owner 2026-11-27): only while ContrataCR has NO menu here (no typed menu, no approved menu photos);
+ // food places always get a link (their site, Instagram, Facebook, else Google Maps), other sections only a real price list.
+ const menuFallback=published&&!hasMenu&&!menuPhotos.length&&!(slots.offer&&!menuSectionOf(place.vertical.id,place.attributes.kind))
+  ?placeMenuLink({vertical:place.vertical.id,kind:place.attributes.kind,name:place.name,area:joinPlaceParts([place.address.locality??place.address.adminArea3,place.address.adminArea1])||null,website:place.website,attributes:place.attributes}):null;
  const tabs:PlaceTab[]=[
-  ...(slots.offer?[{id:'offer',label:offerLabel,anchors:['precios'],content:<div className="space-y-6">{slots.offer}</div>}]:[]),
+  // 547: customers' menu photos also open the «Menú» tab of a restaurant/café without a typed menu (never an empty tab).
+  ...(slots.offer||menuPhotos.length>0||menuFallback?[{id:'offer',label:slots.offer?offerLabel:menuSectionOf(place.vertical.id,place.attributes.kind)?t('Menú','Menu'):t('Precios','Prices'),anchors:['precios','menu'],content:<div className="space-y-6">{slots.offer}
+   {menuPhotos.length>0&&viewer&&<PlaceMenuPhotos photos={menuPhotos} placeName={place.name} slug={place.slug} vertical={photoVertical} locale={locale} viewer={viewer}/>}
+   {menuFallback&&viewer&&<PlaceMenuFallback link={menuFallback} slug={place.slug} vertical={photoVertical} locale={locale} viewer={viewer} manageHref={menuManageHref}/>}</div>}]:[]),
   ...(!reviews?[]:[{id:'reviews',label:t('Reseñas','Reviews'),anchors:['resenas','escribir-resena'],content:slots.reviews??<section id="resenas" className="space-y-3"><h2 className={H2}>{t('Reseñas','Reviews')}</h2><p className={BIZ.sub} data-place-reviews-empty>{t('Todavía no hay reseñas.','No reviews yet.')}</p></section>}]),
-  ...(photos.length>0?[{id:'photos',label:`${t('Fotos','Photos')} (${photos.length})`,anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-32 space-y-4">
+  // 547: on a published page the «Fotos» tab is always there; empty, it invites the first photos (Google Maps / Yelp model).
+  ...(published&&viewer?[{id:'photos',label:photos.length?`${t('Fotos','Photos')} (${photos.length})`:t('Fotos','Photos'),anchors:['fotos'],
+   content:<PlacePhotosTab photos={photos} placeName={place.name} slug={place.slug} vertical={photoVertical} locale={locale} viewer={viewer}/>}]
+  :photos.length>0?[{id:'photos',label:`${t('Fotos','Photos')} (${photos.length})`,anchors:['fotos'],content:<section id="fotos" aria-labelledby="place-photos" data-place-photos className="scroll-mt-32 space-y-4">
    <h2 id="place-photos" className={H2}>{t('Fotos','Photos')} <span className="font-semibold text-[#94a3b8]">{photos.length}</span></h2>
    {/* 2+ photos: shown like the production professional's «Casos de éxito» (owner 2026-11-27); one photo keeps the grid. */}
    <PlacePhotoGallery en={en} placeName={place.name} photos={photos} variant={photos.length>1?'cases':'grid'}/></section>}]:[]),
@@ -372,7 +390,7 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
     </header>
     {!hasPhotos&&slots.streetView&&<div className="mb-6">{slots.streetView}</div>}
     {contactBar}
-    {published&&viewer&&<PlaceFichaMenu slug={place.slug} name={place.name} locale={locale} signedIn={viewer.signedIn} loginHref={viewer.loginHref} isManager={viewer.isManager}/>}
+    {published&&viewer&&<PlaceFichaMenu slug={place.slug} vertical={photoVertical} name={place.name} locale={locale} signedIn={viewer.signedIn} loginHref={viewer.loginHref} isManager={viewer.isManager}/>}
 
     <PlaceTabs variant="card" tabs={tabs} label={t('Secciones de la empresa','Business sections')} defaultTab={defaultTab}/>
    </div>

@@ -8,7 +8,7 @@ import {photoDbError} from '@/lib/directory/place-photos-server';
 import {PHOTO_VARIANTS,createClientVariantsCodec,derivedUuid,photoRejectText,processListingPhoto,sha256Hex,type PhotoVariant,type PhotoVariantSize} from '@/lib/directory/photo-pipeline';
 import {NoServerCodecError,pickPhotoCodec} from '@/lib/directory/photo-codec-cf-images';
 import {uploadPlacePhotoStore} from '@/lib/directory/place-photo-store';
-import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCaption,placePhotoUrl} from '@/lib/directory/place-photos';
+import {PLACE_PHOTO_BUCKET,PLACE_PHOTO_DAILY_LIMIT,PLACE_PHOTO_PREFIX,cleanCaption,placePhotoUrl,type PhotoCategory} from '@/lib/directory/place-photos';
 
 /**
  * The server half of a place photo upload, shared by /api/lugar/[slug]/fotos (the «Agregar fotos» panel) and the Instagram
@@ -36,6 +36,8 @@ export type PlacePhotoAddInput={
  /** The uploaded file (the 1600 variant when `clientVariants` is set). */
  upload:Uint8Array;clientVariants:Record<PhotoVariantSize,Uint8Array>|null;
  caption?:string;review:boolean;locale:'es'|'en';
+ /** 547: what the photo shows (optional: review photos and the Instagram import may carry none). */
+ category?:PhotoCategory;
 };
 /** Returns the route Response (same bodies and statuses as before the extraction) plus the photo id it worked on. */
 export async function addPlacePhoto(i:PlacePhotoAddInput):Promise<{response:Response;mediaId:string;created:boolean}>{
@@ -78,7 +80,7 @@ export async function addPlacePhoto(i:PlacePhotoAddInput):Promise<{response:Resp
  const caption=cleanCaption(i.caption);
  const input={actionId,mediaId,slug:place.slug,review:i.review,...(caption?{caption}:{}),sha256:photo.sha256,width:photo.width,height:photo.height,
   path1600:path(photo.variants[1600]),path800:path(photo.variants[800]),path320:path(photo.variants[320]),url:placePhotoUrl(mediaId),
-  ...(store.name==='r2'?{store:'r2'}:{})};
+  ...(store.name==='r2'?{store:'r2'}:{}),...(i.category?{category:i.category}:{})};
  const r=await db.rpc('dir_place_photo_add',{p_actor:i.actor,p_member:i.member,p_input:input});
  if(r.error){
   const row=await db.from('dir_place_media').select('id').eq('id',mediaId).maybeSingle();
