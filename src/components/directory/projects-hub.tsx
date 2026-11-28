@@ -236,7 +236,7 @@ export function ProjectsHub({ proyectos = [] }: { proyectos?: ProyectoPublico[] 
 
       <header className="sticky top-0 z-30 border-b border-transparent bg-white/95 backdrop-blur" style={{ borderColor: desplazado ? "#e5ebf0" : "transparent" }}>
         <div className="relative flex min-h-14 items-center justify-center px-14">
-          <h1 className={cn("text-[17px] font-extrabold leading-tight transition-opacity", desplazado ? "opacity-100" : "opacity-0")} aria-hidden={!desplazado}>{titulo}</h1>
+          <h1 className={cn("text-[19px] font-extrabold leading-6 transition-opacity", desplazado ? "opacity-100" : "opacity-0")} aria-hidden={!desplazado}>{titulo}</h1>
           <div className="absolute right-3 top-2"><MenuPuntos lang={lang} /></div>
         </div>
       </header>
