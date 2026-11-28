@@ -308,6 +308,8 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 - [ ] Dentro del flujo: «Regístrese» → «← Crear cuenta», «¿Olvidó su contraseña?» → «← Recuperar contraseña» (conserva el destino), el código de correo → «← Verificar correo»: la flecha retrocede un paso; la X solo está en la primera pantalla.
 - [ ] Al entrar, llega a la sección que quería abrir (cualquier ruta interna segura, también con Google/Apple) y «atrás» del navegador NO vuelve al login (se reemplaza la entrada).
 - [ ] `/login` abierto desde el menú («Ingresar»): barra normal del sitio; si hay una pantalla de la app detrás, «← Iniciar sesión» (aparece al hidratar). Lo mismo «← Crear cuenta» y «← Recuperar contraseña».
+- [ ] «Ofrezco servicios» (2026-11-28, `tests/e2e/pro-dir-offer-services-step.spec.ts`): en `/registro` y en `/onboarding` (cuentas de Google/Apple) la pregunta «¿Cómo ofrece sus servicios?» es un paso con dirección propia (`?paso=profesional`). Revisar en teléfono: el gesto de atrás y el «Atrás» del navegador vuelven a la primera pregunta (antes salían del registro); desde `/registro/profesional`, atrás vuelve a «¿Cómo ofrece sus servicios?» (antes a la primera pregunta). «Profesional independiente» → cuenta, código, servicio, zona → «Publicar mi perfil» → panel con la sesión.
+- [ ] `/registro/profesional` (2026-11-28): el correo de «Cuenta conectada», el oficio elegido y el texto del botón principal envuelven a otra línea; antes se cortaban con «…» (un correo largo de Google salía cortado).
 
 ## 11. Panel Pro / Herramientas
 

@@ -6,6 +6,8 @@ import { pendingRegistrationPath, registrationComplete } from "@/lib/auth/regist
 
 import { providerDisplayName } from "@/lib/auth/provider-display-name";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { abrirPasoProfesional, cerrarPasoProfesional } from "@/lib/navigation/paso-profesional";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight, UserRound, ChevronLeft, HardHat, Store } from "lucide-react";
@@ -29,7 +31,11 @@ export default function OnboardingPage() {
   // (the professional form, as before) or «Empresa o local» (client account first, then «Agregar o reclamar mi
   // empresa» on /registro/empresa). Directory off: unchanged.
   const directoryOn = useSiteFeatures().directorySections.length > 0;
-  const [proStep, setProStep] = useState(false);
+  // A history entry (?paso=profesional), as on /registro: Back returns to the first question instead of leaving.
+  const proStep = useSearchParams().get("paso") === "profesional";
+  const pasoAbiertoAqui = useRef(false);
+  const abrirPaso = () => { pasoAbiertoAqui.current = true; abrirPasoProfesional(); };
+  const cerrarPaso = () => { cerrarPasoProfesional(pasoAbiertoAqui.current); pasoAbiertoAqui.current = false; };
   // While we determine whether this is an EXISTING account, render a loader — never
   // the role cards — so an existing user logging in never sees the onboarding "flash".
   const [checkingExisting, setCheckingExisting] = useState(true);
@@ -176,7 +182,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* «Profesional» → the kind question is a step (owner 2026-11-27): «← Ofrezco servicios» on phones, back to the
           first question; the in-page «Volver» stays from lg. */}
-      {directoryOn && proStep ? <CabeceraDeTramite title={tc("proTitle")} onBack={() => { if (!selecting) setProStep(false); }} backLabel={tc("back")} /> : <CabeceraDeTramite />}
+      {directoryOn && proStep ? <CabeceraDeTramite title={tc("proTitle")} onBack={() => { if (!selecting) cerrarPaso(); }} backLabel={tc("back")} /> : <CabeceraDeTramite />}
 
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-xl">
@@ -213,7 +219,7 @@ export default function OnboardingPage() {
           {directoryOn && proStep ? (
           <div data-onboarding-pro-kind>
             <div className="mb-4 text-center">
-              <button type="button" onClick={() => setProStep(false)} disabled={!!selecting} data-onboarding-kind-back className="hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
+              <button type="button" onClick={cerrarPaso} disabled={!!selecting} data-onboarding-kind-back className="hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
                 <ChevronLeft className="h-4 w-4" aria-hidden />{tc("back")}
               </button>
               <h2 className="mt-1 text-xl font-bold text-[#162543]">{tc("proKindTitle")}</h2>
@@ -262,7 +268,7 @@ export default function OnboardingPage() {
 
             {/* Professional card */}
             <button
-              onClick={() => (directoryOn ? setProStep(true) : selectRole("professional"))}
+              onClick={() => (directoryOn ? abrirPaso() : selectRole("professional"))}
               disabled={!!selecting}
               className="ccr-tarjeta-rol group disabled:opacity-60"
             >

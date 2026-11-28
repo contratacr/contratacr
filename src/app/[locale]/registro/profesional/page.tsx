@@ -346,17 +346,17 @@ function ServicePickerTrigger({
       onClick={onClick}
       aria-invalid={!!error}
       className={cn(
-        "group flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 text-left text-sm transition-all hover:border-[#009FD9] hover:bg-white",
+        "group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3.5 py-2 text-left text-sm transition-all hover:border-[#009FD9] hover:bg-white",
         error ? "border-red-400" : "border-[#e5e7eb]"
       )}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
         {selectedLabel ? (
-          <span className="truncate font-medium text-[#162543]">{selectedLabel}</span>
+          <span className="min-w-0 break-words text-left font-medium text-[#162543]">{selectedLabel}</span>
         ) : (
           <>
             <Search className="h-4 w-4 shrink-0 text-[#68778d]" />
-            <span className="truncate text-[#68778d]">{placeholder}</span>
+            <span className="min-w-0 break-words text-left text-[#68778d]">{placeholder}</span>
           </>
         )}
       </span>
@@ -1188,7 +1188,7 @@ export default function RegisterProfessionalPage() {
                   <p className="text-xs font-semibold text-[#6b7280]">
                     {connectedProviderLabel ? t("oauthConfirmedWithProvider", { provider: connectedProviderLabel }) : t("oauthConfirmed")}
                   </p>
-                  <p className="truncate text-sm font-bold text-[#162543]">{currentUser.email}</p>
+                  <p className="break-words text-sm font-bold text-[#162543] [overflow-wrap:anywhere]">{currentUser.email}</p>
                 </div>
               </div>
             </div>
@@ -1541,10 +1541,10 @@ export default function RegisterProfessionalPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="min-w-0 flex-1 px-4 sm:px-7"
+                  className="h-auto min-h-12 min-w-0 flex-1 px-4 py-2 sm:px-7"
                   loading={submitting || uploadingPhoto}
                 >
-                  <span className="min-w-0 truncate">
+                  <span className="min-w-0 whitespace-normal break-words text-center">
                     {uploadingPhoto
                       ? t("uploadingPhoto")
                       : submitting

@@ -3,7 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef } from "react";
+import { abrirPasoProfesional, cerrarPasoProfesional } from "@/lib/navigation/paso-profesional";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight, ChevronLeft, HardHat, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { CabeceraDeEntrada } from "@/components/auth/cabecera-de-entrada";
@@ -22,7 +23,12 @@ export default function RegisterPage() {
   // Directory on (2026-11-27): «Profesional» asks one more thing, independent professional or business with premises
   // («Empresa o local» → add or claim the place). With the directory off (production) the card is the same link as always.
   const directoryOn = useSiteFeatures().directorySections.length > 0;
-  const [proStep, setProStep] = useState(() => searchParams.get("paso") === "profesional");
+  // The second question is a history entry (?paso=profesional): the phone's back gesture and the browser's Back return
+  // to the first question instead of leaving sign-up, and Back from /registro/profesional lands on this question again.
+  const proStep = searchParams.get("paso") === "profesional";
+  const pasoAbiertoAqui = useRef(false);
+  const abrirPaso = () => { pasoAbiertoAqui.current = true; abrirPasoProfesional(); };
+  const cerrarPaso = () => { cerrarPasoProfesional(pasoAbiertoAqui.current); pasoAbiertoAqui.current = false; };
   // Directory on (owner 2026-11-27): «Crear cuenta» is a step of the sign-in flow when it came from login
   // (cabecera-de-entrada.tsx) and the professional-kind question is a step of «Crear cuenta»: phones get «← paso» in
   // the bar instead of an in-page «Volver». Directory off: the site bar, as always.
@@ -40,11 +46,11 @@ export default function RegisterPage() {
   if (directoryOn && proStep) {
     return (
       <div className="ccr-account-page min-h-dvh flex flex-col bg-white" data-register-pro-kind>
-        <CabeceraDeEntrada title={t("proTitle")} onBack={() => setProStep(false)} />
+        <CabeceraDeEntrada title={t("proTitle")} onBack={cerrarPaso} />
         <main className="flex-1 ccr-centrado-seguro px-4 py-12 lg:py-20">
           <div className="w-full max-w-2xl">
             <div className="ccr-entrada text-center mb-8 lg:mb-12">
-              <button type="button" data-register-kind-back onClick={() => setProStep(false)} className="mb-3 hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
+              <button type="button" data-register-kind-back onClick={cerrarPaso} className="mb-3 hidden lg:inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-[#009FD9] hover:underline">
                 <ChevronLeft className="h-4 w-4" aria-hidden />{t("back")}
               </button>
               <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("proKindTitle")}</h1>
@@ -121,7 +127,7 @@ export default function RegisterPage() {
               pueden dibujar con distinto peso.) */}
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
             {directoryOn ? (
-              <button type="button" onClick={() => setProStep(true)} data-register-pro className={proCardClass}>{proCard}</button>
+              <button type="button" onClick={abrirPaso} data-register-pro className={proCardClass}>{proCard}</button>
             ) : (
               <Link href={`/registro/profesional${redirectSuffix}`} className={proCardClass}>{proCard}</Link>
             )}
