@@ -56,6 +56,7 @@ function setup({ signedIn = false, oldSchema = false, banned = false } = {}) {
       if (name === '@/lib/pricing') return { deriveDisplayPricing: () => ({ type: 'quote' }) };
       if (name === '@/lib/text/repair-visible-text') return { repairVisibleText: value => value };
       if (name === '@/lib/cloudinary') return { cldThumb: value => value };
+      if (name === '@/lib/r2-image-url') return { r2Thumb: value => value };
       if (name === '@/lib/promise-timeout') return { withPromiseTimeout: p => p };
       if (name === '@/lib/cv/model') return cvModel;
       // Nearby ranking is used by search, not by the profile-detail queries
