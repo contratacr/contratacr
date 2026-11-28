@@ -464,7 +464,7 @@ export default function LoginPage() {
   if (otpEmail) {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
-        <CabeceraDeEntrada title={locale === "en" ? "Verify e-mail" : "Verificar correo"} onBack={() => setOtpEmail(null)} />
+        <CabeceraDeEntrada title={t("verifyEmailHeader")} onBack={() => setOtpEmail(null)} />
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 sm:p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
@@ -493,7 +493,7 @@ export default function LoginPage() {
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><AuthenticationLoading /></div>}
 
-      <CabeceraDeEntrada title={locale === "en" ? "Sign in" : "Iniciar sesión"} inicio />
+      <CabeceraDeEntrada title={t("headerTitle")} inicio />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and

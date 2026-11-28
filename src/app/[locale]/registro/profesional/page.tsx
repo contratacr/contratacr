@@ -1074,7 +1074,7 @@ export default function RegisterProfessionalPage() {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={locale === "en" ? "Verify e-mail" : "Verificar correo"} onBack={() => setOtpEmail(null)} />}
+        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={t("verifyEmailHeader")} onBack={() => setOtpEmail(null)} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
@@ -1137,7 +1137,7 @@ export default function RegisterProfessionalPage() {
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={locale === "en" ? "Professional account" : "Cuenta profesional"} parentHref={choiceHref} onBack={step > 0 ? () => { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); setStep(step - 1); } : undefined} />}
+      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={t("accountHeader")} parentHref={choiceHref} onBack={step > 0 ? () => { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); setStep(step - 1); } : undefined} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
           hueco enorme entre la cabecera y el formulario. Sin sesión sigue

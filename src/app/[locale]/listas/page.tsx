@@ -15,7 +15,7 @@ export async function generateMetadata({params}:{params:Promise<{locale:string}>
 }
 export default async function ListsRoute({params}:{params:Promise<{locale:string}>}){
  if(!DIR_ENABLED)notFound();
- const {locale}=await params,prefix=locale==='en'?'/en':'';
+ const {locale}=await params,en=locale==='en',prefix=en?'/en':'';
  const user=await safeGetUser(await createClient());
  if(!user)redirect(`${prefix}/login?redirect=${encodeURIComponent(prefix+'/listas')}`);
  redirect(`${prefix}/dashboard/profesional?tab=saved&vista=listas`,RedirectType.replace);

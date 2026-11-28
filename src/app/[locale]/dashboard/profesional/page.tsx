@@ -596,6 +596,7 @@ export default function DashboardPage() {
   const t = useTranslations("proPanel");
   const locale = useLocale();
   const pc = useTranslations("ProPanelCopy");
+  const tRoutes = useTranslations("directoryRoutes");
   const proAccessPlaceholder = <div data-pro-access-placeholder>{proAccessReady
     ? <p className="p-4">{pc("toolsUnavailable")}</p>
     : proAccessError ? <div role="alert" className="space-y-3 p-4"><p>{pc("accessCheckFailed")}</p><Button type="button" variant="secondary" onClick={retryProAccess}>{pc("retry")}</Button></div>
@@ -1676,7 +1677,7 @@ export default function DashboardPage() {
   const toolsGroup: ToolsGroupId | null = toolsGroupTitle && isToolsGroupId(toolsGroupParam) ? toolsGroupParam : null;
   // Directory on: «Guardados → Mis listas» is a screen of its own (?tab=saved&vista=listas), bar «← Mis listas».
   const savedListsOpen = directoryOn && activeTab === "saved" && searchParams.get("vista") === "listas";
-  const savedListsTitle = savedListsOpen ? (locale === "en" ? "My lists" : "Mis listas") : null;
+  const savedListsTitle = savedListsOpen ? tRoutes("listsTitle") : null;
   const mobileSectionHeaderTitle = activeTab === "home"
     ? (proEnabled ? simpleCopy("day") : t("panelHeading"))
     : (supportThreadTitle ?? mobileProfileSectionTitle ?? toolsGroupTitle ?? savedListsTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));

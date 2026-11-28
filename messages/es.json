@@ -714,7 +714,8 @@
       "contactCardTitle": "Contacte a este profesional",
       "moreCategories": "{count, plural, one {+# servicio más} other {+# servicios más}}"
     },
-    "experienceYears": "{years, plural, one {# año} other {# años}} de experiencia"
+    "experienceYears": "{years, plural, one {# año} other {# años}} de experiencia",
+    "previewHeader": "Vista previa"
   },
   "auth": {
     "login": {
@@ -748,7 +749,9 @@
       "lastUsed": "Usó la última vez: {method}",
       "emailMethod": "Correo",
       "continueApple": "Continuar con Apple",
-      "emailPlaceholder": "nombre@correo.com"
+      "emailPlaceholder": "nombre@correo.com",
+      "headerTitle": "Iniciar sesión",
+      "verifyEmailHeader": "Verificar correo"
     },
     "register": {
       "title": "Crear cuenta",
@@ -867,7 +870,9 @@
       "errWorkplaceGuardar": "Falta guardar su local: toque \"Guardar lugar\" antes de continuar.",
       "errWorkplacePais": "Además de la cobertura nacional, elija su provincia y cantón de base.",
       "errPhoneFijo": "Ese número parece de teléfono fijo. Escriba un celular con WhatsApp para que los clientes le puedan escribir.",
-      "termsRequired": "Acepte los términos y la política de privacidad."
+      "termsRequired": "Acepte los términos y la política de privacidad.",
+      "verifyEmailHeader": "Verificar correo",
+      "accountHeader": "Cuenta profesional"
     },
     "client": {
       "title": "Crear cuenta de cliente",
@@ -2139,7 +2144,8 @@
     "sending": "Enviando…",
     "sendLink": "Enviar enlace",
     "backToLogin": "Volver al inicio de sesión",
-    "emailNotConfirmed": "Primero verifique su correo con el código que le enviamos al registrarse. Después podrá iniciar sesión o restablecer su contraseña."
+    "emailNotConfirmed": "Primero verifique su correo con el código que le enviamos al registrarse. Después podrá iniciar sesión o restablecer su contraseña.",
+    "headerTitle": "Recuperar contraseña"
   },
   "resetPassword": {
     "doneTitle": "Contraseña actualizada",

@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return { title: `${locale === "en" ? TOOLS_TITLE.en : TOOLS_TITLE.es} | ContrataCR`, robots: { index: false, follow: false } };
+  const en = locale === "en";
+  return { title: `${en ? TOOLS_TITLE.en : TOOLS_TITLE.es} | ContrataCR`, robots: { index: false, follow: false } };
 }
 
 export default async function ToolsPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ grupo?: string }> }) {

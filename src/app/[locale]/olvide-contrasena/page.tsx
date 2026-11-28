@@ -78,7 +78,7 @@ export default function OlvideContrasenaPage() {
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* Directory on (owner 2026-11-27): from the sign-in flow, «← Recuperar contraseña» on phones (cabecera-de-entrada.tsx). */}
-      <CabeceraDeEntrada title={locale === "en" ? "Reset password" : "Recuperar contraseña"} parentHref={loginHref} />
+      <CabeceraDeEntrada title={t("headerTitle")} parentHref={loginHref} />
       <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-7 shadow-sm sm:p-8">

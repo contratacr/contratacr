@@ -898,7 +898,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           {previewMode ? (
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-lg:pt-4">
               {/* Phones (owner 2026-11-27): «← Vista previa» in the bar, back to the panel; the button only from lg. */}
-              <SectionHeaderTitle title={locale === "en" ? "Preview" : "Vista previa"} fallbackHref="/dashboard/profesional" tambienEnLaWeb />
+              <SectionHeaderTitle title={t("previewHeader")} fallbackHref="/dashboard/profesional" tambienEnLaWeb />
               <p className="text-sm text-[#6b7280] font-medium">{t("previewNote")}</p>
               <Link href="/dashboard/profesional" data-preview-back-to-panel className="max-lg:!hidden inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
                 <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
