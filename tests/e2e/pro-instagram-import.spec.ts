@@ -22,6 +22,17 @@ async function warm(page:Page){
   await page.request.get(path,{timeout:120000,maxRedirects:0}).catch(()=>null);
 }
 
+/** The import exists only with INSTAGRAM_IMPORT_ENABLED (unset = on only under `next dev`) and its sandbox adapter only
+ *  under `next dev`: a production build such as the Pro Local CI server answers 404 on every Instagram route. Then the
+ *  off-state contract is checked (the routes answer 404) and the sandbox flow is skipped. */
+async function importEnabled(page:Page){
+ const status=(await page.request.get('/api/integrations/instagram/connection',{maxRedirects:0})).status();
+ if(status!==404)return true;
+ expect((await page.request.get('/api/integrations/instagram/media?target=portfolio',{maxRedirects:0})).status(),'media while the import is off').toBe(404);
+ expect((await page.request.post('/api/integrations/instagram/import',{data:{},maxRedirects:0})).status(),'import while the import is off').toBe(404);
+ return false;
+}
+
 async function connectInPopup(page:Page,sheet:ReturnType<Page['locator']>){
  await expect(sheet.locator('[data-instagram-connect]')).toContainText('Conectar su cuenta de Instagram (Empresa o Creador)');
  const popupP=page.waitForEvent('popup');
@@ -35,6 +46,7 @@ async function connectInPopup(page:Page,sheet:ReturnType<Page['locator']>){
 
 test('instagram import (sandbox): place owner connects, imports 3, repeat skipped, disconnect',async({page,context},info)=>{
  test.setTimeout(600000);local(info.project.use.baseURL);
+ if(!(await importEnabled(page))){test.skip(true,'Instagram import is off in this build (sandbox only under next dev)');return;}
  const tag=label(),f=await ownerFixture(context,'ig-'+tag),db=f.db,slug=`soda-instagram-${tag}`,errors=collectPageErrors(page);
  try{
   const {placeId}=await seedPlace(db,{slug,vertical:'restaurant',name:`Soda Instagram ${tag}`});
@@ -100,6 +112,7 @@ test('instagram import (sandbox): place owner connects, imports 3, repeat skippe
 
 test('instagram import (sandbox): professional adds photos to a success case (up to its free slots)',async({page,context},info)=>{
  test.setTimeout(600000);local(info.project.use.baseURL);
+ if(!(await importEnabled(page))){test.skip(true,'Instagram import is off in this build (sandbox only under next dev)');return;}
  const tag=label(),f=await ownerFixture(context,'igp-'+tag),db=f.db;
  try{
   await warm(page);

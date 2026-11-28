@@ -16,6 +16,11 @@ const ALL_DAY=[0,1,2,3,4,5,6].map(weekday=>({weekday,opens:'00:00',closes:'24:00
 type Item={key:string;slug:string;name:string;attributes?:Record<string,unknown>};
 const api=async(page:Page,qs:string)=>{const r=await page.request.get(`${origin}/api/directorio/search?${qs}`);expect(r.status(),qs).toBe(200);return (await r.json()).items as Item[];};
 const attr=(it:Item,k:string)=>it.attributes?.[k];
+// «Salud» exists only with DIR_HEALTH_ENABLED (off by default in a production build such as the Pro Local CI server): read
+// the server's own flag from /salud (200 on, 404 off; same probe as pro-dir-verticals) and skip the health checks when off.
+async function healthEnabled(page:Page){const status=(await page.request.get(`${origin}/salud`,{maxRedirects:0})).status();
+ expect([200,404],'/salud status').toContain(status);return status===200;}
+const sectionsOn=async(page:Page,sections:string[])=>(await healthEnabled(page))?sections:sections.filter(s=>s!=='salud');
 // Section pages are heavy on the dev server: a navigation can be aborted while the previous page still hydrates.
 const open=async(page:Page,path:string)=>expect(async()=>{await gotoOK(page,path);}).toPass({timeout:60000});
 /** Opens a chip menu (after hydration: retried until its options show) and picks one option by its label. */
@@ -49,7 +54,9 @@ const REAL:[string,string,(it:Item)=>boolean,((s:Stats)=>number)|null][]=[
 
 test('every section filter returns only matching places (API, real data and synthetic places)',async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
- for(const [section,qs,ok,expected] of REAL){
+ const healthOn=await healthEnabled(page);
+ if(!healthOn)expect((await page.request.get(`${origin}/api/directorio/search?vertical=salud&public=1`)).status(),'health search while DIR_HEALTH_ENABLED is off').toBe(404);
+ for(const [section,qs,ok,expected] of REAL.filter(([section])=>healthOn||section!=='salud')){
   const items=await api(page,`vertical=${section}&${qs}&limit=50`);
   if(expected&&expected(await stats(section))>0)expect(items.length,`${section}?${qs} has data`).toBeGreaterThan(0);
   const bad=items.filter(it=>!ok(it)).map(it=>it.name);
@@ -86,7 +93,7 @@ test('every section filter returns only matching places (API, real data and synt
  await only('restaurantes','reservations=1',[]);
  await only('bancos','brand=bcr',['bcr']);
  await only('bancos','atm=1',['bcr']);
- await only('salud','public=1',['ccss']);
+ if(healthOn)await only('salud','public=1',['ccss']);
  await only('gasolineras','brand=delta',['delta']);
  await only('supermercados','brand=mas-x-menos',['mxm']);
  await only('educacion','public=1',['mep']);
@@ -142,7 +149,7 @@ test('chips filter the list, keep the state in the URL across reload and Back, a
 
 test('«Abierto ahora» shows only where enough places have hours; the value lists come from the data',async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
- for(const section of ['restaurantes','bancos','gasolineras','supermercados','salud','educacion','hospedaje','tiendas']){
+ for(const section of await sectionsOn(page,['restaurantes','bancos','gasolineras','supermercados','salud','educacion','hospedaje','tiendas'])){
   const s=await stats(section);const useful=s.withHours>=20&&s.withHours/s.total>=0.3;
   await open(page,`/${section}`);
   const n=await page.locator('[data-chip="open-now"]').count();
@@ -174,7 +181,7 @@ test('«Abierto ahora» shows only where enough places have hours; the value lis
 for(const width of [390,360])test(`chip rows at ${width} px: whole labels, no ellipsis, no page overflow`,async({page},info)=>{
  test.setTimeout(240000);local(info.project.use.baseURL);
  await page.setViewportSize({width,height:844});
- for(const section of ['restaurantes','bancos','hospedaje','gasolineras','supermercados','salud','educacion']){
+ for(const section of await sectionsOn(page,['restaurantes','bancos','hospedaje','gasolineras','supermercados','salud','educacion'])){
   await open(page,`/${section}`);
   const rail=page.locator('[data-places-home] [role="group"]').filter({visible:true}).first();
   await expect(rail).toBeVisible();
