@@ -166,7 +166,7 @@ test("live moderation withdraws and restores an offer and resolves its case with
     await page.getByRole("group", { name: "Prioridad", exact: true }).getByRole("button", { name: "Urgente", exact: true }).click();
     await page.locator("article").filter({ hasText: title }).getByRole("button", { name: "Atender y ver historial", exact: true }).click();
     await expect(page.getByRole("link", { name: "Abrir contenido", exact: true })).toHaveAttribute("href", new RegExp(`/promociones/${offerId}$`));
-    const reason = page.getByRole("textbox", { name: "Motivo (visible al afectado si se registra como decisión)", exact: true });
+    const reason = page.getByRole("textbox", { name: "Motivo (si hay sanción, se le envía a la persona afectada)", exact: true });
     await reason.fill("Synthetic policy violation confirmed by the reviewer");
     await page.getByRole("radio", { name: /^Retirar contenido/ }).check();
     await expect(reason).toHaveValue("Synthetic policy violation confirmed by the reviewer");

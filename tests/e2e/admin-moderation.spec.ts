@@ -60,7 +60,7 @@ test('reports identify a client, require a reason and preserve the case on resol
  await expect(page.getByRole('heading',{name:/Cliente reportado QA/})).toBeVisible();
  await page.getByRole('button',{name:'Atender y ver historial'}).click();
  await expect(page.getByRole('button',{name:'Resolver con motivo'})).toBeDisabled();
- const reason=page.getByRole('textbox',{name:'Motivo (visible al afectado si se registra como decisión)',exact:true});
+ const reason=page.getByRole('textbox',{name:'Motivo (si hay sanción, se le envía a la persona afectada)',exact:true});
  await reason.fill('Se revisó la evidencia y se atendió el caso.');
  await page.getByRole('button',{name:'Resolver con motivo'}).click();
  expect(calls).toHaveLength(1);expect(calls[0]).toMatchObject({id:rid,status:'resolved',priority:'high'});
