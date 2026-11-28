@@ -86673,6 +86673,10 @@
         {
           "line": 139,
           "title": "'cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target'"
+        },
+        {
+          "line": 142,
+          "title": "!info.project.use.isMobile"
         }
       ]
     },
@@ -88275,11 +88279,11 @@
           "title": "'download button keeps the website download section after campaign attribution is appended'"
         },
         {
-          "line": 80,
+          "line": 84,
           "title": "'worker never offers the retired invitation while remaining campaigns continue'"
         },
         {
-          "line": 87,
+          "line": 91,
           "title": "'queued retired envelopes are cancelled without reading accounts or contacting a provider'"
         }
       ]

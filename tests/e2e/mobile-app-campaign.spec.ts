@@ -48,6 +48,7 @@ import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as policy from '../../src/lib/email/lifecycle-policy';
 import * as names from '../../src/lib/nombres';
+import * as seguimiento from '../../src/lib/email/seguimiento-policy';
 function workerHarness(usedBeforeSend: boolean, lookupFails=false) {
  let providerCalls=0;
  const profile={...account,id:'account',created_at:new Date(Date.now()-30*86400000).toISOString()};
@@ -73,6 +74,9 @@ function workerHarness(usedBeforeSend: boolean, lookupFails=false) {
   './send':{brandedEmailDocument:()=>'',sendBrevoEmail:async()=>{providerCalls++;return {ok:true,status:'sent'};}},
   './baja':{enlaceDeBaja:()=>''},'./escape':{escaparHtml:(value:unknown)=>String(value)},
   './cuota':{resumenDeCuota:async()=>({puedeEnviar:{masivo:true}})},
+  // Follow-ups after the welcome (2acd45ec8) are their own campaigns: the real policy, and no follow-up account here.
+  './seguimiento-policy':seguimiento,
+  './seguimiento-worker':{loadFollowupContexts:async()=>[],countFollowups:()=>({}),renderFollowupHtml:()=>''},
  };
  runInNewContext(source,{module:box,exports:box.exports,require:(name:string)=>mocks[name],URL,Date,Promise,process:{env:{NEXT_PUBLIC_APP_URL:'https://contratacr.com'}}});
  return {run:(simulate=false)=>box.exports.runLifecycleEmails(db,simulate),calls:()=>providerCalls};

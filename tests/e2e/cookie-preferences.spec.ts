@@ -136,7 +136,10 @@ test('withdrawing from the footer settings stops measurement and the notice does
  expect(await page.evaluate(()=>document.cookie)).toContain('ccr_ads_consent_v2=declined');
 });
 
-test('cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target', async ({ page }) => {
+test('cookie notice stays compact on a phone: about a third of the screen at most, with a 44px close target', async ({ page }, info) => {
+ // A phone measurement: the desktop project only narrows a desktop window (no mobile emulation, desktop text metrics);
+ // on Linux CI that wrapped the copy to 294 px against the 279 px limit. Phones are measured in the mobile projects.
+ test.skip(!info.project.use.isMobile, 'phone layout is measured in the mobile projects');
  await page.addInitScript(()=>{ if (!sessionStorage.getItem("consent-fixture-ready")) { localStorage.clear(); sessionStorage.setItem("consent-fixture-ready","1"); } });
  await page.setViewportSize({width:390,height:844});
  await page.route('**/api/privacy/**',r=>r.fulfill({status:200,json:{ok:true}}));
