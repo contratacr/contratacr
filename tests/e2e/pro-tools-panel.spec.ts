@@ -116,4 +116,48 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
    await expect(page.locator('[data-testid="menu-herramientas"]').filter({visible:true}).first()).toHaveAttribute('href',/\/dashboard\/profesional\?tab=tools$/);
   }finally{await cleanupDisposableAccount(actor);}
  });
+
+ test('signed in: Mis listas and Mis reservas live in «Mi panel»; signed out keeps login / the guest page',async({page,baseURL,context})=>{
+  test.setTimeout(360_000);local(baseURL);
+  // Signed out: /listas asks to sign in and comes back; /mis-reservas explains the private link.
+  await page.goto(origin+'/listas');
+  await expect(page).toHaveURL(/\/login\?redirect=%2Flistas/);
+  await page.goto(origin+'/mis-reservas');
+  await expect(page.locator('[data-my-reservations-guest]')).toBeVisible();
+  let actor:DisposableAccount|undefined;
+  try{
+   actor=await createDisposableAccount({prefix:'lists-panel'});await login(context,actor);
+   // Panel menu: Mis reservas is a row right after Guardados; the drawer does not repeat panel items.
+   await page.goto(origin+'/dashboard/profesional');
+   await expect(page.locator('[data-testid="panel-tab-mis_reservas"]').filter({visible:true})).toBeVisible();
+   await page.goto(origin+'/');
+   await page.getByRole('button',{name:/menú|menu/i}).first().click();
+   const drawer=page.locator('[data-menu-cortina], [role="dialog"]').filter({visible:true}).first();
+   await expect(drawer.getByRole('link',{name:/Mis listas|Mis reservas/})).toHaveCount(0);
+   // /listas → Guardados → Mis listas (replace), bar «← Mis listas», arrow back to Guardados.
+   await page.goto(origin+'/listas');
+   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=saved&vista=listas$/);
+   await expect(page.locator('[data-panel-lists]')).toBeVisible({timeout:30_000});
+   await expect(barTitle(page)).toHaveText('Mis listas');
+   await page.screenshot({path:join(out,'panel-mis-listas-390.png'),fullPage:true});
+   await back(page).click();
+   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=saved$/);
+   // From Guardados the row opens it again and the arrow returns to Guardados (history, not a new entry).
+   await page.locator('[data-saved-companies]').click();
+   await expect(page).toHaveURL(/tab=saved&vista=listas$/);
+   await expect(page.locator('[data-panel-lists]')).toBeVisible({timeout:30_000});
+   await back(page).click();
+   await expect(page).toHaveURL(/tab=saved$/);
+   await expect(page.locator('[data-saved-companies]')).toBeVisible();
+   // /mis-reservas → its panel section.
+   await page.goto(origin+'/mis-reservas');
+   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=mis_reservas$/);
+   await expect(page.locator('[data-panel-reservations] [data-my-reservations-empty]')).toBeVisible({timeout:30_000});
+   await expect(barTitle(page)).toHaveText('Mis reservas');
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+   await page.screenshot({path:join(out,'panel-mis-reservas-390.png'),fullPage:true});
+   const api=await page.request.get(origin+'/api/mis-reservas');expect(api.status()).toBe(200);
+   expect(JSON.stringify(await api.json())).not.toMatch(/"id"/);
+  }finally{await cleanupDisposableAccount(actor);}
+ });
 });

@@ -57,8 +57,10 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
   }catch{setUploadError(true);}
  };
  const counter=(Icon:typeof Star,n:number|null,label:string)=>n===null?null:<li className="flex items-center gap-1.5 text-sm text-slate-700"><Icon aria-hidden="true" className="h-4 w-4"/><span className="font-bold text-[#162543]">{n}</span><span className="sr-only">{label}</span></li>;
+ const listsHref=`${prefix}/dashboard/profesional?tab=saved&vista=listas`;
  const quick=[{href:`${prefix}/buscar?resena=1`,icon:Star,label:t('Agregar reseña','Add review')},{href:`${prefix}/buscar?foto=1`,icon:Camera,label:t('Agregar foto','Add photo')},
-  {href:`${prefix}/listas`,icon:MapPinCheck,label:t('Registrar visita','Check in')},{href:`${prefix}/registro/profesional`,icon:Store,label:t('Agregar negocio','Add business')}];
+  {href:listsHref,icon:MapPinCheck,label:t('Registrar visita','Check in')},{href:`${prefix}/registro/profesional`,icon:Store,label:t('Agregar negocio','Add business')}];
+ // «Mis listas» lives inside «Mi panel» (owner, 2026-11-27); «Yo» is only shown with a session.
  const iconBtn=`relative grid h-11 w-11 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] ${ring}`;
  const exp=(slug:string,a:'yes'|'no'|'maybe')=>{answerExperience(slug,a);setDismissed(readDismissed().concat(slug));};
  const reviewsN=counts.reviews;
@@ -118,7 +120,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
    <Row href={`${prefix}/promociones`} icon={Tag} label={t('Promociones','Promotions')}/>
    <Row href={`${prefix}/promociones/mis-promociones`} icon={Tag} label={t('Mis promociones','My promotions')}/>
    <Row href={`${prefix}/solicitudes`} icon={FileText} label={t('Mis solicitudes','My requests')}/>
-   <Row href={`${prefix}/listas`} icon={Bookmark} label={t('Mis listas','My lists')}/></section>
+   <Row href={listsHref} icon={Bookmark} label={t('Mis listas','My lists')}/></section>
 
   <section data-me-account aria-labelledby="me-account"><h2 id="me-account" className={h2}>{t('Mi cuenta','My account')}</h2>
    {isPro&&<Row href={`${prefix}${dashboardHref}`} icon={Store} label={t('Mi negocio','My business')}/>}

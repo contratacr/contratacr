@@ -31,6 +31,7 @@ import {
   User, Award, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen, ChartNoAxesColumn, FileUser, Mail,
+  CalendarCheck,
   } from "lucide-react";
 import { CERRAR_EDITOR_CV, CvBuilder } from "@/components/dashboard/cv-builder";
 import { StatisticsPanel } from "@/components/dashboard/statistics/statistics-panel";
@@ -39,6 +40,8 @@ import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Herramientas } from "@/components/dashboard/herramientas";
 import { HerramientasCatalogo } from "@/components/dashboard/herramientas-catalogo";
+import { PanelMisListas, PanelMisReservas } from "@/components/dashboard/panel-directorio";
+import { useSiteFeatures } from "@/components/site-features";
 import { isToolsGroupId, toolsCatalog, type ToolsGroupId } from "@/lib/pro/tools-catalog";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -108,7 +111,9 @@ type Tab =
   | "pro_tools" | "pro_payments" | "pro_billing" | "pro_expenses" | "pro_agenda" | "pro_clients" | "pro_quotes" | "pro_inventory" | "pro_social" | "pro" | "home" | "profile" | "services" | "photos" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "sent_projects" | "applications" | "saved" | "connections" | "appointments"
-  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta" | "tools";
+  | "chat" | "notifications" | "soporte" | "cuenta" | "guides" | "statistics" | "cv" | "carta" | "tools"
+  // Directory on only (owner, 2026-11-27): the old /mis-reservas page as a section of the panel.
+  | "mis_reservas";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -120,8 +125,10 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "pro_tools", "pro_payments", "pro_expenses", "pro_billing", "pro_agenda", "pro_clients", "pro_inventory", "pro_social", "pro", "home", "profile", "services", "photos", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "sent_projects", "applications", "saved", "connections", "appointments",
-  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta", "tools",
+  "chat", "notifications", "soporte", "cuenta", "guides", "statistics", "cv", "carta", "tools", "mis_reservas",
 ]);
+// Sections that exist only while the directory is on (production: an unknown ?tab=, which falls back to the panel home).
+const DIRECTORY_TABS = new Set<Tab>(["mis_reservas"]);
 
 const PRO_SALES_TABS = new Set<Tab>(["quotes","pro_billing","pro_payments"]);
 const LOCAL_APPOINTMENT_TABS=PRO_UI_ENABLED?['appointments']:[];
@@ -148,6 +155,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   appointments: <ClipboardList className="h-4 w-4" />,
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
+  mis_reservas: <CalendarCheck className="h-4 w-4" />,
   connections: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
@@ -229,7 +237,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "tools" | "saved" | "account"
   // Herramientas: documentos que uno arma y descarga, cada una en su pantalla.
   { grupo: "tools", tabs: ["tools"] },
   { grupo: "work", tabs: ["photos", "services", "statistics", "profile", "completion"] },
-  { grupo: "saved", tabs: ["saved"] },
+  { grupo: "saved", tabs: ["saved", "mis_reservas"] },
   { grupo: "account", tabs: ["soporte", "guides"] },
 ];
 function agruparPestanas(tabs: Tab[]): Tab[][] {
@@ -260,6 +268,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   photos: { es: "Casos de éxito", en: "Success stories" },
   services: { es: "Servicios", en: "Services" },
   saved: { es: "Favoritos", en: "Favorites" },
+  mis_reservas: { es: "Mis reservas", en: "My reservations" },
   soporte: { es: "Soporte", en: "Support" },
   profile: { es: "Mi perfil", en: "My profile" },
   publicaciones: { es: "Mis publicaciones", en: "My posts" },
@@ -527,6 +536,7 @@ export default function DashboardPage() {
   useEffect(()=>{setProNavigationAccount(user?.id??null);return()=>setProNavigationAccount(null);},[user?.id]);
   const {enabled:proEnabled,ready:proAccessReady,error:proAccessError,retry:retryProAccess}=useLocalProAccess(user?.id);
   const simpleCopy=useTranslations("ProSimple");
+  const directoryOn = useSiteFeatures().directorySections.length > 0;
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   // Query-only Pro history can outlive Next's cached router tree across reloads.
@@ -601,7 +611,7 @@ export default function DashboardPage() {
   const normalizedTab = rawRequestedTab === "guides" ? null : rawRequestedTab === "appointments"&&!LOCAL_APPOINTMENT_TABS.length?"sent_projects":rawRequestedTab === "pro_social" ? "home" : legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab === "cv" && searchParams.get("doc") === "carta" ? "carta" : rawRequestedTab;
   // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
   // se ignora y cae al inicio del panel.
-  const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
+  const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) && (directoryOn || !DIRECTORY_TABS.has(normalizedTab as Tab)) ? normalizedTab : null) as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
@@ -1379,26 +1389,27 @@ export default function DashboardPage() {
     scrollDashboardToPageTop();
   }
 
-  // Herramientas (Pro on): a group and the CV/letter opened from it are history entries marked `ccrHerramientas`, so
+  // Screens opened inside a section (a Herramientas group, the CV/letter from it, Guardados → Mis listas) are history
+  // entries marked `ccrPantallaDelPanel`, so
   // the bar's arrow (and the phone's back gesture) returns to the screen they were opened from.
-  function pushHerramientas(url: string) {
+  function pushPantallaDelPanel(url: string) {
     const antes = window.location.href;
     if (proEnabled) pushProPath(url); else window.history.pushState(null, "", url);
-    if (window.location.href !== antes) window.history.replaceState({ ...(window.history.state ?? {}), ccrHerramientas: true }, "", window.location.href);
+    if (window.location.href !== antes) window.history.replaceState({ ...(window.history.state ?? {}), ccrPantallaDelPanel: true }, "", window.location.href);
     scrollDashboardToPageTop();
   }
-  function volverEnHerramientas(destino: string) {
-    if (window.history.state?.ccrHerramientas) { window.history.back(); return; }
+  function volverEnElPanel(destino: string) {
+    if (window.history.state?.ccrPantallaDelPanel) { window.history.back(); return; }
     if (proEnabled) replaceProPath(destino); else window.history.replaceState(null, "", destino);
     scrollDashboardToPageTop();
   }
   function openToolsGroup(id: ToolsGroupId) {
-    requestUnsavedAction(() => pushHerramientas(`${window.location.pathname}?tab=tools&grupo=${id}`));
+    requestUnsavedAction(() => pushPantallaDelPanel(`${window.location.pathname}?tab=tools&grupo=${id}`));
   }
   // The address changes first and the section follows it: a new account's CV opens straight in its editor, and the
   // editor's back-gesture entry must land on ?tab=cv, not on the group it was opened from.
   function openToolsSection(tab: "cv" | "carta") {
-    requestUnsavedAction(() => pushHerramientas(`${window.location.pathname}?tab=${tab}`));
+    requestUnsavedAction(() => pushPantallaDelPanel(`${window.location.pathname}?tab=${tab}`));
   }
 
   function openRequestedService(categoryId: string) {
@@ -1660,9 +1671,12 @@ export default function DashboardPage() {
   const toolsGroupParam = PRO_UI_ENABLED && activeTab === "tools" ? searchParams.get("grupo") : null;
   const toolsGroup: ToolsGroupId | null = isToolsGroupId(toolsGroupParam) ? toolsGroupParam : null;
   const toolsGroupTitle = toolsGroup ? toolsCatalog(locale === "en").find((g) => g.id === toolsGroup)?.label ?? null : null;
+  // Directory on: «Guardados → Mis listas» is a screen of its own (?tab=saved&vista=listas), bar «← Mis listas».
+  const savedListsOpen = directoryOn && activeTab === "saved" && searchParams.get("vista") === "listas";
+  const savedListsTitle = savedListsOpen ? (locale === "en" ? "My lists" : "Mis listas") : null;
   const mobileSectionHeaderTitle = activeTab === "home"
     ? (proEnabled ? simpleCopy("day") : t("panelHeading"))
-    : (supportThreadTitle ?? mobileProfileSectionTitle ?? toolsGroupTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
+    : (supportThreadTitle ?? mobileProfileSectionTitle ?? toolsGroupTitle ?? savedListsTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
   const sectionBackRef = useRef<(() => void) | null>(null);
   // EL GESTO DE VOLVER (deslizar en iOS, el botón físico de Android, el atrás
   // del navegador) usa el HISTORIAL, que no sabe nada de los pasos que se abren
@@ -1801,7 +1815,8 @@ export default function DashboardPage() {
   // Keep the primary dashboard navigation focused. Shared surfaces like chat,
   // notifications and support stay routable from the navbar or direct links
   // instead of competing with the core panel tasks.
-  const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
+  // Directory on: «Mis reservas» goes right after Guardados (the old /mis-reservas page, owner 2026-11-27).
+  const modeTabs = (mode === "offer" ? OFFER_TABS : USE_TABS).flatMap((tab): Tab[] => tab === "saved" && directoryOn ? ["saved", "mis_reservas"] : [tab]);
   const proCoreTabs:Tab[]=["home","pro_agenda"];
   // Keep the existing publication order and place tools immediately before profile.
   const proRemainingTabs=modeTabs.filter(tab=>!["quotes","statistics","photos","services"].includes(tab)&&!proCoreTabs.includes(tab));
@@ -2302,12 +2317,16 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event(CERRAR_EDITOR_CV));
                           return;
                         }
+                        if (savedListsOpen) {
+                          volverEnElPanel(`${window.location.pathname}?tab=saved`);
+                          return;
+                        }
                         if (toolsGroup) {
-                          volverEnHerramientas(`${window.location.pathname}?tab=tools`);
+                          volverEnElPanel(`${window.location.pathname}?tab=tools`);
                           return;
                         }
                         if (PRO_UI_ENABLED && (activeTab === "cv" || activeTab === "carta")) {
-                          volverEnHerramientas(`${window.location.pathname}?tab=tools&grupo=free`);
+                          volverEnElPanel(`${window.location.pathname}?tab=tools&grupo=free`);
                           return;
                         }
                         if (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta") {
@@ -2332,7 +2351,7 @@ export default function DashboardPage() {
                       {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
                     </h2>
                   ) : (
-                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? toolsGroupTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? toolsGroupTitle ?? savedListsTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
                   <div data-pro-section-actions-slot className="flex shrink-0 justify-self-end" />
                 </div>
@@ -2576,8 +2595,9 @@ export default function DashboardPage() {
                             aplica por WhatsApp y no hay nada que seguir aquí.
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
-                        {activeTab === "saved" && <ClientActivity section="saved" />}
-                        {activeTab === "tools" && PRO_UI_ENABLED && <HerramientasCatalogo grupo={toolsGroup} alAbrirGrupo={openToolsGroup} alAbrirSeccion={openToolsSection} alVolver={() => volverEnHerramientas(`${window.location.pathname}?tab=tools`)} />}
+                        {activeTab === "saved" && (savedListsOpen ? <PanelMisListas /> : <ClientActivity section="saved" alAbrirListas={directoryOn ? () => requestUnsavedAction(() => pushPantallaDelPanel(`${window.location.pathname}?tab=saved&vista=listas`)) : undefined} />)}
+                        {activeTab === "mis_reservas" && directoryOn && <PanelMisReservas />}
+                        {activeTab === "tools" && PRO_UI_ENABLED && <HerramientasCatalogo grupo={toolsGroup} alAbrirGrupo={openToolsGroup} alAbrirSeccion={openToolsSection} alVolver={() => volverEnElPanel(`${window.location.pathname}?tab=tools`)} />}
                         {activeTab === "tools" && !PRO_UI_ENABLED && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
                         {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" alCambiarEditor={setCvEditorAbierto} />}
                         {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" alCambiarEditor={setCvEditorAbierto} />}

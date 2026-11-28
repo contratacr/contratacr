@@ -32,7 +32,7 @@ export function DirectoryTabs({
   onTabClick?: (event: React.MouseEvent<HTMLAnchorElement>, href: string) => void;
 }) {
   const hrefDe = (id: DirectoryTabId): string =>
-    id === "buscar" ? "/" : id === "proyectos" ? "/solicitudes" : id === "asistente" ? "/asistente" : id === "listas" ? "/listas" : loggedIn ? "/yo" : "/login?redirect=%2Fyo";
+    id === "buscar" ? "/" : id === "proyectos" ? "/solicitudes" : id === "asistente" ? "/asistente" : id === "listas" ? (loggedIn ? "/dashboard/profesional?tab=saved&vista=listas" : "/listas") : loggedIn ? "/yo" : "/login?redirect=%2Fyo";
   return (
     <nav ref={navRef} aria-label={ariaLabel} data-directory-tabs="" className={cn("ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 px-4 lg:hidden", CAPA_BARRA_ABAJO)}>
       <div className="ccr-barra-flotante-pastilla pointer-events-auto relative mx-auto flex h-[60px] w-full max-w-[420px] items-stretch rounded-full p-1">

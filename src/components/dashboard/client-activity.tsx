@@ -86,7 +86,8 @@ export async function fetchClientProjects(signal?: AbortSignal): Promise<Project
 // es adorno, así que es el que cede.
 const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden lg:grow-0 lg:min-w-[11rem]";
 
-export function ClientActivity({ section, onCount }: { section: ClientActivitySection; onCount?: (total: number) => void }) {
+// `alAbrirListas` (directory on, owner 2026-11-27): «Mis listas» opens inside «Mi panel» instead of the old /listas page.
+export function ClientActivity({ section, onCount, alAbrirListas }: { section: ClientActivitySection; onCount?: (total: number) => void; alAbrirListas?: () => void }) {
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const tSub = useTranslations("proPanel.subtitles");
@@ -297,12 +298,12 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     // Directory on (owner 2026-11-26): saved companies (the lists) are managed from here too, with the panel's row style.
     return (
       <>
-        {directoryOn && (
-          <Link href="/listas" prefetch={false} data-saved-companies className="mb-4 flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]">
+        {directoryOn && alAbrirListas && (
+          <button type="button" onClick={alAbrirListas} data-saved-companies className="mb-4 flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]">
             <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a]"><Bookmark className="h-5 w-5" aria-hidden /></span>
-            <span className="min-w-0 flex-1 truncate">{cs("savedCompanies")}</span>
+            <span className="min-w-0 flex-1 break-words">{cs("savedCompanies")}</span>
             <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" aria-hidden />
-          </Link>
+          </button>
         )}
         <SavedProfessionalsTab />
       </>

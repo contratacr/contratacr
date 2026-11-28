@@ -17,7 +17,8 @@ const tile=['bg-[#eaf6fb] text-[#0089bb]','bg-[#e8ecf4] text-[#162543]','bg-[#e3
 function Thumb({name,i}:{name:string;i:number}){return <span aria-hidden="true" className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl text-lg font-extrabold ${tile[i%3]}`}>{name.trim().charAt(0).toUpperCase()}</span>;}
 type Tab='been'|'want'|'lists';
 
-export function MyListsTabs({locale,initial,origin,suggestions}:{locale:string;initial:SavedList[];origin:string;suggestions:ListSuggestion[]}){
+// `embedded` («Mi panel», 2026-11-27): on phones the panel bar already reads «← Mis listas», so the heading is for screen readers only there.
+export function MyListsTabs({locale,initial,origin,suggestions,embedded=false}:{locale:string;initial:SavedList[];origin:string;suggestions:ListSuggestion[];embedded?:boolean}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const [lists,setLists]=useState(initial),[tab,setTab]=useState<Tab>('been'),[q,setQ]=useState(''),[showFilter,setShowFilter]=useState(false),[alpha,setAlpha]=useState(false);
  const [msg,setMsg]=useState<{ok:boolean;text:string}|null>(null),[busy,setBusy]=useState<string|null>(null),[map,setMap]=useState(false);
@@ -47,7 +48,7 @@ export function MyListsTabs({locale,initial,origin,suggestions}:{locale:string;i
  const tabBtn=(id:Tab,label:string,icon:React.ReactNode)=><button key={id} type="button" role="tab" aria-selected={tab===id} data-lists-tab={id} onClick={()=>setTab(id)}
   className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-sm font-bold ${ring} ${tab===id?'border-[#009FD9] text-[#162543]':'border-transparent text-slate-600'}`}>{icon}{label}</button>;
  return <div data-my-lists data-ready={ready||undefined} className="space-y-4">
-  <header className="flex items-center justify-between gap-3"><h1 className="text-2xl font-extrabold text-[#162543]">{t('Mis listas','My lists')}</h1>
+  <header className="flex items-center justify-between gap-3"><h1 className={`text-2xl font-extrabold text-[#162543] ${embedded?'max-lg:sr-only':''}`}>{t('Mis listas','My lists')}</h1>
    <button type="button" data-lists-map aria-pressed={map} onClick={()=>setMap(v=>!v)} className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#d7e1ea] px-4 text-sm font-bold text-[#162543] ${ring} ${map?'bg-[#eaf6fb]':'bg-white'}`}><MapIcon aria-hidden="true" className="h-4 w-4"/>{t('Mapa','Map')}</button></header>
   {map&&<section data-lists-map-panel aria-label={t('Mapa de lugares guardados','Map of saved places')} className="space-y-2 rounded-2xl border border-[#d7e1ea] bg-[#f6f9fb] p-4">
    {(been?.places.length||want?.places.length)?<ul className="space-y-2">{[...(been?.places??[]),...(want?.places??[])].slice(0,12).map(p=><li key={p.slug} className="flex items-center justify-between gap-2 text-sm">
