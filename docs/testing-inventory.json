@@ -8,7 +8,7 @@
     "handlers": 444,
     "components": 751,
     "hooks": 29,
-    "specs": 650
+    "specs": 651
   },
   "dashboardTabs": [
     "pro_tools",
@@ -93633,6 +93633,15 @@
         {
           "line": 16,
           "title": "`Saved reports [${language}]`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-schedule-calendar-view.spec.ts",
+      "cases": [
+        {
+          "line": 11,
+          "title": "`Schedule calendar view: tasks and key dates by day, navigation, no cut titles [${language}]`"
         }
       ]
     },

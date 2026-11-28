@@ -26,7 +26,7 @@ export function ScheduleCalendar({data,en,disabled,visible,onTask,onMilestone}:{
      <p className={`text-xs font-semibold ${isToday?'inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#008bb5] px-1 text-white':''}`}>{Number(day.slice(8))}</p>
      {shown.map(e=>{const label=e.title,cls=e.kind==='milestone'?'bg-[#fff1e3] text-[#7a3a06]':e.status==='done'?'bg-[#eef8f4] text-[#18573a] line-through':'bg-[#eaf5fb] text-[#006e90]';
       const click=e.kind==='task'?(onTask?()=>onTask(e.task):undefined):(onMilestone?()=>onMilestone(e.milestone):undefined);
-      return click?<button key={e.kind+e.id} type="button" disabled={disabled} data-calendar-entry={e.kind} title={label} onClick={click} className={`block w-full min-w-0 truncate rounded px-1 text-left text-[11px] ${cls}`}>{label}</button>:<span key={e.kind+e.id} data-calendar-entry={e.kind} title={label} className={`block min-w-0 truncate rounded px-1 text-[11px] ${cls}`}>{label}</span>;})}
+      return click?<button key={e.kind+e.id} type="button" disabled={disabled} data-calendar-entry={e.kind} title={label} onClick={click} className={`block w-full min-w-0 whitespace-normal break-words rounded px-1 [overflow-wrap:anywhere] text-left text-[11px] ${cls}`}>{label}</button>:<span key={e.kind+e.id} data-calendar-entry={e.kind} title={label} className={`block min-w-0 whitespace-normal break-words rounded px-1 [overflow-wrap:anywhere] text-[11px] ${cls}`}>{label}</span>;})}
      {list.length>3&&<p className="text-[11px] text-[#52627a]">{t(`+${list.length-3} más`,`+${list.length-3} more`)}</p>}
     </div>;})}
   </div>
