@@ -33,6 +33,7 @@ Pie de página del sitio (regla 2026-11-27, la misma de `FooterSoloWeb` en produ
 
 Listas de opciones (regla 2026-11-27):
 - [ ] Toda fila de opciones al estilo «Mi panel» lleva ícono de contorno gris (#52627a) a la izquierda y flecha a la derecha: Mi panel, Herramientas (grupos y herramientas), pestaña Información de un negocio (Contacto, Reclamar, Sugerir un cambio). Las listas de contenido (solicitudes, negocios) no llevan ícono de fila: llevan foto, ícono mejorado de la sección o solo texto.
+- [ ] `/solicitudes` (hub de Proyectos en teléfono): el título que aparece en la barra al desplazar mide 19px como toda cabecera (`cabeceras.spec.ts`).
 - [ ] Sin texto cortado en Herramientas ni en la lista de solicitudes de `/solicitudes` (títulos largos envuelven).
 
 Texto:
