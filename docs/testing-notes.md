@@ -215,6 +215,7 @@ Casos límite:
 - [ ] Reclamar: `/negocios/<slug>/reclamar` funciona sin sesión → login → vuelve.
 - [ ] Dirección de la ficha (2026-11-27): `/negocios/<slug>` (y `/menu`, `/reclamar`; en inglés `/en/negocios/...`). Las direcciones viejas `/lugar/...` y `/en/lugar/...` redirigen con 308 a `/negocios/...` conservando parámetros y `#`; con el directorio apagado ambas responden 404. Tarjetas, sitemap, canonical, JSON-LD, compartir y avisos usan `/negocios/`.
 - [ ] Bandera apagada: ruta no disponible.
+- [ ] Asistente del directorio (`/asistente`, 2026-11-28): el historial de conversaciones queda solo en esta pestaña (se pierde al cerrarla) y se borra al cerrar sesión; una copia vieja del almacenamiento permanente se descarta al abrirlo. «Mis listas»: el número de «He estado» ya no se guarda en el navegador (se lee de la cuenta).
 
 ## 7. Perfil profesional
 
@@ -333,6 +334,7 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Teléfono: títulos largos envuelven, los botones de lista/cuadrícula no desbordan, el cuaderno de gastos y calendarios cierran al recargar.
 - [ ] Atrás del navegador conserva ediciones sin guardar; sin sesión, enlaces de Pro piden login.
 - [ ] Con Pro apagado nada de lo anterior aparece.
+- [ ] Vista previa de horarios en la tarjeta de búsqueda (2026-11-28): a fin de mes (quedan menos de 6 días con horario en el mes) los días del mes siguiente siguen en la vista previa; el 28/29/30 se ven 3 días y «Días siguientes» avanza al mes nuevo. El calendario del modal no cambia.
 
 ## 12. Datos OSM e importación
 
@@ -347,6 +349,7 @@ Todo tras `PRO_UI_ENABLED` (Pro lanza gratis primero). Pendiente de pasada compl
 - [ ] Muestreo: nombres genéricos descartados; duplicados; direcciones vacías.
 - [ ] Fotos libres (docs/directory-photos.md, migraciones 540 y 541): `commons-photos.mjs` pone foto activa a lugares con etiqueta OSM `wikimedia_commons`/`image` de Commons o `wikidata` (P18), solo CC0, dominio público, CC BY y CC BY-SA, con autor y licencia guardados; `openverse-photos.mjs` solo sugiere: la foto queda **pendiente** en Admin, Fotos (con nota «Sugerida automáticamente (Openverse) — verificar que sea el lugar» y enlace a la fuente), y se publica solo si se aprueba. Probar: aprobar y rechazar una sugerida, ver su crédito, repetir el script (no duplica).
 - [ ] Términos 13.1 y `/como-ordenamos` listan las secciones nuevas y explican las sin reseñas; «Origen de los datos» enlaza © OpenStreetMap y la licencia ODbL.
+- [ ] Datos del directorio en test (2026-11-28, workflow «Supabase migrations» con `directory_data=true` y `target=test`, `scripts/directory/run-test-data.mjs`): solo destino test (rechaza otra opción, otra rama, una URL que no sea del proyecto oqheayqqprpciqdvdaqo o que nombre el de producción); reconstruye `osm-pois.json` desde el extracto público de Geofabrik y corre `osm-filter-attributes.mjs` y `backfill-menu-links.mjs` (simulacro por defecto, `dry_run=false` escribe; relanzarlo no cambia nada). Comprobar en test.contratacr.com: chips «Tipo de comida»/«Sodas» en Restaurantes, «Banco»/«Con cajero» en Bancos, «Marca» en Gasolineras, cadena en Supermercados, «Cabinas» en Hospedaje y «Ver menú» en lugares de comida con enlace de OSM.
 
 ## 13. Cloudflare / infra
 

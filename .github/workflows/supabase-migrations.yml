@@ -25,6 +25,11 @@ on:
         required: false
         type: boolean
         default: false
+      directory_data:
+        description: "SOLO TEST: atributos de filtros, cabinas y enlaces de menú desde OSM (scripts/directory/run-test-data.mjs). Con dry_run solo cuenta. Repetirlo es seguro."
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   # Test migrations, mirroring/seeding and regression all mutate the same
@@ -37,7 +42,7 @@ jobs:
   deploy:
     name: Migrate ${{ inputs.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.seed_directory && 60 || 15 }}
+    timeout-minutes: ${{ (inputs.seed_directory || inputs.directory_data) && 60 || 15 }}
     environment: ${{ inputs.target }}
     permissions:
       contents: read
@@ -57,6 +62,10 @@ jobs:
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
             echo "Missing SUPABASE_DB_URL in the $TARGET_ENV GitHub Environment."
+            exit 1
+          fi
+          if [ "${{ inputs.directory_data }}" = "true" ] && [ "$TARGET_ENV" != "test" ]; then
+            echo "::error::directory_data only runs against test."
             exit 1
           fi
           if [ "$TARGET_ENV" = "test" ] && [ "${{ github.ref }}" != "refs/heads/test" ]; then
@@ -158,3 +167,54 @@ jobs:
           SEED_LOG_DIR: ${{ runner.temp }}/seed/logs
           SEED_SESSION_POOLER: "1"
         run: SEED_DB_URL="$SUPABASE_DB_URL" zsh scripts/directory/seed/run-seed.zsh "$TARGET_ENV"
+
+      # Directory data on TEST only (2026-11-28): section filter attributes (cuisines, sodas, brands, chains, MEP,
+      # cabinas) and «Ver menú» links, which the seed package predates. The OSM input is rebuilt from the public
+      # Geofabrik Costa Rica extract (ODbL) with the converter the local import uses; places match by OSM reference.
+      # run-test-data.mjs refuses any target but test and any database that is not the test project. Idempotent.
+      - name: Directory data guard (test only)
+        if: ${{ inputs.directory_data == true }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET_ENV" != "test" ] || [ "${{ github.ref }}" != "refs/heads/test" ]; then
+            echo "::error::directory_data only runs against test, from the test branch."; exit 1
+          fi
+          case "$SUPABASE_DB_URL" in
+            *"$PRODUCTION_SUPABASE_PROJECT_REF"*) echo "::error::The database URL names the production project."; exit 1 ;;
+            *"$TEST_SUPABASE_PROJECT_REF"*) ;;
+            *) echo "::error::The database URL is not the test project."; exit 1 ;;
+          esac
+          node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$TEST_SUPABASE_PROJECT_REF"
+
+      - name: Set up Python (directory data)
+        if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the OSM input (directory data)
+        if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client >/dev/null
+          python -m pip install --quiet "osmium==4.3.2"
+          mkdir -p "$RUNNER_TEMP/osm/out"
+          cd "$RUNNER_TEMP/osm"
+          curl -fsSL --retry 3 -o costa-rica-latest.osm.pbf https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf
+          curl -fsSL --retry 3 -o costa-rica-latest.osm.pbf.md5 https://download.geofabrik.de/central-america/costa-rica-latest.osm.pbf.md5
+          md5sum -c costa-rica-latest.osm.pbf.md5
+          python -I "$GITHUB_WORKSPACE/scripts/directory/osm-pbf-to-json.py" costa-rica-latest.osm.pbf out
+          ls -la out
+
+      - name: Fill directory data (test)
+        if: ${{ inputs.directory_data == true && inputs.target == 'test' }}
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/directory/run-test-data.mjs test --pois "$RUNNER_TEMP/osm/out/osm-pois.json"
+          else
+            node scripts/directory/run-test-data.mjs test --pois "$RUNNER_TEMP/osm/out/osm-pois.json" --apply
+          fi
