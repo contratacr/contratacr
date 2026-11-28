@@ -161,7 +161,8 @@ export function LandingFooter() {
                       </SupportLink>
                     ) : (
                       <Link
-                        href={href}
+                        // Herramientas: signed in it is a section of «Mi panel» (owner, 2026-11-27).
+                        href={user && href === "/herramientas" ? "/dashboard/profesional?tab=tools" : href}
                         className="inline-flex py-2 text-sm leading-5 text-[#162543] hover:text-[#0083b0] transition-colors"
                       >
                         {t(key)}

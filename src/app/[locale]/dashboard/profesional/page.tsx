@@ -38,6 +38,8 @@ import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-se
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Herramientas } from "@/components/dashboard/herramientas";
+import { HerramientasCatalogo } from "@/components/dashboard/herramientas-catalogo";
+import { isToolsGroupId, toolsCatalog, type ToolsGroupId } from "@/lib/pro/tools-catalog";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1377,6 +1379,28 @@ export default function DashboardPage() {
     scrollDashboardToPageTop();
   }
 
+  // Herramientas (Pro on): a group and the CV/letter opened from it are history entries marked `ccrHerramientas`, so
+  // the bar's arrow (and the phone's back gesture) returns to the screen they were opened from.
+  function pushHerramientas(url: string) {
+    const antes = window.location.href;
+    if (proEnabled) pushProPath(url); else window.history.pushState(null, "", url);
+    if (window.location.href !== antes) window.history.replaceState({ ...(window.history.state ?? {}), ccrHerramientas: true }, "", window.location.href);
+    scrollDashboardToPageTop();
+  }
+  function volverEnHerramientas(destino: string) {
+    if (window.history.state?.ccrHerramientas) { window.history.back(); return; }
+    if (proEnabled) replaceProPath(destino); else window.history.replaceState(null, "", destino);
+    scrollDashboardToPageTop();
+  }
+  function openToolsGroup(id: ToolsGroupId) {
+    requestUnsavedAction(() => pushHerramientas(`${window.location.pathname}?tab=tools&grupo=${id}`));
+  }
+  // The address changes first and the section follows it: a new account's CV opens straight in its editor, and the
+  // editor's back-gesture entry must land on ?tab=cv, not on the group it was opened from.
+  function openToolsSection(tab: "cv" | "carta") {
+    requestUnsavedAction(() => pushHerramientas(`${window.location.pathname}?tab=${tab}`));
+  }
+
   function openRequestedService(categoryId: string) {
     requestUnsavedAction(() => {
       // This is an internal panel action, not a new route. Commit the section
@@ -1631,9 +1655,14 @@ export default function DashboardPage() {
   // suelto «ContrataCR», que dice dónde estás tanto como no decir nada: la
   // misma barra que en Proyectos, Empleos o Notificaciones lleva el nombre de
   // la sección al lado de la marca, y aquí se quedaba sin él.
+  // Pro on (owner, 2026-11-27): «Herramientas» lists five groups; an open group (?tab=tools&grupo=<id>) is a screen of
+  // its own and the bar reads «← <group>». Production (flag off) keeps the three-row list and never reads `grupo`.
+  const toolsGroupParam = PRO_UI_ENABLED && activeTab === "tools" ? searchParams.get("grupo") : null;
+  const toolsGroup: ToolsGroupId | null = isToolsGroupId(toolsGroupParam) ? toolsGroupParam : null;
+  const toolsGroupTitle = toolsGroup ? toolsCatalog(locale === "en").find((g) => g.id === toolsGroup)?.label ?? null : null;
   const mobileSectionHeaderTitle = activeTab === "home"
     ? (proEnabled ? simpleCopy("day") : t("panelHeading"))
-    : (supportThreadTitle ?? mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
+    : (supportThreadTitle ?? mobileProfileSectionTitle ?? toolsGroupTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
   const sectionBackRef = useRef<(() => void) | null>(null);
   // EL GESTO DE VOLVER (deslizar en iOS, el botón físico de Android, el atrás
   // del navegador) usa el HISTORIAL, que no sabe nada de los pasos que se abren
@@ -2273,6 +2302,14 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event(CERRAR_EDITOR_CV));
                           return;
                         }
+                        if (toolsGroup) {
+                          volverEnHerramientas(`${window.location.pathname}?tab=tools`);
+                          return;
+                        }
+                        if (PRO_UI_ENABLED && (activeTab === "cv" || activeTab === "carta")) {
+                          volverEnHerramientas(`${window.location.pathname}?tab=tools&grupo=free`);
+                          return;
+                        }
                         if (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta") {
                           setTab("tools");
                           return;
@@ -2295,7 +2332,7 @@ export default function DashboardPage() {
                       {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
                     </h2>
                   ) : (
-                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? toolsGroupTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
                   <div data-pro-section-actions-slot className="flex shrink-0 justify-self-end" />
                 </div>
@@ -2540,7 +2577,8 @@ export default function DashboardPage() {
                             La dirección sigue existiendo y muestra el aviso de
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
-                        {activeTab === "tools" && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
+                        {activeTab === "tools" && PRO_UI_ENABLED && <HerramientasCatalogo grupo={toolsGroup} alAbrirGrupo={openToolsGroup} alAbrirSeccion={openToolsSection} alVolver={() => volverEnHerramientas(`${window.location.pathname}?tab=tools`)} />}
+                        {activeTab === "tools" && !PRO_UI_ENABLED && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
                         {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" alCambiarEditor={setCvEditorAbierto} />}
                         {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" alCambiarEditor={setCvEditorAbierto} />}
                         {activeTab === "connections" && <ClientConnections />}

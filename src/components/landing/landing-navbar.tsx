@@ -403,8 +403,8 @@ function AccountMenu({
                 nuevo. */}
             {/* Cotizar es lo que el profesional hace seguido: en la app está en
                 la barra de abajo y aquí, en la web, en su menú. */}
-            {isPro && (
-              <Link href={`${professionalPanelHref.split("?")[0]}?mode=offer&tab=tools`} onClick={() => setOpen(false)} className={menuItemClass}>
+            {(isPro || PRO_UI_ENABLED) && (
+              <Link href={`${professionalPanelHref.split("?")[0]}?${isPro ? "mode=offer&" : ""}tab=tools`} onClick={() => setOpen(false)} className={menuItemClass}>
                 <Wrench className="h-4 w-4 text-[#009FD9]" />
                 {t("tools")}
               </Link>
@@ -2892,9 +2892,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                {/* Pro on (test): Herramientas opens the plain list of every tool (/herramientas), like the Pro panel. */}
+                {/* Pro on (test): Herramientas opens the five tool groups. Signed in they are a section of «Mi panel»
+                    (owner, 2026-11-27); signed out, the public /herramientas page. The drawer is closed at first paint,
+                    so the address settles before anyone sees it (and /herramientas redirects a session anyway). */}
                 {PRO_UI_ENABLED ? (
-                  <Link href="/herramientas" prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
+                  <Link href={user ? "/dashboard/profesional?tab=tools" : "/herramientas"} prefetch={false} onClick={cerrarCajon} className={cn(mobileDrawerItemClass, "gap-2")} data-testid="menu-herramientas">
                     <DrawerIcon><Wrench /></DrawerIcon>
                     <span className="min-w-0 flex-1 whitespace-nowrap">{t("tools")}</span>
                   </Link>
