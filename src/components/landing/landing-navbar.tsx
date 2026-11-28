@@ -1590,7 +1590,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   useEffect(() => {
     if (!nativeSearchOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- al abrir el buscador se leen las búsquedas guardadas (localStorage)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- al abrir el buscador se leen las búsquedas guardadas en el navegador
     setBusquedasRecientes(leerBusquedasRecientesConFecha());
     setVisitasRecientes([...readRecentVisits("profesionales"), ...readRecentVisits("negocios")]);
   }, [nativeSearchOpen]);
