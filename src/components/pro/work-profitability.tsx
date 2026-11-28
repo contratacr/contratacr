@@ -15,6 +15,7 @@ const api='/api/pro/work-profitability',field='mt-1 block min-h-11 w-full min-w-
 function copy(en:boolean){return en?{
  title:'Profitability',intro:'What you agreed to charge against what the job costs and is expected to cost until it closes.',
  agreed:'Agreed (before VAT)',agreedAsIs:'Agreed (VAT not itemized)',changes:'Approved changes included',pendingChanges:(n:number,v:string)=>`${n===1?'1 change':n+' changes'} awaiting approval (${v}) are not counted`,
+ withProposed:'Projected margin if the changes awaiting approval are accepted',withProposedNote:'Adds only their price. Their extra cost counts once it is recorded as a cost or a purchase order.',
  estimatedCost:'Estimated cost (budget)',estimatedMargin:'Estimated margin',actual:'Real cost',committed:'Committed in purchase orders',allowances:'Allowances still to choose',
  projectedCost:'Projected cost at close',marginNow:'Margin today',marginProjected:'Projected margin at close',consumed:'Cost already spent',none:'Not set',
  basis:'Projected cost = the higher of (real + committed) and the budget estimate at completion, plus allowances still to choose.',
@@ -26,6 +27,7 @@ function copy(en:boolean){return en?{
 }:{
  title:'Rentabilidad',intro:'Lo que acordó cobrar frente a lo que cuesta el trabajo y lo que se espera que cueste hasta cerrarlo.',
  agreed:'Acordado (sin IVA)',agreedAsIs:'Acordado (IVA no desglosado)',changes:'Cambios aprobados incluidos',pendingChanges:(n:number,v:string)=>`${n===1?'1 cambio':n+' cambios'} por aprobar (${v}) no se cuentan`,
+ withProposed:'Margen proyectado si se aprueban los cambios por aprobar',withProposedNote:'Suma solo su precio. Su costo adicional cuenta cuando se registra como costo u orden de compra.',
  estimatedCost:'Costo estimado (presupuesto)',estimatedMargin:'Margen estimado',actual:'Costo real',committed:'Comprometido en órdenes de compra',allowances:'Montos previstos por elegir',
  projectedCost:'Costo proyectado al cierre',marginNow:'Margen hoy',marginProjected:'Margen proyectado al cierre',consumed:'Costo ya gastado',none:'Sin definir',
  basis:'Costo proyectado = el mayor entre (real + comprometido) y el estimado al terminar del presupuesto, más los montos previstos por elegir.',
@@ -78,6 +80,8 @@ export function WorkProfitability({accountId,workId}:{accountId:string;workId:st
    {row('margin-projected',c.marginProjected,data.projectedMarginCents===null?c.none:money(data.projectedMarginCents)+(data.projectedMarginBp!==null?' · '+pct(data.projectedMarginBp,en):''),true,neg)}
   </dl>
   {data.proposedChangesCount>0&&<p data-profit-pending-changes className="text-sm text-[#52627a]">{c.pendingChanges(data.proposedChangesCount,money(data.proposedChangesCents))}</p>}
+  {data.proposedChangesCount>0&&data.projectedMarginCents!==null&&data.agreedCents!==null&&(()=>{const m=data.projectedMarginCents+data.proposedChangesCents,base=data.agreedCents+data.proposedChangesCents,bp=base>0?Math.round(m*10000/base):null;
+   return <div data-profit-with-proposed className="min-w-0 space-y-1 rounded-xl border border-dashed border-[#d7e1ea] p-3"><dl>{row('margin-with-proposed',c.withProposed,money(m)+(bp!==null?' · '+pct(bp,en):''),false,m<0)}</dl><p className="text-xs text-[#52627a]">{c.withProposedNote}</p></div>;})()}
   <p className="text-xs text-[#52627a]">{c.basis}</p>
   <form onSubmit={e=>{e.preventDefault();void save();}} className="flex flex-wrap items-end gap-2">
    <label className="block min-w-0 flex-1 basis-48 text-sm font-semibold">{c.target}<input data-profit-target inputMode="decimal" value={target} disabled={busy} onChange={e=>setTarget(e.target.value)} className={field}/></label>

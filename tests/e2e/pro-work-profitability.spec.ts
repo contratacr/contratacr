@@ -83,6 +83,10 @@ for(const language of ['es','en'] as const)test(`Work profitability: projection,
   await expect(box.locator('[data-profit-figure="margin-projected"]')).toContainText('99');
   await expect(box.locator('[data-profit-alert="low_margin"]')).toBeVisible();
   await expect(box.locator('[data-profit-pending-changes]')).toBeVisible();
+  // What-if: projected margin if the ₡20.000 proposed change is accepted = (99.500.000 + 2.000.000) / 102.000.000 = 99,5 %.
+  const withProposed=box.locator('[data-profit-with-proposed]');await expect(withProposed).toBeVisible();
+  await expect(withProposed).toContainText(en?'Projected margin if the changes awaiting approval are accepted':'Margen proyectado si se aprueban los cambios por aprobar');
+  await expect(withProposed.locator('[data-profit-figure="margin-with-proposed"]')).toContainText(en?'99.5%':'99,5 %');
   await expectNoHorizontalOverflow(page);
   await box.locator('[data-profit-target]').fill('abc');await box.locator('[data-profit-save]').click();await expect(box.locator('[data-profit-form-error]')).toBeVisible();
   await box.locator('[data-profit-target]').fill(en?'50':'50');await box.locator('[data-profit-save]').click();
