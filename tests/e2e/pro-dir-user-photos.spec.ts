@@ -157,7 +157,10 @@ test('customer photos + Ver menú fallback: category + rights → pending → ap
   try{
    await login(me,customer);await gotoOK(m,'/yo');
    await expect(m.locator('[data-me-counters]')).toContainText('2');
-   await m.locator('[data-me-impact]').getByRole('tab',{name:'Fotos'}).click();
+   // The tab works once hydrated: retry the click until it is selected.
+   const photosTab=m.locator('[data-me-impact]').getByRole('tab',{name:'Fotos'});
+   await expect(async()=>{await photosTab.click();await expect(photosTab).toHaveAttribute('aria-selected','true',{timeout:1000});}).toPass({timeout:20000});
+   await expect(m.locator('[data-me-name]')).not.toHaveCSS('text-overflow','ellipsis');
    const list=m.locator('[data-me-photos]');
    await expect(list.locator('[data-me-photo="approved"]')).toHaveCount(2);await expect(list.locator('[data-me-photo="pending"]')).toHaveCount(1);
    await expect(list).toContainText('Pendiente de revisión');

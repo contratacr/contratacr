@@ -81,7 +81,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
      :<span className="grid h-20 w-20 place-items-center rounded-full bg-[#eef5f9] text-[#52627a]"><Camera aria-hidden="true" className="h-8 w-8"/></span>}
     <span aria-hidden="true" className="absolute bottom-0 right-0 grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-[#009FD9] text-white"><Plus className="h-4 w-4"/></span></button>
    <AvatarFileInput ref={fileRef} className="hidden" onFile={upload}/>
-   <div className="min-w-0"><p data-me-name className="truncate text-xl font-extrabold">{name}</p>
+   <div className="min-w-0"><p data-me-name className="text-xl font-extrabold [overflow-wrap:anywhere]">{name}</p>
     <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1" data-me-counters>{counter(Star,reviewsN,t('reseñas','reviews'))}{counter(MapPinCheck,visits,t('visitas','visits'))}{counter(ImageIcon,counts.photos,t('fotos','photos'))}</ul></div></section>
   {uploadError&&<p role="alert" className="mt-2 text-sm font-semibold text-red-800">{t('No se pudo subir la foto. Intente de nuevo.','The photo could not be uploaded. Please try again.')}</p>}
 
@@ -92,7 +92,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
   {cards.length>0&&<section data-me-experience aria-labelledby="me-exp"><h2 id="me-exp" className={h2}>{t('Comparta su experiencia','Share your experience')}</h2>
    <ul className="space-y-3">{cards.map(p=><li key={p.slug} data-experience-card={p.slug} className="relative rounded-2xl border border-[#d7e1ea] p-4">
     <button type="button" aria-label={`${t('Descartar','Dismiss')}: ${p.name}`} onClick={()=>{dismissExperience(p.slug);setDismissed(readDismissed().concat(p.slug));}} className={`absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 ${ring}`}><X aria-hidden="true" className="h-4 w-4"/></button>
-    <div className="flex items-center gap-3 pr-8"><Thumb name={p.name} image={p.image}/><div className="min-w-0"><p className="truncate font-bold">{p.name}</p><p className="text-sm text-slate-700">{t('¿Recomienda este negocio?','Do you recommend this business?')}</p></div></div>
+    <div className="flex items-center gap-3 pr-8"><Thumb name={p.name} image={p.image}/><div className="min-w-0"><p className="font-bold [overflow-wrap:anywhere]">{p.name}</p><p className="text-sm text-slate-700">{t('¿Recomienda este negocio?','Do you recommend this business?')}</p></div></div>
     <div className="mt-3 flex gap-2">{([['yes',t('Sí','Yes')],['no','No'],['maybe',t('Tal vez','Maybe')]] as const).map(([k,label])=><a key={k} href={`${prefix}/negocios/${p.slug}?recomienda=${k}#resenas`} onClick={()=>exp(p.slug,k)} className={`flex min-h-11 flex-1 items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-sm font-bold ${ring}`}>{label}</a>)}</div></li>)}</ul></section>}
 
   <section data-me-impact aria-labelledby="me-impact"><h2 id="me-impact" className={h2}>{t('Impacto','Impact')}</h2>
@@ -109,7 +109,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
 
   {recent.length>0&&<section data-me-recent aria-labelledby="me-recent"><h2 id="me-recent" className={h2}>{t('Vistos recientemente','Recently viewed')}</h2>
    <ul className="divide-y divide-[#eef2f6]">{recent.slice(0,5).map(p=><li key={p.slug} className="flex items-center gap-3 py-3"><Thumb name={p.name} image={p.image}/>
-    <a href={`${prefix}/negocios/${p.slug}`} className={`min-w-0 flex-1 ${ring}`}><span className="block truncate font-bold">{p.name}</span>{p.area&&<span className="block truncate text-sm text-slate-600">{p.area}</span>}</a>
+    <a href={`${prefix}/negocios/${p.slug}`} className={`min-w-0 flex-1 ${ring}`}><span className="block font-bold [overflow-wrap:anywhere]">{p.name}</span>{p.area&&<span className="block text-sm text-slate-600">{p.area}</span>}</a>
     <SaveToList slug={p.slug} locale={locale} signedIn loginHref={null} name={p.name} area={p.area} image={p.image} variant="icon"/></li>)}</ul></section>}
 
   <section data-me-contrib aria-labelledby="me-contrib"><h2 id="me-contrib" className={h2}>{t('Contribuciones','Contributions')}</h2>
