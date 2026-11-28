@@ -137,6 +137,7 @@ Dispositivos/límites:
 - [ ] Filtro que no corresponde a la sección (`/bancos?cuisine=pizza`) muestra «Revise los filtros e intente de nuevo», sin error de página. Vacío con «Abierto ahora» y otro filtro: botón «Quitar "Abierto ahora"» además de «Limpiar filtros».
 - [ ] Filtros nuevos se conservan en la dirección, al recargar, con Atrás, al cargar más resultados (desplazamiento infinito) y al aplicar el formulario «Filtros» de computadora (campos ocultos).
 - [ ] Chips en teléfono (390 y 360 px): fila que se desliza de lado, cada etiqueta completa, sin «…».
+- [ ] Prueba automática `tests/e2e/pro-dir-filters.spec.ts` (local Pro): cada filtro devuelve solo lo que cumple (API con datos reales y lugares sintéticos), vacío amable, combinaciones con «Abierto ahora» y «Más cercanos», dirección tras recargar y Atrás, chips a 390/360 px (capturas en `~/dl/out-filters`), directorio apagado. 2026-11-27: 12/12 dos veces (computadora y teléfono).
 
 Quitado:
 - [ ] Sin insignia de rango, sin cita de reseña en la tarjeta, sin chip "24 horas", sin botón de lista en pantallas solo-mapa.
