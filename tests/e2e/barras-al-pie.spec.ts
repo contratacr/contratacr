@@ -90,6 +90,8 @@ test.describe("@seeded franjas de acciones al pie", () => {
     const medidas: { nombre: string; franja: Franja }[] = [];
     for (const pantalla of pantallas) {
       await pantalla.abrir();
+      // Same as the publish forms below: the strip hides the footer from an effect, so measure once hydrated.
+      await waitForInteractivePage(page);
       medidas.push({ nombre: pantalla.nombre, franja: await medirFranja(page) });
     }
 

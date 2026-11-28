@@ -74,6 +74,8 @@ test('Pro calendar compatibility: free client legacy API books atomically, new U
         await expect(ownerPage.getByRole('button',{name:'Lista',exact:true})).toHaveCount(0);
         await expect(ownerPage.getByRole('button',{name:'Semana',exact:true})).toHaveCount(0);
         await expect(ownerPage.getByLabel('Buscar registros')).toHaveCount(0);
+        // The calendar opens on the current Costa Rica month; three days ahead can be next month (end of month).
+        if (day.slice(0, 7) !== new Date(Date.now() - 6 * 3600000).toISOString().slice(0, 7)) await ownerPage.getByRole('button', { name: 'Mes siguiente', exact: true }).click();
         await ownerPage.getByRole('button',{name:day,exact:true}).click();
         // Unified appointments: the booking is a card of the single list (title = service, subtitle = customer), not a day heading of the calendar.
         await ownerPage.getByLabel('Mostrar citas',{exact:true}).selectOption({label:'Todas'});
