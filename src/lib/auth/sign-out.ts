@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { clearStoredMode } from "@/hooks/use-mode";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { clearProBrowserStorage } from "@/lib/pro/browser-storage-cleanup";
+import { borrarHistorialAsistente } from "@/lib/directory/assistant-history";
 
 /** Marca de UNA recarga: la página de destino sigue diciendo "Cerrando sesión…". */
 export const MARCA_CERRANDO_SESION = "ccr:cerrando-sesion";
@@ -54,6 +55,8 @@ export async function prepareForAccountSignOut() {
 export async function signOutToHome(locale: string, options?: { accountDeletion?: "completed" | "pending" }) {
   _signingOut = true;
   clearStoredMode();
+  // The directory assistant's conversations stay with the account that wrote them.
+  borrarHistorialAsistente();
   // Pro drafts, unconfirmed-write journals and unsent upload bytes never outlive
   // the session on this device (bounded wait for the recovery databases).
   await clearProBrowserStorage();

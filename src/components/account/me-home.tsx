@@ -43,7 +43,7 @@ export function MeHome({locale,name,counts,isPro,empleos,shareUrl,dashboardHref,
  const [shareOpen,setShareOpen]=useState(false),[qrOpen,setQrOpen]=useState(false),[recent,setRecent]=useState<ViewedPlace[]>([]),[dismissed,setDismissed]=useState<string[]>([]);
  const [impact,setImpact]=useState<'reviews'|'photos'>('reviews'),[photo,setPhoto]=useState<string|null>(null),[uploadError,setUploadError]=useState(false),[visits,setVisits]=useState(beenCount);
  const fileRef=useRef<HTMLInputElement>(null);
- // localStorage only exists in the browser, so it is read after mount.
+ // Browser-only data (recently viewed places on this device), so it is read after mount.
  // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{setRecent(readViewedPlaces());setDismissed(readDismissed());void refreshBeenHereCount().then(n=>{if(n!==null)setVisits(n);});},[]);
  const shownAvatar=photo??avatarUrl;

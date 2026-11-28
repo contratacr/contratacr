@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { cn } from "@/lib/utils";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
+import { escribirHistorial, leerHistorial as leerConversaciones, type ConversacionGuardada } from "@/lib/directory/assistant-history";
 import {
   ASSISTANT_COPY,
   AssistantMessageBubble,
@@ -98,21 +99,8 @@ const T = {
   },
 } as const;
 
-type Guardada = { id: string; titulo: string; actualizada: number; mensajes: ChatMessage[] };
-const HIST_KEY = "ccr:asistente:conversaciones:v1";
-const MAX_CONVERSACIONES = 20;
-
-function leerHistorial(): Guardada[] {
-  try {
-    const v = JSON.parse(window.localStorage.getItem(HIST_KEY) || "[]");
-    return Array.isArray(v) ? (v as Guardada[]).filter((c) => c && typeof c.id === "string" && Array.isArray(c.mensajes)) : [];
-  } catch {
-    return [];
-  }
-}
-function escribirHistorial(v: Guardada[]) {
-  try { window.localStorage.setItem(HIST_KEY, JSON.stringify(v.slice(0, MAX_CONVERSACIONES))); } catch { /* sin almacenamiento */ }
-}
+type Guardada = ConversacionGuardada<ChatMessage>;
+const leerHistorial = () => leerConversaciones<ChatMessage>();
 
 type ReconocimientoVoz = { lang: string; interimResults: boolean; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
 
