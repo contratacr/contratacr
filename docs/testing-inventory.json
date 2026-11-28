@@ -3,12 +3,12 @@
   "warning": "Inventario estático, no cobertura ejecutada. Los specs relacionados son candidatos por dominio; una referencia textual tampoco demuestra que todas las acciones estén probadas.",
   "totals": {
     "files": 1411,
-    "controls": 6577,
+    "controls": 6580,
     "pages": 149,
     "handlers": 444,
     "components": 749,
     "hooks": 29,
-    "specs": 644
+    "specs": 645
   },
   "dashboardTabs": [
     "pro_tools",
@@ -56283,7 +56283,7 @@
       "methods": [],
       "controls": [
         {
-          "line": 34,
+          "line": 35,
           "tag": "input",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>{const base=draft??[1,2,3,4,5];const next=on?base.filter(x=>x!==d):[...base,d].sort((a,b)=>a-b);if(!next.length){setError(t('Elija al menos un día laborable.','Choose at least one working day.'));return;}setError('');setDrafts(old=>({...old,[p.personId]:next}));}}",
@@ -56291,7 +56291,7 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 35,
+          "line": 36,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void send({action:'set',personId:p.personId,revision:p.revision,workDays:drafts[p.personId]},p.personId,t('Jornada guardada.','Workdays saved.'))}",
@@ -56299,10 +56299,34 @@
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         },
         {
-          "line": 36,
+          "line": 37,
           "tag": "Button",
           "label": "Texto/etiqueta dinámica: revisar en UI",
           "handler": "{()=>void send({action:'clear',personId:p.personId,revision:p.revision},p.personId,t('Ahora sigue el calendario de la empresa.','Now follows the company calendar.'))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 40,
+          "tag": "Button",
+          "label": "{t('Quitar el día libre ','Remove the day off ')+civil(d,en)}",
+          "handler": "{()=>void send({action:'days_off',personId:p.personId,revision:p.daysOffRevision,daysOff:p.daysOff.filter(x=>x!==d)},p.personId,t('Día libre quitado.','Day off removed.'))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 42,
+          "tag": "input",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{e=>setDayDrafts(old=>({...old,[p.personId]:e.target.value}))}",
+          "destination": "",
+          "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
+        },
+        {
+          "line": 43,
+          "tag": "Button",
+          "label": "Texto/etiqueta dinámica: revisar en UI",
+          "handler": "{()=>{const d=dayDrafts[p.personId];void send({action:'days_off',personId:p.personId,revision:p.daysOffRevision,daysOff:[...p.daysOff,d].sort()},p.personId,t('Día libre agregado.','Day off added.')).then(()=>setDayDrafts(old=>({...old,[p.personId]:''})));}}",
           "destination": "",
           "states": "habilitado, deshabilitado, foco, carga, éxito, error, doble pulsación; según aplique"
         }
@@ -91986,6 +92010,23 @@
         {
           "line": 10,
           "title": "'Pro internal payment receipts: explicit immutable copies, ledger preservation, reversal, private print and owner isolation'"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-person-days-off.spec.ts",
+      "cases": [
+        {
+          "line": 11,
+          "title": "'person days off schemas'"
+        },
+        {
+          "line": 21,
+          "title": "'Person days off: owner saves and clears them, CAS, others cannot, the day rule and the next working day use them'"
+        },
+        {
+          "line": 51,
+          "title": "`Person days off in the work calendar panel [${language}]`"
         }
       ]
     },

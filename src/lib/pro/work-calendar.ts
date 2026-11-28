@@ -82,11 +82,14 @@ export function mergeExceptions(current:readonly WorkCalendarException[],extra:r
  return [...current,...extra.filter(e=>!taken.has(e.day))].sort((x,y)=>x.day<y.day?-1:1).slice(0,200);
 }
 
+/** Row 13 (migration 561): a civil date a person does not work (vacation, leave); never a working day for their tasks. */
+const personDayOff=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>{const d=new Date(v+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===v&&v>='2000-01-01'&&v<='2100-12-31';});
 /** Row 13: working weekdays per person (0 = Sunday ... 6 = Saturday). `workDays` null = follows the company calendar. */
-export const personWorkdaysSchema=z.object({people:z.array(z.object({personId:z.string().uuid(),name:z.string().min(1).max(160),workDays:z.array(z.number().int().min(0).max(6)).min(1).max(7).nullable(),revision:z.number().int().min(0)}).strict()).max(300)}).strict();
+export const personWorkdaysSchema=z.object({people:z.array(z.object({personId:z.string().uuid(),name:z.string().min(1).max(160),workDays:z.array(z.number().int().min(0).max(6)).min(1).max(7).nullable(),revision:z.number().int().min(0),daysOff:z.array(personDayOff).max(60).default([]),daysOffRevision:z.number().int().min(0).default(0)}).strict()).max(300)}).strict();
 export type PersonWorkdays=z.infer<typeof personWorkdaysSchema>;
 export const personWorkdaysMutationSchema=z.union([
  z.object({action:z.literal('set'),personId:z.string().uuid(),revision:z.number().int().min(0),workDays:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(d=>new Set(d).size===d.length)}).strict(),
  z.object({action:z.literal('clear'),personId:z.string().uuid(),revision:z.number().int().min(1)}).strict(),
+ z.object({action:z.literal('days_off'),personId:z.string().uuid(),revision:z.number().int().min(0),daysOff:z.array(personDayOff).max(60).refine(d=>new Set(d).size===d.length)}).strict(),
 ]);
 export const personWorkdaysResultSchema=z.object({personId:z.string().uuid(),revision:z.number().int().min(0)}).strict();

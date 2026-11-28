@@ -22,8 +22,9 @@ export async function POST(req:Request){
  if(!proSameOrigin(req))return proFail(403,'Origen no autorizado.');
  try{
   const a=await proActor(req);if(a.error)return a.error;const limited=await enforceRateLimit(req,'person-workdays-'+a.user.id,30,60000);if(limited)return limited;
-  let input;try{input=personWorkdaysMutationSchema.parse(await proBoundedJson(req,2048));}catch{return proFail(400,'Revise los días laborables.');}
-  const r=await a.db.rpc('pro_person_workdays_save',{p_owner:a.user.id,p_person:(await person())??a.user.id,p_input:input});
+  let input;try{input=personWorkdaysMutationSchema.parse(await proBoundedJson(req,4096));}catch{return proFail(400,'Revise los días laborables.');}
+  // Row 13 (migration 561): days off per person have their own writer and revision.
+  const r=await a.db.rpc(input.action==='days_off'?'pro_person_days_off_save':'pro_person_workdays_save',{p_owner:a.user.id,p_person:(await person())??a.user.id,p_input:input});
   if(r.error)return proDbError(r.error,'Las jornadas cambiaron en otra pestaña. Recargue.');
   return Response.json(personWorkdaysResultSchema.parse(r.data),{headers});
  }catch{return proFail(503,'No se pudo comprobar el guardado. Reintente.');}
