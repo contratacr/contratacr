@@ -55,6 +55,10 @@ const CARD_PEEK = 0.5;
 const FULL = 0.92;
 const SHEET_TOP_GAP = 58;
 const SSR_SNAP_POINTS = [MAP_PEEK, CARD_PEEK, 0.82] as const;
+// A sheet that opens extended is painted at FULL: the transform clamps it to the CSS height (ALTO_EXTENDIDO), so the
+// first paint already equals the measured extended snap — under the 124px navbar (where 0.82 clamped the same way) and
+// under the floating card, where 0.82 left it ~85px low until hydration (2026-11-27).
+const SSR_OPEN = FULL;
 // El alto de reposo de la hoja, en unidades del navegador: idéntico en el
 // servidor y en el teléfono, así que no hay un segundo pintado que corrija.
 const ALTO_EXTENDIDO = `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`;
@@ -64,7 +68,10 @@ function mobileSheetSnapPoints(): readonly number[] {
   const viewportHeight = window.innerHeight || 1;
   const headerValue = getComputedStyle(document.documentElement)
     .getPropertyValue("--ccr-native-header-height");
-  const headerHeight = Number.parseFloat(headerValue) || 124;
+  // 0px is a real height (map screens with the floating card, 2026-11-27): `|| 124` read it as missing and the open
+  // sheet re-snapped 30px lower right after arriving.
+  const parsedHeader = Number.parseFloat(headerValue);
+  const headerHeight = Number.isFinite(parsedHeader) ? parsedHeader : 124;
   const expanded = Math.max(CARD_PEEK + 0.2, Math.min(FULL, (viewportHeight - headerHeight - SHEET_TOP_GAP) / viewportHeight));
   const oneCard = Math.min(CARD_PEEK, expanded - 0.2);
   // En la app el panel llega hasta el fondo y la barra flotante tapa su parte
@@ -174,7 +181,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   // a la vista). Sin resultados no hay nada que ver en el mapa y sí un aviso con
   // su botón: abre extendido, o el botón quedaba bajo el borde de la pantalla.
   // El valor sale de las props, así que servidor y cliente pintan lo mismo.
-  const [heightFr, setHeightFr] = useState<number>(sinResultados || hojaAbiertaAlInicio ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : mapaPrimero ? MAP_PEEK : CARD_PEEK);
+  const [heightFr, setHeightFr] = useState<number>(sinResultados || hojaAbiertaAlInicio ? SSR_OPEN : mapaPrimero ? MAP_PEEK : CARD_PEEK);
   // Cada cambio de posición del panel re-mide la cola (también al terminar la
   // transición con la que llega a su sitio).
   useEffect(() => {
@@ -197,7 +204,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: CARD_PEEK });
   const dragStartedAtRef = useRef(0);
-  const curRef = useRef<number>(sinResultados ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : mapaPrimero ? MAP_PEEK : CARD_PEEK);
+  const curRef = useRef<number>(sinResultados || hojaAbiertaAlInicio ? SSR_OPEN : mapaPrimero ? MAP_PEEK : CARD_PEEK);
   const expandedStart = currentSnapPoints[1] ?? CARD_PEEK;
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
 

@@ -81,7 +81,7 @@ Quitado:
 
 Dispositivos/límites:
 - [ ] iPhone con teclado abierto: la tarjeta flotante no asoma.
-- [ ] Sin parpadeo al entrar a `/buscar` o a una sección (2026-11-27, iPhone): el mapa, la hoja de resultados y la tarjeta flotante quedan donde salen en el primer cuadro (antes todo subía 124 px al hidratar); con Pro, las tarjetas pintan WhatsApp/Llamar desde el servidor en vez de «Consultando horarios…» (solo un profesional con agenda cambia a «Ver disponibilidad»). Cubierto por `tests/e2e/search-first-paint-stable.spec.ts`.
+- [ ] Sin parpadeo al entrar a `/buscar` o a una sección (2026-11-27, iPhone): el mapa, la hoja de resultados y la tarjeta flotante quedan donde salen en el primer cuadro (antes todo subía 124 px al hidratar); con Pro, las tarjetas pintan WhatsApp/Llamar desde el servidor en vez de «Consultando horarios…» (solo un profesional con agenda cambia a «Ver disponibilidad»). Cubierto por `tests/e2e/search-first-paint-stable.spec.ts`. También al llegar desde el buscador de la portada a una búsqueda que abre la hoja extendida (`/profesionales/plomeria/alajuela`): la hoja ya no baja 30 px después de llegar. Pendiente en la app nativa: en `/restaurantes` la hoja todavía se reacomoda (~60 px) justo cuando se quita la portada de carga.
 - [ ] Buscar sin permiso de ubicación: "Más cercanos" muestra "Sin ubicación".
 - [ ] Bandera apagada: navbar y buscador idénticos a producción.
 - [ ] Búsqueda de varias palabras en «Lugares» (migración 544, prefiltro `search_haystack` + puntaje plpgsql): «soda la», «farmacia fischel», «hotel san jose» responden en menos de 300 ms (local: 8,2 s → 78/32/37 ms) y con los mismos resultados que antes; «san jose» ~0,35 s, una sola palabra corta («la») ~1,8 s.

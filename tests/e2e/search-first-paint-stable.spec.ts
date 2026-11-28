@@ -11,6 +11,8 @@ import { directoryEnabled, isMobileProject } from "./helpers";
 const PATHS = [
   { path: "/buscar", directoryOnly: false },
   { path: "/restaurantes", directoryOnly: true },
+  // A search that opens with the sheet extended: it used to land ~85px low and re-snap (0px header read as 124).
+  { path: "/profesionales/plomeria/alajuela", directoryOnly: false },
 ];
 
 for (const { path, directoryOnly } of PATHS) {
