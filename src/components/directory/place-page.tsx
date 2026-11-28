@@ -2,7 +2,7 @@ import {createElement,type ReactNode} from 'react';
 import {cn} from '@/lib/utils';
 import {RecordRecentVisit} from '@/components/mobile/record-recent-visit';
 import {AccionesAlPie} from '@/components/ui/acciones-al-pie';
-import {ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Globe,Phone,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
+import {Accessibility,ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Check,ChevronRight,CircleParking,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Globe,Phone,Landmark,Leaf,MapPin,PawPrint,PenLine,Percent,Pill,ShieldCheck,ShoppingBag,Siren,Smartphone,Star,Store,Truck,Waves,Wifi,Wind,Wrench,Zap,type LucideIcon} from 'lucide-react';
 import {VERIFICATION_LABELS,WEEKDAYS,type PublicPlace} from '@/lib/directory/types';
 import {PlaceReportForm} from './place-report-form';
 import {DIRECTORY_LISTINGS_ENABLED} from '@/lib/directory/feature-flags';
@@ -12,6 +12,8 @@ import {PlaceMapDialog} from './place-map-dialog';
 import {PlacePhotoGallery} from './place-photo-gallery';
 import {PlaceMenuFallback,PlaceMenuPhotos,PlacePhotosTab} from './place-photos-tab';
 import {menuSectionOf,placeMenuLink} from '@/lib/directory/place-menu-link';
+import {ATTR_QUESTION_KEYS,attrIcon,attrValueText,nextAttrQuestion,type AttrState} from '@/lib/directory/place-questions';
+import {PlaceAttributeQuestion} from './place-attribute-question';
 import {menuPhotosFor,type PhotoCategory} from '@/lib/directory/place-photos';
 import {PlaceSectionAvatar} from './place-section-avatar';
 import {placePhotoSrc} from '@/lib/directory/place-photos';
@@ -49,7 +51,7 @@ import {PlaceSocialLinks,SOCIAL_ICONS} from './place-social-links';
  * hours from OSM keep «Horario según OpenStreetMap.»; nothing is shown that the data does not contain. The footer keeps
  * the data credit (© OpenStreetMap, ODbL) and «Reportar un problema o pedir el retiro» (Ley 10.946 notice channel).
  */
-const AMENITY_ICONS:Record<string,LucideIcon>={ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Landmark,Leaf,CircleParking,PawPrint,Percent,Pill,ShoppingBag,Siren,Smartphone,Store,Truck,Waves,Wifi,Wind,Wrench,Zap};
+const AMENITY_ICONS:Record<string,LucideIcon>={Accessibility,ArrowLeftRight,Banknote,Bath,CalendarCheck,CalendarClock,Car,Clock,Coffee,CreditCard,Droplets,FileText,Fuel,Landmark,Leaf,CircleParking,PawPrint,Percent,Pill,ShoppingBag,Siren,Smartphone,Store,Truck,Waves,Wifi,Wind,Wrench,Zap};
 const iconOf=(name:string)=>AMENITY_ICONS[name]??Check;
 /** Extras row of the identity card (Reservar, Reseñar, Pedir, Sitio web, Guardar…): slides sideways on phones, wraps from lg. */
 const CHIP_ROW='scrollbar-none -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 py-0.5 [touch-action:pan-x_pan-y] sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0';
@@ -82,7 +84,7 @@ function offerTabLabel(vertical:string,en:boolean):string{
  if(vertical==='vehicle_dealer'||vertical==='real_estate')return en?'Listings':'Anuncios';
  return en?'Prices':'Precios';
 }
-export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer,claimable=false,photoMeta,menuManageHref=null}:{/** «Suba su menú» for the business (owner/managers) in the «Ver menú» fallback. */menuManageHref?:string|null;/** 547: per photo URL, who added it and what it shows (server-built; no ids). */photoMeta?:Record<string,{by:string|null;owner:boolean;category:PhotoCategory|null}>;/** Unclaimed: «Reclamar esta empresa» row at the end of «Información». */claimable?:boolean;viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
+export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,photoSlot,priceNote,slots={},hasMenu=false,reservation=false,viewer,claimable=false,photoMeta,menuManageHref=null,attrState=null}:{/** 548: community-confirmed attributes and the keys this viewer already answered. */attrState?:AttrState|null;/** «Suba su menú» for the business (owner/managers) in the «Ver menú» fallback. */menuManageHref?:string|null;/** 547: per photo URL, who added it and what it shows (server-built; no ids). */photoMeta?:Record<string,{by:string|null;owner:boolean;category:PhotoCategory|null}>;/** Unclaimed: «Reclamar esta empresa» row at the end of «Información». */claimable?:boolean;viewer?:{signedIn:boolean;loginHref:string|null;isManager:boolean};hasMenu?:boolean;reservation?:boolean;photoSlot?:ReactNode;place:PublicPlace;locale:string;hoursSource?:string|null;orderLink?:OrderLink|null;brand?:PlaceBrand|null;saveSlot?:ReactNode;priceNote?:string|null;slots?:PlacePageSlots}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const area=joinPlaceParts([place.address.adminArea3,place.address.adminArea2,place.address.adminArea1]);
  const days=en?WEEKDAYS.en:WEEKDAYS.es,vertical=en?place.vertical.nameEn:place.vertical.nameEs;
@@ -96,7 +98,11 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
  const today=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Costa_Rica'})).getDay();
  const phone=checkPlacePhone(place.phone);
  const status=place.status==='published'?openStatus(place.hours):null,statusText=status?openStatusText(status,en,days):null;
- const amenities=placeAmenities(place.attributes,{open24:status?.state==='open24'});
+ // 548: «Según clientes» rows (community-confirmed «yes», never over the place's own value) after the place's own amenities.
+ const amenities=[...placeAmenities(place.attributes,{open24:status?.state==='open24'}).map(a=>({...a,community:false})),
+  ...Object.entries(attrState?.confirmed??{}).filter(([,v])=>v).map(([k])=>({key:'community:'+k,icon:attrIcon(k),es:attrValueText(k,true,false),en:attrValueText(k,true,true),community:true}))];
+ // Questions still open for this viewer, in section order (one card shows them one at a time).
+ const attrQueue=(()=>{const out:string[]=[];for(let n=0;n<(ATTR_QUESTION_KEYS[place.vertical.id]?.length??0);n++){const k=nextAttrQuestion(place.vertical.id,place.attributes,attrState,out);if(!k)break;out.push(k);}return out;})();
  const cuisines=placeCuisines(place.attributes),priceLevel=placePriceLevel(place.attributes);
  // 547: menu photos go last, so the hero, the avatar and the cards show the place itself whenever another photo exists.
  const photos=place.media.filter(m=>m.kind==='photo').map(m=>({url:m.url,caption:(en?m.altEn:m.altEs)??null,...photoMeta?.[m.url]}))
@@ -247,8 +253,10 @@ export function PlacePage({place,locale,hoursSource,orderLink,brand,saveSlot,pho
   {amenities.length>0&&<section id="comodidades" aria-labelledby="place-amenities" data-place-amenities={amenities.length} className="scroll-mt-32 space-y-3">
    <h2 id="place-amenities" className={H2}>{t('Comodidades y más','Amenities and more')}</h2>
    <ul className="grid gap-2 sm:grid-cols-2">{amenities.map(a=><li key={a.key} data-place-amenity={a.key} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5e9ee] bg-white px-4 py-2.5">
-    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#0083b0]">{createElement(iconOf(a.icon),{className:'h-5 w-5'})}</span><span className="text-[15px] font-semibold text-[#162543]">{en?a.en:a.es}</span></li>)}</ul>
+    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center text-[#0083b0]">{createElement(iconOf(a.icon),{className:'h-5 w-5'})}</span><span className="min-w-0 text-[15px] font-semibold text-[#162543]">{en?a.en:a.es}
+     {a.community&&<span className="mt-0.5 block text-xs font-semibold text-[#68778d]" data-place-amenity-community>{t('Según clientes','According to customers')}</span>}</span></li>)}</ul>
   </section>}
+  {published&&viewer&&!viewer.isManager&&attrQueue.length>0&&<PlaceAttributeQuestion slug={place.slug} locale={locale} keys={attrQueue} signedIn={viewer.signedIn} loginHref={viewer.loginHref} where="info"/>}
   {slots.reservation}
   {brand&&brandAbout&&<section id="acerca" aria-labelledby="place-about" data-place-brand-about={brand.slug} className="scroll-mt-32 space-y-3">
    <h2 id="place-about" className={H2}>{t(`Acerca de ${brand.name}`,`About ${brand.name}`)}</h2>

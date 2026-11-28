@@ -36,6 +36,7 @@ import {SaveToList} from '@/components/directory/save-to-list';
 import {PlacePhotoUpload} from '@/components/directory/place-photo-upload';
 import type {PhotoCategory} from '@/lib/directory/place-photos';
 import {menuSectionOf} from '@/lib/directory/place-menu-link';
+import {nextAttrQuestion,type AttrState} from '@/lib/directory/place-questions';
 import {businessPlaces} from '@/lib/directory/business-access';
 import type {OrderLink,PlaceBrand,PlaceEvent,PublicBrand,ReservationConfig} from '@/lib/directory/place-features';
 import {BIZ} from '@/components/directory/biz-ui';
@@ -160,6 +161,10 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  const placeId=claim.data?.id as string|undefined;
  const photoMeta=placeId?await placePhotoMeta(db,placeId):undefined;
  const photoVertical=menuSectionOf(vertical,place.attributes.kind)??vertical;
+ // 548: «¿Sabe si este lugar…?» — community-confirmed attributes and what this person already answered.
+ const attrRes=place.status==='published'?await db.rpc('dir_place_attribute_state',{p_slug:slug,p_actor:user?.id??null}):null;
+ const attrState=attrRes&&!attrRes.error?attrRes.data as AttrState|null:null;
+ const reviewQuestions=(()=>{const out:string[]=[];for(;;){const k=nextAttrQuestion(vertical,place.attributes,attrState,out);if(!k)break;out.push(k);}return out;})();
  const ownStreetView=!placeId||place.media.some(m=>m.kind==='photo')?null:(await placeStreetViews([placeId],db)).get(placeId)??null;
  // Spread on purpose: PlacePage renders slots.streetView once place-page.tsx declares it (until then it is ignored).
  const streetViewSlot=ownStreetView?{streetView:<PlaceStreetView view={ownStreetView} en={en} placeName={place.name}/>}:{};
@@ -179,7 +184,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
  // on the server (header pixel-stable on reload, 2026-11-27); SectionHeaderTitle keeps the back and «…» wiring.
  const barTitle=en?place.vertical.nameEn:place.vertical.nameEs;
  return <DirectoryShell section={{title:barTitle,menu:true,centrado:true}}><SectionHeaderTitle title={barTitle} fallbackHref='/' tambienEnLaWeb centrado menu/>{published&&<DatosEstructurados datos={placeJsonLd(place,`${appUrl}${prefix}/negocios/${slug}`)}/>}<PlacePage place={place} locale={locale} hoursSource={hoursSource&&!hoursSource.error?hoursSource.data as string|null:null}
-  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} photoMeta={photoMeta} menuManageHref={managesHere?(vertical==='restaurant'||vertical==='cafe_bar'?`${prefix}/dashboard/negocio/menu?lugar=${slug}`:`${prefix}/dashboard/negocio`):null} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
+  orderLink={orderLink} brand={placeBrand} priceNote={priceNote} viewer={{signedIn:!!user,loginHref,isManager:!!manage}} claimable={unclaimed} photoMeta={photoMeta} attrState={attrState} menuManageHref={managesHere?(vertical==='restaurant'||vertical==='cafe_bar'?`${prefix}/dashboard/negocio/menu?lugar=${slug}`:`${prefix}/dashboard/negocio`):null} hasMenu={!!menuData&&menuData.sections.length>0} reservation={!!reservationConfig}
   photoSlot={published?<PlacePhotoUpload slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} isManager={!!manage} popover buttonClass={PAGE_CHIP} vertical={photoVertical}/>:null}
   saveSlot={published?<SaveToList slug={slug} locale={locale} signedIn={!!user} loginHref={loginHref} chipClass={PAGE_CHIP}/>:null}
   slots={{
@@ -199,7 +204,7 @@ export default async function PlaceRoute({params}:{params:Promise<{locale:string
    </>:null,
    events:upcoming.length?<PlaceEvents events={upcoming} locale={locale}/>:null,
    // Q&A is not rendered on the place page (6ac114902), so its data is not fetched; the API and component stay.
-   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} vertical={photoVertical} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
+   reviews:reviewData?<PlaceReviews slug={slug} locale={locale} placeName={place.name} vertical={photoVertical} questions={reviewQuestions} initial={reviewData} signedIn={!!user} manage={manage} note={reviewNote} distribution={distribution}/>:null,
    branches:branches.length&&placeBrand?<PlaceBranches brand={placeBrand} branches={branches} locale={locale} extras={branchExtras}/>:null,
    similar:similar.length&&searchVertical?<PlaceSimilar locale={locale} sectionPath={searchVertical} places={similar.map(item=>({item,photo:cardExtras[item.slug]?.photo??null,streetView:cardExtras[item.slug]?.streetView??null}))}
     title={loc?(en?'Similar businesses nearby':'Negocios similares cerca'):(en?`More in ${place.vertical.nameEn}`:`Más en ${place.vertical.nameEs}`)}

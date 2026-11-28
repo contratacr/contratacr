@@ -3,6 +3,7 @@ import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {useRouter} from 'next/navigation';
 import {Camera} from 'lucide-react';
 import {PhotoPicker,PlacePhotoUpload,uploadPlacePhotos} from './place-photo-upload';
+import {PlaceAttributeQuestion} from './place-attribute-question';
 import type {PublicPlaceReviews,ReplyTarget} from '@/lib/directory/review-schemas';
 import {FlagReview,OwnerReplyEditor} from './place-review-actions';
 import {ReviewCard,ReviewsEmpty,ReviewsSummary} from '@/components/professionals/review-section';
@@ -30,10 +31,10 @@ const REASONS:Record<string,[string,string]>={
 };
 const noSubscribe=()=>()=>{};
 
-export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null,placeName,vertical}:{/** 547: section of the place (photo categories of the «¿Tiene fotos?» prompt). */vertical?:string;slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null;placeName?:string}){
+export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,distribution=null,placeName,vertical,questions=[]}:{/** 548: open «¿Sabe si este lugar…?» keys, asked after the review is posted. */questions?:string[];/** 547: section of the place (photo categories of the «¿Tiene fotos?» prompt). */vertical?:string;slug:string;locale:string;initial:PublicPlaceReviews;signedIn:boolean;manage?:ReplyTarget[]|null;note?:string;distribution?:number[]|null;placeName?:string}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const router=useRouter();
- const [askPhotos,setAskPhotos]=useState(false),[photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null),[rights,setRights]=useState(false);
+ const [askPhotos,setAskPhotos]=useState(false),[posted,setPosted]=useState(false),[photos,setPhotos]=useState<File[]>([]),[photoNote,setPhotoNote]=useState<string|null>(null),[rights,setRights]=useState(false);
  const sectionRef=useRef<HTMLElement>(null),action=useRef('');
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  // «Reseñar» (#escribir-resena, bottom bar) brings the write card into view.
@@ -54,6 +55,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
    if(r.ok){
     // 547 (Google Maps model): a review posted without photos is followed by «¿Tiene fotos? Agréguelas».
     if(signedIn&&!photos.length)setAskPhotos(true);
+    if(signedIn)setPosted(true);
     // Photos of the review (launch round 2026-11-18): uploaded after the review exists; they wait for staff approval.
     if(signedIn&&photos.length){const up=await uploadPlacePhotos(slug,photos,{review:true,en});setPhotos([]);setRights(false);
      if(up.pending>0)setPhotoNote(t(`${up.pending===1?'Su foto quedó pendiente':`Sus ${up.pending} fotos quedaron pendientes`} de revisión.`,`${up.pending===1?'Your photo is':`Your ${up.pending} photos are`} awaiting review.`));}
@@ -86,6 +88,7 @@ export function PlaceReviews({slug,locale,initial,signedIn,manage=null,note,dist
      <p className="flex items-start gap-2 font-semibold text-[#162543]"><Camera aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-[#0083b0]"/>{t('Gracias por su reseña. ¿Tiene fotos? Agréguelas','Thank you for your review. Do you have photos? Add them')}</p>
      <p className="text-[#526277]">{t('Sus fotos del lugar ayudan a otras personas a decidir. Se revisan antes de publicarse.','Your photos of the place help other people decide. They are reviewed before they are published.')}</p>
      <PlacePhotoUpload slug={slug} locale={locale} signedIn loginHref={null} isManager={false} vertical={vertical}/></div>}
+    {posted&&questions.length>0&&<div className="mt-3"><PlaceAttributeQuestion slug={slug} locale={locale} keys={questions} signedIn={signedIn} loginHref={null} where="review"/></div>}
    </div>}
   </div>
   {/* Flat list with thin dividers (owner 2026-11-27, «en plano y con divisiones»): the production professional profile's

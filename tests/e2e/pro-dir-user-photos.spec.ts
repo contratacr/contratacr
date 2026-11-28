@@ -140,6 +140,11 @@ test('customer photos + Ver menú fallback: category + rights → pending → ap
   await expect(tab.locator('[data-place-photo-thumb]')).toHaveCount(1);
   await expect(tab.locator('img').first()).toHaveAttribute('draggable','false');
   await expectNoCutText(tab);await expectNoHorizontalOverflow(a);await shot(a,'fotos-filtro-390');
+  // 360 px (small Android): filters and the Menú tab still wrap, nothing cut.
+  await a.setViewportSize({width:360,height:780});
+  await expectNoCutText(tab);await expectNoHorizontalOverflow(a);await shot(a,'fotos-filtro-360');
+  await openPlaceTab(a,'offer');await expectNoCutText(a.locator('[data-place-menu-photos]'));await expectNoHorizontalOverflow(a);
+  await openPlaceTab(a,'photos');await a.setViewportSize({width:390,height:844});
   await tab.locator('[data-place-photo-thumb]').first().click();
   const box=a.locator('[data-place-lightbox]');await expect(box).toBeVisible();
   if(by)await expect(box.locator('[data-photo-by]')).toHaveText(`Foto de ${by}`);
@@ -160,4 +165,51 @@ test('customer photos + Ver menú fallback: category + rights → pending → ap
   }finally{await me.close();}
   expect(placeId).toBeTruthy();
  }finally{await anon.close();await cleanupDisposableAccount(customer);}
+});
+
+test('«¿Sabe si este lugar…?»: one question at a time, never a known key; 3 matching answers → «Según clientes»',async({browser},info)=>{
+ test.setTimeout(240000);local(info.project.use.baseURL);
+ const db=dirDb(),tag=label(),slug=`soda-preguntas-${tag}`;
+ const {placeId}=await seedPlace(db,{slug,vertical:'restaurant',name:`Soda Preguntas ${tag}`,attributes:{reservations:true}});
+ // Two earlier customers already said «Sí» to delivery.
+ for(let n=0;n<2;n++){const r=await db.rpc('dir_place_attribute_answer',{p_actor:uid(),p_input:{slug,key:'delivery',answer:'yes'}});expect(r.error).toBeNull();}
+ const user=await createDisposableAccount({prefix:'dir-attr'});
+ const c=await browser.newContext({baseURL:origin,viewport:{width:360,height:780},extraHTTPHeaders:randomIp()});const p=await c.newPage();const errors=collectPageErrors(p);
+ try{
+  // Without a session the card is there, its buttons lead to the login.
+  await gotoOK(p,`/negocios/${slug}`);await openPlaceTab(p,'info');
+  let card=p.locator('[data-place-attr-question][data-where="info"]');
+  // reservations is already on the place (business/import value wins): the first question is delivery.
+  await expect(card).toHaveAttribute('data-place-attr-question','delivery');
+  await expect(card).toContainText('¿Sabe si este lugar tiene servicio a domicilio (exprés)?');
+  await expectNoCutText(card);await expectNoHorizontalOverflow(p);await shot(p,'pregunta-info-360');
+  await login(c,user);
+  await gotoOK(p,`/negocios/${slug}`);await openPlaceTab(p,'info');
+  card=p.locator('[data-place-attr-question][data-where="info"]');
+  await card.locator('[data-attr-answer="yes"]').click();
+  await expect(card.locator('[data-place-attr-thanks]')).toBeVisible();
+  await expect(card).toHaveAttribute('data-place-attr-question','takeaway');
+  // Third matching answer → confirmed: «Servicio a domicilio» with «Según clientes»; never asked again.
+  await gotoOK(p,`/negocios/${slug}`);await openPlaceTab(p,'info');
+  const row=p.locator('[data-place-amenity="community:delivery"]');
+  await expect(row).toContainText('Servicio a domicilio');await expect(row.locator('[data-place-amenity-community]')).toHaveText('Según clientes');
+  await expect(p.locator('[data-place-attr-question="delivery"]')).toHaveCount(0);
+  await expectNoCutText(p.locator('#comodidades'));await shot(p,'segun-clientes-360');
+  const rows=(await db.from('dir_place_attribute_answers').select('key,answer').eq('place_id',placeId).eq('user_id',user.id)).data;
+  expect(rows).toEqual([{key:'delivery',answer:'yes'}]);
+  // After a review: the question card (next open key) under the form.
+  await openPlaceTab(p,'reviews');
+  const form=p.locator('[data-place-review-form][data-ready]');
+  await form.getByRole('button',{name:'4 estrellas',exact:true}).click({timeout:45000});
+  await form.locator('textarea').fill('Buena sazón y precios justos.');
+  await form.getByRole('button',{name:'Enviar reseña'}).click();
+  const after=p.locator('[data-place-attr-question][data-where="review"]');
+  await expect(after).toHaveAttribute('data-place-attr-question','takeaway');
+  await after.locator('[data-attr-answer="unsure"]').click();
+  await expect(after.locator('[data-place-attr-thanks]')).toBeVisible();
+  await expectNoCutText(after);await expectNoHorizontalOverflow(p);
+  // A key the place already settles is refused by the API.
+  const bad=await p.request.post(`/api/lugar/${slug}/atributos`,{data:{key:'reservations',answer:'no'},headers:{origin}});expect(bad.status()).toBe(400);
+  expect(errors()).toEqual([]);
+ }finally{await c.close();await cleanupDisposableAccount(user);}
 });
