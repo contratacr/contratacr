@@ -8,7 +8,7 @@
     "handlers": 444,
     "components": 749,
     "hooks": 29,
-    "specs": 645
+    "specs": 646
   },
   "dashboardTabs": [
     "pro_tools",
@@ -91775,6 +91775,15 @@
         {
           "line": 73,
           "title": "`Pro modal localization: long destination rows stay inside padded content and dirty close confirmation preserves selection (${language})`"
+        }
+      ]
+    },
+    {
+      "file": "tests/e2e/pro-module-permissions-ui.spec.ts",
+      "cases": [
+        {
+          "line": 11,
+          "title": "`Module permissions panel: deny, save, enforced for the role [${language}]`"
         }
       ]
     },
