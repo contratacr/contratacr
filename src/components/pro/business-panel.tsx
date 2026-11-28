@@ -4,6 +4,7 @@ import {CatalogItemSpecs} from './catalog-item-specs';
 import {CatalogItemPricing} from './catalog-item-pricing';
 import {CatalogItemKind} from './catalog-item-kind';
 import {CatalogListChips} from './catalog-list-chips';
+import {CatalogColumnsPicker,useCatalogColumns} from './catalog-list-columns';
 import {WorkMessages} from './work-messages';
 import {inventoryWriteInputSchema} from "@/lib/pro/inventory-write-recovery";
 import {proPhone} from '@/lib/pro/phone';
@@ -204,6 +205,7 @@ export function BusinessPanel({
     [quoteError, setQuoteError] = useState("");
   const [visible, setVisible] = useState(20);
   const [sortKey,setSortKey]=useState<'default'|'name'|'cost'|'price'|'stock'>('default'),[sortDir,setSortDir]=useState<'asc'|'desc'>('asc');
+  const [catalogColumns,setCatalogColumns]=useCatalogColumns();
   const sentinel = useRef<HTMLDivElement>(null);
   const [localDay,setLocalDay]=useState(crTodayISO);
   const calendarDay=agenda?.day??localDay,setCalendarDay=agenda?.setDay??setLocalDay;
@@ -882,7 +884,7 @@ export function BusinessPanel({
             </>}
           </>}
           {section !== "Agenda" && <>
-          {section==="Inventario"?<div className="space-y-2"><label className="block text-[13px] font-bold text-[#162543]">{ux("showProducts")}<select aria-label={ux("showProducts")} value={filter} onChange={event=>{setFilter(event.target.value);setVisible(20);}} className={field}>{Object.entries(labels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>{filter==="low"&&<p className="text-sm text-[#68778d]">{ux("replenishHint")}</p>}{proSpace&&<div data-catalog-sort className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><label className="block text-[13px] font-bold text-[#162543]">{tr("Ordenar por","Sort by")}<select aria-label={tr("Ordenar por","Sort by")} value={sortKey} onChange={event=>{setSortKey(event.target.value as typeof sortKey);setVisible(20);}} className={field}><option value="default">{tr("Orden original","Default order")}</option><option value="name">{tr("Nombre","Name")}</option><option value="cost">{tr("Costo","Cost")}</option><option value="price">{tr("Precio","Price")}</option><option value="stock">{tr("Existencias","Stock")}</option></select></label><button type="button" data-catalog-sort-dir disabled={sortKey==="default"} aria-label={tr("Invertir orden","Reverse order")} aria-pressed={sortDir==="desc"} onClick={()=>setSortDir(d=>d==="asc"?"desc":"asc")} className="min-h-11 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] disabled:opacity-50">{sortDir==="asc"?tr("Ascendente","Ascending"):tr("Descendente","Descending")}</button></div>}</div>:<StatusFilterTabs
+          {section==="Inventario"?<div className="space-y-2"><label className="block text-[13px] font-bold text-[#162543]">{ux("showProducts")}<select aria-label={ux("showProducts")} value={filter} onChange={event=>{setFilter(event.target.value);setVisible(20);}} className={field}>{Object.entries(labels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>{filter==="low"&&<p className="text-sm text-[#68778d]">{ux("replenishHint")}</p>}{proSpace&&<div data-catalog-sort className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"><label className="block text-[13px] font-bold text-[#162543]">{tr("Ordenar por","Sort by")}<select aria-label={tr("Ordenar por","Sort by")} value={sortKey} onChange={event=>{setSortKey(event.target.value as typeof sortKey);setVisible(20);}} className={field}><option value="default">{tr("Orden original","Default order")}</option><option value="name">{tr("Nombre","Name")}</option><option value="cost">{tr("Costo","Cost")}</option><option value="price">{tr("Precio","Price")}</option><option value="stock">{tr("Existencias","Stock")}</option></select></label><button type="button" data-catalog-sort-dir disabled={sortKey==="default"} aria-label={tr("Invertir orden","Reverse order")} aria-pressed={sortDir==="desc"} onClick={()=>setSortDir(d=>d==="asc"?"desc":"asc")} className="min-h-11 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#162543] disabled:opacity-50">{sortDir==="asc"?tr("Ascendente","Ascending"):tr("Descendente","Descending")}</button></div>}{proSpace&&<CatalogColumnsPicker columns={catalogColumns} onChange={setCatalogColumns}/>}</div>:<StatusFilterTabs
             tabs={Object.keys(labels).map((id) => ({ id }))}
             value={filter}
             onChange={(v) => {
@@ -930,7 +932,13 @@ export function BusinessPanel({
                 const subtitle = c
                   ? [c.tradeName, c.group, proPhone(c.phone), c.email].filter(Boolean).join(" · ")
                   : p
-                    ? p.itemType==="service"?`${tr("Servicio","Service")} · ${money(p.price)}`:`${p.stock} ${p.unit||tr("unidades", "units")} · ${money(p.price)}${p.minimum>0&&p.stock <= p.minimum ? " · " + ux("replenish") + " · " + ux("minimum",{value:p.minimum}) : ""}`
+                    ? proSpace
+                      ? [p.itemType==="service"?tr("Servicio","Service"):catalogColumns.includes("stock")?`${p.stock} ${p.unit||tr("unidades", "units")}`:"",
+                         catalogColumns.includes("price")?money(p.price):"",
+                         catalogColumns.includes("cost")?`${tr("Costo","Cost")} ${money(p.cost)}`:"",
+                         catalogColumns.includes("margin")&&p.price>0?`${tr("Margen","Margin")} ${money(p.price-p.cost)} (${Math.round((p.price-p.cost)*100/p.price)} %)`:"",
+                         p.itemType!=="service"&&p.minimum>0&&p.stock<=p.minimum?ux("replenish")+" · "+ux("minimum",{value:p.minimum}):""].filter(Boolean).join(" · ")
+                      : p.itemType==="service"?`${tr("Servicio","Service")} · ${money(p.price)}`:`${p.stock} ${p.unit||tr("unidades", "units")} · ${money(p.price)}${p.minimum>0&&p.stock <= p.minimum ? " · " + ux("replenish") + " · " + ux("minimum",{value:p.minimum}) : ""}`
                     : workStatus(w!)+" · "+date(w!.start);
                 const actions: CardAction[] = [
                   {
@@ -978,7 +986,7 @@ export function BusinessPanel({
                   );
                 return <ProRecordCard
                   key={item.id} icon={Icon} title={title} subtitle={subtitle}
-                  meta={p&&proSpace?<CatalogListChips productId={p.id}/>:c?.identification || (w ? (w.cancelled ? tr("Cancelada","Cancelled") : w.stage === "completed" ? tr("Finalizada","Completed") : tr("Agendada","Scheduled")) : undefined)}
+                  meta={p&&proSpace?(catalogColumns.includes("chips")?<CatalogListChips productId={p.id}/>:undefined):c?.identification || (w ? (w.cancelled ? tr("Cancelada","Cancelled") : w.stage === "completed" ? tr("Finalizada","Completed") : tr("Agendada","Scheduled")) : undefined)}
                   onOpen={() => void openDetail(item.id)}
                   openLabel={c ? tr("Ver cliente","View customer") : p ? (p.itemType === "service" ? tr("Ver servicio","View service") : tr("Ver producto","View product")) : tr("Ver cita","View appointment")}
                   onEdit={() => openEdit(item.id)} editLabel={tr("Editar","Edit")}
