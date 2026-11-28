@@ -115,6 +115,7 @@ test.describe('sign-in reached from a gated section (390 px)',()=>{
   await page.locator('main a[href*="/registro"]').first().click();
   await page.waitForURL(/\/registro\?redirect=%2Flistas/,{timeout:45_000});
   await expect(flowTitle(page)).toHaveText('Crear cuenta');
+  await notCut(page,'[data-focused-title]');
   await expect(stepBack(page)).toBeVisible();
   await expect(close(page)).toHaveCount(0);
   await shot(page,'registro-step-390');
@@ -126,6 +127,7 @@ test.describe('sign-in reached from a gated section (390 px)',()=>{
   await page.locator('main a[href*="/olvide-contrasena"]').first().click();
   await page.waitForURL(/\/olvide-contrasena\?redirect=/,{timeout:45_000});
   await expect(flowTitle(page)).toHaveText('Recuperar contraseña');
+  await notCut(page,'[data-focused-title]');
   await shot(page,'olvide-step-390');
   await hydrated(page);
   await stepBack(page).click();
@@ -133,6 +135,21 @@ test.describe('sign-in reached from a gated section (390 px)',()=>{
   await hydrated(page);
   await close(page).click();
   await expect.poll(()=>here(page),{timeout:30_000}).toBe('/como-ordenamos');
+ });
+ test('a public page whose action asks to sign in: X returns to that same page',async({page})=>{
+  const brand=(await dirDb().from('dir_brands').select('slug').limit(1).maybeSingle()).data?.slug as string|undefined;
+  test.skip(!brand,'sin marcas');
+  await gotoOK(page,'/como-ordenamos');await dismissCookies(page);await hydrated(page);
+  await openFrom(page,`/marca/${brand}`);await hydrated(page);
+  const path=new URL(page.url()).pathname;
+  // The brand's «Iniciar sesión para reclamar» link (loginHref): redirect = the brand page itself.
+  await openFrom(page,`/login?redirect=${encodeURIComponent(path)}`);
+  await expect(close(page)).toBeVisible({timeout:20_000});
+  await hydrated(page);
+  await close(page).click();
+  await expect.poll(()=>new URL(page.url()).pathname,{timeout:30_000}).toBe(path);
+  await page.waitForTimeout(1_500);
+  expect(new URL(page.url()).pathname).toBe(path);
  });
  test('signing in lands on the target and Back does not return to sign-in',async({page})=>{
   const user=await createDisposableAccount({prefix:'child-headers'});

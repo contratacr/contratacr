@@ -175,17 +175,24 @@ export function volverSiEsLaAnterior(href: string): boolean {
 }
 
 // The sign-in flow (owner 2026-11-27): login, create account and password recovery are steps of ONE interruption.
-const RUTA_DEL_FLUJO = /^(?:\/(?:es|en))?\/(?:login|registro|olvide-contrasena)(?:[/?]|$)/;
+// (/registro/empresa is a public directory page, not a step of the flow.)
+const RUTA_DEL_FLUJO = /^(?:\/(?:es|en))?\/(?:login|registro(?!\/empresa)|olvide-contrasena)(?:[/?]|$)/;
+// Addresses that send a signed-out person to sign-in: when one of them is the `?redirect=`, it may sit in the history
+// (a client push that then bounced) and must be skipped too. A public page that asked to sign in for an action (a
+// brand, a place, a claim) is where the person WAS: X returns to it.
+const RUTA_PROTEGIDA = /^\/(?:dashboard|listas|mis-reservas|yo|herramientas|mensajes|notificaciones|continuar-perfil|publicar-solicitud|cotizar|empleos\/publicar|promociones\/publicar)(?:[/?]|$)/;
 const sinIdiomaNiBarra = (r: string) => (r.replace(/^\/(?:es|en)(?=\/|\?|$)/, "") || "/").replace(/\/(?=\?|$)/, "") || "/";
 
 /**
  * «X» of the sign-in flow: back to the screen the person was on BEFORE the gated section. Skips every step of the flow
- * and the gated address itself (`objetivo`, the `?redirect=`) — going there again would bounce back to login. Returns
+ * and a gated `objetivo` (the `?redirect=`) — going there again would bounce back to login; a public `objetivo` (the
+ * page whose action asked to sign in) is kept, it is where the person was. Returns
  * false when no such screen is behind in this tab (opened from outside): the caller goes home instead.
  */
 export function salirDelFlujoDeEntrada(objetivo: string | null): boolean {
   if (typeof window === "undefined") return false;
-  const destino = objetivo ? sinIdiomaNiBarra(claveDeRuta(objetivo)) : null;
+  const objetivoLimpio = objetivo ? sinIdiomaNiBarra(claveDeRuta(objetivo)) : null;
+  const destino = objetivoLimpio && RUTA_PROTEGIDA.test(objetivoLimpio) ? objetivoLimpio : null;
   const dentro = (clave: string) => RUTA_DEL_FLUJO.test(clave) || (!!destino && sinIdiomaNiBarra(clave) === destino);
   const pila = leerPila();
   if (pila[pila.length - 1] !== claveDeRuta() || window.history.length < 2) return false;
