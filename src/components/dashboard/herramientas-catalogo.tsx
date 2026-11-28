@@ -10,10 +10,12 @@ import { TOOLS_ROW, TOOLS_ROW_ICON, TOOLS_TITLE, toolsCatalog, type ToolsGroupId
  * here), on desktop the section keeps an in-page back link and heading. Pro tools open the Pro space; the CV and the
  * letter open their panel sections.
  */
-export function HerramientasCatalogo({ grupo, alAbrirGrupo, alAbrirSeccion, alVolver }: {
+export function HerramientasCatalogo({ grupo, esProfesional, alAbrirGrupo, alAbrirSeccion, alVolver }: {
   grupo: ToolsGroupId | null;
+  // A professional keeps «Cotizaciones» in the panel (its own section, free like production), not in the Pro space.
+  esProfesional: boolean;
   alAbrirGrupo: (id: ToolsGroupId) => void;
-  alAbrirSeccion: (tab: "cv" | "carta") => void;
+  alAbrirSeccion: (tab: "cv" | "carta" | "quotes") => void;
   alVolver: () => void;
 }) {
   const en = useLocale() === "en";
@@ -27,7 +29,8 @@ export function HerramientasCatalogo({ grupo, alAbrirGrupo, alAbrirSeccion, alVo
         </button>
         <h2 data-tools-group-heading className="mb-3 hidden text-[20px] font-extrabold text-[#162543] lg:block">{open.label}</h2>
         <ul className="space-y-2">
-          {open.tools.map(({ key, label, href, icon: Icon, panelTab }) => {
+          {open.tools.map(({ key, label, href, icon: Icon, panelTab: seccion }) => {
+            const panelTab = seccion ?? (key === "quotes" && esProfesional ? "quotes" as const : undefined);
             const contenido = <>
               <span className={TOOLS_ROW_ICON}><Icon aria-hidden /></span>
               <span className="min-w-0 flex-1 break-words">{label}</span>

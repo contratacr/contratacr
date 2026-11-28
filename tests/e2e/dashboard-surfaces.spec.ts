@@ -280,7 +280,12 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(toolsTab).toHaveCount(1);
     await toolsTab.click();
     await expect(page).toHaveURL(/tab=tools/);
-    await page.getByTestId("herramienta-quotes").click();
+    // Pro on (2026-11-27): five groups; Cotizaciones is in «Clientes y ventas» and stays a panel section for a professional.
+    await expect(page.locator('[data-tools-group-tile="sales"], [data-testid="herramienta-quotes"]').first()).toBeVisible();
+    if (await page.locator('[data-tools-group-tile="sales"]').count()) {
+      await page.locator('[data-tools-group-tile="sales"]').click();
+      await page.locator('[data-tools-entry="quotes"]').click();
+    } else await page.getByTestId("herramienta-quotes").click();
     await expect(page).toHaveURL(/tab=quotes/);
     // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
     // cuerpo: se mira la página entera.

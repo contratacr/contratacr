@@ -1408,7 +1408,7 @@ export default function DashboardPage() {
   }
   // The address changes first and the section follows it: a new account's CV opens straight in its editor, and the
   // editor's back-gesture entry must land on ?tab=cv, not on the group it was opened from.
-  function openToolsSection(tab: "cv" | "carta") {
+  function openToolsSection(tab: "cv" | "carta" | "quotes") {
     requestUnsavedAction(() => pushPantallaDelPanel(`${window.location.pathname}?tab=${tab}`));
   }
 
@@ -1889,6 +1889,8 @@ export default function DashboardPage() {
 
   function openPanelDestination(tab: Tab) {
     if(tab==="pro_tools"&&proEnabled){pushProPath(prefijoDeIdioma(locale)+"/dashboard/pro");return;}
+    // Inside a screen of the section (a Herramientas group, Mis listas), its row goes back to the section's root.
+    if(tab===activeTab&&(toolsGroup||savedListsOpen)){const raiz=`${window.location.pathname}?tab=${tab}`;if(proEnabled)pushProPath(raiz);else window.history.pushState(null,"",raiz);scrollDashboardToPageTop();return;}
     if(tab===activeTab)return;
     setTab(tab);
   }
@@ -2325,8 +2327,8 @@ export default function DashboardPage() {
                           volverEnElPanel(`${window.location.pathname}?tab=tools`);
                           return;
                         }
-                        if (PRO_UI_ENABLED && (activeTab === "cv" || activeTab === "carta")) {
-                          volverEnElPanel(`${window.location.pathname}?tab=tools&grupo=free`);
+                        if (PRO_UI_ENABLED && (activeTab === "cv" || activeTab === "carta" || activeTab === "quotes")) {
+                          volverEnElPanel(`${window.location.pathname}?tab=tools&grupo=${activeTab === "quotes" ? "sales" : "free"}`);
                           return;
                         }
                         if (activeTab === "quotes" || activeTab === "cv" || activeTab === "carta") {
@@ -2597,7 +2599,7 @@ export default function DashboardPage() {
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && (savedListsOpen ? <PanelMisListas /> : <ClientActivity section="saved" alAbrirListas={directoryOn ? () => requestUnsavedAction(() => pushPantallaDelPanel(`${window.location.pathname}?tab=saved&vista=listas`)) : undefined} />)}
                         {activeTab === "mis_reservas" && directoryOn && <PanelMisReservas />}
-                        {activeTab === "tools" && PRO_UI_ENABLED && <HerramientasCatalogo grupo={toolsGroup} alAbrirGrupo={openToolsGroup} alAbrirSeccion={openToolsSection} alVolver={() => volverEnElPanel(`${window.location.pathname}?tab=tools`)} />}
+                        {activeTab === "tools" && PRO_UI_ENABLED && <HerramientasCatalogo grupo={toolsGroup} esProfesional={esProfesional} alAbrirGrupo={openToolsGroup} alAbrirSeccion={openToolsSection} alVolver={() => volverEnElPanel(`${window.location.pathname}?tab=tools`)} />}
                         {activeTab === "tools" && !PRO_UI_ENABLED && <Herramientas esProfesional={esProfesional} alAbrir={(destino) => requestUnsavedAction(() => setTab(destino))} />}
                         {activeTab === "cv" && <CvBuilder pro={pro} documento="cv" alCambiarEditor={setCvEditorAbierto} />}
                         {activeTab === "carta" && <CvBuilder pro={pro} documento="carta" alCambiarEditor={setCvEditorAbierto} />}

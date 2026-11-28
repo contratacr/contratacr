@@ -3,7 +3,7 @@ import {mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
-import {origin,local,login} from './pro-round2-fixture';
+import {origin,local,login,ownerFixture} from './pro-round2-fixture';
 
 // Herramientas (owner, 2026-11-27): signed out, /herramientas is the public page; signed in it is the «Herramientas»
 // section of «Mi panel» (/dashboard/profesional?tab=tools[&grupo=]). Group screens have no second header on phones: the
@@ -56,11 +56,13 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
   expect(decodeURIComponent(page.url())).toContain('/dashboard/pro?tab=pro_clients');
  });
 
- test('signed in: /herramientas opens the panel section; group → tool → back; CV comes back to its group',async({page,baseURL,context})=>{
+ // A plain account moves with history.pushState; a Pro member through the Pro navigation (pushProPath / backPro).
+ for(const who of ['client','pro member'] as const)test(`signed in (${who}): /herramientas opens the panel section; group → tool → back; CV comes back to its group`,async({page,baseURL,context})=>{
   test.setTimeout(360_000);local(baseURL);
-  let actor:DisposableAccount|undefined;
+  let actor:DisposableAccount|undefined,cleanup=async()=>{await cleanupDisposableAccount(actor);};
   try{
-   actor=await createDisposableAccount({prefix:'tools-panel'});await login(context,actor);
+   if(who==='pro member'){const o=await ownerFixture(context,'tools'+Date.now());actor=o.owner;cleanup=o.cleanup;}
+   else{actor=await createDisposableAccount({prefix:'tools-panel'});await login(context,actor);}
    // Server redirect (replace): the public page never paints and Back does not return to it.
    await page.goto(origin+'/');
    await page.goto(origin+'/herramientas?grupo=work');
@@ -91,6 +93,14 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
    await page.goBack();
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools&grupo=sales$/);
    await expect(page.locator('[data-tools-group="sales"]')).toBeVisible();
+   // A professional keeps Cotizaciones as a panel section: it opens there and its arrow returns to the group.
+   if(who==='pro member'){
+    await page.locator('[data-tools-entry="quotes"]').click();
+    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=quotes/);
+    await back(page).click();
+    await expect(page).toHaveURL(/tab=tools&grupo=sales$/);
+    await expect(page.locator('[data-tools-group="sales"]')).toBeVisible();
+   }
    // The bar's arrow goes back to the list, then to Mi panel.
    await back(page).click();
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools$/);
@@ -114,7 +124,7 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
    await page.goto(origin+'/');
    await page.getByRole('button',{name:/menú|menu/i}).first().click();
    await expect(page.locator('[data-testid="menu-herramientas"]').filter({visible:true}).first()).toHaveAttribute('href',/\/dashboard\/profesional\?tab=tools$/);
-  }finally{await cleanupDisposableAccount(actor);}
+  }finally{await cleanup();}
  });
 
  test('signed in: Mis listas and Mis reservas live in «Mi panel»; signed out keeps login / the guest page',async({page,baseURL,context})=>{
@@ -160,4 +170,22 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
    expect(JSON.stringify(await api.json())).not.toMatch(/"id"/);
   }finally{await cleanupDisposableAccount(actor);}
  });
+
+test('desktop 1280: a group keeps its in-page back link and heading; the sidebar row returns to the list',async({page,baseURL,context})=>{
+ test.setTimeout(240_000);local(baseURL);await page.setViewportSize({width:1280,height:900});
+ let actor:DisposableAccount|undefined;
+ try{
+  actor=await createDisposableAccount({prefix:'tools-desk'});await login(context,actor);
+  await page.goto(origin+'/dashboard/profesional?tab=tools&grupo=sales',{timeout:120_000});
+  await expect(page.locator('[data-tools-group-heading]')).toHaveText('Clientes y ventas');
+  await expect(page.locator('[data-tools-back]')).toBeVisible();
+  await page.screenshot({path:join(out,'panel-herramientas-ventas-1280.png')});
+  await page.getByTestId('panel-tab-tools').filter({visible:true}).click();
+  await expect(page).toHaveURL(/tab=tools$/);
+  await expect(page.locator('[data-tools-group-tile="sales"]')).toBeVisible();
+  await page.locator('[data-tools-group-tile="money"]').click();
+  await page.locator('[data-tools-back]').click();
+  await expect(page).toHaveURL(/tab=tools$/);
+ }finally{await cleanupDisposableAccount(actor);}
+});
 });

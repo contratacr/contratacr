@@ -49,7 +49,10 @@ for(const vp of [{name:'móvil',width:390,height:844},{name:'escritorio',width:1
    // Lists tabs.
    await gotoOK(page,'/listas');
    const tabs=page.locator('[data-my-lists][data-ready]');await expect(tabs).toBeVisible({timeout:45000});
-   await expect(tabs.getByRole('heading',{name:'Mis listas'})).toBeVisible();await expect(tabs.locator('[data-lists-map]')).toContainText('Mapa');
+   // Signed in, /listas opens «Mi panel» → Guardados → Mis listas (2026-11-27): on phones the bar is the title.
+   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=saved&vista=listas$/);
+   if(vp.width<1024)await expect(page.locator('[data-ccr-section-title], [data-native-back="dashboard-section"] ~ h2').filter({visible:true}).first()).toHaveText('Mis listas');
+   else await expect(tabs.getByRole('heading',{name:'Mis listas'})).toBeVisible();await expect(tabs.locator('[data-lists-map]')).toContainText('Mapa');
    await expect(tabs.locator('[data-lists-tab]')).toHaveText(['He estado','Quiero ir','Listas']);
    await expect(tabs.locator('[data-lists-empty]')).toHaveText('Agregue lugares para registrar, clasificar y compartir dónde ha estado.');
    await expect(tabs.locator('[data-lists-progress]')).toContainText('0/5');await expect(tabs.locator('[data-lists-progress]')).toContainText('Desbloquee su lista top 10 agregando 5 más');
