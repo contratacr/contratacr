@@ -4,6 +4,7 @@ import {join} from 'node:path';
 import {homedir} from 'node:os';
 import {createDisposableAccount,cleanupDisposableAccount,type DisposableAccount} from './disposable-account';
 import {origin,local,login,ownerFixture} from './pro-round2-fixture';
+import {directoryActiveTab} from '../../src/components/mobile/directory-tabs-model';
 
 // Herramientas (owner, 2026-11-27): signed out, /herramientas is the public page; signed in it is the «Herramientas»
 // section of «Mi panel» (/dashboard/profesional?tab=tools[&grupo=]). Group screens have no second header on phones: the
@@ -63,52 +64,55 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
   try{
    if(who==='pro member'){const o=await ownerFixture(context,'tools'+Date.now());actor=o.owner;cleanup=o.cleanup;}
    else{actor=await createDisposableAccount({prefix:'tools-panel'});await login(context,actor);}
+   const pro=who==='pro member';
    // Server redirect (replace): the public page never paints and Back does not return to it.
    await page.goto(origin+'/');
    await page.goto(origin+'/herramientas?grupo=work');
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools&grupo=work$/);
-   await expect(page.locator('[data-tools-group="work"]')).toBeVisible();
-   await expect(barTitle(page)).toHaveText('Trabajos y proyectos');
-   expect(search(page).get('grupo')).toBe('work');
+   if(pro){await expect(page.locator('[data-tools-group="work"]')).toBeVisible();await expect(barTitle(page)).toHaveText('Trabajos y proyectos');}
+   // A client account has no Pro groups: a Pro group address shows its plain list.
+   else{await expect(page.locator('[data-tools-group-tile="free"]')).toBeVisible();await expect(page.locator('[data-tools-group]')).toHaveCount(0);await expect(barTitle(page)).toHaveText('Herramientas');}
    await page.goBack();await expect.poll(()=>new URL(page.url()).pathname).toBe('/');
    await page.goto(origin+'/herramientas?grupo=nada');
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools$/);
-   for(const id of GROUPS)await expect(page.locator(`[data-tools-group-tile="${id}"]`)).toBeVisible();
+   await expect(page.locator('[data-tools-group-tile="free"]')).toBeVisible();
+   // Clients keep only what they can use (CV and letter, like the old list); nothing opens the Pro space.
+   await expect(page.locator('[data-tools-group-tile]')).toHaveCount(pro?GROUPS.length:1);
    await expect(barTitle(page)).toHaveText('Herramientas');
    await noCutText(page,'[data-tools-panel]');
    await expect(page.locator('.ccr-dashboard-footer footer').filter({visible:true})).toHaveCount(0);
-   await page.screenshot({path:join(out,'panel-herramientas-390.png'),fullPage:true});
-   // Group: own screen, «← group» bar, no second header.
-   await page.locator('[data-tools-group-tile="sales"]').click();
-   await expect(page).toHaveURL(/tab=tools&grupo=sales$/);
-   await expect(barTitle(page)).toHaveText('Clientes y ventas');
-   await expect(page.locator('[data-tools-back]')).toBeHidden();
-   await expect(page.locator('[data-tools-group-heading]')).toBeHidden();
-   await noCutText(page,'[data-tools-panel]');
-   await page.screenshot({path:join(out,'panel-herramientas-ventas-390.png'),fullPage:true});
-   // Pro tool → the Pro space; Back returns to the group.
-   await page.locator('[data-tools-entry="customers"]').click();
-   await expect.poll(()=>new URL(page.url()).pathname,{timeout:30_000}).toBe('/dashboard/pro');
-   expect(search(page).get('tab')).toBe('pro_clients');
-   await page.goBack();
-   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools&grupo=sales$/);
-   await expect(page.locator('[data-tools-group="sales"]')).toBeVisible();
-   // A professional keeps Cotizaciones as a panel section: it opens there and its arrow returns to the group.
-   if(who==='pro member'){
+   await page.screenshot({path:join(out,`panel-herramientas-${pro?'pro':'cliente'}-390.png`),fullPage:true});
+   if(pro){
+    // Group: own screen, «← group» bar, no second header.
+    await page.locator('[data-tools-group-tile="sales"]').click();
+    await expect(page).toHaveURL(/tab=tools&grupo=sales$/);
+    await expect(barTitle(page)).toHaveText('Clientes y ventas');
+    await expect(page.locator('[data-tools-back]')).toBeHidden();
+    await expect(page.locator('[data-tools-group-heading]')).toBeHidden();
+    await noCutText(page,'[data-tools-panel]');
+    await page.screenshot({path:join(out,'panel-herramientas-ventas-390.png'),fullPage:true});
+    // Pro tool → the Pro space; Back returns to the group.
+    await page.locator('[data-tools-entry="customers"]').click();
+    await expect.poll(()=>new URL(page.url()).pathname,{timeout:30_000}).toBe('/dashboard/pro');
+    expect(search(page).get('tab')).toBe('pro_clients');
+    await page.goBack();
+    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools&grupo=sales$/);
+    await expect(page.locator('[data-tools-group="sales"]')).toBeVisible();
+    // A professional keeps Cotizaciones as a panel section: it opens there and its arrow returns to the group.
     await page.locator('[data-tools-entry="quotes"]').click();
     await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=quotes/);
     await back(page).click();
     await expect(page).toHaveURL(/tab=tools&grupo=sales$/);
     await expect(page.locator('[data-tools-group="sales"]')).toBeVisible();
+    // The bar's arrow goes back to the list.
+    await back(page).click();
+    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools$/);
    }
-   // The bar's arrow goes back to the list, then to Mi panel.
-   await back(page).click();
-   await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=tools$/);
-   await expect(page.locator('[data-tools-group-tile="free"]')).toBeVisible();
    // Free group → CV (panel section) → arrow → the group, not the list.
    await page.locator('[data-tools-group-tile="free"]').click();
    await expect(barTitle(page)).toHaveText('Búsqueda de empleo');
-   await page.screenshot({path:join(out,'panel-herramientas-empleo-390.png'),fullPage:true});
+   if(!pro)expect(await page.locator('[data-tools-panel] a[href*="/dashboard/pro"]').count()).toBe(0);
+   await page.screenshot({path:join(out,`panel-herramientas-empleo-${pro?'pro':'cliente'}-390.png`),fullPage:true});
    await page.locator('[data-tools-entry="cv"]').click();
    await expect(page).toHaveURL(/tab=cv/);
    // A new account gets a first CV opened in its editor: the first arrow closes the editor (existing behaviour).
@@ -149,6 +153,11 @@ test.describe('Herramientas: public page signed out, «Mi panel» section signed
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=saved&vista=listas$/);
    await expect(page.locator('[data-panel-lists]')).toBeVisible({timeout:30_000});
    await expect(barTitle(page)).toHaveText('Mis listas');
+   // Directory on: the bar title wraps, never «…»; the directory bottom bar lights «Mis listas» here and «Yo» elsewhere in the panel.
+   expect(await barTitle(page).evaluate(e=>getComputedStyle(e).textOverflow)).not.toBe('ellipsis');
+   expect(directoryActiveTab('/dashboard/profesional',[],false,'?tab=saved&vista=listas')).toBe('listas');
+   expect(directoryActiveTab('/dashboard/profesional',[],false,'?tab=mis_reservas')).toBe('yo');
+   expect(directoryActiveTab('/listas')).toBe('listas');
    await page.screenshot({path:join(out,'panel-mis-listas-390.png'),fullPage:true});
    await back(page).click();
    await expect(page).toHaveURL(/\/dashboard\/profesional\?tab=saved$/);
@@ -176,14 +185,14 @@ test('desktop 1280: a group keeps its in-page back link and heading; the sidebar
  let actor:DisposableAccount|undefined;
  try{
   actor=await createDisposableAccount({prefix:'tools-desk'});await login(context,actor);
-  await page.goto(origin+'/dashboard/profesional?tab=tools&grupo=sales',{timeout:120_000});
-  await expect(page.locator('[data-tools-group-heading]')).toHaveText('Clientes y ventas');
+  await page.goto(origin+'/dashboard/profesional?tab=tools&grupo=free',{timeout:120_000});
+  await expect(page.locator('[data-tools-group-heading]')).toHaveText('Búsqueda de empleo');
   await expect(page.locator('[data-tools-back]')).toBeVisible();
-  await page.screenshot({path:join(out,'panel-herramientas-ventas-1280.png')});
+  await page.screenshot({path:join(out,'panel-herramientas-empleo-1280.png')});
   await page.getByTestId('panel-tab-tools').filter({visible:true}).click();
   await expect(page).toHaveURL(/tab=tools$/);
-  await expect(page.locator('[data-tools-group-tile="sales"]')).toBeVisible();
-  await page.locator('[data-tools-group-tile="money"]').click();
+  await expect(page.locator('[data-tools-group-tile="free"]')).toBeVisible();
+  await page.locator('[data-tools-group-tile="free"]').click();
   await page.locator('[data-tools-back]').click();
   await expect(page).toHaveURL(/tab=tools$/);
  }finally{await cleanupDisposableAccount(actor);}

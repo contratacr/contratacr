@@ -17,8 +17,12 @@ export function directoryTabLabel(id: DirectoryTabId, locale: string): string {
 }
 
 /** Cuál pestaña está encendida para una ruta (sin prefijo de idioma). `null` si ninguna (p. ej. /empleos, /promociones: viven en «Más»). */
-export function directoryActiveTab(pathname: string | null | undefined, sections: readonly string[] = [], esBusqueda = false): DirectoryTabId | null {
+export function directoryActiveTab(pathname: string | null | undefined, sections: readonly string[] = [], esBusqueda = false, search = ""): DirectoryTabId | null {
   const ruta = (pathname ?? "").replace(/\/+$/, "") || "/";
+  // «Mis listas» lives in «Mi panel» (?tab=saved&vista=listas, 2026-11-27): that screen is the Mis listas tab; every
+  // other panel screen (Mis reservas included) stays under Yo.
+  const q = new URLSearchParams(search);
+  if (ruta === "/dashboard/profesional" && q.get("tab") === "saved" && q.get("vista") === "listas") return "listas";
   const en = (base: string) => ruta === base || ruta.startsWith(`${base}/`);
   if (en("/solicitudes")) return "proyectos";
   if (en("/asistente")) return "asistente";

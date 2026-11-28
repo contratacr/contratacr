@@ -40,6 +40,16 @@ export function toolsCatalog(en: boolean): ToolsGroup[] {
   return GROUPS.map((g) => ({ id: g.id, icon: g.icon, label: en ? g.en : g.es, tools: g.keys.flatMap((k) => byKey.get(k) ?? []) })).filter((g) => g.tools.length);
 }
 
+/**
+ * What a signed-in account sees in «Mi panel». A client account (not a professional) keeps only the tools it can use
+ * — the CV and the letter, as the old three-row list did — and a group left empty is hidden; a professional sees them all.
+ */
+export function toolsCatalogFor(en: boolean, professional: boolean): ToolsGroup[] {
+  const groups = toolsCatalog(en);
+  if (professional) return groups;
+  return groups.map((g) => ({ ...g, tools: g.tools.filter((t) => t.panelTab) })).filter((g) => g.tools.length);
+}
+
 // Same row as «Mi panel» in production: separate rounded rows, grey outline icon, name that wraps (never cut), chevron.
 export const TOOLS_ROW = "flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]";
 export const TOOLS_ROW_ICON = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5";

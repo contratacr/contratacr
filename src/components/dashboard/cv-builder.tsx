@@ -28,6 +28,7 @@ import { AdaptarConIa, CartaConIa, MejorarConIa } from "./cv-ia";
 import type { Diseno } from "@/lib/cv/diseno";
 import { htmlDeTexto, textoDeHtml } from "@/lib/cv/editor-formato";
 import { cn } from "@/lib/utils";
+import { useSiteFeatures } from "@/components/site-features";
 import { formatFullPersonName } from "@/lib/display-name";
 import { borrarDeLaNube, elegirCvPublico, esUuid, guardarEnLaNube, leerDeLaNube } from "@/lib/cv/nube";
 import { enlacePerfil } from "@/lib/profile-url";
@@ -555,6 +556,8 @@ export function CvBuilder({ pro, documento = "cv", alCambiarEditor }: { pro: Pro
 function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: { pro: ProData; uid: string; tipo: Tipo; nombreCuenta: string; correo: string; alCambiarEditor?: (abierto: boolean) => void }) {
   const idiomaApp: Idioma = useLocale() === "en" ? "en" : "es";
   const en = idiomaApp === "en";
+  // Directory on (owner, 2026-11-27: texts are never cut): a long document name wraps instead of «…».
+  const sinCortar = useSiteFeatures().directorySections.length > 0;
   const desdeElPerfil = (idioma: Idioma): Borrador => {
     const cv = prellenar(datosDelPerfil(pro, nombreCuenta, correo, idioma), idioma);
     return { cv, carta: cartaInicial(cv) };
@@ -788,7 +791,7 @@ function Documentos({ pro, uid, tipo, nombreCuenta, correo, alCambiarEditor }: {
             <li key={d.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:p-4" data-testid="cv-documento">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f6fc] text-[#007fae]">{tipo === "cv" ? <FileText className="h-5 w-5" /> : <Mail className="h-5 w-5" />}</span>
               <button type="button" onClick={() => setEstado((s) => ({ ...s, abierto: d.id, oferta: undefined }))} className="min-h-11 min-w-0 flex-1 text-left">
-                <span className="block truncate text-[15px] font-black text-[#162543]">{tituloDe(d, en)}</span>
+                <span className={cn("block text-[15px] font-black text-[#162543]", sinCortar ? "break-words" : "truncate")}>{tituloDe(d, en)}</span>
                 <span className="block text-[13px] text-[#667085]">{d.borrador.cv.idioma === "en" ? "English" : "Español"} · {en ? "Edited" : "Editado"} {fecha(d.actualizado)}</span>
                 {publico === d.id && <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#e6f6fc] px-2 py-0.5 text-[12px] font-bold text-[#006f9c]"><Globe className="h-3.5 w-3.5" />{en ? "On your profile" : "En su perfil"}</span>}
               </button>

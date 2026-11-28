@@ -2,7 +2,7 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { TOOLS_ROW, TOOLS_ROW_ICON, TOOLS_TITLE, toolsCatalog, type ToolsGroupId } from "@/lib/pro/tools-catalog";
+import { TOOLS_ROW, TOOLS_ROW_ICON, TOOLS_TITLE, toolsCatalogFor, type ToolsGroupId } from "@/lib/pro/tools-catalog";
 
 /**
  * «Herramientas» inside «Mi panel» while Pro is on (owner, 2026-11-27): the five groups of the public page, with the
@@ -19,7 +19,8 @@ export function HerramientasCatalogo({ grupo, esProfesional, alAbrirGrupo, alAbr
   alVolver: () => void;
 }) {
   const en = useLocale() === "en";
-  const groups = toolsCatalog(en);
+  // A client account never sees a tool that opens the Pro space (owner, 2026-11-27).
+  const groups = toolsCatalogFor(en, esProfesional);
   const open = groups.find((g) => g.id === grupo) ?? null;
   if (open) {
     return (

@@ -583,6 +583,9 @@ let encabezadoYaHidratado = false;
 const SEARCH_PLACE_ORDER = ["restaurantes", "farmacias", "hospedaje", "atracciones", "supermercados", "talleres", "gasolineras", "parqueos", "tiendas", "cafes"];
 
 /** Section bar known by the server (detail screens such as /negocios): the first paint already shows «← Título ···». */
+// Directory on (owner, 2026-11-27: texts are never cut): the bar title wraps to a second line instead of «…».
+const tituloSinCorte = CABECERA_TITULO.replace(/\btruncate\b/, "whitespace-normal break-words");
+
 export type SeccionInicialDeBarra = { title: string; menu?: boolean; centrado?: boolean };
 
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false, onWelcomeNavigate, seccionInicial }: { onWelcomeNavigate?: (href: string) => void; mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean; seccionInicial?: SeccionInicialDeBarra } = {}) {
@@ -1781,11 +1784,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       // con flex-1 se corría hacia la derecha si el hueco de la
                       // derecha medía distinto que la flecha.
                       <>
-                        <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "pointer-events-none absolute inset-x-14 text-center")}>{sectionTitle}</p>
+                        <p data-ccr-section-title="" className={cn(directoryOn ? tituloSinCorte : CABECERA_TITULO, "pointer-events-none absolute inset-x-14 text-center")}>{sectionTitle}</p>
                         <span className="flex-1" aria-hidden />
                       </>
                     ) : (
-                      <p data-ccr-section-title="" className={cn(CABECERA_TITULO, sectionVolver ? "mr-auto min-w-0 truncate" : "flex-1 text-center")}>{sectionTitle}</p>
+                      <p data-ccr-section-title="" className={cn(directoryOn ? tituloSinCorte : CABECERA_TITULO, sectionVolver ? (directoryOn ? "mr-auto min-w-0" : "mr-auto min-w-0 truncate") : "flex-1 text-center")}>{sectionTitle}</p>
                     )}
                     {!sectionTitle && <span className="flex-1" aria-hidden />}
                   </>

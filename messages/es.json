@@ -4192,16 +4192,6 @@
     "emptyTitle": "Todavía no hay recomendaciones",
     "emptyBody": "Busque arriba o elija una sección para explorar."
   },
-  "toolsPage": {
-    "title": "Herramientas",
-    "cv": "Currículum",
-    "letter": "Carta de presentación",
-    "g_sales": "Clientes y ventas",
-    "g_work": "Trabajos y proyectos",
-    "g_money": "Finanzas",
-    "g_company": "Mi empresa",
-    "g_free": "Búsqueda de empleo"
-  },
   "adminPlaceCreate": {
     "title": "Agregar un lugar",
     "lead": "El equipo de ContrataCR agrega el lugar a mano. Se publica de inmediato y queda en el historial del directorio.",

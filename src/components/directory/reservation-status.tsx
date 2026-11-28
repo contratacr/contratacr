@@ -1,5 +1,7 @@
 'use client';
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
+import {useAuth} from '@/hooks/use-auth';
+import {PANEL_MIS_RESERVAS} from '@/lib/directory/panel-links';
 import {useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type CustomerReservation} from '@/lib/directory/place-features';
 
@@ -31,6 +33,8 @@ const ACTION:Record<string,[string,string]>={request:['Solicitud enviada','Reque
 export function ReservationStatus({token,locale,initial}:{token:string;locale:string;initial:CustomerReservation}){
  const en=locale==='en',t=(es:string,english:string)=>en?english:es,prefix=en?'/en':'';
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
+ // Signed in, «Mis reservas» goes straight to its «Mi panel» section (owner, 2026-11-27).
+ const {user}=useAuth();
  const [r,setR]=useState(initial),[asking,setAsking]=useState(false),[busy,setBusy]=useState(false),[msg,setMsg]=useState<{ok:boolean;text:string}|null>(null);
  const action=useRef<{id:string;revision:number}|null>(null);
  const dayText=new Intl.DateTimeFormat(en?'en-US':'es-CR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(r.day+'T12:00:00Z'));
@@ -85,7 +89,7 @@ export function ReservationStatus({token,locale,initial}:{token:string;locale:st
    <ol className="space-y-1 text-sm" data-reservation-timeline>{r.timeline.map((e,i)=><li key={i} className="flex flex-wrap gap-x-2"><span className="font-semibold">{(ACTION[e.action]??[e.action,e.action])[en?1:0]}</span><time dateTime={e.at} className="text-slate-700">{ready?at(e.at):''}</time></li>)}</ol>
   </section>
   <p className="text-sm"><a href={`${prefix}/negocios/${r.placeSlug}`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Ver el lugar','View the place')}</a>
-   {' · '}<a href={`${prefix}/mis-reservas`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Mis reservas','My reservations')}</a></p>
+   {' · '}<a href={`${prefix}${user?PANEL_MIS_RESERVAS:'/mis-reservas'}`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Mis reservas','My reservations')}</a></p>
   <p className="text-xs text-slate-700">{t('Este enlace es privado: quien lo tenga puede ver y cancelar esta reserva. No lo comparta.','This link is private: anyone who has it can view and cancel this reservation. Do not share it.')}</p>
  </section>;
 }

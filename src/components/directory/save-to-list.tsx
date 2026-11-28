@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {Bookmark,Check,X} from 'lucide-react';
 import {featureReasonText,type SavedList} from '@/lib/directory/place-features';
+import {PANEL_MIS_LISTAS} from '@/lib/directory/panel-links';
 import {BEEN_NAME,WANT_NAME,announceListsChanged,fetchLists,isSystemList,postListChange,rememberBeenHereCount,setSystemList} from '@/components/saved/lists-client';
 import {rememberViewedPlace} from '@/components/saved/recently-viewed';
 
@@ -83,7 +84,7 @@ export function SaveToList({slug,locale,signedIn,loginHref,name,area,image,varia
       <input id="save-new" ref={nameRef} data-save-new-name maxLength={80} placeholder={t('Nueva lista','New list')} className="min-h-11 w-full min-w-0 rounded-xl border border-slate-300 px-3 text-base"/>
       <button type="submit" disabled={busy} data-save-create className={`${button} bg-[#162543] px-4 text-white disabled:opacity-60`}>{t('Crear','Create')}</button></form>
      {msg&&<p role="alert" className="text-sm font-semibold text-red-800">{msg.text}</p>}
-     <a className={`inline-block text-sm underline underline-offset-2 ${ring}`} href={`${prefix}/listas`}>{t('Ver mis listas','See my lists')}</a>
+     <a className={`inline-block text-sm underline underline-offset-2 ${ring}`} href={`${prefix}${PANEL_MIS_LISTAS}`}>{t('Ver mis listas','See my lists')}</a>
     </>}
    </div></div>}
  </div>;

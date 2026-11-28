@@ -4192,16 +4192,6 @@
     "emptyTitle": "No recommendations yet",
     "emptyBody": "Search above or pick a section to explore."
   },
-  "toolsPage": {
-    "title": "Tools",
-    "cv": "Resume",
-    "letter": "Cover letter",
-    "g_sales": "Customers and sales",
-    "g_work": "Jobs and projects",
-    "g_money": "Finances",
-    "g_company": "My company",
-    "g_free": "Job search"
-  },
   "adminPlaceCreate": {
     "title": "Add a place",
     "lead": "The ContrataCR team adds the place by hand. It is published at once and recorded in the directory history.",

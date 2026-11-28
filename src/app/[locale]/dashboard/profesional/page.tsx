@@ -42,7 +42,7 @@ import { Herramientas } from "@/components/dashboard/herramientas";
 import { HerramientasCatalogo } from "@/components/dashboard/herramientas-catalogo";
 import { PanelMisListas, PanelMisReservas } from "@/components/dashboard/panel-directorio";
 import { useSiteFeatures } from "@/components/site-features";
-import { isToolsGroupId, toolsCatalog, type ToolsGroupId } from "@/lib/pro/tools-catalog";
+import { isToolsGroupId, toolsCatalogFor, type ToolsGroupId } from "@/lib/pro/tools-catalog";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -537,6 +537,8 @@ export default function DashboardPage() {
   const {enabled:proEnabled,ready:proAccessReady,error:proAccessError,retry:retryProAccess}=useLocalProAccess(user?.id);
   const simpleCopy=useTranslations("ProSimple");
   const directoryOn = useSiteFeatures().directorySections.length > 0;
+  // Directory on (owner, 2026-11-27: texts are never cut): titles and row names wrap instead of «…». Production keeps «…».
+  const tituloCabecera = directoryOn ? CABECERA_TITULO.replace(/\btruncate\b/, "whitespace-normal break-words") : CABECERA_TITULO;
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   // Query-only Pro history can outlive Next's cached router tree across reloads.
@@ -1669,8 +1671,9 @@ export default function DashboardPage() {
   // Pro on (owner, 2026-11-27): «Herramientas» lists five groups; an open group (?tab=tools&grupo=<id>) is a screen of
   // its own and the bar reads «← <group>». Production (flag off) keeps the three-row list and never reads `grupo`.
   const toolsGroupParam = PRO_UI_ENABLED && activeTab === "tools" ? searchParams.get("grupo") : null;
-  const toolsGroup: ToolsGroupId | null = isToolsGroupId(toolsGroupParam) ? toolsGroupParam : null;
-  const toolsGroupTitle = toolsGroup ? toolsCatalog(locale === "en").find((g) => g.id === toolsGroup)?.label ?? null : null;
+  // A group the account does not have (a client asking for ?grupo=sales) is the plain list.
+  const toolsGroupTitle = isToolsGroupId(toolsGroupParam) ? toolsCatalogFor(locale === "en", esProfesional).find((g) => g.id === toolsGroupParam)?.label ?? null : null;
+  const toolsGroup: ToolsGroupId | null = toolsGroupTitle && isToolsGroupId(toolsGroupParam) ? toolsGroupParam : null;
   // Directory on: «Guardados → Mis listas» is a screen of its own (?tab=saved&vista=listas), bar «← Mis listas».
   const savedListsOpen = directoryOn && activeTab === "saved" && searchParams.get("vista") === "listas";
   const savedListsTitle = savedListsOpen ? (locale === "en" ? "My lists" : "Mis listas") : null;
@@ -1927,7 +1930,7 @@ export default function DashboardPage() {
             </span>
           )}
         </span>
-        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <span className={cn("min-w-0 flex-1", directoryOn ? "break-words" : "truncate")}>{label}</span>
       </button>
     );
   }
@@ -2003,7 +2006,7 @@ export default function DashboardPage() {
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
         </span>
-        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <span className={cn("min-w-0 flex-1", directoryOn ? "break-words" : "truncate")}>{label}</span>
         <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
       </button>
     );
@@ -2348,12 +2351,12 @@ export default function DashboardPage() {
                     <ArrowLeft className={CABECERA_GLIFO} />
                   </button>
                   {supportThreadTitle ? (
-                    <h2 className={cn(CABECERA_TITULO, "flex items-baseline justify-center gap-1.5 px-1 text-center")}>
-                      <span className="min-w-0 truncate">{supportThreadTitle}</span>
+                    <h2 className={cn(tituloCabecera, "flex items-baseline justify-center gap-1.5 px-1 text-center")}>
+                      <span className={cn("min-w-0", directoryOn ? "break-words" : "truncate")}>{supportThreadTitle}</span>
                       {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
                     </h2>
                   ) : (
-                    <h2 className={cn(CABECERA_TITULO, "px-2 text-center")}>{mobileProfileSectionTitle ?? toolsGroupTitle ?? savedListsTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                    <h2 className={cn(tituloCabecera, "px-2 text-center")}>{mobileProfileSectionTitle ?? toolsGroupTitle ?? savedListsTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
                   <div data-pro-section-actions-slot className="flex shrink-0 justify-self-end" />
                 </div>

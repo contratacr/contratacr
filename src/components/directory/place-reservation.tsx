@@ -1,6 +1,8 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {featureReasonText,type ReservationConfig} from '@/lib/directory/place-features';
+import {useAuth} from '@/hooks/use-auth';
+import {PANEL_MIS_RESERVAS} from '@/lib/directory/panel-links';
 
 /**
  * LOCAL PRO ONLY (place features round, 2026-11-17): «Reservar mesa» on /negocios/<slug> of a claimed restaurant/café whose
@@ -18,6 +20,8 @@ const field='min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 te
 const noSubscribe=()=>()=>{};
 type Done={kind:'booking'|'waitlist';reference:string;position:number|null;channel:string|null;link:string|null};
 export function PlaceReservation({slug,locale,config}:{slug:string;locale:string;config:ReservationConfig}){
+ // Signed in, «Mis reservas» goes straight to its «Mi panel» section (owner, 2026-11-27).
+ const {user}=useAuth();
  const en=locale==='en',t=(es:string,english:string)=>en?english:es;
  const ready=useSyncExternalStore(noSubscribe,()=>true,()=>false);
  const [mode,setMode]=useState<'booking'|'waitlist'>('booking'),[day,setDay]=useState(''),[times,setTimes]=useState<{time:string;left:number}[]|null>(null);
@@ -63,7 +67,7 @@ export function PlaceReservation({slug,locale,config}:{slug:string;locale:string
     </div>
     <p className="text-xs text-slate-700">{t('Guárdelo: solo se muestra esta vez y también se lo enviamos en el aviso. Quien tenga el enlace puede ver y cancelar esta reserva.','Keep it: it is only shown now and we also sent it in the notice. Anyone with the link can view and cancel this reservation.')}</p>
    </div>}
-   <p className="text-sm"><a href={`${en?'/en':''}/mis-reservas`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Mis reservas (con cuenta)','My reservations (signed in)')}</a></p>
+   <p className="text-sm"><a href={`${en?'/en':''}${user?PANEL_MIS_RESERVAS:'/mis-reservas'}`} className={`font-semibold underline underline-offset-2 ${ring}`}>{t('Mis reservas (con cuenta)','My reservations (signed in)')}</a></p>
    <button type="button" className={`underline underline-offset-2 ${ring}`} onClick={()=>{setDone(null);form.current?.reset();}}>{t('Hacer otra solicitud','Make another request')}</button>
   </div>:<>
    {config.waitlistOpen&&<div role="radiogroup" aria-label={t('Tipo de solicitud','Request type')} className="flex flex-wrap gap-2">
