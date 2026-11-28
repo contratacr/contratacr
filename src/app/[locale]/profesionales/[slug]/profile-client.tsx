@@ -1,5 +1,6 @@
 "use client";
 import { useSiteFeatures } from "@/components/site-features";
+import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import {PRO_UI_ENABLED} from '@/lib/pro/enabled-client';
 import { WorkplaceDirections } from "@/components/professionals/workplace-directions";
 import { serviceModalities } from "@/components/professionals/service-modalities";
@@ -427,6 +428,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     // Sin ficha (perfil no encontrado) el «volver» de la ficha no existe:
     // la flecha regresa a la pantalla anterior, o al inicio si no hay.
     const onBack = () => {
+      // Vista previa: la flecha la atiende su SectionHeaderTitle (vuelve al panel).
+      if (previewMode) return;
       if (volverRef.current) return volverRef.current();
       if (hayPantallaAnterior()) volverHastaSalir();
       else window.location.assign("/");
@@ -448,7 +451,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       window.removeEventListener("ccr:section-menu", onMenu);
       window.removeEventListener("ccr:section-header-ack", onAck);
     };
-  }, []);
+  }, [previewMode]);
   // «¿NO TE RESPONDIÓ?» (4-oct-2026): tras abrir WhatsApp, al volver a la
   // ficha se ofrece publicar lo que necesita para que le escriban varios.
   // Una vez por visita; se cierra con la ✕.
@@ -893,9 +896,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {!previewMode && <RecordRecentVisit surface="profesionales" visita={visitaProfesional} />}
           {previewMode ? (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-lg:pt-4">
+              {/* Phones (owner 2026-11-27): «← Vista previa» in the bar, back to the panel; the button only from lg. */}
+              <SectionHeaderTitle title={locale === "en" ? "Preview" : "Vista previa"} fallbackHref="/dashboard/profesional" tambienEnLaWeb />
               <p className="text-sm text-[#6b7280] font-medium">{t("previewNote")}</p>
-              <Link href="/dashboard/profesional" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
+              <Link href="/dashboard/profesional" data-preview-back-to-panel className="max-lg:!hidden inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
                 <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
               </Link>
             </div>

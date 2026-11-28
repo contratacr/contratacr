@@ -39,8 +39,11 @@ async function MyOffersContent() {
   })) as ProfessionalOffer[];
   return (
     <main data-route-content="offers-manager">
-      <LandingNavbar mobileSearch={false} />
-      <SectionHeaderTitle title={tSecciones("myOffers")} fallbackHref="/promociones" />
+      <LandingNavbar mobileSearch={false} seccionInicial={{ title: tSecciones("myOffers") }} />
+      {/* The bar is fixed: the content starts below it (the manager's first row was under it). */}
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
+      {/* Phones (owner 2026-11-27): «← Mis promociones» in the bar on the web too; the manager's in-page arrow and title stay from lg. */}
+      <SectionHeaderTitle title={tSecciones("myOffers")} fallbackHref="/promociones" tambienEnLaWeb />
       <OffersManager initialOffers={offers} />
     </main>
   );

@@ -20,6 +20,7 @@ import { readAttribution } from "@/lib/analytics/attribution";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { Navbar } from "@/components/layout/navbar";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
+import { CabeceraDeEntrada } from "@/components/auth/cabecera-de-entrada";
 import { Button } from "@/components/ui/button";
 import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
@@ -61,6 +62,11 @@ export default function RegisterClientPage() {
   const [terminosAceptados, setTerminosAceptados] = useState(false);
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
+  // Signed out (owner 2026-11-27): this form is a step of «Crear cuenta», so phones get «← Cuenta de cliente» (back to
+  // the account-type choice, through the history or its address) and the code step «← Verificar correo».
+  const enRegistro = useLocale() === "en";
+  const choiceRedirect = rutaInternaSegura(searchParams.get("redirect"));
+  const choiceHref = `/registro${choiceRedirect ? `?redirect=${encodeURIComponent(choiceRedirect)}` : ""}`;
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
   // Solo una ruta interna válida; cualquier otra cosa cae al panel.
   const panelHref = rutaInternaSegura(searchParams.get("redirect")) ?? "/dashboard/profesional?mode=use";
@@ -210,7 +216,7 @@ export default function RegisterClientPage() {
   if (otpEmail) {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
-        {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
+        {user ? <CabeceraDeTramite title={t("title")} /> : <CabeceraDeEntrada siempre title={enRegistro ? "Verify e-mail" : "Verificar correo"} onBack={() => setOtpEmail(null)} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
@@ -250,7 +256,7 @@ export default function RegisterClientPage() {
 
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
-      {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
+      {user ? <CabeceraDeTramite title={t("title")} /> : <CabeceraDeEntrada siempre title={enRegistro ? "Client account" : "Cuenta de cliente"} parentHref={choiceHref} />}
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -259,7 +265,7 @@ export default function RegisterClientPage() {
                 tarjeta que la persona acaba de tocar. */}
             {/* Con sesión el título va en la cabecera; aquí solo el apoyo. */}
             <div className="text-center mb-6">
-              {!user && <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>}
+              {!user && <h1 className="text-2xl font-bold text-[#162543] max-lg:sr-only">{t("title")}</h1>}
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
 

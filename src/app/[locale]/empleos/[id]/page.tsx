@@ -2,7 +2,9 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { notFound } from "next/navigation";
 import { contentIsHeld } from "@/lib/moderation/visibility";
 import { claveDeTramo, rangoDePrefijo } from "@/lib/marketplace-url";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
@@ -147,18 +149,20 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   const esDelDueno = !!usuario && !!empleador?.profile_id && empleador.profile_id === usuario.id && cerrado.status !== "draft";
   const reactivar = esDelDueno ? <VolverAPublicar tipo="empleo" id={String(cerrado.id)} /> : null;
 
+  const tituloBarra = (await getLocale()) === "en" ? "Job" : "Empleo";
   return (
     <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-white">
+      {/* Phones (owner 2026-11-27): the same bar as a live job, «← Empleo», instead of a «← Volver» link inside the
+          page. Desktop has no back arrow at all (the browser's is next to the address). */}
+      <header className={cn(CABECERA_FILA_CENTRADA, "sticky top-0 z-20 border-b border-[#e5e7eb] bg-white lg:hidden")}>
+        <Link href={volverHref} data-native-back="closed-job" aria-label={volverTexto} className={cn("absolute left-4", CABECERA_BOTON)}>
+          <ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} />
+        </Link>
+        <p data-closed-job-title className={cn(CABECERA_TITULO, "text-center")}>{tituloBarra}</p>
+      </header>
       {/* Las mismas medidas que la ficha de un empleo vivo: 6xl, la columna de
           760 centrada. La lápida no es otra pantalla, es la misma sin acciones. */}
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-        {/* EN COMPUTADORA NO HAY FLECHA DE VOLVER, NUNCA: la del navegador ya
-            está a la izquierda de la dirección y hace exactamente eso. En el
-            teléfono sí, que ahí no hay otra. */}
-        <Link href={volverHref} data-native-back="closed-job" aria-label={volverTexto} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc] lg:hidden">
-          <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-          {volverTexto}
-        </Link>
         {/* FLEX CON UTILIDADES NORMALES, NO UNA REJILLA CON VALOR ARBITRARIO.
             `lg:grid-cols-[minmax(0,1fr)_320px]` depende de que Tailwind genere
             esa clase; donde no la generó, quedaba `lg:grid` con una sola

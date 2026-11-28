@@ -22,6 +22,10 @@ export default function SoportePage() {
   const { user, loading: authLoading } = useAuth();
   const panelHref = "/dashboard/profesional?tab=soporte";
   const panelHomeHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
+  // Phones (owner 2026-11-27): Soporte is a screen of its own, «← Soporte» in the bar (web too, painted by the server);
+  // the arrow goes back, or with no history to the panel's support section (signed in) or home. The in-page «Volver al
+  // panel» stays only from lg.
+  const backHref = user ? panelHref : "/";
 
   const [success, setSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState("");
@@ -35,8 +39,8 @@ export default function SoportePage() {
   if (success) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
-        <LandingNavbar />
-      <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
+        <LandingNavbar seccionInicial={{ title: tSeccion("support") }} />
+      <SectionHeaderTitle title={tSeccion("support")} fallbackHref={backHref} tambienEnLaWeb />
         <div className="ccr-navbar-spacer h-16" aria-hidden />
         <main className="flex-1 ccr-centrado-seguro px-4 pb-20 pt-4 lg:pt-8">
           {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
@@ -117,16 +121,17 @@ export default function SoportePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <LandingNavbar />
-      <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
+      <LandingNavbar seccionInicial={{ title: tSeccion("support") }} />
+      <SectionHeaderTitle title={tSeccion("support")} fallbackHref={backHref} tambienEnLaWeb />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="ccr-native-compact-page flex-1 px-4 pb-0 pt-4 lg:pt-8">
         <div className="mx-auto max-w-xl">
-          {authLoading && <div className="mb-5"><Skeleton className="h-[38px] w-40 rounded-full" /></div>}
+          {authLoading && <div className="mb-5 max-lg:hidden"><Skeleton className="h-[38px] w-40 rounded-full" /></div>}
           {user && !authLoading && (
-            <div className="mb-5">
+            <div className="mb-5 max-lg:hidden">
               <Link
                 href={panelHref}
+                data-support-back-to-panel
                 className="inline-flex items-center gap-2 rounded-full border border-[#d8eef8] bg-white px-4 py-2 text-sm font-semibold text-[#0089bb] shadow-sm transition-colors hover:bg-[#f5fbfe]"
               >
                 <ArrowLeft className="h-4 w-4" />

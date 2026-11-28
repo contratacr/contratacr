@@ -2,6 +2,7 @@ import {test,expect,type Page} from 'playwright/test';
 import {gotoOK} from './helpers';
 import {createDisposableAccount,cleanupDisposableAccount} from './disposable-account';
 import {dirDb} from './pro-dir-fixture';
+import {login} from './pro-round2-fixture';
 
 // Owner rule 2026-11-27: on phones a CHILD screen names itself in the bar, «← Título», and the arrow returns to its
 // parent (through the history, or to the parent address when the screen was opened directly). No in-page «Volver», no
@@ -177,5 +178,87 @@ test.describe('sign-in reached from a gated section (390 px)',()=>{
   await hydrated(page);
   await sectionBack(page).click();
   await expect.poll(()=>here(page),{timeout:30_000}).toBe('/como-ordenamos');
+ });
+});
+
+// Production screens (owner «Dale», 2026-11-27): the same «← title» bar on phones, no in-page back link or repeated
+// title; the arrow goes back, or with no history to the parent address.
+async function arrowTo(page:Page,parent:string|RegExp){
+ await hydrated(page);
+ // The bar arrow answers once the screen's own header component is mounted (after the route registry).
+ await page.waitForLoadState('networkidle').catch(()=>{});
+ await sectionBack(page).click();
+ if(typeof parent==='string')await expect.poll(()=>here(page),{timeout:30_000}).toBe(parent);
+ else await expect.poll(()=>here(page),{timeout:30_000}).toMatch(parent);
+}
+test.describe('production screens: «← title» bar at 390 px',()=>{
+ test('Soporte: signed out → home; signed in → the panel support section; no «Volver al panel» on phones',async({page,context})=>{
+  await gotoOK(page,'/soporte');await dismissCookies(page);
+  await expect(sectionTitle(page)).toHaveText('Soporte',{timeout:20_000});await notCut(page,'[data-ccr-section-title]');
+  await arrowTo(page,'/');
+  const user=await createDisposableAccount({prefix:'child-soporte'});
+  try{
+   await login(context,user);
+   await gotoOK(page,'/soporte');await dismissCookies(page);
+   await expect(sectionTitle(page)).toHaveText('Soporte',{timeout:20_000});
+   await expect(page.locator('[data-support-back-to-panel]').filter({visible:true})).toHaveCount(0);
+   await shot(page,'soporte-390');
+   await arrowTo(page,/^\/dashboard\/profesional\?tab=soporte/);
+  }finally{await cleanupDisposableAccount(user);}
+ });
+ test('Mis empleos / Mis promociones (professional): bar title, no in-page arrow or title',async({page,context})=>{
+  const user=await createDisposableAccount({prefix:'child-managers',professional:true});
+  try{
+   await login(context,user);
+   for(const [url,title,parent,name] of [['/empleos/mis-empleos','Mis empleos','/empleos','mis-empleos'],['/promociones/mis-promociones','Mis promociones','/promociones','mis-promociones']] as const){
+    await gotoOK(page,url);await dismissCookies(page);
+    await expect(sectionTitle(page)).toHaveText(title,{timeout:20_000});await notCut(page,'[data-ccr-section-title]');
+    await expect(page.locator('[data-manager-back]').filter({visible:true})).toHaveCount(0);
+    // The page title is kept for screen readers only (no visible repeat under the bar).
+    expect(await page.locator('main h1').evaluateAll((els,t)=>els.filter(e=>e.textContent?.trim()===t&&e.getBoundingClientRect().width>2).length,title)).toBe(0);
+    await shot(page,`${name}-390`);
+    await arrowTo(page,parent);
+   }
+  }finally{await cleanupDisposableAccount(user);}
+ });
+ test('own profile preview: «← Vista previa», back to the panel; the button only on desktop',async({page,context})=>{
+  const user=await createDisposableAccount({prefix:'child-preview',professional:true,publicDiscoverable:true});
+  try{
+   await login(context,user);
+   const slug=(await dirDb().from('professionals').select('slug').eq('profile_id',user.id).maybeSingle()).data?.slug as string;
+   await gotoOK(page,`/profesionales/${slug}?preview=1`);await dismissCookies(page);
+   await expect(sectionTitle(page)).toHaveText('Vista previa',{timeout:30_000});
+   await expect(page.locator('[data-preview-back-to-panel]').filter({visible:true})).toHaveCount(0);
+   await shot(page,'perfil-vista-previa-390');
+   await arrowTo(page,/^\/dashboard\/profesional/);
+  }finally{await cleanupDisposableAccount(user);}
+ });
+ test('closed job: «← Empleo» bar, no «Volver» link in the page',async({page})=>{
+  const closed=(await dirDb().from('job_posts').select('id').eq('status','closed').limit(1).maybeSingle()).data?.id as string|undefined;
+  test.skip(!closed,'sin empleo cerrado');
+  await gotoOK(page,`/empleos/${closed}`);await dismissCookies(page);
+  await expect(page.locator('[data-closed-job-title]')).toHaveText('Empleo');
+  await notCut(page,'[data-closed-job-title]');
+  await expect(page.locator('main a[data-native-back="closed-job"]')).toHaveCount(1);
+  await expect(page.getByRole('link',{name:/Ver todos los empleos/}).filter({visible:true})).toHaveCount(1);
+  await shot(page,'empleo-cerrado-390');
+  await page.locator('[data-native-back="closed-job"]').click();
+  await expect.poll(()=>new URL(page.url()).pathname,{timeout:30_000}).toBe('/empleos');
+ });
+ test('signed-out sign-up forms are steps: «← Cuenta de cliente» / «← Cuenta profesional» back to the choice',async({page})=>{
+  for(const [url,title,parent,name] of [['/registro/cliente','Cuenta de cliente','/registro','registro-cliente'],['/registro/profesional','Cuenta profesional','/registro?paso=profesional','registro-profesional']] as const){
+   await gotoOK(page,url);await dismissCookies(page);
+   await expect(flowTitle(page)).toHaveText(title,{timeout:20_000});await notCut(page,'[data-focused-title]');
+   await expect(page.getByRole('link',{name:'ContrataCR'}).filter({visible:true})).toHaveCount(0);
+   await shot(page,`${name}-390`);
+   await hydrated(page);
+   await stepBack(page).click();
+   await expect.poll(()=>here(page),{timeout:30_000}).toBe(parent);
+  }
+  // From the choice: the arrow goes back to it through the history.
+  await gotoOK(page,'/registro');await hydrated(page);
+  await openFrom(page,'/registro/cliente');await hydrated(page);
+  await stepBack(page).click();
+  await expect.poll(()=>here(page),{timeout:30_000}).toBe('/registro');
  });
 });

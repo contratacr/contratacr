@@ -31,8 +31,11 @@ export default async function MyJobsPage() {
   })) as Array<JobPost & { applications: Array<{ id: string; status: string; created_at: string; cover_letter: string; applicant_email: string | null; phone: string | null; resume_url: string | null; portfolio_url: string | null; applicant_name: string }> }>;
   return (
     <main data-route-content="jobs-manager">
-      <LandingNavbar mobileSearch={false} />
-      <SectionHeaderTitle title={tSecciones("myJobs")} fallbackHref="/empleos" />
+      <LandingNavbar mobileSearch={false} seccionInicial={{ title: tSecciones("myJobs") }} />
+      {/* The bar is fixed: the content starts below it (the manager's first row was under it). */}
+      <div className="ccr-navbar-spacer h-16" aria-hidden />
+      {/* Phones (owner 2026-11-27): «← Mis empleos» in the bar on the web too; the manager's in-page arrow and title stay from lg. */}
+      <SectionHeaderTitle title={tSecciones("myJobs")} fallbackHref="/empleos" tambienEnLaWeb />
       <JobsManager initialJobs={jobs} />
     </main>
   );

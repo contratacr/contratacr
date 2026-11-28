@@ -33,6 +33,33 @@ test("every admin page excludes the bottom nav before and after hydration", () =
   expect(sinBarraDeAbajo("/administracion-publica")).toBe(false);
 });
 
+// Owner 2026-11-27: the sign-in flow is a full-screen interruption in the app too. Create account (every step),
+// password recovery and a login asked by a gated section (`?redirect=`) have no bottom bar, before and after hydration;
+// login opened by itself (menu «Ingresar») is a root screen and keeps it.
+test("sign-in flow screens exclude the bottom nav before and after hydration", () => {
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  const raw = layout.match(/__html: `(document\.documentElement\.classList\.add\("ccr-js"\);[\s\S]*?)`,/)![1];
+  const boot = new Function("DIRECCIONES_POR_TRAMO", `return \`${raw}\`;`)("{}");
+  const run = (pathname: string, search: string) => {
+    const root = new Set(["ccr-native-app", "ccr-native-bottom-nav-visible"]);
+    const classList = (set: Set<string>) => ({ add: (c: string) => set.add(c), remove: (c: string) => set.delete(c), contains: (c: string) => set.has(c) });
+    runInNewContext(boot, { navigator: {}, window: { location: { pathname, search } }, document: { documentElement: { classList: classList(root) }, body: { classList: classList(new Set()) } } });
+    return root.has("ccr-native-bottom-nav-visible");
+  };
+  const sinBarra: Array<[string, string]> = [["/registro", ""], ["/registro/cliente", "?redirect=%2Flistas"], ["/registro/profesional", ""], ["/registro/empresa", ""], ["/olvide-contrasena", ""], ["/login", "?redirect=%2Flistas"]];
+  for (const prefix of ["", "/es", "/en"]) {
+    for (const [path, search] of sinBarra) {
+      const pathname = `${prefix}${path}`;
+      expect(sinBarraDeAbajo(pathname, search), pathname + search).toBe(true);
+      expect(run(pathname, search), pathname + search).toBe(false);
+    }
+    expect(sinBarraDeAbajo(`${prefix}/login`, ""), `${prefix}/login`).toBe(false);
+    expect(run(`${prefix}/login`, ""), `${prefix}/login`).toBe(true);
+  }
+  expect(sinBarraDeAbajo("/registrosanitario")).toBe(false);
+  expect(sinBarraDeAbajo("/loginx", "?redirect=%2F")).toBe(false);
+});
+
 test("native admin login has no bottom nav or bottom-nav space", async ({ page, context }) => {
   await context.addCookies([{ name: "ccr_platform", value: "native", domain: "localhost", path: "/" }]);
   await page.addInitScript(() => {

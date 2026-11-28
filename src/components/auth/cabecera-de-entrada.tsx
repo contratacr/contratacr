@@ -82,16 +82,23 @@ function FlechaSiHayHistorial({ title }: { title: string }) {
  * `inicio`: the first screen of the flow (login). Otherwise a step: `onBack` for a step inside the same page (code,
  * kind of professional), else back through the history or to `parentHref` (the previous step's address).
  */
-export function CabeceraDeEntrada({ title, inicio = false, onBack, parentHref }: {
+export function CabeceraDeEntrada({ title, inicio = false, onBack, parentHref, siempre = false }: {
   title: string;
   inicio?: boolean;
   onBack?: () => void;
   parentHref?: string;
+  // A step of creating an account (client or professional form, its e-mail code): «← paso» on phones also with the
+  // directory off (owner 2026-11-27, «Dale»). ← goes to the previous step, or back through the history / `parentHref`.
+  siempre?: boolean;
 }) {
   const { directoryOn, redirect, enFlujo } = useFlujoDeEntrada();
   const router = useRouter();
   const en = useLocale() === "en";
-  if (!directoryOn) return <Navbar mobileSearch={false} />;
+  if (siempre && !onBack && parentHref) {
+    const volver = () => { if (hayPantallaAnterior()) volverHastaSalir(); else router.push(parentHref); };
+    return <CabeceraDeTramite title={title} onBack={volver} backLabel={en ? "Back" : "Volver"} tituloComo="p" />;
+  }
+  if (!directoryOn && !siempre) return <Navbar mobileSearch={false} />;
   if (onBack) return <CabeceraDeTramite title={title} onBack={onBack} backLabel={en ? "Back" : "Volver"} tituloComo="p" />;
   if (enFlujo && inicio) {
     const cerrar = () => { if (!salirDelFlujoDeEntrada(redirect)) router.replace("/"); };

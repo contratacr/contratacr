@@ -19,8 +19,8 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Navbar } from "@/components/layout/navbar";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
+import { CabeceraDeEntrada, useFlujoDeEntrada } from "@/components/auth/cabecera-de-entrada";
 import { Input } from "@/components/ui/input";
 import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { Button } from "@/components/ui/button";
@@ -514,6 +514,10 @@ export default function RegisterProfessionalPage() {
   // A local place with its pin placed but not yet saved with «Guardar lugar».
   const [localDraftPending, setLocalDraftPending] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
+  // Signed out (owner 2026-11-27): the account step is a step of «Crear cuenta»: phones get «← Cuenta profesional»
+  // (back to the account-type choice, through the history or its address) and the code step «← Verificar correo».
+  const { directoryOn: directorioEncendido, redirect: redirectDelFlujo } = useFlujoDeEntrada();
+  const choiceHref = `/registro${directorioEncendido ? "?paso=profesional" : ""}${redirectDelFlujo ? `${directorioEncendido ? "&" : "?"}redirect=${encodeURIComponent(redirectDelFlujo)}` : ""}`;
 
   useEffect(() => () => {
     if (photoPreviewObjectUrlRef.current) URL.revokeObjectURL(photoPreviewObjectUrlRef.current);
@@ -1070,7 +1074,7 @@ export default function RegisterProfessionalPage() {
     return (
       <div className="ccr-account-page ccr-paso-codigo min-h-dvh flex flex-col bg-white">
         {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <Navbar mobileSearch={false} />}
+        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={locale === "en" ? "Verify e-mail" : "Verificar correo"} onBack={() => setOtpEmail(null)} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-6 sm:p-8">
@@ -1133,7 +1137,7 @@ export default function RegisterProfessionalPage() {
   return (
     <div className="ccr-account-page min-h-dvh flex flex-col bg-white">
       {/* 15-nov-2026: «Atrás» en el paso 0 va al inicio, no al panel: el panel manda una cuenta que puede ofrecer pero aún no tiene fila de profesional de vuelta a /registro/profesional, y se formaba un bucle. */}
-      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <Navbar mobileSearch={false} />}
+      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref={quoteReturn?.path??"/"} onBack={step > 0 ? () => setStep(step - 1) : quoteReturn ? backToQuoteLead : undefined} backLabel={step > 0 ? t("back") : quoteReturn ? rc("backToLead") : undefined} /> : <CabeceraDeEntrada siempre title={locale === "en" ? "Professional account" : "Cuenta profesional"} parentHref={choiceHref} onBack={step > 0 ? () => { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); setStep(step - 1); } : undefined} />}
       {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
           hueco enorme entre la cabecera y el formulario. Sin sesión sigue
@@ -1152,7 +1156,7 @@ export default function RegisterProfessionalPage() {
           {/* El título del trámite va en la tarjeta, encima de los pasos. En
               el teléfono con sesión ya lo dice la cabecera («Ofrecer mis
               servicios»), así que ahí no se repite. */}
-          <div className={cn("text-center mb-5", currentUser && "hidden lg:block")}>
+          <div className={cn("text-center mb-5", currentUser ? "hidden lg:block" : "max-lg:sr-only")}>
             <h1 className="text-2xl font-bold text-[#162543]">
               {step === 2 ? t("photoStepTitle") : currentUser ? t("headerTitle") : t("title")}
             </h1>
@@ -1497,16 +1501,15 @@ export default function RegisterProfessionalPage() {
               </section>
 
               <BarraDeAcciones activa={!!currentUser}>
-                {/* Sin sesión arriba va el navbar, que no lleva flecha: ahí el
-                    botón «Atrás» sigue siendo la única forma de retroceder. */}
-                {/* Con sesión, en el teléfono retrocede la flecha de la cabecera;
-                    en computadora no hay esa cabecera y el «Atrás» vuelve aquí. */}
+                {/* En el teléfono retrocede la flecha de la cabecera (con o sin
+                    sesión, dueño 2026-11-27); en computadora no hay esa cabecera
+                    y el «Atrás» vuelve aquí. */}
                 {(
                   <Button
                     variant="outline"
                     size="lg"
                     type="button"
-                    className={currentUser ? "hidden lg:inline-flex" : undefined}
+                    className="hidden lg:inline-flex"
                     onClick={() => {
                       if (!currentUser) { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); }
                       setStep(0);
@@ -1531,7 +1534,7 @@ export default function RegisterProfessionalPage() {
 
               <BarraDeAcciones activa={!!currentUser}>
                 {(
-                  <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className={cn("shrink-0 px-4 sm:px-7", currentUser && "hidden lg:inline-flex")}>
+                  <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className={cn("shrink-0 px-4 sm:px-7", "hidden lg:inline-flex")}>
                     <ArrowLeft className="h-4 w-4" /> {t("back")}
                   </Button>
                 )}

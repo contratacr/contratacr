@@ -18,7 +18,7 @@
  *    seguimiento. Para saltar a otra pestaña se vuelve primero, que es lo que
  *    una pantalla con flecha ya pide.
  *
- * La misma expresión vive, en literal, en el script de arranque de
+ * Las mismas expresiones (detalle, entrada, login) viven, en literal, en el script de arranque de
  * `src/app/layout.tsx` (corre antes de hidratar, no puede importar); el
  * contrato de `scripts/validate-mobile-native-config.mjs` vigila que las dos
  * no se separen.
@@ -34,8 +34,16 @@ const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-solicitud|cotizar|(?:empleo
 // `mis-promociones` son listas o flujos, no fichas, y se quedan con la barra.
 const RUTA_DE_DETALLE = /^\/(?:(?:es|en)\/)?(?:profesionales\/[^/]+|solicitudes\/[^/]+|promociones\/(?!publicar\/?$|mis-promociones\/?$)[^/]+|empleos\/(?!publicar\/?$|mis-empleos\/?$)[^/]+)\/?$/;
 
-export function sinBarraDeAbajo(pathname: string | null | undefined): boolean {
+// 3. EL FLUJO DE ENTRAR (dueño 2026-11-27): crear cuenta, recuperar la
+//    contraseña y el código son pasos de una interrupción a pantalla completa,
+//    sin barra. Iniciar sesión también, cuando la pidió una sección (`?redirect=`);
+//    abierta sola (menú «Ingresar») es una pantalla raíz y conserva la barra.
+const RUTA_DE_ENTRADA = /^\/(?:(?:es|en)\/)?(?:registro|olvide-contrasena)(?:\/|$)/;
+const RUTA_DE_LOGIN = /^\/(?:(?:es|en)\/)?login\/?$/;
+
+export function sinBarraDeAbajo(pathname: string | null | undefined, search = ""): boolean {
   const ruta = pathname ?? "";
+  if (RUTA_DE_ENTRADA.test(ruta) || (RUTA_DE_LOGIN.test(ruta) && /[?&]redirect=/.test(search))) return true;
   // /profesionales/techos tiene la forma de una ficha pero es la búsqueda de
   // ese servicio: esa sí lleva la barra.
   return RUTA_DE_ADMIN.test(ruta) || RUTA_DE_PANTALLA_COMPLETA.test(ruta) || (RUTA_DE_DETALLE.test(ruta) && !esRutaDeBusqueda(ruta, esServicioDelCatalogo));

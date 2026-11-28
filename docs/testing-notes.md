@@ -46,7 +46,15 @@ Pantallas hijas en el teléfono (regla del dueño 2026-11-27, `tests/e2e/pro-chi
 - [ ] `/marca/<slug>`: «← Marca» (sin historial: portada); la ruta «Inicio › Marcas › …» solo desde lg.
 - [ ] `/precios?categoria=…`: «← Granos» (el nombre de la categoría; madre: `/precios` con los mismos filtros); `/precios?producto=…`: «← Producto» (madre: la lista o la búsqueda de la que vino). Sin «← Todas las categorías» / «← Productos» ni el título «Comparar precios» en el teléfono. `/precios` y la búsqueda (`?q=`) siguen con la barra del sitio.
 - [ ] `/registro?paso=profesional` («¿Cómo ofrece sus servicios?»): «← Ofrezco servicios», la flecha vuelve a «¿Cómo quiere empezar?»; el «Volver» de la página solo desde lg.
-- [ ] Con directorio apagado todas estas pantallas (y login/registro) se ven como en producción.
+- [ ] Con directorio apagado, login, `/registro` (elegir tipo) y `/olvide-contrasena` se ven como en producción. Las pantallas de abajo cambian TAMBIÉN en producción (dueño 2026-11-27, «Dale»; sin subir hasta su visto bueno).
+- [ ] `/soporte`: «← Soporte» en la barra también en la web (sin parpadeo); con sesión la flecha vuelve, o sin historial a Mi panel › Soporte; sin sesión, a la portada. «Volver al panel» solo desde lg.
+- [ ] `/empleos/mis-empleos` y `/promociones/mis-promociones`: «← Mis empleos» / «← Mis promociones» en la web; la flecha y el título de la página solo desde lg; la primera fila ya no queda debajo de la barra (también en computadora).
+- [ ] Empleo cerrado `/empleos/<id>`: barra «← Empleo» como un empleo publicado, sin el enlace «← Ver todos los empleos» dentro de la página; la flecha vuelve a la lista de origen.
+- [ ] Perfil propio en vista previa (`?preview=1`): «← Vista previa», vuelve a Mi panel; el botón «Volver a mi panel» solo desde lg.
+- [ ] `/registro/cliente` y `/registro/profesional` sin sesión: «← Cuenta de cliente» / «← Cuenta profesional» (vuelven a elegir el tipo de cuenta: historial o `/registro`, con directorio `/registro?paso=profesional`), el código de correo «← Verificar correo» (vuelve al formulario); el título grande de la tarjeta y el «Atrás» de abajo solo desde lg. La X queda solo en el login pedido por una sección.
+- [ ] `/onboarding` con directorio: «Ofrezco servicios» abre el paso «← Ofrezco servicios» en la barra; «Volver» de la página solo desde lg.
+- [ ] Sin cambio (ya cumplían): conversación de Mensajes y caso de Soporte en el panel (su propia cabecera «← nombre/asunto», la barra del sitio se oculta), editor de CV («‹ Mis currículums» ya era solo de computadora; «Atrás» abajo es el paso anterior del asistente).
+- [ ] App nativa: sin barra de abajo en `/registro/*`, `/olvide-contrasena` y en `/login?redirect=…` (antes y después de hidratar; `rutas-sin-barra.ts` y el script de arranque de `layout.tsx` iguales, lo vigila `validate-mobile-native-config.mjs`). `/login` abierto desde el menú conserva la barra.
 
 Fotos e íconos de secciones, grupos y servicios (regla de Isaac 2026-11-27, tabla en `docs/section-visuals.md`):
 - [ ] Una sección, variante, grupo o servicio muestra SIEMPRE la misma foto y el mismo ícono: hero, "Categorías más buscadas", "Lo más buscado", `/categorias` (Servicios y Negocios), hoja de búsqueda, sugerencias, menú y cajón, "Busque en su provincia", `/precios`, `/solicitudes`, avatar de un negocio sin foto. Revisar al menos Talleres, Restaurantes, Farmacias, Belleza, Salud y Educación (mismo nombre en Servicios y Negocios = misma foto y mismo ícono).
@@ -276,7 +284,6 @@ Bandera `INSTAGRAM_IMPORT_ENABLED` / `NEXT_PUBLIC_INSTAGRAM_IMPORT_ENABLED`; en 
 - [ ] Dentro del flujo: «Regístrese» → «← Crear cuenta», «¿Olvidó su contraseña?» → «← Recuperar contraseña» (conserva el destino), el código de correo → «← Verificar correo»: la flecha retrocede un paso; la X solo está en la primera pantalla.
 - [ ] Al entrar, llega a la sección que quería abrir (cualquier ruta interna segura, también con Google/Apple) y «atrás» del navegador NO vuelve al login (se reemplaza la entrada).
 - [ ] `/login` abierto desde el menú («Ingresar»): barra normal del sitio; si hay una pantalla de la app detrás, «← Iniciar sesión» (aparece al hidratar). Lo mismo «← Crear cuenta» y «← Recuperar contraseña».
-- [ ] Pendiente: `/registro/cliente` y `/registro/profesional` sin sesión todavía muestran la barra del sitio (no son paso del flujo aún); la app nativa no esconde su barra de abajo en login.
 
 ## 11. Panel Pro / Herramientas
 

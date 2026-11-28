@@ -129,7 +129,14 @@ requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\
 // hidratar). Si una cambia y la otra no, la barra aparece un cuadro y se va.
 const rutasSinBarra = await text("src/lib/rutas-sin-barra.ts");
 const layoutRaiz = await text("src/app/layout.tsx");
-requireMatch("Bottom nav uses the shared no-bar rule", bottomNav, /sinBarraDeAbajo\(pathname\)/);
+requireMatch("Bottom nav uses the shared no-bar rule", bottomNav, /sinBarraDeAbajo\(pathname(?:, [^)]*)?\)/);
+// El flujo de entrar (registro, recuperar contraseña y el login pedido por una sección) tampoco lleva barra: las
+// mismas dos expresiones en el helper y en el script de arranque.
+for (const nombre of ["RUTA_DE_ENTRADA", "RUTA_DE_LOGIN"]) {
+  const enHelper = new RegExp(`${nombre} = \\/(.+)\\/;`).exec(rutasSinBarra)?.[1];
+  if (!enHelper) failures.push(`rutas-sin-barra.ts: ${nombre} not found`);
+  else if (!layoutRaiz.includes(enHelper.replace(/\\/g, "\\\\"))) failures.push(`layout.tsx boot script does not carry the same ${nombre} as rutas-sin-barra.ts`);
+}
 const detalleEnHelper = /RUTA_DE_DETALLE = \/(.+)\/;/.exec(rutasSinBarra)?.[1];
 if (!detalleEnHelper) failures.push("rutas-sin-barra.ts: RUTA_DE_DETALLE not found");
 else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.push("layout.tsx boot script does not carry the same RUTA_DE_DETALLE as rutas-sin-barra.ts");

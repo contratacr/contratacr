@@ -152,11 +152,12 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
         <div className="mb-5 flex flex-col gap-4">
           <div className="min-w-0">
             {!embedded && !nativeApp && (
-              <div className="mb-1.5 flex items-center gap-2">
-                <Link href={backHref} aria-label={copy.back} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#162543] hover:bg-white">
+              // Phones: the bar says «← title» (owner 2026-11-27); this arrow and title only from lg (h1 kept for readers).
+              <div className="flex items-center gap-2 lg:mb-1.5">
+                <Link href={backHref} aria-label={copy.back} data-manager-back className="hidden h-9 w-9 shrink-0 place-items-center rounded-lg text-[#162543] hover:bg-white lg:grid">
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
-                <h1 className="truncate text-2xl font-bold">{copy.title}</h1>
+                <h1 className="text-2xl font-bold max-lg:sr-only">{copy.title}</h1>
               </div>
             )}
           </div>

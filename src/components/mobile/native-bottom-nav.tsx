@@ -90,7 +90,8 @@ export function NativeBottomNav() {
   // arranque habían puesto. Esa clase gobierna el relleno inferior de `main` y
   // varias alturas: quitarla y reponerla un cuadro después es un salto de
   // maquetación en CADA arranque, además de la barra apareciendo de la nada.
-  const visible = nativeApp && !sinBarraDeAbajo(pathname);
+  // La búsqueda cuenta solo para el login pedido por una sección (`?redirect=`).
+  const visible = nativeApp && !sinBarraDeAbajo(pathname, `?${searchParams.toString()}`);
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(
